@@ -117,18 +117,22 @@ const enemies = {
 
 const items = {
   trainingSword: { name: "Übungsschwert", slot: "weapon", quality: "common", damage: 4, defense: 0 },
-  paddedVest: { name: "Gepolsterte Weste", slot: "armor", quality: "common", damage: 0, defense: 3 },
+  wornBuckler: { name: "Abgenutzter Buckler", slot: "offhand", quality: "common", damage: 0, defense: 2 },
+  paddedVest: { name: "Gepolsterte Weste", slot: "chest", quality: "common", damage: 0, defense: 3 },
+  patchedTrousers: { name: "Geflickte Hose", slot: "pants", quality: "common", damage: 0, defense: 2 },
+  travelBoots: { name: "Reisestiefel", slot: "boots", quality: "common", damage: 0, defense: 1 },
+  twineNecklace: { name: "Kordelhalskette", slot: "necklace", quality: "common", damage: 1, defense: 0 },
   copperRing: { name: "Kupferring", slot: "ring", quality: "common", damage: 1, defense: 1 },
-  wolfRing: { name: "Ring des Rudels", slot: "ring", quality: "rare", damage: 3, defense: 2 },
-  rustBlade: { name: "Rostklinge", slot: "weapon", quality: "rare", damage: 10, defense: 0 },
-  hideArmor: { name: "Dornenleder", slot: "armor", quality: "rare", damage: 0, defense: 11 },
-  oathRing: { name: "Eidring", slot: "ring", quality: "very-rare", damage: 5, defense: 5 },
-  knightPlate: { name: "Grenzritterplatte", slot: "armor", quality: "very-rare", damage: 0, defense: 20 },
-  guardAxe: { name: "Gardistenaxt", slot: "weapon", quality: "rare", damage: 15, defense: 0 },
-  graveRing: { name: "Grablichtring", slot: "ring", quality: "very-rare", damage: 7, defense: 4 },
-  bruteMail: { name: "Schlägerkettenhemd", slot: "armor", quality: "very-rare", damage: 1, defense: 27 },
-  ashenGreatsword: { name: "Aschgraues Großschwert", slot: "weapon", quality: "epic", damage: 34, defense: 0 },
-  crownShard: { name: "Splitter der Krone", slot: "ring", quality: "epic", damage: 11, defense: 10 },
+  wolfRing: { name: "Ring des Rudels", slot: "ring", quality: "rare", damage: 3, defense: 2, set: "wolf" },
+  rustBlade: { name: "Rostklinge", slot: "weapon", quality: "rare", damage: 10, defense: 0, set: "iron" },
+  hideArmor: { name: "Dornenleder", slot: "chest", quality: "rare", damage: 0, defense: 11, set: "wolf" },
+  oathRing: { name: "Eidring", slot: "ring", quality: "very-rare", damage: 5, defense: 5, set: "iron" },
+  knightPlate: { name: "Grenzritterplatte", slot: "chest", quality: "very-rare", damage: 0, defense: 20, set: "iron" },
+  guardAxe: { name: "Gardistenaxt", slot: "weapon", quality: "rare", damage: 15, defense: 0, set: "iron" },
+  graveRing: { name: "Grablichtring", slot: "ring", quality: "very-rare", damage: 7, defense: 4, set: "crypt" },
+  bruteMail: { name: "Schlägerkettenhemd", slot: "chest", quality: "very-rare", damage: 1, defense: 27, set: "crypt" },
+  ashenGreatsword: { name: "Aschgraues Großschwert", slot: "weapon", quality: "epic", damage: 34, defense: 0, set: "ashen" },
+  crownShard: { name: "Splitter der Krone", slot: "ring", quality: "epic", damage: 11, defense: 10, set: "ashen" },
 };
 
 const qualityLabel = {
@@ -140,9 +144,16 @@ const qualityLabel = {
 
 const slotLabel = {
   weapon: "Waffe",
-  armor: "Rüstung",
+  offhand: "2. Hand",
+  chest: "Brustpanzer",
+  pants: "Hose",
+  boots: "Stiefel",
+  necklace: "Halskette",
   ring: "Ring",
 };
+
+const equipmentSlots = ["weapon", "offhand", "chest", "pants", "boots", "necklace", "ring"];
+const lootSlots = [...equipmentSlots];
 
 const qualityPower = {
   common: 1,
@@ -158,17 +169,76 @@ const lootNames = {
     "very-rare": ["Eidbrecher", "Sternstahlklinge", "Gruftspalter"],
     epic: ["Königsschneide", "Aschenurteil", "Drachenzahn"],
   },
-  armor: {
+  offhand: {
+    common: ["Holzschild", "Parierdolch", "Rostbuckler"],
+    rare: ["Wolfsbuckler", "Gardistenschild", "Hakenklinge"],
+    "very-rare": ["Eidwall", "Runenfokus", "Gruftlaterne"],
+    epic: ["Sonnenschild", "Aschenfokus", "Splitterparade"],
+  },
+  chest: {
     common: ["Lederwams", "Kettenfetzen", "Reiserüstung"],
     rare: ["Wolfsleder", "Schildplattenrock", "Schuppenpanzer"],
     "very-rare": ["Eidhüterplatte", "Nachtkettenhemd", "Runenharnisch"],
     epic: ["Krone der Bastion", "Aschenpanzer", "Sonnenharnisch"],
+  },
+  pants: {
+    common: ["Leinenhose", "Wanderbeinlinge", "Kettenhose"],
+    rare: ["Wolfsbeinlinge", "Schmiedeplatten", "Räuberhose"],
+    "very-rare": ["Eidbeinplatten", "Grabstahl-Beinlinge", "Runenbeinpanzer"],
+    epic: ["Aschenbeinplatten", "Königsgamaschen", "Sonnenbeinschutz"],
+  },
+  boots: {
+    common: ["Lederstiefel", "Marschschuhe", "Eisenkappen"],
+    rare: ["Fährtenstiefel", "Wachstiefel", "Dornenläufer"],
+    "very-rare": ["Eidtreter", "Gruftschritte", "Runensohlen"],
+    epic: ["Aschenläufer", "Sonnenstiefel", "Kronenschritte"],
+  },
+  necklace: {
+    common: ["Holzamulett", "Kordelkette", "Kupfertalisman"],
+    rare: ["Wolfszahnkette", "Rostmedaillon", "Wachhalsreif"],
+    "very-rare": ["Eidamulett", "Grablichtkette", "Runenhalsreif"],
+    epic: ["Aschenmedaillon", "Sonnenanhänger", "Kronentalisman"],
   },
   ring: {
     common: ["Zinnring", "Feldreif", "Schlichter Talisman"],
     rare: ["Blutsteinring", "Wolfszeichen", "Wachtersiegel"],
     "very-rare": ["Grablichtreif", "Eidsiegel", "Sternsplitterring"],
     epic: ["Splitterkrone", "Ring des alten Feuers", "Königszeichen"],
+  },
+};
+
+const setBonuses = {
+  wolf: {
+    name: "Rudeljäger",
+    bonuses: {
+      2: { damage: 4, defense: 2, text: "+4 Schaden, +2 Verteidigung" },
+      4: { damage: 7, defense: 6, text: "+7 Schaden, +6 Verteidigung" },
+      6: { damage: 16, defense: 10, maxHp: 25, text: "+16 Schaden, +10 Verteidigung, +25 Leben" },
+    },
+  },
+  iron: {
+    name: "Grenzwacht",
+    bonuses: {
+      2: { defense: 8, text: "+8 Verteidigung" },
+      4: { damage: 5, defense: 14, text: "+5 Schaden, +14 Verteidigung" },
+      6: { damage: 10, defense: 30, maxHp: 35, text: "+10 Schaden, +30 Verteidigung, +35 Leben" },
+    },
+  },
+  crypt: {
+    name: "Gruftbund",
+    bonuses: {
+      2: { damage: 5, maxHp: 18, text: "+5 Schaden, +18 Leben" },
+      4: { damage: 9, defense: 9, maxHp: 30, text: "+9 Schaden, +9 Verteidigung, +30 Leben" },
+      6: { damage: 18, defense: 16, maxHp: 70, text: "+18 Schaden, +16 Verteidigung, +70 Leben" },
+    },
+  },
+  ashen: {
+    name: "Aschenkrone",
+    bonuses: {
+      2: { damage: 12, defense: 8, text: "+12 Schaden, +8 Verteidigung" },
+      4: { damage: 20, defense: 16, maxHp: 45, text: "+20 Schaden, +16 Verteidigung, +45 Leben" },
+      6: { damage: 42, defense: 28, maxHp: 90, text: "+42 Schaden, +28 Verteidigung, +90 Leben" },
+    },
   },
 };
 
@@ -182,9 +252,9 @@ const questCatalog = [
 ];
 
 const rareQuestTemplates = [
-  { key: "wolf", name: "Blutspur des Rudels", rarity: "epic", text: "Jage 6 Waldwölfe für eine alte Jagdtrophaee.", target: "wolf", needed: 6, rewardXp: 360, rewardGold: 120, slot: "ring" },
+  { key: "wolf", name: "Blutspur des Rudels", rarity: "epic", text: "Jage 6 Waldwölfe für eine alte Jagdtrophaee.", target: "wolf", needed: 6, rewardXp: 360, rewardGold: 120, slot: "necklace" },
   { key: "bandit", name: "Versiegelter Steckbrief", rarity: "epic", text: "Besiege 5 Wegräuber und bringe den Steckbrief zurück.", target: "bandit", needed: 5, rewardXp: 420, rewardGold: 160, slot: "weapon" },
-  { key: "elite", name: "Schwur gegen die Gefallenen", rarity: "epic", text: "Bezwinge 3 Elite-Gegner für eine seltene Reliquie.", target: "elite", needed: 3, rewardXp: 900, rewardGold: 260, slot: "armor" },
+  { key: "elite", name: "Schwur gegen die Gefallenen", rarity: "epic", text: "Bezwinge 3 Elite-Gegner für eine seltene Reliquie.", target: "elite", needed: 3, rewardXp: 900, rewardGold: 260, slot: "chest" },
   { key: "dungeon", name: "Runen aus der Tiefe", rarity: "epic", text: "Besiege 5 Dungeon-Gegner und berge eine Runenbelohnung.", target: "dungeon", needed: 5, rewardXp: 760, rewardGold: 220, slot: "ring" },
 ];
 
@@ -218,13 +288,32 @@ const materialDrops = {
 let state = load();
 let selectedZone = "meadow";
 let selectedEnemy = "wolf";
+let selectedBestiaryZone = "meadow";
 let selectedBestiaryEnemy = "wolf";
 let isFighting = false;
 let skipCombat = false;
+let bestiaryListDirty = true;
+let bestiaryListHtml = "";
+let selectedBestiaryCategory = "overview";
+let selectedBestiaryFilter = "all";
+let selectedBestiarySearch = "";
+let selectedBestiaryPage = 0;
+let selectedBestiaryItemKey = "";
+let combatWatchdog = 0;
+const tooltipItemCache = new Map();
+const bestiaryLootCache = new Map();
 
-const $ = (id) => document.getElementById(id);
+const elementCache = new Map();
+const $ = (id) => {
+  if (!elementCache.has(id)) {
+    elementCache.set(id, document.getElementById(id));
+  }
+  return elementCache.get(id);
+};
 const random = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const eliteEncounterChance = 0.09;
+const maxBestiaryLootPerEnemy = 15;
+const generatedLootPoolSize = maxBestiaryLootPerEnemy;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function defaultState() {
@@ -239,7 +328,11 @@ function defaultState() {
     durability: 100,
     equipment: {
       weapon: "trainingSword",
-      armor: "paddedVest",
+      offhand: "wornBuckler",
+      chest: "paddedVest",
+      pants: "patchedTrousers",
+      boots: "travelBoots",
+      necklace: "twineNecklace",
       ring: "copperRing",
     },
     customItems: {},
@@ -274,6 +367,7 @@ function load() {
     loaded.discoveredLoot = loaded.discoveredLoot || {};
     loaded.lootQueue = Array.isArray(loaded.lootQueue) ? loaded.lootQueue : [];
     loaded.nextEncounters = loaded.nextEncounters || {};
+    migrateEquipmentSlots(loaded);
     loaded.materials = { ...defaultState().materials, ...(loaded.materials || {}) };
     loaded.questBoard = Array.isArray(loaded.questBoard) ? loaded.questBoard : ["wolves", "rust", "elites"];
     loaded.rareQuests = loaded.rareQuests || {};
@@ -282,6 +376,27 @@ function load() {
   } catch {
     return defaultState();
   }
+}
+
+function migrateEquipmentSlots(loaded) {
+  const defaults = defaultState().equipment;
+  const current = loaded.equipment || {};
+  if (current.armor && !current.chest) {
+    current.chest = current.armor;
+    delete current.armor;
+  }
+  loaded.equipment = { ...defaults, ...current };
+  Object.keys(loaded.equipment).forEach((slot) => {
+    if (!equipmentSlots.includes(slot)) delete loaded.equipment[slot];
+  });
+  Object.values(loaded.customItems || {}).forEach(normalizeItemSlot);
+  (loaded.pendingLoot || []).forEach(normalizeItemSlot);
+  (loaded.lootQueue || []).flat().forEach(normalizeItemSlot);
+}
+
+function normalizeItemSlot(item) {
+  if (item?.slot === "armor") item.slot = "chest";
+  return item;
 }
 
 function save() {
@@ -332,19 +447,44 @@ function normalizeSavedText(value) {
 }
 
 function getItem(itemId) {
-  return items[itemId] || state.customItems[itemId];
+  const item = state.customItems[itemId] || items[itemId];
+  return normalizeItemSlot(item);
 }
 
 function totalStats() {
-  const equipped = Object.values(state.equipment).map((id) => getItem(id));
+  const equipped = Object.values(state.equipment).map((id) => getItem(id)).filter(Boolean);
   const itemDamage = equipped.reduce((sum, item) => sum + item.damage, 0);
   const itemDefense = equipped.reduce((sum, item) => sum + item.defense, 0);
+  const setStats = activeSetBonusStats();
   const durabilityFactor = 0.72 + state.durability / 360;
   return {
-    damage: Math.floor((8 + state.level * 3 + itemDamage) * durabilityFactor),
-    defense: Math.floor((3 + state.level * 2 + itemDefense) * durabilityFactor),
-    maxHp: 92 + state.level * 8,
+    damage: Math.floor((8 + state.level * 3 + itemDamage + setStats.damage) * durabilityFactor),
+    defense: Math.floor((3 + state.level * 2 + itemDefense + setStats.defense) * durabilityFactor),
+    maxHp: 92 + state.level * 8 + setStats.maxHp,
   };
+}
+
+function activeSetBonusStats() {
+  const result = { damage: 0, defense: 0, maxHp: 0 };
+  Object.values(activeSetCounts()).forEach(({ id, count }) => {
+    Object.entries(setBonuses[id]?.bonuses || {}).forEach(([needed, bonus]) => {
+      if (count < Number(needed)) return;
+      result.damage += bonus.damage || 0;
+      result.defense += bonus.defense || 0;
+      result.maxHp += bonus.maxHp || 0;
+    });
+  });
+  return result;
+}
+
+function activeSetCounts() {
+  const counts = {};
+  Object.values(state.equipment).map(getItem).filter(Boolean).forEach((item) => {
+    if (!item.set) return;
+    counts[item.set] = counts[item.set] || { id: item.set, count: 0 };
+    counts[item.set].count += 1;
+  });
+  return counts;
 }
 
 function syncDerivedStats() {
@@ -413,37 +553,87 @@ async function fight() {
   setControlsDisabled(true);
   $("fightBtn").textContent = "Skip";
   $("fightBtn").disabled = false;
-  await playCombatAnimation(enemy, events, playerHp > 0);
+  armCombatWatchdog(25000);
+  try {
+    await playCombatAnimation(enemy, events, playerHp > 0);
 
-  state.durability = Math.max(0, state.durability - random(2, enemy.elite ? 9 : 5));
+    state.durability = Math.max(0, state.durability - random(2, enemy.elite ? 9 : 5));
 
-  if (playerHp > 0) {
-    state.hp = Math.max(1, playerHp);
-    const gold = random(enemy.gold[0], enemy.gold[1]);
-    state.gold += gold;
-    gainXp(enemy.xp);
-    grantMaterials(enemy.baseId || selectedEnemy, enemy.eliteVariant);
-    updateQuestProgress(enemy);
-    maybeDropRareQuest(enemy);
-    refreshQuestBoard(false);
-    createLootChoices(enemy, enemy.baseId || selectedEnemy);
-    log(`Sieg gegen ${enemy.name} nach ${rounds} Runden. +${enemy.xp} XP, +${gold} Gold.`, "good");
-  } else {
-    const xpLoss = Math.min(state.xp, Math.ceil(xpForLevel(state.level) * 0.06));
-    const goldLoss = Math.min(state.gold, Math.ceil(10 + state.level * 4));
-    state.xp -= xpLoss;
-    state.gold -= goldLoss;
-    state.deaths += 1;
-    state.hp = Math.max(1, Math.floor(state.maxHp * 0.35));
-    state.durability = Math.max(0, state.durability - 12);
-    log(`Tod gegen ${enemy.name}. Du verlierst ${xpLoss} XP, ${goldLoss} Gold und kehrst angeschlagen ins Lager zurück.`, "bad");
+    if (playerHp > 0) {
+      state.hp = Math.max(1, playerHp);
+      const gold = random(enemy.gold[0], enemy.gold[1]);
+      state.gold += gold;
+      gainXp(enemy.xp);
+      grantMaterials(enemy.baseId || selectedEnemy, enemy.eliteVariant);
+      createLootChoices(enemy, enemy.baseId || selectedEnemy);
+      updateQuestProgress(enemy);
+      maybeDropRareQuest(enemy);
+      refreshQuestBoard(false);
+      log(`Sieg gegen ${enemy.name} nach ${rounds} Runden. +${enemy.xp} XP, +${gold} Gold.`, "good");
+    } else {
+      const xpLoss = Math.min(state.xp, Math.ceil(xpForLevel(state.level) * 0.06));
+      const goldLoss = Math.min(state.gold, Math.ceil(10 + state.level * 4));
+      state.xp -= xpLoss;
+      state.gold -= goldLoss;
+      state.deaths += 1;
+      state.hp = Math.max(1, Math.floor(state.maxHp * 0.35));
+      state.durability = Math.max(0, state.durability - 12);
+      log(`Tod gegen ${enemy.name}. Du verlierst ${xpLoss} XP, ${goldLoss} Gold und kehrst angeschlagen ins Lager zurück.`, "bad");
+    }
+  } catch (error) {
+    console.error(error);
+    log("Der Kampfabschluss hatte einen Fehler, wurde aber sauber freigegeben.", "bad");
+  } finally {
+    clearCombatWatchdog();
+    isFighting = false;
+    skipCombat = false;
+    setControlsDisabled(false);
+    resetFightButton();
+    prepareNextEncounter(enemy.baseId || selectedEnemy);
+    save();
+    safeRender();
   }
+}
 
+function armCombatWatchdog(ms) {
+  clearCombatWatchdog();
+  combatWatchdog = window.setTimeout(() => {
+    if (isFighting) {
+      forceUnlockCombat("Der Kampf wurde automatisch freigegeben.");
+    }
+  }, ms);
+}
+
+function clearCombatWatchdog() {
+  if (!combatWatchdog) return;
+  window.clearTimeout(combatWatchdog);
+  combatWatchdog = 0;
+}
+
+function forceUnlockCombat(message) {
+  clearCombatWatchdog();
   isFighting = false;
+  skipCombat = false;
   setControlsDisabled(false);
-  prepareNextEncounter(enemy.baseId || selectedEnemy);
+  resetFightButton();
+  if (message) log(message, "bad");
   save();
-  render();
+  safeRender();
+}
+
+function resetFightButton() {
+  $("fightBtn").textContent = "Kampf starten";
+  $("fightBtn").disabled = state.pendingLoot.length > 0;
+}
+
+function safeRender() {
+  try {
+    render();
+  } catch (error) {
+    console.error(error);
+    resetFightButton();
+    $("battleText").textContent = "Bereit";
+  }
 }
 
 function getPreparedEncounter(enemyId) {
@@ -574,22 +764,31 @@ function getQuestById(questId) {
 
 function createQuestRewardItem(quest) {
   const quality = quest.rare ? "epic" : "very-rare";
-  const slot = quest.slot || ["weapon", "armor", "ring"][random(0, 2)];
+  const slot = quest.slot || lootSlots[random(0, lootSlots.length - 1)];
   const base = Math.max(6, Math.floor(quest.rewardXp / 80) + state.level);
   const power = qualityPower[quality];
   const namePool = lootNames[slot][quality];
+  const stats = rollSlotStats(slot, base, power);
 
   return {
     id: `quest-reward-${quest.id}`,
     name: `${namePool[random(0, namePool.length - 1)]} der Grauwacht`,
     slot,
     quality,
-    damage: slot === "armor" ? 0 : Math.max(3, Math.floor(base * (slot === "ring" ? 0.7 : 1.8) * power)),
-    defense: slot === "weapon" ? 0 : Math.max(3, Math.floor(base * (slot === "ring" ? 0.75 : 2.0) * power)),
+    damage: stats.damage,
+    defense: stats.defense,
+    set: questSet(quest),
     fixed: false,
     sourceType: "quest",
     sourceQuest: quest.id,
   };
+}
+
+function questSet(quest) {
+  if (quest.key === "wolf" || quest.target === "wolf") return "wolf";
+  if (quest.key === "bandit" || quest.target === "bandit" || quest.target === "rust") return "iron";
+  if (quest.key === "dungeon" || quest.target === "dungeon") return "crypt";
+  return "ashen";
 }
 
 function itemScore(item) {
@@ -617,7 +816,7 @@ function createLootChoices(enemy, enemyId) {
 }
 
 function queueLootBatch(items) {
-  const equipmentItems = items.filter((item) => item && item.slot && ["weapon", "armor", "ring"].includes(item.slot));
+  const equipmentItems = items.filter((item) => item && equipmentSlots.includes(item.slot));
   if (!equipmentItems.length) return;
   if (state.pendingLoot.length) {
     state.lootQueue.push(equipmentItems);
@@ -631,54 +830,97 @@ function advanceLootQueue() {
 }
 
 function generateLootItem(enemy, enemyId) {
-  const slot = ["weapon", "armor", "ring"][random(0, 2)];
+  const slot = lootSlots[random(0, lootSlots.length - 1)];
   const quality = rollQuality(enemy);
   const base = Math.max(1, enemy.level + random(-1, 2));
   const power = qualityPower[quality];
   const namePool = lootNames[slot][quality];
   const id = `loot-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-
-  let damage = 0;
-  let defense = 0;
-
-  if (slot === "weapon") {
-    damage = Math.max(2, Math.floor(base * 1.65 * power + random(0, 3)));
-  } else if (slot === "armor") {
-    defense = Math.max(2, Math.floor(base * 1.85 * power + random(0, 4)));
-  } else {
-    damage = Math.max(1, Math.floor(base * 0.55 * power));
-    defense = Math.max(1, Math.floor(base * 0.65 * power));
-  }
+  const stats = rollSlotStats(slot, base, power);
 
   return {
     id,
     name: namePool[random(0, namePool.length - 1)],
     slot,
     quality,
-    damage,
-    defense,
+    damage: stats.damage,
+    defense: stats.defense,
+    set: rollItemSet(enemy, quality),
     fixed: false,
     sourceEnemy: enemyId,
   };
 }
 
+function rollSlotStats(slot, base, power) {
+  const profiles = {
+    weapon: [1.65, 0],
+    offhand: [0.55, 1.05],
+    chest: [0, 1.85],
+    pants: [0.15, 1.25],
+    boots: [0.25, 0.85],
+    necklace: [0.75, 0.45],
+    ring: [0.55, 0.65],
+  };
+  const [damageScale, defenseScale] = profiles[slot] || profiles.ring;
+  return {
+    damage: damageScale ? Math.max(1, Math.floor(base * damageScale * power + random(0, 2))) : 0,
+    defense: defenseScale ? Math.max(1, Math.floor(base * defenseScale * power + random(0, 3))) : 0,
+  };
+}
+
+function rollItemSet(enemy, quality) {
+  const chance = quality === "epic" ? 0.75 : quality === "very-rare" ? 0.45 : quality === "rare" ? 0.22 : 0.05;
+  if (Math.random() > chance) return null;
+  if (enemy.tags?.wolf || enemy.tags?.beast) return "wolf";
+  if (enemy.tags?.bandit || enemy.tags?.rust || enemy.name?.includes("Ritter")) return "iron";
+  if (enemy.tags?.dungeon) return enemy.level >= 18 ? "ashen" : "crypt";
+  return null;
+}
+
 function recordDiscoveredLoot(enemyId, lootItems) {
   state.discoveredLoot[enemyId] = state.discoveredLoot[enemyId] || {};
+  bestiaryListDirty = true;
+  bestiaryLootCache.delete(enemyId);
 
   lootItems.forEach((item) => {
     const key = lootDiscoveryKey(item);
     const existing = state.discoveredLoot[enemyId][key];
+    const bestItem = existing && itemScore(existing) >= itemScore(item) ? existing : item;
     state.discoveredLoot[enemyId][key] = {
-      id: item.id,
-      name: item.name,
-      slot: item.slot,
-      quality: item.quality,
-      damage: item.damage,
-      defense: item.defense,
-      fixed: item.fixed,
+      id: bestItem.id,
+      name: bestItem.name,
+      slot: bestItem.slot,
+      quality: bestItem.quality,
+      damage: bestItem.damage,
+      defense: bestItem.defense,
+      set: bestItem.set,
+      fixed: bestItem.fixed,
       count: (existing?.count || 0) + 1,
     };
   });
+  pruneBestiaryLoot(enemyId);
+}
+
+function pruneBestiaryLoot(enemyId) {
+  const entries = Object.entries(state.discoveredLoot[enemyId] || {});
+  const fixed = entries.filter(([, item]) => item.fixed);
+  const generatedLimit = Math.max(0, maxBestiaryLootPerEnemy - fixed.length);
+  const generated = entries
+    .filter(([, item]) => !item.fixed)
+    .sort(([, a], [, b]) => bestiaryKeepScore(b) - bestiaryKeepScore(a));
+
+  state.discoveredLoot[enemyId] = Object.fromEntries([
+    ...fixed,
+    ...generated.slice(0, generatedLimit),
+  ]);
+  bestiaryLootCache.delete(enemyId);
+}
+
+function bestiaryKeepScore(item) {
+  const rarityScore = { common: 1, rare: 10, "very-rare": 25, epic: 50 }[item.quality] || 0;
+  const setScore = item.set ? 18 : 0;
+  const countScore = Math.min(10, item.count || 0);
+  return rarityScore + setScore + itemScore(item) * 0.2 + countScore;
 }
 
 function markLootDiscovery(enemyId, lootItems) {
@@ -731,7 +973,7 @@ function chooseLoot(index, equipNow = false) {
 function equipInventoryItem(index) {
   const itemId = state.inventory[index];
   const item = getItem(itemId);
-  if (!item) return;
+  if (!item || !equipmentSlots.includes(item.slot)) return;
 
   const previousId = state.equipment[item.slot];
   state.equipment[item.slot] = itemId;
@@ -800,15 +1042,21 @@ function grantMaterials(enemyId, eliteBonus = false) {
 function upgradeCost(item) {
   const level = item.upgrade || 0;
   const qualityMultiplier = { common: 1, rare: 2, "very-rare": 3, epic: 5 }[item.quality];
-  const slotMaterial = item.slot === "weapon" ? "fang" : item.slot === "armor" ? "iron" : "shard";
+  const slotMaterial = primaryMaterialForSlot(item.slot);
   return {
     gold: Math.floor(18 * qualityMultiplier * (level + 1)),
     materials: {
       [slotMaterial]: 2 + level * qualityMultiplier,
-      hide: item.slot === "armor" ? 1 + level : 0,
+      hide: ["chest", "pants", "boots"].includes(item.slot) ? 1 + level : 0,
       shard: item.quality === "epic" ? 1 + level : 0,
     },
   };
+}
+
+function primaryMaterialForSlot(slot) {
+  if (slot === "weapon" || slot === "offhand") return "fang";
+  if (["chest", "pants", "boots"].includes(slot)) return "iron";
+  return "shard";
 }
 
 function canUpgrade(item) {
@@ -830,8 +1078,13 @@ function upgradeEquipped(slot) {
   });
   const upgraded = { ...item, upgrade: (item.upgrade || 0) + 1 };
   if (slot === "weapon") upgraded.damage += 2 + Math.ceil(upgraded.upgrade / 2);
-  if (slot === "armor") upgraded.defense += 3 + upgraded.upgrade;
-  if (slot === "ring") {
+  if (slot === "offhand") {
+    upgraded.damage += 1 + Math.floor(upgraded.upgrade / 2);
+    upgraded.defense += 2 + upgraded.upgrade;
+  }
+  if (slot === "chest") upgraded.defense += 3 + upgraded.upgrade;
+  if (slot === "pants" || slot === "boots") upgraded.defense += 2 + upgraded.upgrade;
+  if (slot === "necklace" || slot === "ring") {
     upgraded.damage += 1 + Math.floor(upgraded.upgrade / 2);
     upgraded.defense += 1 + Math.ceil(upgraded.upgrade / 2);
   }
@@ -846,10 +1099,10 @@ function salvageValue(item) {
   const qualityAmount = { common: 1, rare: 3, "very-rare": 6, epic: 10 }[item.quality];
   const upgradeBonus = item.upgrade || 0;
   const result = {};
-  if (item.slot === "weapon") {
+  if (item.slot === "weapon" || item.slot === "offhand") {
     result.fang = qualityAmount + upgradeBonus;
     result.iron = Math.max(1, Math.floor(qualityAmount / 2));
-  } else if (item.slot === "armor") {
+  } else if (["chest", "pants", "boots"].includes(item.slot)) {
     result.iron = qualityAmount + upgradeBonus;
     result.hide = Math.max(1, Math.floor(qualityAmount / 2));
   } else {
@@ -963,12 +1216,11 @@ function render() {
 
   renderEnemies();
   renderEquipment();
-  renderInventory();
   renderLootChoices();
   renderQuests();
-  renderQuestBoard();
-  renderBestiary();
-  renderSmith();
+  if (isModalOpen("inventoryModal")) renderInventory();
+  if (isModalOpen("questBoardModal")) renderQuestBoard();
+  if (isModalOpen("smithModal")) renderSmith();
   renderSelectedEnemy();
   renderLog();
   $("fightBtn").textContent = isFighting ? (skipCombat ? "Überspringe..." : "Skip") : "Kampf starten";
@@ -986,14 +1238,6 @@ function renderEnemies() {
       <em class="risk ${ok ? "ok" : ""}">${risk}</em>
     </button>`;
   }).join("");
-
-  document.querySelectorAll("[data-enemy]").forEach((button) => {
-    button.addEventListener("click", () => {
-      selectedEnemy = button.dataset.enemy;
-      renderEnemies();
-      renderSelectedEnemy();
-    });
-  });
 }
 
 function enemyRarity(enemy) {
@@ -1022,11 +1266,15 @@ function setBattleEnemyVisual(enemy) {
 }
 
 function renderEquipment() {
-  $("equipment").innerHTML = Object.entries(state.equipment).map(([slot, id]) => {
+  const slots = equipmentSlots.map((slot) => [slot, state.equipment[slot]]);
+  $("equipment").innerHTML = slots.map(([slot, id]) => {
     const item = getItem(id);
+    if (!item) return "";
+    const setKey = item.set ? cacheSetTooltip(item.set) : "";
     return `<div class="slot rarity-card rarity-${item.quality}">
       <strong>${slotLabel[slot]}</strong>
       <p class="quality-${item.quality}">${item.name} · ${qualityLabel[item.quality]} · +${item.upgrade || 0}</p>
+      ${item.set ? `<p class="set-line set-hover-row"><span>${setBonuses[item.set]?.name || item.set}</span><span class="tooltip-source" data-set-tooltip-key="${setKey}"></span></p>` : ""}
       <p>+${item.damage} Schaden · +${item.defense} Verteidigung</p>
     </div>`;
   }).join("");
@@ -1038,8 +1286,10 @@ function renderSmith() {
   ).join("");
   $("salvageAllBtn").disabled = !state.inventory.length;
 
-  $("smithGrid").innerHTML = Object.entries(state.equipment).map(([slot, itemId]) => {
+  $("smithGrid").innerHTML = equipmentSlots.map((slot) => {
+    const itemId = state.equipment[slot];
     const item = getItem(itemId);
+    if (!item) return "";
     const cost = upgradeCost(item);
     const materialText = Object.entries(cost.materials)
       .filter(([, amount]) => amount > 0)
@@ -1055,10 +1305,6 @@ function renderSmith() {
     </div>`;
   }).join("");
 
-  document.querySelectorAll("[data-upgrade]").forEach((button) => {
-    button.addEventListener("click", () => upgradeEquipped(button.dataset.upgrade));
-  });
-
   $("salvageList").innerHTML = state.inventory.length
     ? state.inventory.map((itemId, index) => {
         const item = getItem(itemId);
@@ -1070,9 +1316,6 @@ function renderSmith() {
       }).join("")
     : `<div class="inventory-empty">Keine Items im Rucksack zum Zerlegen.</div>`;
 
-  document.querySelectorAll("[data-salvage]").forEach((button) => {
-    button.addEventListener("click", () => salvageInventoryItem(Number(button.dataset.salvage)));
-  });
 }
 
 function renderInventory() {
@@ -1086,13 +1329,19 @@ function renderInventory() {
 
   $("inventory").innerHTML = state.inventory.map((itemId, index) => {
     const item = getItem(itemId);
+    if (!item) return "";
     const current = getItem(state.equipment[item.slot]);
     const compare = compareLoot(item, current);
     return `<div class="inventory-item rarity-card rarity-${item.quality}">
       <strong class="quality-${item.quality}">${item.name}</strong>
       <p>${slotLabel[item.slot]} · ${qualityLabel[item.quality]} · Wert ${sellValue(item)} Gold</p>
+      ${item.set ? `<p class="set-line">${setBonuses[item.set]?.name || item.set}</p>` : ""}
       <p>+${item.damage} Schaden · +${item.defense} Verteidigung</p>
-      <p class="${compare.powerClass}">${compare.powerText}</p>
+      <div class="loot-compare compact">
+        <span class="${compare.powerClass}">${compare.powerText}</span>
+        <span class="${compare.damageClass}">${compare.damageText}</span>
+        <span class="${compare.defenseClass}">${compare.defenseText}</span>
+      </div>
       <div class="inventory-actions">
         <button type="button" data-equip="${index}">Ausrüsten</button>
         <button class="sell-button" type="button" data-sell="${index}">Verkaufen</button>
@@ -1100,12 +1349,6 @@ function renderInventory() {
     </div>`;
   }).join("");
 
-  document.querySelectorAll("[data-equip]").forEach((button) => {
-    button.addEventListener("click", () => equipInventoryItem(Number(button.dataset.equip)));
-  });
-  document.querySelectorAll("[data-sell]").forEach((button) => {
-    button.addEventListener("click", () => sellInventoryItem(Number(button.dataset.sell)));
-  });
 }
 
 function renderLootChoices() {
@@ -1123,15 +1366,17 @@ function renderLootChoices() {
   $("lootTitle").textContent = isQuestReward ? "Questbelohnung" : "Wähle ein Item";
   $("lootCounter").textContent = isQuestReward ? "Belohnung" : `1 von ${state.pendingLoot.length}`;
   $("lootChoices").innerHTML = state.pendingLoot.map((item, index) => {
+    if (!item) return "";
     const current = getItem(state.equipment[item.slot]);
     const compare = compareLoot(item, current);
     const discovery = lootDiscoveryStatus(item);
     return `<div class="loot-card rarity-card rarity-${item.quality}">
-      <strong class="quality-${item.quality}">${item.name}</strong>
-      ${discovery ? `<span class="discovery-badge ${discovery.className}">${discovery.text}</span>` : ""}
-      <p>${slotLabel[item.slot]} · ${qualityLabel[item.quality]}</p>
-      <p>+${item.damage} Schaden · +${item.defense} Verteidigung</p>
-      <p>Wert: ${sellValue(item)} Gold</p>
+      <strong class="loot-card-title quality-${item.quality}">${item.name}</strong>
+      <div class="loot-card-badge">${discovery ? `<span class="discovery-badge ${discovery.className}">${discovery.text}</span>` : ""}</div>
+      <p class="loot-card-meta">${slotLabel[item.slot]} · ${qualityLabel[item.quality]}</p>
+      <p class="loot-card-set ${item.set ? "set-line" : "empty"}">${item.set ? setBonuses[item.set]?.name || item.set : "&nbsp;"}</p>
+      <p class="loot-card-stats">+${item.damage} Schaden · +${item.defense} Verteidigung</p>
+      <p class="loot-card-value">Wert: ${sellValue(item)} Gold</p>
       <div class="loot-compare">
         <span class="${compare.powerClass}">${compare.powerText}</span>
         <span class="${compare.damageClass}">${compare.damageText}</span>
@@ -1144,12 +1389,6 @@ function renderLootChoices() {
     </div>`;
   }).join("");
 
-  document.querySelectorAll("[data-loot]").forEach((button) => {
-    button.addEventListener("click", () => chooseLoot(Number(button.dataset.loot)));
-  });
-  document.querySelectorAll("[data-equip-loot]").forEach((button) => {
-    button.addEventListener("click", () => chooseLoot(Number(button.dataset.equipLoot), true));
-  });
 }
 
 function lootDiscoveryStatus(item) {
@@ -1161,6 +1400,7 @@ function lootDiscoveryStatus(item) {
 }
 
 function compareLoot(item, current) {
+  current = current || { damage: 0, defense: 0 };
   const powerDiff = itemScore(item) - itemScore(current);
   const damageDiff = item.damage - current.damage;
   const defenseDiff = item.defense - current.defense;
@@ -1242,9 +1482,6 @@ function renderQuestBoard() {
     </div>`;
   }).join("");
 
-  document.querySelectorAll("[data-accept-quest]").forEach((button) => {
-    button.addEventListener("click", () => acceptQuest(button.dataset.acceptQuest));
-  });
 }
 
 function acceptQuest(questId) {
@@ -1264,25 +1501,54 @@ function isQuestActive(questId) {
 }
 
 function renderBestiary() {
-  const entries = Object.entries(enemies);
-  const detailEnemy = enemies[selectedBestiaryEnemy] || enemies.wolf;
-  const fixedDrops = renderFixedDropRows(detailEnemy);
-  const discoveredRows = renderDiscoveredLootRows(selectedBestiaryEnemy);
+  const container = $("bestiary");
+  if (bestiaryListDirty || !container.querySelector(".bestiary-list")) {
+    bestiaryListHtml = renderBestiaryList();
+    container.innerHTML = `${bestiaryListHtml}<div class="bestiary-detail" id="bestiaryDetail"></div>`;
+    elementCache.delete("bestiaryDetail");
+    bestiaryListDirty = false;
+  }
+  updateBestiaryActiveCard();
+  renderBestiaryDetail();
+}
 
-  $("bestiary").innerHTML = `<div class="bestiary-list">
+function renderBestiaryList() {
+  const zone = zones[selectedBestiaryZone] || zones.meadow;
+  const entries = zone.enemies.map((id) => [id, enemies[id]]).filter(([, enemy]) => enemy);
+  return `<div class="bestiary-list">
+    <div class="bestiary-zone-tabs">
+      ${Object.entries(zones).map(([id, zoneData]) => `<button class="${id === selectedBestiaryZone ? "active" : ""}" type="button" data-bestiary-zone="${id}">
+        <strong>${zoneData.name}</strong>
+        <span>${zoneData.enemies.length}</span>
+      </button>`).join("")}
+    </div>
     ${entries.map(([id, enemy]) => {
-    const zoneName = zoneForEnemy(id);
-    const completion = lootCompletion(id);
-    return `<button class="bestiary-card ${id === selectedBestiaryEnemy ? "active" : ""}" type="button" data-bestiary="${id}">
-      <strong>${enemy.name}</strong>
-      <p>${zoneName} · Level ${enemy.level}${enemy.elite ? " · Elite" : ""}</p>
-      <p>${enemy.hp} Leben · ${enemy.damage[0]}-${enemy.damage[1]} Schaden · ${enemy.defense} Rüstung</p>
-      <p>Loot entdeckt: ${completion.found}/${completion.total} · ${completion.percent}%</p>
-      <div class="completion-bar"><span style="width:${completion.percent}%"></span></div>
-    </button>`;
-  }).join("")}
-  </div>
-  <div class="bestiary-detail">
+      const completion = lootCompletion(id);
+      return `<button class="bestiary-card ${id === selectedBestiaryEnemy ? "active" : ""}" type="button" data-bestiary="${id}">
+        <strong>${enemy.name}</strong>
+        <p>Level ${enemy.level}${enemy.elite ? " · Elite" : ""} · ${enemy.hp} Leben</p>
+        <p>Loot entdeckt: ${completion.found}/${completion.total} · ${completion.percent}%</p>
+        <div class="completion-bar"><span style="width:${completion.percent}%"></span></div>
+      </button>`;
+    }).join("")}
+  </div>`;
+}
+
+function updateBestiaryActiveCard() {
+  $("bestiary").querySelectorAll("[data-bestiary]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.bestiary === selectedBestiaryEnemy);
+  });
+}
+
+function renderBestiaryDetail() {
+  const detailEnemy = enemies[selectedBestiaryEnemy] || enemies.wolf;
+  const categories = bestiaryCategories(selectedBestiaryEnemy, detailEnemy);
+  const categoryRows = renderBestiaryCategoryRows(selectedBestiaryEnemy, detailEnemy);
+
+  const detail = document.getElementById("bestiaryDetail");
+  if (!detail) return;
+
+  detail.innerHTML = `
     <div class="detail-head">
       <div>
         <p class="eyebrow">${zoneForEnemy(selectedBestiaryEnemy)}</p>
@@ -1290,45 +1556,92 @@ function renderBestiary() {
       </div>
     </div>
     <p>Level ${detailEnemy.level}${detailEnemy.elite ? " · Elite" : ""} · ${detailEnemy.hp} Leben · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} Schaden · ${detailEnemy.defense} Rüstung</p>
-    <h3>Feste seltene Drops</h3>
-    <div class="drop-list">${fixedDrops}</div>
-    <h3>Entdeckte Beute von diesem Gegner</h3>
-    <div class="drop-list">${discoveredRows}</div>
-    <p class="loot-note">Normale 3er-Beute erscheint nach jedem Sieg. Neue gefundene Items werden hier automatisch eingetragen.</p>
+    <h3>Sammlung</h3>
+    <div class="bestiary-category-grid">
+      ${categories.map((category) => `<button class="bestiary-category ${selectedBestiaryCategory === category.id ? "active" : ""}" type="button" data-bestiary-category="${category.id}">
+        <strong>${category.label}</strong>
+        <span>${category.count}</span>
+      </button>`).join("")}
+    </div>
+    ${selectedBestiaryCategory === "overview" ? "" : renderBestiaryFilters()}
+    <div class="bestiary-content-grid">
+      <div class="drop-list">${categoryRows}</div>
+    </div>
+    <p class="loot-note">Items werden zusammengefasst, seitenweise geladen und Details öffnen per Klick.</p>
+  `;
+}
+
+function bestiaryCategories(enemyId, enemy) {
+  const discovered = groupedBestiaryLoot(enemyId);
+  const countGroup = (group) => discovered.filter((item) => bestiaryItemGroup(item) === group).length;
+  return [
+    { id: "overview", label: "Übersicht", count: discovered.length + enemy.drops.length },
+    { id: "weapon", label: "Waffen", count: countGroup("weapon") },
+    { id: "armor", label: "Rüstung", count: countGroup("armor") },
+    { id: "jewelry", label: "Schmuck", count: countGroup("jewelry") },
+    { id: "materials", label: "Materialien", count: (materialDrops[enemyId] || []).length },
+    { id: "fixed", label: "Feste Drops", count: enemy.drops.length },
+    { id: "sets", label: "Set-Items", count: discovered.filter((item) => item.set).length },
+  ].filter((category) => category.id === "overview" || category.count > 0);
+}
+
+function renderBestiaryCategoryRows(enemyId, enemy) {
+  if (selectedBestiaryCategory === "overview") {
+    return renderBestiaryOverview(enemyId, enemy);
+  }
+  if (selectedBestiaryCategory === "fixed") {
+    return renderFixedDropRows(enemy);
+  }
+  if (selectedBestiaryCategory === "materials") {
+    return renderMaterialDropRows(enemyId);
+  }
+  return renderDiscoveredLootRows(enemyId, selectedBestiaryCategory);
+}
+
+function renderBestiaryOverview(enemyId, enemy) {
+  const discovered = groupedBestiaryLoot(enemyId);
+  const byQuality = ["epic", "very-rare", "rare", "common"]
+    .map((quality) => `${qualityLabel[quality]}: ${discovered.filter((item) => item.quality === quality).length}`)
+    .join(" · ");
+  const setCount = discovered.filter((item) => item.set).length;
+  const materialCount = (materialDrops[enemyId] || []).length;
+  return `<div class="bestiary-overview">
+    <p>Entdeckt: ${discovered.length} Item-Gruppen · ${enemy.drops.length} feste Drops · ${materialCount} Materialien</p>
+    <p>${byQuality}</p>
+    <p>Set-Items: ${setCount}</p>
   </div>`;
-
-  document.querySelectorAll("[data-bestiary]").forEach((button) => {
-    button.addEventListener("click", () => {
-      selectedBestiaryEnemy = button.dataset.bestiary;
-      renderBestiary();
-    });
-  });
-
-  attachFloatingTooltips();
 }
 
 function renderFixedDropRows(enemy) {
   return enemy.drops.length
     ? enemy.drops.map((drop) => {
         const item = getItem(drop.id);
-        return `<div class="drop-row item-hover-row">
-          <span class="quality-${item.quality}">${item.name}</span>
+        const key = `fixed:${drop.id}`;
+        return `<button class="drop-row bestiary-item-row item-hover-row" type="button" data-bestiary-item="${key}" data-tooltip-key="${cacheTooltipItem(item)}">
+          <span><b class="quality-${item.quality}">${item.name}</b><small>${qualityLabel[item.quality]} · ${slotLabel[item.slot]}</small></span>
           <span>${formatChance(drop.chance)}</span>
-          <template>${renderItemTooltip(item)}</template>
-        </div>`;
+        </button>`;
       }).join("")
     : `<div class="drop-row"><span>Keine festen seltenen Drops</span><span>-</span></div>`;
 }
 
+function renderMaterialDropRows(enemyId) {
+  const drops = materialDrops[enemyId] || [];
+  return drops.length
+    ? drops.map((drop) => `<button class="drop-row bestiary-item-row material-hover-row" type="button" data-bestiary-material="${drop.id}" data-material-id="${drop.id}">
+        <span><b>${materialLabel[drop.id]}</b><small>Material fürs Schmieden</small></span>
+        <span>${drop.min}-${drop.max}</span>
+      </button>`).join("")
+    : `<div class="drop-row"><span>Keine Materialien bekannt</span><span>-</span></div>`;
+}
+
 function lootCompletion(enemyId) {
   const enemy = enemies[enemyId];
-  const discovered = Object.keys(state.discoveredLoot[enemyId] || {}).length;
-  const generatedPool = Object.values(lootNames).reduce((sum, byQuality) => {
-    return sum + Object.values(byQuality).reduce((inner, names) => inner + names.length, 0);
-  }, 0);
-  const total = enemy.drops.length + generatedPool;
+  const discovered = groupedBestiaryLoot(enemyId).length;
+  const generatedLimit = Math.max(0, maxBestiaryLootPerEnemy - enemy.drops.length);
+  const total = enemy.drops.length + generatedLimit;
   const fixedFound = enemy.drops.filter((drop) => state.discoveredLoot[enemyId]?.[`fixed:${drop.id}`]).length;
-  const generatedFound = Math.max(0, discovered - fixedFound);
+  const generatedFound = Math.min(generatedLimit, discovered);
   const found = Math.min(total, fixedFound + generatedFound);
   return {
     found,
@@ -1337,28 +1650,172 @@ function lootCompletion(enemyId) {
   };
 }
 
-function renderDiscoveredLootRows(enemyId) {
-  const discovered = Object.values(state.discoveredLoot[enemyId] || {});
-  if (!discovered.length) {
+function renderDiscoveredLootRows(enemyId, category) {
+  const discovered = groupedBestiaryLoot(enemyId);
+  const filtered = filterBestiaryLoot(discovered.filter((item) => {
+    if (category === "sets") return item.set;
+    return bestiaryItemGroup(item) === category;
+  }));
+
+  if (!filtered.length) {
     return `<div class="drop-row"><span>Noch nichts entdeckt</span><span>-</span></div>`;
   }
 
-  return discovered
-    .sort((a, b) => itemScore(b) - itemScore(a))
-    .map((item) => `<div class="drop-row discovered-drop item-hover-row">
-      <span><b class="quality-${item.quality}">${item.name}</b><small>${slotLabel[item.slot]} · +${item.damage} Schaden · +${item.defense} Vert.</small></span>
-      <span>${qualityLabel[item.quality]} · x${item.count}</span>
-      <template>${renderItemTooltip(item)}</template>
-    </div>`)
+  const sorted = filtered.sort((a, b) => bestiaryRowRank(b) - bestiaryRowRank(a) || b.count - a.count || a.name.localeCompare(b.name));
+  const pageSize = 15;
+  const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
+  selectedBestiaryPage = Math.min(selectedBestiaryPage, pageCount - 1);
+  const start = selectedBestiaryPage * pageSize;
+  const visible = sorted.slice(start, start + pageSize);
+  const rows = visible
+    .map((item) => {
+      const key = bestiaryItemKey(item);
+      return `<button class="drop-row discovered-drop bestiary-item-row item-hover-row ${selectedBestiaryItemKey === key ? "active" : ""}" type="button" data-bestiary-item="${key}" data-tooltip-key="${cacheTooltipItem(item)}">
+        <span><b class="quality-${item.quality}">${item.name}</b><small>${qualityLabel[item.quality]}</small></span>
+        <span>${qualityLabel[item.quality]} · x${item.count}</span>
+      </button>`;
+    })
     .join("");
+
+  if (pageCount <= 1) return rows;
+
+  return `${rows}
+    <div class="bestiary-pagination">
+      <button type="button" data-bestiary-page="prev" ${selectedBestiaryPage === 0 ? "disabled" : ""}>Zurück</button>
+      <span>Seite ${selectedBestiaryPage + 1}/${pageCount}</span>
+      <button type="button" data-bestiary-page="next" ${selectedBestiaryPage >= pageCount - 1 ? "disabled" : ""}>Weiter</button>
+    </div>`;
+}
+
+function groupedBestiaryLoot(enemyId) {
+  const cached = bestiaryLootCache.get(enemyId);
+  if (cached) return cached;
+  pruneBestiaryLoot(enemyId);
+
+  const groups = Object.values(state.discoveredLoot[enemyId] || {}).reduce((result, item) => {
+    if (item.fixed) return result;
+    const key = bestiaryItemKey(item);
+    const existing = result.get(key);
+    if (!existing || itemScore(item) > itemScore(existing)) {
+      result.set(key, { ...item, count: (existing?.count || 0) + (item.count || 1) });
+    } else {
+      existing.count = (existing.count || 0) + (item.count || 1);
+    }
+    return result;
+  }, new Map());
+  const grouped = Array.from(groups.values());
+  bestiaryLootCache.set(enemyId, grouped);
+  return grouped;
+}
+
+function bestiaryRowRank(item) {
+  const ranks = { epic: 4, "very-rare": 3, rare: 2, common: 1 };
+  return ranks[item.quality] || 0;
+}
+
+function bestiaryItemKey(item) {
+  return item.fixed ? `fixed:${item.id}` : `${item.name}|${item.slot}|${item.quality}`;
+}
+
+function bestiaryItemGroup(item) {
+  if (["weapon", "offhand"].includes(item.slot)) return "weapon";
+  if (["chest", "pants", "boots"].includes(item.slot)) return "armor";
+  if (["necklace", "ring"].includes(item.slot)) return "jewelry";
+  return "other";
+}
+
+function filterBestiaryLoot(items) {
+  const search = selectedBestiarySearch.trim().toLowerCase();
+  const searched = search ? items.filter((item) => item.name.toLowerCase().includes(search)) : items;
+  if (selectedBestiaryFilter === "new") return searched.filter((item) => (item.count || 0) <= 1);
+  if (selectedBestiaryFilter === "sets") return searched.filter((item) => item.set);
+  if (selectedBestiaryFilter === "epic") return searched.filter((item) => item.quality === "epic");
+  if (selectedBestiaryFilter === "incomplete") return searched.filter((item) => (item.count || 0) <= 1 || item.quality === "epic" || item.set);
+  return searched;
+}
+
+function renderBestiaryFilters() {
+  const filters = [
+    ["all", "Alle"],
+    ["new", "Neu"],
+    ["sets", "Set-Items"],
+    ["epic", "Episch"],
+    ["incomplete", "Noch nicht vollständig"],
+  ];
+  return `<div class="bestiary-filters">
+    <input id="bestiarySearch" type="search" value="${escapeAttr(selectedBestiarySearch)}" placeholder="Item suchen">
+    ${filters.map(([id, label]) => `<button class="${selectedBestiaryFilter === id ? "active" : ""}" type="button" data-bestiary-filter="${id}">${label}</button>`).join("")}
+  </div>`;
+}
+
+function escapeAttr(value) {
+  return String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+}
+
+function renderBestiaryItemDetail(enemyId, enemy) {
+  if (selectedBestiaryCategory === "overview") {
+    return `<aside class="bestiary-selected-detail">
+      <strong>Details</strong>
+      <p>Wähle eine Kategorie und klicke ein Item an.</p>
+    </aside>`;
+  }
+
+  if (selectedBestiaryCategory === "materials") {
+    const material = (materialDrops[enemyId] || []).find((drop) => `mat:${drop.id}` === selectedBestiaryItemKey);
+    return `<aside class="bestiary-selected-detail">
+      <strong>Materialien</strong>
+      ${material ? `<p>${materialLabel[material.id]}</p><p>Drop-Menge: ${material.min}-${material.max}</p><p>Wird beim Schmied für Upgrades genutzt.</p>` : "<p>Klicke ein Material für Details.</p>"}
+    </aside>`;
+  }
+
+  const item = selectedBestiaryItemKey.startsWith("fixed:")
+    ? getItem(selectedBestiaryItemKey.replace("fixed:", ""))
+    : groupedBestiaryLoot(enemyId).find((entry) => bestiaryItemKey(entry) === selectedBestiaryItemKey);
+
+  if (!item) {
+    return `<aside class="bestiary-selected-detail">
+      <strong>Details</strong>
+      <p>Klicke ein Item für Stats und Vergleich.</p>
+    </aside>`;
+  }
+
+  return `<aside class="bestiary-selected-detail">
+    ${renderItemTooltip({ ...item, fixed: selectedBestiaryItemKey.startsWith("fixed:") })}
+  </aside>`;
+}
+
+function cacheTooltipItem(item) {
+  const key = item.fixed ? `fixed:${item.id}` : `${item.name}|${item.slot}|${item.quality}|${item.damage}|${item.defense}`;
+  tooltipItemCache.set(key, item);
+  return key.replaceAll('"', "&quot;");
+}
+
+function cacheSetTooltip(setId) {
+  const key = `set:${setId}`;
+  tooltipItemCache.set(key, { tooltipType: "set", setId });
+  return key;
+}
+
+function renderSetTooltip(setId) {
+  const set = setBonuses[setId];
+  if (!set) return "";
+  const count = activeSetCounts()[setId]?.count || 0;
+  const bonuses = Object.entries(set.bonuses)
+    .map(([needed, bonus]) => `<span class="${count >= Number(needed) ? "compare-good" : "compare-even"}">${needed} Teile: ${bonus.text}</span>`)
+    .join("");
+  return `<div class="item-tooltip">
+    <strong>${set.name} (${Math.min(count, 6)}/6)</strong>
+    ${bonuses}
+  </div>`;
 }
 
 function renderItemTooltip(item) {
-  const current = getItem(state.equipment[item.slot]);
+  const current = getItem(state.equipment[item.slot]) || { name: "Nichts", damage: 0, defense: 0 };
   const compare = compareLoot(item, current);
   return `<div class="item-tooltip">
     <strong class="quality-${item.quality}">${item.name}</strong>
     <span>${slotLabel[item.slot]} · ${qualityLabel[item.quality]}</span>
+    ${item.set ? `<span>Set: ${setBonuses[item.set]?.name || item.set}</span>` : ""}
     <span>Schaden: ${item.damage} · Verteidigung: ${item.defense}</span>
     <span>Aktuell: ${current.name}</span>
     <span class="${compare.powerClass}">${compare.powerText}</span>
@@ -1367,19 +1824,30 @@ function renderItemTooltip(item) {
   </div>`;
 }
 
-function attachFloatingTooltips() {
-  document.querySelectorAll(".item-hover-row").forEach((row) => {
-    row.addEventListener("mouseenter", () => showFloatingTooltip(row));
-    row.addEventListener("mousemove", (event) => positionFloatingTooltip(event));
-    row.addEventListener("mouseleave", hideFloatingTooltip);
-  });
+function renderMaterialTooltip(materialId) {
+  const drop = (materialDrops[selectedBestiaryEnemy] || []).find((entry) => entry.id === materialId);
+  return `<div class="item-tooltip">
+    <strong>${materialLabel[materialId] || materialId}</strong>
+    <span>Material fürs Schmieden</span>
+    ${drop ? `<span>Drop-Menge: ${drop.min}-${drop.max}</span>` : ""}
+    <span>Wird für Upgrades und Ausrüstung genutzt.</span>
+  </div>`;
 }
 
 function showFloatingTooltip(row) {
-  const template = row.querySelector("template");
-  if (!template) return;
+  const materialId = row.dataset.materialId;
+  if (materialId) {
+    const tooltip = $("floatingTooltip");
+    tooltip.innerHTML = renderMaterialTooltip(materialId);
+    tooltip.classList.add("open");
+    tooltip.setAttribute("aria-hidden", "false");
+    return;
+  }
+  const key = row.dataset.tooltipKey || row.querySelector("[data-tooltip-key]")?.dataset.tooltipKey || row.querySelector("[data-set-tooltip-key]")?.dataset.setTooltipKey;
+  const item = tooltipItemCache.get(key);
+  if (!item) return;
   const tooltip = $("floatingTooltip");
-  tooltip.innerHTML = template.innerHTML;
+  tooltip.innerHTML = item.tooltipType === "set" ? renderSetTooltip(item.setId) : renderItemTooltip(item);
   tooltip.classList.add("open");
   tooltip.setAttribute("aria-hidden", "false");
 }
@@ -1387,6 +1855,21 @@ function showFloatingTooltip(row) {
 function positionFloatingTooltip(event) {
   const tooltip = $("floatingTooltip");
   if (!tooltip.classList.contains("open")) return;
+
+  pendingTooltipEvent = event;
+  if (tooltipFrame) return;
+  tooltipFrame = requestAnimationFrame(() => {
+    tooltipFrame = 0;
+    applyTooltipPosition(pendingTooltipEvent);
+  });
+}
+
+let tooltipFrame = 0;
+let pendingTooltipEvent = null;
+
+function applyTooltipPosition(event) {
+  const tooltip = $("floatingTooltip");
+  if (!event || !tooltip.classList.contains("open")) return;
 
   const margin = 16;
   const offset = 18;
@@ -1407,6 +1890,10 @@ function positionFloatingTooltip(event) {
 
 function hideFloatingTooltip() {
   const tooltip = $("floatingTooltip");
+  if (tooltipFrame) {
+    cancelAnimationFrame(tooltipFrame);
+    tooltipFrame = 0;
+  }
   tooltip.classList.remove("open");
   tooltip.setAttribute("aria-hidden", "true");
 }
@@ -1439,12 +1926,174 @@ document.querySelectorAll("[data-zone]").forEach((button) => {
   });
 });
 
+$("enemyList").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-enemy]");
+  if (!button) return;
+  selectedEnemy = button.dataset.enemy;
+  renderEnemies();
+  renderSelectedEnemy();
+});
+
+$("inventory").addEventListener("click", (event) => {
+  const equip = event.target.closest("[data-equip]");
+  if (equip) {
+    equipInventoryItem(Number(equip.dataset.equip));
+    return;
+  }
+  const sell = event.target.closest("[data-sell]");
+  if (sell) sellInventoryItem(Number(sell.dataset.sell));
+});
+
+$("lootChoices").addEventListener("click", (event) => {
+  const equipLoot = event.target.closest("[data-equip-loot]");
+  if (equipLoot) {
+    chooseLoot(Number(equipLoot.dataset.equipLoot), true);
+    return;
+  }
+  const loot = event.target.closest("[data-loot]");
+  if (loot) chooseLoot(Number(loot.dataset.loot));
+});
+
+$("questBoard").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-accept-quest]");
+  if (button) acceptQuest(button.dataset.acceptQuest);
+});
+
+$("bestiary").addEventListener("click", (event) => {
+  const zone = event.target.closest("[data-bestiary-zone]");
+  if (zone) {
+    selectedBestiaryZone = zone.dataset.bestiaryZone;
+    selectedBestiaryEnemy = zones[selectedBestiaryZone]?.enemies[0] || selectedBestiaryEnemy;
+    selectedBestiaryCategory = "overview";
+    selectedBestiaryFilter = "all";
+    selectedBestiarySearch = "";
+    selectedBestiaryPage = 0;
+    selectedBestiaryItemKey = "";
+    bestiaryListDirty = true;
+    renderBestiary();
+    return;
+  }
+
+  const page = event.target.closest("[data-bestiary-page]");
+  if (page) {
+    selectedBestiaryPage += page.dataset.bestiaryPage === "next" ? 1 : -1;
+    renderBestiaryDetail();
+    return;
+  }
+
+  const filter = event.target.closest("[data-bestiary-filter]");
+  if (filter) {
+    selectedBestiaryFilter = filter.dataset.bestiaryFilter;
+    selectedBestiaryPage = 0;
+    selectedBestiaryItemKey = "";
+    renderBestiaryDetail();
+    return;
+  }
+
+  const material = event.target.closest("[data-bestiary-material]");
+  if (material) {
+    selectedBestiaryItemKey = `mat:${material.dataset.bestiaryMaterial}`;
+    renderBestiaryDetail();
+    return;
+  }
+
+  const item = event.target.closest("[data-bestiary-item]");
+  if (item) {
+    selectedBestiaryItemKey = item.dataset.bestiaryItem;
+    renderBestiaryDetail();
+    return;
+  }
+
+  const category = event.target.closest("[data-bestiary-category]");
+  if (category) {
+    selectedBestiaryCategory = category.dataset.bestiaryCategory;
+    selectedBestiaryFilter = "all";
+    selectedBestiarySearch = "";
+    selectedBestiaryPage = 0;
+    selectedBestiaryItemKey = "";
+    renderBestiaryDetail();
+    return;
+  }
+
+  const button = event.target.closest("[data-bestiary]");
+  if (!button) return;
+  selectedBestiaryEnemy = button.dataset.bestiary;
+  selectedBestiaryZone = zoneKeyForEnemy(selectedBestiaryEnemy);
+  selectedBestiaryCategory = "overview";
+  selectedBestiaryFilter = "all";
+  selectedBestiarySearch = "";
+  selectedBestiaryPage = 0;
+  selectedBestiaryItemKey = "";
+  updateBestiaryActiveCard();
+  renderBestiaryDetail();
+});
+
+$("bestiary").addEventListener("input", (event) => {
+  if (!event.target.matches("#bestiarySearch")) return;
+  selectedBestiarySearch = event.target.value;
+  selectedBestiaryPage = 0;
+  selectedBestiaryItemKey = "";
+  renderBestiaryDetail();
+  const search = document.getElementById("bestiarySearch");
+  search?.focus();
+  search?.setSelectionRange(search.value.length, search.value.length);
+});
+
+$("bestiary").addEventListener("mouseover", (event) => {
+  const row = event.target.closest(".item-hover-row, .material-hover-row");
+  if (!row || row.contains(event.relatedTarget)) return;
+  showFloatingTooltip(row);
+  positionFloatingTooltip(event);
+});
+
+$("bestiary").addEventListener("mousemove", (event) => {
+  if (event.target.closest(".item-hover-row, .material-hover-row")) {
+    positionFloatingTooltip(event);
+  }
+});
+
+$("bestiary").addEventListener("mouseout", (event) => {
+  const row = event.target.closest(".item-hover-row, .material-hover-row");
+  if (!row || row.contains(event.relatedTarget)) return;
+  hideFloatingTooltip();
+});
+
+$("equipment").addEventListener("mouseover", (event) => {
+  const row = event.target.closest(".set-hover-row");
+  if (!row || row.contains(event.relatedTarget)) return;
+  showFloatingTooltip(row);
+  positionFloatingTooltip(event);
+});
+
+$("equipment").addEventListener("mousemove", (event) => {
+  if (event.target.closest(".set-hover-row")) {
+    positionFloatingTooltip(event);
+  }
+});
+
+$("equipment").addEventListener("mouseout", (event) => {
+  const row = event.target.closest(".set-hover-row");
+  if (!row || row.contains(event.relatedTarget)) return;
+  hideFloatingTooltip();
+});
+
+$("smithGrid").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-upgrade]");
+  if (button) upgradeEquipped(button.dataset.upgrade);
+});
+
+$("salvageList").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-salvage]");
+  if (button) salvageInventoryItem(Number(button.dataset.salvage));
+});
+
 $("fightBtn").addEventListener("click", () => {
   if (isFighting) {
     skipCombat = true;
     $("battleText").textContent = "Kampf wird übersprungen...";
     $("fightBtn").textContent = "Überspringe...";
     $("fightBtn").disabled = true;
+    armCombatWatchdog(1800);
     return;
   }
 
@@ -1455,6 +2104,7 @@ $("repairBtn").addEventListener("click", repair);
 $("sellAllBtn").addEventListener("click", sellAllInventoryItems);
 $("salvageAllBtn").addEventListener("click", salvageAllInventoryItems);
 $("openBestiaryBtn").addEventListener("click", () => {
+  renderBestiary();
   openModal("bestiaryModal");
 });
 $("closeBestiaryBtn").addEventListener("click", closeBestiary);
@@ -1462,6 +2112,7 @@ $("bestiaryModal").addEventListener("click", (event) => {
   if (event.target.id === "bestiaryModal") closeBestiary();
 });
 $("openQuestBoardBtn").addEventListener("click", () => {
+  renderQuestBoard();
   openModal("questBoardModal");
 });
 $("closeQuestBoardBtn").addEventListener("click", closeQuestBoard);
@@ -1469,6 +2120,7 @@ $("questBoardModal").addEventListener("click", (event) => {
   if (event.target.id === "questBoardModal") closeQuestBoard();
 });
 $("openInventoryBtn").addEventListener("click", () => {
+  renderInventory();
   openModal("inventoryModal");
 });
 $("closeInventoryBtn").addEventListener("click", closeInventory);
@@ -1476,6 +2128,7 @@ $("inventoryModal").addEventListener("click", (event) => {
   if (event.target.id === "inventoryModal") closeInventory();
 });
 $("openSmithBtn").addEventListener("click", () => {
+  renderSmith();
   openModal("smithModal");
 });
 $("closeSmithBtn").addEventListener("click", closeSmith);
@@ -1513,6 +2166,10 @@ function openModal(id) {
   $(id).classList.add("open");
   $(id).setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
+}
+
+function isModalOpen(id) {
+  return $(id).classList.contains("open");
 }
 
 function closeModal(id) {
