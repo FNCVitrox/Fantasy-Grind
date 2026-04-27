@@ -217,8 +217,12 @@ $("smithModal").addEventListener("click", (event) => {
   if (event.target.id === "smithModal") closeSmith();
 });
 $("toggleLogBtn").addEventListener("click", () => {
-  logExpanded = !logExpanded;
   renderLog();
+  openModal("logModal");
+});
+$("closeLogBtn").addEventListener("click", closeLog);
+$("logModal").addEventListener("click", (event) => {
+  if (event.target.id === "logModal") closeLog();
 });
 $("resetBtn").addEventListener("click", () => {
   if (!confirm("Spielstand wirklich löschen?")) return;
@@ -247,6 +251,10 @@ function closeSmith() {
   closeModal("smithModal");
 }
 
+function closeLog() {
+  closeModal("logModal");
+}
+
 function openModal(id) {
   $(id).classList.add("open");
   $(id).setAttribute("aria-hidden", "false");
@@ -268,6 +276,7 @@ function setControlsDisabled(disabled) {
   document.querySelectorAll("button").forEach((button) => {
     if (button.id === "resetBtn") return;
     if (button.id === "toggleLogBtn") return;
+    if (button.id === "closeLogBtn") return;
     if (button.id === "fightBtn") return;
     if (button.id === "openBestiaryBtn") return;
     if (button.id === "closeBestiaryBtn") return;

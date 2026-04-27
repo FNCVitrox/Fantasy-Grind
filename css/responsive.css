@@ -12,20 +12,6 @@
     flex-direction: column;
   }
 
-  .log-head {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .log-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .log-preview {
-    white-space: normal;
-  }
-
   .book-button {
     width: 100%;
   }
@@ -58,6 +44,12 @@
   .modal-window {
     max-height: calc(100vh - 28px);
     overflow: auto;
+  }
+
+  .modal-head-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
   .loot-window .loot-choices {

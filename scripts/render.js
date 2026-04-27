@@ -747,13 +747,10 @@ function formatChance(chance) {
 }
 
 function renderLog() {
-  $("logPanel").classList.toggle("collapsed", !logExpanded);
-  $("toggleLogBtn").textContent = logExpanded ? "Verlauf schließen" : "Verlauf öffnen";
-  $("toggleLogBtn").setAttribute("aria-expanded", String(logExpanded));
   $("logPreview").textContent = state.log[0] || "Noch keine Einträge.";
-  $("log").innerHTML = state.log.map((entry, index) => {
+  $("log").innerHTML = state.log.slice(0, 18).map((entry, index) => {
     const type = entry.includes("Tod") ? "bad" : entry.includes("Seltener") || entry.includes("Quest") || entry.includes("ausgerüstet") ? "drop" : index === 0 ? "good" : "";
     return `<div class="${type}">${escapeHtml(entry)}</div>`;
-  }).join("");
+  }).join("") || `<div>Noch keine Einträge.</div>`;
 }
 

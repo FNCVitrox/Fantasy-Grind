@@ -68,6 +68,13 @@
             <button id="restBtn" type="button">Rasten</button>
             <button id="repairBtn" type="button">Reparieren</button>
           </div>
+          <section class="log-panel compact" id="logPanel" aria-label="Kampfprotokoll">
+            <div>
+              <h2>Protokoll</h2>
+              <p id="logPreview" class="log-preview">Noch keine Einträge.</p>
+            </div>
+            <button id="toggleLogBtn" type="button" aria-haspopup="dialog">Öffnen</button>
+          </section>
         </aside>
 
         <section class="panel world-panel" aria-label="Welt und Kampf">
@@ -129,19 +136,6 @@
         </aside>
       </section>
 
-      <section class="panel log-panel collapsed" id="logPanel" aria-label="Kampfprotokoll">
-        <div class="log-head">
-          <div>
-            <h2>Protokoll</h2>
-            <p id="logPreview" class="log-preview">Noch keine Einträge.</p>
-          </div>
-          <div class="log-actions">
-            <button id="toggleLogBtn" type="button" aria-expanded="false">Verlauf öffnen</button>
-            <button id="resetBtn" type="button">Neuer Spielstand</button>
-          </div>
-        </div>
-        <div id="log" class="log"></div>
-      </section>
     </main>
     <div class="modal-overlay" id="lootModal" aria-hidden="true">
       <div class="modal-window loot-window" role="dialog" aria-modal="true" aria-labelledby="lootTitle">
@@ -215,10 +209,25 @@
         </section>
       </div>
     </div>
+    <div class="modal-overlay" id="logModal" aria-hidden="true">
+      <div class="modal-window log-window" role="dialog" aria-modal="true" aria-labelledby="logTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow">Kampfverlauf</p>
+            <h2 id="logTitle">Protokoll</h2>
+          </div>
+          <div class="modal-head-actions">
+            <button id="resetBtn" type="button">Neuer Spielstand</button>
+            <button class="modal-close" id="closeLogBtn" type="button" aria-label="Protokoll schließen">Schließen</button>
+          </div>
+        </div>
+        <div id="log" class="log"></div>
+      </div>
+    </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="scripts/data.js?v=split-2"></script>
-    <script src="scripts/core.js?v=split-2"></script>
-    <script src="scripts/render.js?v=split-2"></script>
-    <script src="scripts/events.js?v=split-2"></script>
+    <script src="scripts/data.js?v=log-modal-1"></script>
+    <script src="scripts/core.js?v=log-modal-1"></script>
+    <script src="scripts/render.js?v=log-modal-1"></script>
+    <script src="scripts/events.js?v=log-modal-1"></script>
   </body>
 </html>
