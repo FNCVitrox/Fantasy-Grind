@@ -64,7 +64,7 @@ function defaultState() {
     completedQuests: [],
     rareQuests: {},
     winsSinceQuestRefresh: 0,
-    balanceVersion,
+    balanceVersion: 2,
     log: ["Du erreichst das Lager Grauwacht. Der Grind beginnt langsam."],
   };
 }
@@ -98,12 +98,12 @@ function load() {
 }
 
 function applyBalanceMigration(loaded) {
-  if ((loaded.balanceVersion || 1) >= balanceVersion) return;
+  if ((loaded.balanceVersion || 1) >= 2) return;
   Object.values(loaded.customItems || {}).forEach(rebalanceSavedItem);
   (loaded.pendingLoot || []).forEach(rebalanceSavedItem);
   (loaded.lootQueue || []).flat().forEach(rebalanceSavedItem);
   Object.values(loaded.discoveredLoot || {}).forEach((drops) => Object.values(drops || {}).forEach(rebalanceSavedItem));
-  loaded.balanceVersion = balanceVersion;
+  loaded.balanceVersion = 2;
   loaded.log = [
     "Balance überarbeitet: Gegner sind gefährlicher, Loot skaliert langsamer und alte Über-Items wurden angepasst.",
     ...(loaded.log || []),
