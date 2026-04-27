@@ -25,7 +25,8 @@ const $ = (id) => {
   return elementCache.get(id);
 };
 const random = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-const eliteEncounterChance = 0.09;
+const balanceVersion = 2;
+const eliteEncounterChance = 0.12;
 const maxBestiaryLootPerEnemy = 15;
 const generatedLootPoolSize = maxBestiaryLootPerEnemy;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -63,6 +64,7 @@ function defaultState() {
     completedQuests: [],
     rareQuests: {},
     winsSinceQuestRefresh: 0,
+    balanceVersion,
     log: ["Du erreichst das Lager Grauwacht. Der Grind beginnt langsam."],
   };
 }
@@ -88,10 +90,51 @@ function load() {
     loaded.questBoard = Array.isArray(loaded.questBoard) ? loaded.questBoard : ["wolves", "rust", "elites"];
     loaded.rareQuests = loaded.rareQuests || {};
     loaded.winsSinceQuestRefresh = loaded.winsSinceQuestRefresh || 0;
+    applyBalanceMigration(loaded);
     return loaded;
   } catch {
     return defaultState();
   }
+}
+
+function applyBalanceMigration(loaded) {
+  if ((loaded.balanceVersion || 1) >= balanceVersion) return;
+  Object.values(loaded.customItems || {}).forEach(rebalanceSavedItem);
+  (loaded.pendingLoot || []).forEach(rebalanceSavedItem);
+  (loaded.lootQueue || []).flat().forEach(rebalanceSavedItem);
+  Object.values(loaded.discoveredLoot || {}).forEach((drops) => Object.values(drops || {}).forEach(rebalanceSavedItem));
+  loaded.balanceVersion = balanceVersion;
+  loaded.log = [
+    "Balance überarbeitet: Gegner sind gefährlicher, Loot skaliert langsamer und alte Über-Items wurden angepasst.",
+    ...(loaded.log || []),
+  ].slice(0, 40);
+}
+
+function rebalanceSavedItem(item) {
+  if (!item || !item.slot || !item.quality) return item;
+  const upgrade = item.upgrade || Number(item.name?.match(/\+(\d+)$/)?.[1] || 0);
+  const cap = itemStatCap(item.slot, item.quality, upgrade);
+  item.damage = Math.min(item.damage || 0, cap.damage);
+  item.defense = Math.min(item.defense || 0, cap.defense);
+  return item;
+}
+
+function itemStatCap(slot, quality, upgrade = 0) {
+  const qualityIndex = { common: 0, rare: 1, epic: 2, legendary: 3 }[quality] || 0;
+  const caps = {
+    weapon: { damage: [9, 17, 29, 43], defense: [0, 0, 0, 0] },
+    offhand: { damage: [5, 9, 14, 20], defense: [8, 18, 31, 44] },
+    chest: { damage: [0, 0, 2, 3], defense: [13, 28, 50, 72] },
+    pants: { damage: [2, 4, 6, 9], defense: [9, 20, 35, 50] },
+    boots: { damage: [3, 5, 8, 11], defense: [7, 16, 28, 40] },
+    necklace: { damage: [5, 10, 17, 24], defense: [4, 9, 16, 23] },
+    ring: { damage: [4, 9, 15, 22], defense: [5, 11, 18, 26] },
+  };
+  const slotCaps = caps[slot] || caps.ring;
+  return {
+    damage: slotCaps.damage[qualityIndex] + upgrade * (slot === "weapon" ? 3 : 2),
+    defense: slotCaps.defense[qualityIndex] + upgrade * (["chest", "pants", "boots", "offhand"].includes(slot) ? 4 : 2),
+  };
 }
 
 function migrateEquipmentSlots(loaded) {
@@ -192,9 +235,9 @@ function totalStats() {
   const itemDefense = equipped.reduce((sum, [id, item]) => sum + Math.floor(item.defense * itemDurabilityFactor(id)), 0);
   const setStats = activeSetBonusStats();
   return {
-    damage: Math.floor(8 + state.level * 3 + itemDamage + setStats.damage),
-    defense: Math.floor(3 + state.level * 2 + itemDefense + setStats.defense),
-    maxHp: 92 + state.level * 8 + setStats.maxHp,
+    damage: Math.floor(7 + state.level * 2.25 + itemDamage + setStats.damage),
+    defense: Math.floor(2 + state.level * 1.45 + itemDefense + setStats.defense),
+    maxHp: Math.floor(90 + state.level * 6.5 + setStats.maxHp),
   };
 }
 
@@ -237,7 +280,7 @@ function setItemDurability(itemId, value) {
 function itemDurabilityFactor(itemId) {
   const durability = itemDurability(itemId);
   if (durability <= 0) return 0;
-  return 0.55 + durability * 0.0045;
+  return 0.42 + durability * 0.0058;
 }
 
 function equippedDurabilityAverage() {
@@ -276,7 +319,7 @@ function damageEquippedItems(enemy, extraLoss = 0) {
     const itemId = state.equipment[slot];
     const item = getItem(itemId);
     if (!item) return;
-    const baseLoss = random(1, enemy.elite ? 5 : 3) + extraLoss;
+    const baseLoss = random(2, enemy.elite ? 8 : 5) + extraLoss;
     const loss = Math.max(1, Math.ceil(baseLoss * slotWearMultiplier(slot)));
     const nextDurability = itemDurability(itemId) - loss;
     setItemDurability(itemId, nextDurability);
@@ -346,11 +389,11 @@ async function fight() {
 
   while (playerHp > 0 && enemyHp > 0 && rounds < 80) {
     rounds += 1;
-    const playerHit = Math.max(1, random(stats.damage - 3, stats.damage + 5) - enemy.defense);
+    const playerHit = Math.max(1, random(stats.damage - 4, stats.damage + 3) - Math.floor(enemy.defense * 1.08));
     enemyHp -= playerHit;
     events.push({ actor: "hero", damage: playerHit, enemyHp: Math.max(0, enemyHp), playerHp: Math.max(0, playerHp) });
     if (enemyHp <= 0) break;
-    const enemyHit = Math.max(1, random(enemy.damage[0], enemy.damage[1]) - Math.floor(stats.defense * 0.55));
+    const enemyHit = Math.max(1, random(enemy.damage[0], enemy.damage[1]) - Math.floor(stats.defense * 0.42));
     playerHp -= enemyHit;
     events.push({ actor: "enemy", damage: enemyHit, enemyHp: Math.max(0, enemyHp), playerHp: Math.max(0, playerHp) });
   }
@@ -379,8 +422,8 @@ async function fight() {
       refreshQuestBoard(false);
       log(`Sieg gegen ${enemy.name} nach ${rounds} Runden. +${enemy.xp} XP, +${gold} Gold.`, "good");
     } else {
-      const xpLoss = Math.min(state.xp, Math.ceil(xpForLevel(state.level) * 0.06));
-      const goldLoss = Math.min(state.gold, Math.ceil(10 + state.level * 4));
+      const xpLoss = Math.min(state.xp, Math.ceil(xpForLevel(state.level) * 0.1));
+      const goldLoss = Math.min(state.gold, Math.ceil(14 + state.level * 6));
       state.xp -= xpLoss;
       state.gold -= goldLoss;
       state.deaths += 1;
@@ -473,12 +516,12 @@ function createEliteEnemy(base, enemyId) {
     baseId: enemyId,
     name: `Elite-${base.name}`,
     level: base.level + 2,
-    hp: Math.ceil(base.hp * 1.55),
-    damage: [Math.ceil(base.damage[0] * 1.32), Math.ceil(base.damage[1] * 1.36)],
-    defense: Math.ceil(base.defense * 1.45 + 2),
-    xp: Math.ceil(base.xp * 2.15),
-    gold: [Math.ceil(base.gold[0] * 1.8), Math.ceil(base.gold[1] * 2.25)],
-    drops: base.drops.map((drop) => ({ ...drop, chance: Math.min(0.22, drop.chance * 1.85) })),
+    hp: Math.ceil(base.hp * 1.72),
+    damage: [Math.ceil(base.damage[0] * 1.42), Math.ceil(base.damage[1] * 1.5)],
+    defense: Math.ceil(base.defense * 1.65 + 3),
+    xp: Math.ceil(base.xp * 1.65),
+    gold: [Math.ceil(base.gold[0] * 1.35), Math.ceil(base.gold[1] * 1.65)],
+    drops: base.drops.map((drop) => ({ ...drop, chance: Math.min(0.12, drop.chance * 1.45) })),
     elite: true,
     eliteVariant: true,
     tags: { ...base.tags, elite: 1 },
@@ -512,7 +555,7 @@ function updateQuestProgress(enemy) {
 }
 
 function maybeDropRareQuest(enemy) {
-  const chance = enemy.elite ? 0.055 : enemy.tags.dungeon ? 0.035 : 0.018;
+  const chance = enemy.elite ? 0.035 : enemy.tags.dungeon ? 0.022 : 0.012;
   if (Math.random() > chance) return;
 
   const template = pickRareQuestTemplate(enemy);
@@ -573,8 +616,8 @@ function getQuestById(questId) {
 function createQuestRewardItem(quest) {
   const quality = quest.rare ? "legendary" : "epic";
   const slot = quest.slot || lootSlots[random(0, lootSlots.length - 1)];
-  const base = Math.max(6, Math.floor(quest.rewardXp / 80) + state.level);
-  const power = qualityPower[quality];
+  const base = Math.max(5, Math.floor(quest.rewardXp / 115) + Math.floor(state.level * 0.7));
+  const power = qualityPower[quality] * 0.92;
   const namePool = lootNames[slot][quality];
   const stats = rollSlotStats(slot, base, power);
 
@@ -641,7 +684,7 @@ function advanceLootQueue() {
 function generateLootItem(enemy, enemyId) {
   const slot = lootSlots[random(0, lootSlots.length - 1)];
   const quality = rollQuality(enemy);
-  const base = Math.max(1, enemy.level + random(-1, 2));
+  const base = Math.max(1, Math.floor(enemy.level * 0.82) + random(-2, 1));
   const power = qualityPower[quality];
   const namePool = lootNames[slot][quality];
   const id = `loot-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -663,13 +706,13 @@ function generateLootItem(enemy, enemyId) {
 
 function rollSlotStats(slot, base, power) {
   const profiles = {
-    weapon: [1.65, 0],
-    offhand: [0.55, 1.05],
-    chest: [0, 1.85],
-    pants: [0.15, 1.25],
-    boots: [0.25, 0.85],
-    necklace: [0.75, 0.45],
-    ring: [0.55, 0.65],
+    weapon: [1.35, 0],
+    offhand: [0.4, 0.85],
+    chest: [0, 1.45],
+    pants: [0.1, 0.98],
+    boots: [0.18, 0.72],
+    necklace: [0.6, 0.35],
+    ring: [0.42, 0.5],
   };
   const [damageScale, defenseScale] = profiles[slot] || profiles.ring;
   return {
@@ -679,7 +722,7 @@ function rollSlotStats(slot, base, power) {
 }
 
 function rollItemSet(enemy, quality) {
-  const chance = quality === "legendary" ? 0.75 : quality === "epic" ? 0.45 : quality === "rare" ? 0.22 : 0.05;
+  const chance = quality === "legendary" ? 0.55 : quality === "epic" ? 0.3 : quality === "rare" ? 0.12 : 0.02;
   if (Math.random() > chance) return null;
   if (enemy.tags?.wolf || enemy.tags?.beast) return "wolf";
   if (enemy.tags?.bandit || enemy.tags?.rust || enemy.name?.includes("Ritter")) return "iron";
@@ -748,13 +791,13 @@ function lootDiscoveryKey(item) {
 
 function rollQuality(enemy) {
   const roll = Math.random();
-  const eliteBonus = enemy.elite ? 0.04 : 0;
-  const dungeonBonus = enemy.tags.dungeon ? 0.025 : 0;
-  const bonus = eliteBonus + dungeonBonus + Math.min(0.04, enemy.level * 0.002);
+  const eliteBonus = enemy.elite ? 0.025 : 0;
+  const dungeonBonus = enemy.tags.dungeon ? 0.015 : 0;
+  const bonus = eliteBonus + dungeonBonus + Math.min(0.025, enemy.level * 0.0013);
 
-  if (roll > 0.992 - bonus) return "legendary";
-  if (roll > 0.94 - bonus) return "epic";
-  if (roll > 0.72 - bonus) return "rare";
+  if (roll > 0.996 - bonus) return "legendary";
+  if (roll > 0.965 - bonus) return "epic";
+  if (roll > 0.82 - bonus) return "rare";
   return "common";
 }
 
@@ -831,19 +874,19 @@ function sellAllInventoryItems() {
 
 function sellValue(item) {
   const qualityValue = {
-    common: 6,
-    rare: 18,
-    epic: 45,
-    legendary: 120,
+    common: 4,
+    rare: 12,
+    epic: 30,
+    legendary: 82,
   };
-  return Math.max(2, Math.floor(qualityValue[item.quality] + itemScore(item) * 2.2));
+  return Math.max(2, Math.floor(qualityValue[item.quality] + itemScore(item) * 1.45));
 }
 
 function grantMaterials(enemyId, eliteBonus = false) {
   const drops = materialDrops[enemyId] || [];
   const gained = [];
   drops.forEach((drop) => {
-    const amount = random(drop.min, drop.max) + (eliteBonus ? 1 : 0);
+    const amount = Math.max(0, random(drop.min, drop.max) + (eliteBonus && Math.random() < 0.65 ? 1 : 0) - (Math.random() < 0.22 ? 1 : 0));
     if (amount <= 0) return;
     state.materials[drop.id] = (state.materials[drop.id] || 0) + amount;
     gained.push(`${amount} ${materialLabel[drop.id]}`);
@@ -855,14 +898,14 @@ function grantMaterials(enemyId, eliteBonus = false) {
 
 function upgradeCost(item) {
   const level = item.upgrade || 0;
-  const qualityMultiplier = { common: 1, rare: 2, epic: 3, legendary: 5 }[item.quality];
+  const qualityMultiplier = { common: 1, rare: 2.4, epic: 4, legendary: 7 }[item.quality];
   const slotMaterial = primaryMaterialForSlot(item.slot);
   return {
-    gold: Math.floor(18 * qualityMultiplier * (level + 1)),
+    gold: Math.floor(28 * qualityMultiplier * Math.pow(level + 1, 1.18)),
     materials: {
-      [slotMaterial]: 2 + level * qualityMultiplier,
-      hide: ["chest", "pants", "boots"].includes(item.slot) ? 1 + level : 0,
-      shard: item.quality === "legendary" ? 1 + level : 0,
+      [slotMaterial]: Math.ceil(3 + level * qualityMultiplier),
+      hide: ["chest", "pants", "boots"].includes(item.slot) ? 2 + level : 0,
+      shard: ["epic", "legendary"].includes(item.quality) ? 1 + level : 0,
     },
   };
 }
@@ -874,7 +917,7 @@ function primaryMaterialForSlot(slot) {
 }
 
 function canUpgrade(item) {
-  if ((item.upgrade || 0) >= 5) return false;
+  if ((item.upgrade || 0) >= 4) return false;
   const cost = upgradeCost(item);
   return state.gold >= cost.gold && Object.entries(cost.materials).every(([id, amount]) => (state.materials[id] || 0) >= amount);
 }
@@ -891,16 +934,16 @@ function upgradeEquipped(slot) {
     state.materials[id] -= amount;
   });
   const upgraded = { ...item, upgrade: (item.upgrade || 0) + 1 };
-  if (slot === "weapon") upgraded.damage += 2 + Math.ceil(upgraded.upgrade / 2);
+  if (slot === "weapon") upgraded.damage += 2;
   if (slot === "offhand") {
-    upgraded.damage += 1 + Math.floor(upgraded.upgrade / 2);
-    upgraded.defense += 2 + upgraded.upgrade;
+    upgraded.damage += 1;
+    upgraded.defense += 2;
   }
-  if (slot === "chest") upgraded.defense += 3 + upgraded.upgrade;
-  if (slot === "pants" || slot === "boots") upgraded.defense += 2 + upgraded.upgrade;
+  if (slot === "chest") upgraded.defense += 3;
+  if (slot === "pants" || slot === "boots") upgraded.defense += 2;
   if (slot === "necklace" || slot === "ring") {
-    upgraded.damage += 1 + Math.floor(upgraded.upgrade / 2);
-    upgraded.defense += 1 + Math.ceil(upgraded.upgrade / 2);
+    upgraded.damage += 1;
+    upgraded.defense += 1;
   }
   upgraded.name = item.name.replace(/\s\+\d+$/, "") + ` +${upgraded.upgrade}`;
   state.customItems[upgraded.id] = upgraded;
@@ -910,7 +953,7 @@ function upgradeEquipped(slot) {
 }
 
 function salvageValue(item) {
-  const qualityAmount = { common: 1, rare: 3, epic: 6, legendary: 10 }[item.quality];
+  const qualityAmount = { common: 1, rare: 2, epic: 4, legendary: 7 }[item.quality];
   const upgradeBonus = item.upgrade || 0;
   const result = {};
   if (item.slot === "weapon" || item.slot === "offhand") {
@@ -1007,7 +1050,7 @@ function riskFor(enemy) {
 }
 
 function restCost() {
-  return Math.min(state.gold, Math.max(4, Math.floor(state.level * 3)));
+  return Math.min(state.gold, Math.max(8, Math.floor(6 + state.level * 4.2)));
 }
 
 function repairCost() {
@@ -1020,8 +1063,8 @@ function repairCostForSlot(slot) {
   if (!item) return 0;
   const missing = 100 - itemDurability(itemId);
   if (!missing) return 0;
-  const qualityMultiplier = { common: 1, rare: 1.6, epic: 2.35, legendary: 3.4 }[item.quality] || 1;
-  const upgradeMultiplier = 1 + (item.upgrade || 0) * 0.18;
-  return Math.ceil(missing * repairSlotMultiplier(slot) * qualityMultiplier * upgradeMultiplier * (0.6 + state.level * 0.035));
+  const qualityMultiplier = { common: 1.1, rare: 2, epic: 3.1, legendary: 4.8 }[item.quality] || 1;
+  const upgradeMultiplier = 1 + (item.upgrade || 0) * 0.32;
+  return Math.ceil(missing * repairSlotMultiplier(slot) * qualityMultiplier * upgradeMultiplier * (0.78 + state.level * 0.045));
 }
 
