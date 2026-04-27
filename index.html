@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fantasy Grind</title>
+    <link rel="stylesheet" href="css/base.css?v=split-1" />
+    <link rel="stylesheet" href="css/modals.css?v=split-1" />
+    <link rel="stylesheet" href="css/responsive.css?v=split-1" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar" aria-label="Spielstatus">
+        <div>
+          <p class="eyebrow">Fantasy Grind</p>
+          <h1>Grauwacht</h1>
+        </div>
+        <div class="status-grid">
+          <div><span>Level</span><strong id="level">1</strong></div>
+          <div><span>Gold</span><strong id="gold">0</strong></div>
+          <div><span>Ruhm</span><strong id="renown">0</strong></div>
+          <div><span>Tode</span><strong id="deaths">0</strong></div>
+        </div>
+        <button class="book-button" id="openBestiaryBtn" type="button" aria-label="Bestiarium öffnen">
+          <span>Bestiarium</span>
+        </button>
+        <button class="book-button quest-board-button" id="openQuestBoardBtn" type="button" aria-label="Quest-Tafel öffnen">
+          <span>Quest-Tafel</span>
+        </button>
+        <button class="book-button backpack-button" id="openInventoryBtn" type="button" aria-label="Rucksack öffnen">
+          <span>Rucksack</span>
+        </button>
+        <button class="book-button smith-button" id="openSmithBtn" type="button" aria-label="Schmied öffnen">
+          <span>Schmied</span>
+        </button>
+      </section>
+
+      <section class="game-layout">
+        <aside class="panel character-panel" aria-label="Charakter">
+          <div class="portrait">
+            <svg viewBox="0 0 160 160" role="img" aria-label="Kriegerporträt">
+              <defs>
+                <linearGradient id="steel" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0" stop-color="#d8dee9" />
+                  <stop offset="1" stop-color="#6f7d8f" />
+                </linearGradient>
+              </defs>
+              <circle cx="80" cy="80" r="70" fill="#1b2632" />
+              <path d="M37 92c8-25 23-40 43-40s35 15 43 40l-13 45H50z" fill="#415064" />
+              <path d="M48 61c8-28 56-28 64 0l-8 34H56z" fill="url(#steel)" />
+              <path d="M59 80h42v18H59z" fill="#101820" />
+              <path d="M63 86h12M86 86h12" stroke="#f1c96b" stroke-width="5" stroke-linecap="round" />
+              <path d="M38 134h84l-14-36H52z" fill="#8a2f2f" />
+              <path d="M80 28v24M57 42l13 12M103 42 90 54" stroke="#d4af37" stroke-width="6" stroke-linecap="round" />
+            </svg>
+          </div>
+          <h2>Krieger</h2>
+          <div class="bar-block">
+            <div class="bar-label"><span>Leben</span><b id="hpText"></b></div>
+            <div class="bar"><span id="hpBar"></span></div>
+          </div>
+          <div class="bar-block">
+            <div class="bar-label"><span>XP</span><b id="xpText"></b></div>
+            <div class="bar xp"><span id="xpBar"></span></div>
+          </div>
+          <div class="stats" id="stats"></div>
+          <div class="actions">
+            <button id="restBtn" type="button">Rasten</button>
+            <button id="repairBtn" type="button">Reparieren</button>
+          </div>
+        </aside>
+
+        <section class="panel world-panel" aria-label="Welt und Kampf">
+          <div class="map">
+            <button class="zone active" type="button" data-zone="meadow">
+              <span>Startzone</span>
+              <small>Level 1-15</small>
+            </button>
+            <button class="zone" type="button" data-zone="dungeon">
+              <span>Dungeon</span>
+              <small>Level 10-20</small>
+            </button>
+          </div>
+          <div class="battle-stage" id="battleStage" aria-label="Kampfanimation">
+            <div class="combatant hero-sprite" id="heroSprite">
+              <div class="sprite-shadow"></div>
+              <div class="hero-body">
+                <span class="hero-helm"></span>
+                <span class="hero-shield"></span>
+                <span class="hero-sword"></span>
+              </div>
+              <b>Krieger</b>
+            </div>
+            <div class="battle-center">
+              <span class="slash" id="slashFx"></span>
+              <span class="impact" id="impactFx"></span>
+              <strong id="battleText">Bereit</strong>
+            </div>
+            <div class="combatant enemy-sprite enemy-wolf" id="enemySprite">
+              <div class="sprite-shadow"></div>
+              <div class="enemy-body">
+                <span class="enemy-extra enemy-extra-a"></span>
+                <span class="enemy-extra enemy-extra-b"></span>
+                <span class="enemy-eye"></span>
+              </div>
+              <b id="enemySpriteName">Waldwolf</b>
+            </div>
+          </div>
+          <div class="enemy-list" id="enemyList"></div>
+          <div class="combat-card">
+            <div>
+              <p class="eyebrow">Ziel</p>
+              <h2 id="selectedEnemyName">Waldwolf</h2>
+              <p id="selectedEnemyMeta"></p>
+            </div>
+            <button class="primary" id="fightBtn" type="button">Kampf starten</button>
+          </div>
+        </section>
+
+        <aside class="panel side-panel" aria-label="Ausrüstung und Quests">
+          <section>
+            <h2>Ausrüstung</h2>
+            <div class="equipment" id="equipment"></div>
+          </section>
+          <section>
+            <h2>Quests</h2>
+            <div class="quests" id="quests"></div>
+          </section>
+        </aside>
+      </section>
+
+      <section class="panel log-panel collapsed" id="logPanel" aria-label="Kampfprotokoll">
+        <div class="log-head">
+          <div>
+            <h2>Protokoll</h2>
+            <p id="logPreview" class="log-preview">Noch keine Einträge.</p>
+          </div>
+          <div class="log-actions">
+            <button id="toggleLogBtn" type="button" aria-expanded="false">Verlauf öffnen</button>
+            <button id="resetBtn" type="button">Neuer Spielstand</button>
+          </div>
+        </div>
+        <div id="log" class="log"></div>
+      </section>
+    </main>
+    <div class="modal-overlay" id="lootModal" aria-hidden="true">
+      <div class="modal-window loot-window" role="dialog" aria-modal="true" aria-labelledby="lootTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow">Beute erhalten</p>
+            <h2 id="lootTitle">Wähle ein Item</h2>
+          </div>
+          <span id="lootCounter">1 von 3</span>
+        </div>
+        <div class="loot-choices" id="lootChoices"></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="bestiaryModal" aria-hidden="true">
+      <div class="modal-window bestiary-window" role="dialog" aria-modal="true" aria-labelledby="bestiaryTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow">Buch der Gegner</p>
+            <h2 id="bestiaryTitle">Bestiarium</h2>
+          </div>
+          <button class="modal-close" id="closeBestiaryBtn" type="button" aria-label="Bestiarium schließen">Schließen</button>
+        </div>
+        <div class="bestiary" id="bestiary"></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="questBoardModal" aria-hidden="true">
+      <div class="modal-window quest-board-window" role="dialog" aria-modal="true" aria-labelledby="questBoardTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow">Aufträge der Grauwacht</p>
+            <h2 id="questBoardTitle">Quest-Tafel</h2>
+          </div>
+          <button class="modal-close" id="closeQuestBoardBtn" type="button" aria-label="Quest-Tafel schließen">Schließen</button>
+        </div>
+        <div class="quest-board" id="questBoard"></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="inventoryModal" aria-hidden="true">
+      <div class="modal-window inventory-window" role="dialog" aria-modal="true" aria-labelledby="inventoryTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow">Rucksack</p>
+            <h2 id="inventoryTitle">Inventar</h2>
+          </div>
+          <button class="modal-close" id="closeInventoryBtn" type="button" aria-label="Rucksack schließen">Schließen</button>
+        </div>
+        <div class="inventory-summary">
+          <div id="inventorySummary"></div>
+          <button class="bulk-action sell-button" id="sellAllBtn" type="button">Alles verkaufen</button>
+        </div>
+        <div class="inventory" id="inventory"></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="smithModal" aria-hidden="true">
+      <div class="modal-window smith-window" role="dialog" aria-modal="true" aria-labelledby="smithTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow">Amboss der Grauwacht</p>
+            <h2 id="smithTitle">Schmied</h2>
+          </div>
+          <button class="modal-close" id="closeSmithBtn" type="button" aria-label="Schmied schließen">Schließen</button>
+        </div>
+        <div class="materials" id="materials"></div>
+        <div class="smith-grid" id="smithGrid"></div>
+        <section class="salvage-section">
+          <div class="section-title">
+            <h3>Items zerlegen</h3>
+            <button class="bulk-action" id="salvageAllBtn" type="button">Alles zerlegen</button>
+          </div>
+          <div class="salvage-list" id="salvageList"></div>
+        </section>
+      </div>
+    </div>
+    <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
+    <script src="scripts/data.js?v=split-2"></script>
+    <script src="scripts/core.js?v=split-2"></script>
+    <script src="scripts/render.js?v=split-2"></script>
+    <script src="scripts/events.js?v=split-2"></script>
+  </body>
+</html>
