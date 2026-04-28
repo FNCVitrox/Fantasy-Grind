@@ -1104,6 +1104,10 @@ function salvageAllInventoryItems() {
 
 function rest() {
   const cost = restCost();
+  if (state.gold < cost) {
+    log(`Für eine Rast fehlen ${cost - state.gold} Gold.`, "bad");
+    return;
+  }
   state.gold -= cost;
   syncDerivedStats();
   state.hp = state.maxHp;
@@ -1162,7 +1166,7 @@ function riskFor(enemy) {
 }
 
 function restCost() {
-  return Math.min(state.gold, Math.max(8, Math.floor(6 + state.level * 4.2)));
+  return Math.max(8, Math.floor(6 + state.level * 4.2));
 }
 
 function repairCost() {

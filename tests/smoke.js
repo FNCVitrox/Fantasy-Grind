@@ -82,5 +82,6 @@ vm.runInContext("state.gold = 123; save();", context);
 assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1"]).gold, 123);
 assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1-backup"]).gold, 123);
 assert(vm.runInContext("exportSaveData().includes('Fantasy Grind')", context));
+assert(vm.runInContext("state.gold = 0; restCost()", context) > 0);
 
 console.log("Smoke test passed");

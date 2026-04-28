@@ -14,7 +14,9 @@
     ["Verteidigung", stats.defense],
     ["Haltbarkeit", `${equippedDurabilityAverage()}%`],
   ].map(([label, value]) => `<div class="stat"><span>${label}</span><strong>${value}</strong></div>`).join("");
-  $("restBtn").innerHTML = `<span class="button-main">Rasten</span><span class="button-price">${restCost()} Gold</span>`;
+  const currentRestCost = restCost();
+  $("restBtn").innerHTML = `<span class="button-main">Rasten</span><span class="button-price">${currentRestCost} Gold</span>`;
+  $("restBtn").disabled = state.gold < currentRestCost;
   $("repairBtn").innerHTML = `<span class="button-main">Reparieren</span><span class="button-price">${repairCost()} Gold</span>`;
 
   renderMap();
@@ -171,6 +173,10 @@ function renderSmith() {
       <button type="button" data-smith-view="salvage">
         <strong>Zerlegen</strong>
         <span>Alte Items in Schmiedematerialien zerlegen.</span>
+      </button>
+      <button type="button" data-open-repair>
+        <strong>Reparieren</strong>
+        <span>Ausrüstung beim Schmied für Gold instand setzen.</span>
       </button>
     </div>
   `;

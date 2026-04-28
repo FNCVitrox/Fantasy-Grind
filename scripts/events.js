@@ -189,6 +189,11 @@ $("smithGrid").addEventListener("click", (event) => {
 });
 
 $("smithHome").addEventListener("click", (event) => {
+  if (event.target.closest("[data-open-repair]")) {
+    renderRepairModal();
+    openModal("repairModal");
+    return;
+  }
   const button = event.target.closest("[data-smith-view]");
   if (!button) return;
   smithView = button.dataset.smithView;
