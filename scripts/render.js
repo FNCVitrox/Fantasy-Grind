@@ -111,7 +111,7 @@ function renderEquipment() {
     const durability = itemDurability(id);
     const repairCost = repairCostForSlot(slot);
     const quality = itemQuality(item);
-    return `<button class="equipment-chip rarity-card rarity-${quality}" type="button" data-open-equipment>
+    return `<button class="equipment-chip item-hover-row rarity-card rarity-${quality}" type="button" data-open-equipment data-tooltip-key="${cacheTooltipItem(item)}">
       <strong>${labelFor(slotLabel, slot)}</strong>
       <span class="quality-${quality}">${escapeHtml(item.name)}</span>
       <small>${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</small>
@@ -752,11 +752,19 @@ function renderItemTooltip(item) {
   const slot = itemSlot(item);
   const current = getItem(state.equipment[slot]) || { name: "Nichts", damage: 0, defense: 0 };
   const compare = compareLoot(item, current);
+  const equippedId = state.equipment[slot];
+  const isEquipped = equippedId && getItem(equippedId) === item;
+  const durabilityLine = isEquipped ? `<span>Haltbarkeit: ${itemDurability(equippedId)}%</span>` : "";
+  const repairLine = isEquipped ? `<span>Reparatur: ${repairCostForSlot(slot)} Gold</span>` : "";
+  const upgradeLine = item.upgrade ? `<span>Verbesserung: +${item.upgrade}</span>` : "";
   return `<div class="item-tooltip">
     <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
     <span>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)}</span>
     ${item.set ? `<span>Set: ${escapeHtml(setBonuses[item.set]?.name || item.set)}</span>` : ""}
+    ${upgradeLine}
     <span>Schaden: ${item.damage} · Verteidigung: ${item.defense}</span>
+    ${durabilityLine}
+    ${repairLine}
     <span>Aktuell: ${escapeHtml(current.name)}</span>
     <span class="${compare.powerClass}">${compare.powerText}</span>
     <span class="${compare.damageClass}">${compare.damageText}</span>

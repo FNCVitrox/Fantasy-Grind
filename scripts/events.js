@@ -164,6 +164,25 @@ $("equipment").addEventListener("click", (event) => {
   openModal("equipmentModal");
 });
 
+$("equipment").addEventListener("mouseover", (event) => {
+  const row = event.target.closest(".item-hover-row");
+  if (!row || row.contains(event.relatedTarget)) return;
+  showFloatingTooltip(row);
+  positionFloatingTooltip(event);
+});
+
+$("equipment").addEventListener("mousemove", (event) => {
+  if (event.target.closest(".item-hover-row")) {
+    positionFloatingTooltip(event);
+  }
+});
+
+$("equipment").addEventListener("mouseout", (event) => {
+  const row = event.target.closest(".item-hover-row");
+  if (!row || row.contains(event.relatedTarget)) return;
+  hideFloatingTooltip();
+});
+
 $("smithGrid").addEventListener("click", (event) => {
   const button = event.target.closest("[data-upgrade]");
   if (button) upgradeEquipped(button.dataset.upgrade);
