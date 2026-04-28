@@ -680,7 +680,7 @@ h2 {
 }
 
 .smith-window {
-  width: min(1640px, calc(100vw - 24px));
+  width: calc(100vw - 12px);
   max-height: calc(100vh - 24px);
   padding: 12px;
 }
@@ -691,7 +691,7 @@ h2 {
 
 .materials {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 6px;
   margin-bottom: 8px;
 }
@@ -798,26 +798,26 @@ h2 {
 
 .smith-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(4, minmax(260px, 1fr));
+  gap: 10px;
   align-items: stretch;
 }
 
 .smith-card {
   display: grid;
-  grid-template-rows: 42px 34px 58px 22px 22px minmax(28px, auto) 34px;
-  gap: 5px;
+  grid-template-rows: 34px 28px 50px 20px 20px minmax(24px, auto) 32px;
+  gap: 4px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #0c1723;
   padding: 8px;
-  min-height: 258px;
+  min-height: 224px;
 }
 
 .smith-card > strong {
   min-height: 0;
   line-height: 1.2;
-  font-size: 14px;
+  font-size: 15px;
   overflow: hidden;
 }
 
@@ -829,7 +829,7 @@ h2 {
 }
 
 .smith-card .smith-material-cost {
-  min-height: 28px;
+  min-height: 24px;
 }
 
 .upgrade-preview {
@@ -841,7 +841,7 @@ h2 {
   background: rgba(63, 214, 163, 0.07);
   color: var(--muted);
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
-  min-height: 58px;
+  min-height: 50px;
   align-content: center;
 }
 
@@ -854,7 +854,7 @@ h2 {
 
 .upgrade-preview strong {
   color: var(--text);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
