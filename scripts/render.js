@@ -206,7 +206,7 @@ function renderSmith() {
     const maxed = (item.upgrade || 0) >= 4;
     return `<div class="smith-card rarity-card rarity-${quality}">
       <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
-      <p>Stufe +${item.upgrade || 0}/4 · +${item.damage} Schaden · +${item.defense} Verteidigung</p>
+      <p>Stufe +${item.upgrade || 0}/4 · Dmg ${item.damage} · Def ${item.defense}</p>
       <div class="upgrade-preview">
         <span>Nach Upgrade</span>
         <strong>+${preview.upgrade}/4 · Dmg ${preview.damage}${damageGain ? ` <b>+${damageGain}</b>` : ""} · Def ${preview.defense}${defenseGain ? ` <b>+${defenseGain}</b>` : ""}</strong>

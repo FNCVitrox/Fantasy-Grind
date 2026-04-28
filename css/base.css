@@ -680,15 +680,20 @@ h2 {
 }
 
 .smith-window {
-  width: min(1540px, calc(100vw - 56px));
-  max-height: calc(100vh - 36px);
+  width: min(1640px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  padding: 12px;
+}
+
+.smith-window .modal-window-head {
+  margin-bottom: 8px;
 }
 
 .materials {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 10px;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
 .smith-home {
@@ -764,10 +769,10 @@ h2 {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #0c1723;
-  min-height: 44px;
-  padding: 7px 10px;
+  min-height: 36px;
+  padding: 6px 8px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.15;
 }
 
@@ -793,48 +798,50 @@ h2 {
 
 .smith-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
   align-items: stretch;
 }
 
 .smith-card {
   display: grid;
-  grid-template-rows: auto auto auto auto auto minmax(34px, auto) 34px;
-  gap: 7px;
+  grid-template-rows: 42px 34px 58px 22px 22px minmax(28px, auto) 34px;
+  gap: 5px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #0c1723;
-  padding: 10px;
-  min-height: 314px;
+  padding: 8px;
+  min-height: 258px;
 }
 
 .smith-card > strong {
-  min-height: 48px;
+  min-height: 0;
   line-height: 1.2;
+  font-size: 14px;
+  overflow: hidden;
 }
 
 .smith-card p {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.25;
 }
 
 .smith-card .smith-material-cost {
-  min-height: 34px;
+  min-height: 28px;
 }
 
 .upgrade-preview {
   display: grid;
   gap: 2px;
-  padding: 7px;
+  padding: 6px;
   border: 1px solid rgba(63, 214, 163, 0.22);
   border-radius: 8px;
   background: rgba(63, 214, 163, 0.07);
   color: var(--muted);
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
-  min-height: 74px;
+  min-height: 58px;
   align-content: center;
 }
 
@@ -847,7 +854,7 @@ h2 {
 
 .upgrade-preview strong {
   color: var(--text);
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
