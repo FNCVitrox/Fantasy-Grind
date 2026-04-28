@@ -209,11 +209,11 @@ function renderSmith() {
       <p>Stufe +${item.upgrade || 0}/4 · +${item.damage} Schaden · +${item.defense} Verteidigung</p>
       <div class="upgrade-preview">
         <span>Nach Upgrade</span>
-        <strong>+${preview.upgrade}/4 · ${preview.damage} Schaden${damageGain ? ` <b>+${damageGain}</b>` : ""} · ${preview.defense} Verteidigung${defenseGain ? ` <b>+${defenseGain}</b>` : ""}</strong>
+        <strong>+${preview.upgrade}/4 · Dmg ${preview.damage}${damageGain ? ` <b>+${damageGain}</b>` : ""} · Def ${preview.defense}${defenseGain ? ` <b>+${defenseGain}</b>` : ""}</strong>
       </div>
       <p>Haltbarkeit: ${itemDurability(itemId)}%</p>
       <p>Kosten: ${cost.gold} Gold</p>
-      <p>${materialText}</p>
+      <p class="smith-material-cost">${materialText}</p>
       <button type="button" data-upgrade="${slot}" ${!canUpgrade(item) || maxed ? "disabled" : ""}>${maxed ? "Maximal" : "Verbessern"}</button>
     </div>`;
   }).join("");

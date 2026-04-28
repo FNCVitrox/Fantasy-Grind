@@ -686,8 +686,8 @@ h2 {
 
 .materials {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
   margin-bottom: 10px;
 }
 
@@ -757,21 +757,31 @@ h2 {
 }
 
 .material {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #0c1723;
   min-height: 44px;
-  padding: 7px 9px;
+  padding: 7px 10px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.15;
+}
+
+.material span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .material strong {
   color: var(--gold);
+  min-width: 24px;
+  text-align: right;
 }
 
 .gold-material {
@@ -784,17 +794,24 @@ h2 {
 .smith-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 7px;
+  gap: 10px;
+  align-items: stretch;
 }
 
 .smith-card {
   display: grid;
-  gap: 6px;
+  grid-template-rows: auto auto auto auto auto minmax(34px, auto) 34px;
+  gap: 7px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #0c1723;
   padding: 10px;
-  align-content: start;
+  min-height: 314px;
+}
+
+.smith-card > strong {
+  min-height: 48px;
+  line-height: 1.2;
 }
 
 .smith-card p {
@@ -802,6 +819,10 @@ h2 {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.25;
+}
+
+.smith-card .smith-material-cost {
+  min-height: 34px;
 }
 
 .upgrade-preview {
@@ -813,6 +834,8 @@ h2 {
   background: rgba(63, 214, 163, 0.07);
   color: var(--muted);
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  min-height: 74px;
+  align-content: center;
 }
 
 .upgrade-preview span {
@@ -826,6 +849,7 @@ h2 {
   color: var(--text);
   font-size: 12px;
   line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .upgrade-preview b {

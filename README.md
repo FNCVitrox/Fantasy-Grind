@@ -111,6 +111,6 @@ Dadurch lässt sich das Spiel direkt im Browser starten und leicht weiterentwick
 
 ## Status
 
-Aktuelle Version: Alpha v0.6.9
+Aktuelle Version: Alpha v0.7.0
 
 Das Projekt ist noch in Entwicklung. Viele Systeme sind bereits spielbar, aber Balance, Inhalte und Komfort werden weiter ausgebaut.
