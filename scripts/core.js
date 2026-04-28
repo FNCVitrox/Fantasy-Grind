@@ -71,9 +71,34 @@ function defaultState() {
 }
 
 function load() {
+  const candidates = [
+    { key: saveKey, label: "Hauptspielstand" },
+    { key: saveBackupKey, label: "Backup" },
+    { key: savePreviousKey, label: "vorheriges Backup" },
+  ];
+
+  for (const candidate of candidates) {
+    const raw = localStorage.getItem(candidate.key);
+    if (!raw) continue;
+    const loaded = parseSavedState(raw);
+    if (!loaded) continue;
+    if (candidate.key !== saveKey) {
+      loaded.log = [
+        `Spielstand aus ${candidate.label} wiederhergestellt.`,
+        ...(loaded.log || []),
+      ].slice(0, 40);
+      const restored = JSON.stringify(loaded);
+      localStorage.setItem(saveKey, restored);
+      localStorage.setItem(saveBackupKey, restored);
+    }
+    return loaded;
+  }
+
+  return defaultState();
+}
+
+function parseSavedState(raw) {
   try {
-    const raw = localStorage.getItem(saveKey);
-    if (!raw) return defaultState();
     const parsed = normalizeSavedText(JSON.parse(raw));
     const loaded = { ...defaultState(), ...parsed };
     if (!Array.isArray(parsed.activeQuests)) {
@@ -94,7 +119,7 @@ function load() {
     applyBalanceMigration(loaded);
     return loaded;
   } catch {
-    return defaultState();
+    return null;
   }
 }
 
@@ -201,7 +226,48 @@ function normalizeItemQuality(item) {
 }
 
 function save() {
-  localStorage.setItem(saveKey, JSON.stringify(state));
+  const previous = localStorage.getItem(saveKey);
+  const next = JSON.stringify(state);
+  if (previous && previous !== next) {
+    localStorage.setItem(savePreviousKey, previous);
+  }
+  localStorage.setItem(saveKey, next);
+  localStorage.setItem(saveBackupKey, next);
+}
+
+function exportSaveData() {
+  return JSON.stringify({
+    game: "Fantasy Grind",
+    version: saveExportVersion,
+    exportedAt: new Date().toISOString(),
+    save: state,
+  }, null, 2);
+}
+
+function importSaveData(raw) {
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    log("Import fehlgeschlagen: Der Text ist kein gültiges JSON.", "bad");
+    return false;
+  }
+
+  const rawSave = parsed?.save ? JSON.stringify(parsed.save) : JSON.stringify(parsed);
+  const loaded = parseSavedState(rawSave);
+  if (!loaded) {
+    log("Import fehlgeschlagen: Der Spielstand konnte nicht gelesen werden.", "bad");
+    return false;
+  }
+
+  state = loaded;
+  state.log = [
+    "Spielstand erfolgreich importiert.",
+    ...(state.log || []),
+  ].slice(0, 40);
+  save();
+  render();
+  return true;
 }
 
 function normalizeSavedText(value) {

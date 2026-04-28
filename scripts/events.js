@@ -275,6 +275,8 @@ $("closeEquipmentBtn").addEventListener("click", closeEquipment);
 $("equipmentModal").addEventListener("click", (event) => {
   if (event.target.id === "equipmentModal") closeEquipment();
 });
+$("exportSaveBtn").addEventListener("click", exportSave);
+$("importSaveBtn").addEventListener("click", importSave);
 $("resetBtn").addEventListener("click", () => {
   if (!confirm("Spielstand wirklich löschen?")) return;
   state = defaultState();
@@ -318,6 +320,28 @@ function closeEquipment() {
   closeModal("equipmentModal");
 }
 
+function exportSave() {
+  const blob = new Blob([exportSaveData()], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const stamp = new Date().toISOString().slice(0, 10);
+  link.href = url;
+  link.download = `fantasy-grind-save-${stamp}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  log("Spielstand als Datei gesichert.", "drop");
+  save();
+  render();
+}
+
+function importSave() {
+  const raw = prompt("Füge hier den Inhalt deiner Fantasy-Grind-Sicherungsdatei ein:");
+  if (!raw) return;
+  importSaveData(raw);
+}
+
 function openModal(id) {
   $(id).classList.add("open");
   $(id).setAttribute("aria-hidden", "false");
@@ -338,6 +362,8 @@ function closeModal(id) {
 function setControlsDisabled(disabled) {
   document.querySelectorAll("button").forEach((button) => {
     if (button.id === "resetBtn") return;
+    if (button.id === "exportSaveBtn") return;
+    if (button.id === "importSaveBtn") return;
     if (button.id === "toggleLogBtn") return;
     if (button.id === "closeLogBtn") return;
     if (button.id === "closeRepairBtn") return;

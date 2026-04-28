@@ -29,11 +29,14 @@ assert.deepStrictEqual(scriptOrder, [
   "scripts/events.js",
 ]);
 
+const storage = {};
 const context = {
   console,
   localStorage: {
-    getItem: () => null,
-    setItem: () => {},
+    getItem: (key) => storage[key] || null,
+    setItem: (key, value) => {
+      storage[key] = String(value);
+    },
   },
   document: {
     getElementById: () => null,
@@ -75,5 +78,9 @@ assert(
     > vm.runInContext("itemStatCap('weapon', 'common').damage", context),
   "legendary weapon floor should be stronger than common weapon cap",
 );
+vm.runInContext("state.gold = 123; save();", context);
+assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1"]).gold, 123);
+assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1-backup"]).gold, 123);
+assert(vm.runInContext("exportSaveData().includes('Fantasy Grind')", context));
 
 console.log("Smoke test passed");
