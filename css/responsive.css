@@ -47,7 +47,7 @@
   }
 
   .smith-card {
-    grid-template-columns: minmax(220px, 1fr) minmax(210px, 0.9fr) minmax(210px, 0.9fr) minmax(132px, auto);
+    grid-template-columns: minmax(260px, 1fr) minmax(250px, 0.9fr) minmax(230px, 0.9fr) minmax(150px, auto);
   }
 }
 
