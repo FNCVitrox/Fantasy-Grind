@@ -18,7 +18,7 @@ Das Spiel ist aktuell ein spielbarer Alpha-Prototyp. Der Fokus liegt auf einem k
 - Quest-Tafel mit normalen und seltenen Quests
 - Inventar mit Ausrüsten, Verkaufen und Zerlegen
 - Schmied zum Verbessern, Zerlegen und Reparieren von Ausrüstung
-- Materialien wie Fell, Zähne, Eisenbarren und Runensplitter
+- Mehrteiliges Materialsystem mit Eisenstücken, Lederresten, Runensplittern, Set-Materialien und seltenen magischen Komponenten
 - Lokaler Spielstand im Browser mit Sicherungs- und Ladefunktion
 - Automatische Backup-Speicherung, damit Spielstände nicht so leicht verloren gehen
 
@@ -111,6 +111,6 @@ Dadurch lässt sich das Spiel direkt im Browser starten und leicht weiterentwick
 
 ## Status
 
-Aktuelle Version: Alpha v0.6.4
+Aktuelle Version: Alpha v0.6.5
 
 Das Projekt ist noch in Entwicklung. Viele Systeme sind bereits spielbar, aber Balance, Inhalte und Komfort werden weiter ausgebaut.

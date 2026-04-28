@@ -279,20 +279,31 @@ const rarityLabel = {
 };
 
 const materialLabel = {
-  hide: "Fell",
-  fang: "Zähne",
-  iron: "Eisenbarren",
+  scrap: "Eisenstücke",
+  leather: "Lederreste",
+  cloth: "Stofffetzen",
+  chain: "Kettenglieder",
+  sinew: "Bestiensehnen",
   shard: "Runensplitter",
+  moonDust: "Mondstaub",
+  oathSteel: "Eidstahl",
+  bone: "Knochenstücke",
+  shadowResin: "Schattenharz",
+  emberCore: "Glutkern",
+  wolfFang: "Rudelfang",
+  oathMark: "Eidmarke",
+  graveSeal: "Grabessiegel",
+  crownAsh: "Kronenasche",
 };
 
 const materialDrops = {
-  wolf: [{ id: "hide", min: 1, max: 2 }, { id: "fang", min: 0, max: 1 }],
-  bandit: [{ id: "iron", min: 1, max: 2 }, { id: "shard", min: 0, max: 1 }],
-  boar: [{ id: "hide", min: 2, max: 3 }, { id: "fang", min: 1, max: 2 }],
-  oldKnight: [{ id: "iron", min: 2, max: 4 }, { id: "shard", min: 1, max: 2 }],
-  ratguard: [{ id: "iron", min: 2, max: 3 }, { id: "shard", min: 0, max: 1 }],
-  boneAcolyte: [{ id: "shard", min: 1, max: 3 }, { id: "fang", min: 1, max: 2 }],
-  cryptBrute: [{ id: "iron", min: 3, max: 5 }, { id: "shard", min: 2, max: 3 }],
-  hollowChampion: [{ id: "iron", min: 5, max: 8 }, { id: "shard", min: 4, max: 6 }, { id: "fang", min: 2, max: 4 }],
+  wolf: [{ id: "leather", min: 1, max: 2 }, { id: "sinew", min: 0, max: 1 }],
+  bandit: [{ id: "scrap", min: 1, max: 2 }, { id: "cloth", min: 0, max: 1 }],
+  boar: [{ id: "leather", min: 2, max: 3 }, { id: "sinew", min: 1, max: 2 }],
+  oldKnight: [{ id: "scrap", min: 2, max: 4 }, { id: "oathSteel", min: 0, max: 1 }],
+  ratguard: [{ id: "scrap", min: 2, max: 3 }, { id: "chain", min: 0, max: 1 }],
+  boneAcolyte: [{ id: "bone", min: 1, max: 3 }, { id: "shard", min: 1, max: 2 }],
+  cryptBrute: [{ id: "chain", min: 2, max: 4 }, { id: "shadowResin", min: 0, max: 1 }],
+  hollowChampion: [{ id: "oathSteel", min: 2, max: 4 }, { id: "emberCore", min: 1, max: 2 }, { id: "crownAsh", min: 0, max: 1 }],
 };
 

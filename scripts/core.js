@@ -31,7 +31,6 @@ const eliteEncounterChance = 0.06;
 const maxBestiaryLootPerEnemy = 20;
 const generatedLootPoolSize = maxBestiaryLootPerEnemy;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 function defaultState() {
   return {
     level: 1,
@@ -57,7 +56,7 @@ function defaultState() {
     lootQueue: [],
     nextEncounters: {},
     inventory: [],
-    materials: { hide: 0, fang: 0, iron: 0, shard: 0 },
+    materials: emptyMaterials(),
     discoveredLoot: {},
     quests: { wolves: 0, rust: 0, elites: 0 },
     questBoard: ["wolves", "rust", "elites"],
@@ -97,6 +96,10 @@ function load() {
   return defaultState();
 }
 
+function emptyMaterials() {
+  return Object.fromEntries(Object.keys(materialLabel).map((id) => [id, 0]));
+}
+
 function parseSavedState(raw) {
   try {
     const parsed = normalizeSavedText(JSON.parse(raw));
@@ -112,7 +115,7 @@ function parseSavedState(raw) {
     loaded.nextEncounters = loaded.nextEncounters || {};
     migrateEquipmentSlots(loaded);
     loaded.itemDurability = loaded.itemDurability || {};
-    loaded.materials = { ...defaultState().materials, ...(loaded.materials || {}) };
+    loaded.materials = normalizeMaterials(loaded.materials);
     loaded.questBoard = Array.isArray(loaded.questBoard) ? loaded.questBoard : ["wolves", "rust", "elites"];
     loaded.rareQuests = loaded.rareQuests || {};
     loaded.winsSinceQuestRefresh = loaded.winsSinceQuestRefresh || 0;
@@ -134,6 +137,27 @@ function applyBalanceMigration(loaded) {
     "Balance überarbeitet: Item-Qualitäten sind klarer getrennt, Elite-Gegner seltener und Reparaturen günstiger.",
     ...(loaded.log || []),
   ].slice(0, 40);
+}
+
+function normalizeMaterials(materials = {}) {
+  const next = { ...emptyMaterials(), ...materials };
+  const legacyMap = {
+    hide: "leather",
+    fang: "sinew",
+    iron: "scrap",
+  };
+
+  Object.entries(legacyMap).forEach(([oldId, newId]) => {
+    if (!next[oldId]) return;
+    next[newId] = (next[newId] || 0) + next[oldId];
+    delete next[oldId];
+  });
+
+  Object.keys(next).forEach((id) => {
+    if (!materialLabel[id]) delete next[id];
+  });
+
+  return { ...emptyMaterials(), ...next };
 }
 
 function rebalanceSavedItem(item) {
@@ -1025,20 +1049,36 @@ function upgradeCost(item) {
   const level = item.upgrade || 0;
   const qualityMultiplier = { common: 1, rare: 2.4, epic: 4, legendary: 7 }[item.quality];
   const slotMaterial = primaryMaterialForSlot(item.slot);
+  const setMaterial = setMaterialForItem(item);
+  const materials = {
+    [slotMaterial]: Math.ceil(3 + level * qualityMultiplier),
+    leather: ["chest", "pants", "boots"].includes(item.slot) ? 2 + level : 0,
+    shard: ["epic", "legendary"].includes(item.quality) ? 1 + level : 0,
+  };
+  if (item.set) {
+    materials[setMaterial] = (materials[setMaterial] || 0) + 1 + Math.floor(level / 2);
+  }
   return {
     gold: Math.floor(28 * qualityMultiplier * Math.pow(level + 1, 1.18)),
-    materials: {
-      [slotMaterial]: Math.ceil(3 + level * qualityMultiplier),
-      hide: ["chest", "pants", "boots"].includes(item.slot) ? 2 + level : 0,
-      shard: ["epic", "legendary"].includes(item.quality) ? 1 + level : 0,
-    },
+    materials,
   };
 }
 
 function primaryMaterialForSlot(slot) {
-  if (slot === "weapon" || slot === "offhand") return "fang";
-  if (["chest", "pants", "boots"].includes(slot)) return "iron";
-  return "shard";
+  if (slot === "weapon" || slot === "offhand") return "scrap";
+  if (slot === "chest") return "chain";
+  if (slot === "pants") return "cloth";
+  if (slot === "boots") return "leather";
+  return "moonDust";
+}
+
+function setMaterialForItem(item) {
+  return {
+    wolf: "wolfFang",
+    iron: "oathMark",
+    crypt: "graveSeal",
+    ashen: "crownAsh",
+  }[item.set] || "shard";
 }
 
 function canUpgrade(item) {
@@ -1080,21 +1120,40 @@ function upgradeEquipped(slot) {
 function salvageValue(item) {
   const qualityAmount = { common: 1, rare: 2, epic: 4, legendary: 7 }[item.quality];
   const upgradeBonus = item.upgrade || 0;
-  const result = {};
-  if (item.slot === "weapon" || item.slot === "offhand") {
-    result.fang = qualityAmount + upgradeBonus;
-    result.iron = Math.max(1, Math.floor(qualityAmount / 2));
-  } else if (["chest", "pants", "boots"].includes(item.slot)) {
-    result.iron = qualityAmount + upgradeBonus;
-    result.hide = Math.max(1, Math.floor(qualityAmount / 2));
-  } else {
-    result.shard = qualityAmount + upgradeBonus;
-    result.fang = Math.max(1, Math.floor(qualityAmount / 3));
-  }
-  if (item.quality === "legendary") {
-    result.shard = (result.shard || 0) + 2;
-  }
-  return result;
+  const result = addMaterials({}, salvageBaseMaterials(item.slot, qualityAmount + upgradeBonus));
+  const rareAmount = { common: 0, rare: 1, epic: 2, legendary: 4 }[item.quality] || 0;
+
+  if (rareAmount) addMaterials(result, salvageRareMaterials(item, rareAmount));
+  if (item.set) addMaterials(result, { [setMaterialForItem(item)]: Math.max(1, Math.ceil(rareAmount / 2)) });
+  if (item.quality === "legendary") addMaterials(result, { emberCore: 1 });
+
+  return Object.fromEntries(Object.entries(result).filter(([, amount]) => amount > 0));
+}
+
+function addMaterials(target, source) {
+  Object.entries(source).forEach(([id, amount]) => {
+    target[id] = (target[id] || 0) + amount;
+  });
+  return target;
+}
+
+function salvageBaseMaterials(slot, amount) {
+  if (slot === "weapon") return { scrap: amount, oathSteel: Math.floor(amount / 3) };
+  if (slot === "offhand") return { scrap: amount, chain: Math.max(1, Math.floor(amount / 2)) };
+  if (slot === "chest") return { chain: amount, leather: Math.max(1, Math.floor(amount / 2)) };
+  if (slot === "pants") return { cloth: amount, leather: Math.max(1, Math.floor(amount / 2)) };
+  if (slot === "boots") return { leather: amount, sinew: Math.max(1, Math.floor(amount / 2)) };
+  if (slot === "necklace") return { moonDust: amount, shard: Math.max(1, Math.floor(amount / 2)) };
+  return { moonDust: amount, shard: Math.max(1, Math.floor(amount / 2)) };
+}
+
+function salvageRareMaterials(item, amount) {
+  if (item.set === "wolf") return { sinew: amount, wolfFang: Math.ceil(amount / 2) };
+  if (item.set === "iron") return { oathSteel: amount, oathMark: Math.ceil(amount / 2) };
+  if (item.set === "crypt") return { bone: amount, shadowResin: Math.ceil(amount / 2) };
+  if (item.set === "ashen") return { emberCore: Math.ceil(amount / 2), crownAsh: Math.ceil(amount / 2) };
+  if (["necklace", "ring"].includes(item.slot)) return { moonDust: amount, shard: Math.ceil(amount / 2) };
+  return { shard: amount };
 }
 
 function salvageInventoryItem(index) {
