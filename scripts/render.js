@@ -17,7 +17,6 @@
   const currentRestCost = restCost();
   $("restBtn").innerHTML = `<span class="button-main">Rasten</span><span class="button-price">${currentRestCost} Gold</span>`;
   $("restBtn").disabled = state.gold < currentRestCost;
-  $("repairBtn").innerHTML = `<span class="button-main">Reparieren</span><span class="button-price">${repairCost()} Gold</span>`;
 
   renderMap();
   renderEnemies();

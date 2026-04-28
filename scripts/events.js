@@ -232,10 +232,6 @@ $("fightBtn").addEventListener("click", () => {
   fight();
 });
 $("restBtn").addEventListener("click", rest);
-$("repairBtn").addEventListener("click", () => {
-  renderRepairModal();
-  openModal("repairModal");
-});
 $("sellAllBtn").addEventListener("click", sellAllInventoryItems);
 $("salvageAllBtn").addEventListener("click", salvageAllInventoryItems);
 $("openBestiaryBtn").addEventListener("click", () => {
@@ -299,8 +295,6 @@ $("closeEquipmentBtn").addEventListener("click", closeEquipment);
 $("equipmentModal").addEventListener("click", (event) => {
   if (event.target.id === "equipmentModal") closeEquipment();
 });
-$("exportSaveBtn").addEventListener("click", exportSave);
-$("importSaveBtn").addEventListener("click", importSave);
 $("exportSaveTopBtn").addEventListener("click", exportSave);
 $("importSaveTopBtn").addEventListener("click", importSave);
 $("resetBtn").addEventListener("click", () => {
@@ -388,8 +382,6 @@ function closeModal(id) {
 function setControlsDisabled(disabled) {
   document.querySelectorAll("button").forEach((button) => {
     if (button.id === "resetBtn") return;
-    if (button.id === "exportSaveBtn") return;
-    if (button.id === "importSaveBtn") return;
     if (button.id === "exportSaveTopBtn") return;
     if (button.id === "importSaveTopBtn") return;
     if (button.id === "toggleLogBtn") return;
