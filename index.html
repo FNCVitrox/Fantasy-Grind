@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=salvage-materials-1" />
-    <link rel="stylesheet" href="./css/modals.css?v=salvage-materials-1" />
-    <link rel="stylesheet" href="./css/responsive.css?v=salvage-materials-1" />
+    <link rel="stylesheet" href="./css/base.css?v=file-save-import-1" />
+    <link rel="stylesheet" href="./css/modals.css?v=file-save-import-1" />
+    <link rel="stylesheet" href="./css/responsive.css?v=file-save-import-1" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.6.5</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.6.6</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
@@ -34,6 +34,7 @@
         <button class="book-button load-button" id="importSaveTopBtn" type="button" aria-label="Spielstand laden">
           <span>Laden</span>
         </button>
+        <input id="saveFileInput" type="file" accept="application/json,.json" hidden />
       </section>
 
       <section class="game-layout">
@@ -290,10 +291,10 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=salvage-materials-1"></script>
-    <script src="./scripts/core.js?v=salvage-materials-1"></script>
-    <script src="./scripts/render.js?v=salvage-materials-1"></script>
-    <script src="./scripts/events.js?v=salvage-materials-1"></script>
+    <script src="./scripts/data.js?v=file-save-import-1"></script>
+    <script src="./scripts/core.js?v=file-save-import-1"></script>
+    <script src="./scripts/render.js?v=file-save-import-1"></script>
+    <script src="./scripts/events.js?v=file-save-import-1"></script>
   </body>
 </html>
 

@@ -297,6 +297,7 @@ $("equipmentModal").addEventListener("click", (event) => {
 });
 $("exportSaveTopBtn").addEventListener("click", exportSave);
 $("importSaveTopBtn").addEventListener("click", importSave);
+$("saveFileInput").addEventListener("change", importSaveFile);
 $("resetBtn").addEventListener("click", () => {
   if (!confirm("Spielstand wirklich löschen?")) return;
   state = defaultState();
@@ -357,9 +358,24 @@ function exportSave() {
 }
 
 function importSave() {
-  const raw = prompt("Füge hier den Inhalt deiner Fantasy-Grind-Sicherungsdatei ein:");
-  if (!raw) return;
-  importSaveData(raw);
+  const input = $("saveFileInput");
+  input.value = "";
+  input.click();
+}
+
+function importSaveFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const imported = importSaveData(String(reader.result || ""));
+    if (imported) log(`Spielstand aus ${file.name} geladen.`, "drop");
+  };
+  reader.onerror = () => {
+    log("Import fehlgeschlagen: Die Datei konnte nicht gelesen werden.", "bad");
+    render();
+  };
+  reader.readAsText(file);
 }
 
 function openModal(id) {
