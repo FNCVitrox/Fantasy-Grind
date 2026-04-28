@@ -65,5 +65,15 @@ assert.strictEqual(typeof context.renderBestiaryItemDetail, "function");
 assert.strictEqual(context.defaultState().level, 1);
 assert.strictEqual(vm.runInContext("enemies.wolf.name", context), "Waldwolf");
 assert.strictEqual(vm.runInContext("zones.meadow.enemies[0]", context), "wolf");
+assert.strictEqual(vm.runInContext("eliteEncounterChance", context), 0.06);
+assert.strictEqual(
+  vm.runInContext("normalizeRolledItemStats('weapon', 'common', { damage: 999, defense: 0 }).damage", context),
+  vm.runInContext("itemStatCap('weapon', 'common').damage", context),
+);
+assert(
+  vm.runInContext("normalizeRolledItemStats('weapon', 'legendary', { damage: 1, defense: 0 }).damage", context)
+    > vm.runInContext("itemStatCap('weapon', 'common').damage", context),
+  "legendary weapon floor should be stronger than common weapon cap",
+);
 
 console.log("Smoke test passed");

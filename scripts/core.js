@@ -26,8 +26,8 @@ const $ = (id) => {
   return elementCache.get(id);
 };
 const random = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-const balanceVersion = 2;
-const eliteEncounterChance = 0.12;
+const balanceVersion = 3;
+const eliteEncounterChance = 0.06;
 const maxBestiaryLootPerEnemy = 15;
 const generatedLootPoolSize = maxBestiaryLootPerEnemy;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -65,7 +65,7 @@ function defaultState() {
     completedQuests: [],
     rareQuests: {},
     winsSinceQuestRefresh: 0,
-    balanceVersion: 2,
+    balanceVersion: 3,
     log: ["Du erreichst das Lager Grauwacht. Der Grind beginnt langsam."],
   };
 }
@@ -99,14 +99,14 @@ function load() {
 }
 
 function applyBalanceMigration(loaded) {
-  if ((loaded.balanceVersion || 1) >= 2) return;
+  if ((loaded.balanceVersion || 1) >= balanceVersion) return;
   Object.values(loaded.customItems || {}).forEach(rebalanceSavedItem);
   (loaded.pendingLoot || []).forEach(rebalanceSavedItem);
   (loaded.lootQueue || []).flat().forEach(rebalanceSavedItem);
   Object.values(loaded.discoveredLoot || {}).forEach((drops) => Object.values(drops || {}).forEach(rebalanceSavedItem));
-  loaded.balanceVersion = 2;
+  loaded.balanceVersion = balanceVersion;
   loaded.log = [
-    "Balance überarbeitet: Gegner sind gefährlicher, Loot skaliert langsamer und alte Über-Items wurden angepasst.",
+    "Balance überarbeitet: Item-Qualitäten sind klarer getrennt, Elite-Gegner seltener und Reparaturen günstiger.",
     ...(loaded.log || []),
   ].slice(0, 40);
 }
@@ -114,22 +114,44 @@ function applyBalanceMigration(loaded) {
 function rebalanceSavedItem(item) {
   if (!item || !item.slot || !item.quality) return item;
   const upgrade = item.upgrade || Number(item.name?.match(/\+(\d+)$/)?.[1] || 0);
-  const cap = itemStatCap(item.slot, item.quality, upgrade);
-  item.damage = Math.min(item.damage || 0, cap.damage);
-  item.defense = Math.min(item.defense || 0, cap.defense);
+  const stats = normalizeRolledItemStats(item.slot, item.quality, {
+    damage: item.damage || 0,
+    defense: item.defense || 0,
+  }, upgrade);
+  item.damage = stats.damage;
+  item.defense = stats.defense;
   return item;
+}
+
+function itemStatBounds(slot, quality, upgrade = 0) {
+  const qualityIndex = { common: 0, rare: 1, epic: 2, legendary: 3 }[quality] || 0;
+  const caps = itemStatCap(slot, quality, upgrade);
+  const floorRatio = [0, 0.5, 0.72, 0.88][qualityIndex];
+  return {
+    minDamage: Math.floor(caps.damage * floorRatio),
+    minDefense: Math.floor(caps.defense * floorRatio),
+    maxDamage: caps.damage,
+    maxDefense: caps.defense,
+  };
+}
+
+function normalizeRolledItemStats(slot, quality, stats, upgrade = 0) {
+  const bounds = itemStatBounds(slot, quality, upgrade);
+  const damage = Math.max(bounds.minDamage, Math.min(stats.damage || 0, bounds.maxDamage));
+  const defense = Math.max(bounds.minDefense, Math.min(stats.defense || 0, bounds.maxDefense));
+  return { damage, defense };
 }
 
 function itemStatCap(slot, quality, upgrade = 0) {
   const qualityIndex = { common: 0, rare: 1, epic: 2, legendary: 3 }[quality] || 0;
   const caps = {
-    weapon: { damage: [9, 17, 29, 43], defense: [0, 0, 0, 0] },
-    offhand: { damage: [5, 9, 14, 20], defense: [8, 18, 31, 44] },
-    chest: { damage: [0, 0, 2, 3], defense: [13, 28, 50, 72] },
-    pants: { damage: [2, 4, 6, 9], defense: [9, 20, 35, 50] },
-    boots: { damage: [3, 5, 8, 11], defense: [7, 16, 28, 40] },
-    necklace: { damage: [5, 10, 17, 24], defense: [4, 9, 16, 23] },
-    ring: { damage: [4, 9, 15, 22], defense: [5, 11, 18, 26] },
+    weapon: { damage: [8, 16, 29, 46], defense: [0, 0, 0, 0] },
+    offhand: { damage: [4, 8, 14, 22], defense: [7, 17, 31, 47] },
+    chest: { damage: [0, 0, 2, 3], defense: [11, 26, 50, 76] },
+    pants: { damage: [1, 3, 6, 10], defense: [8, 18, 35, 53] },
+    boots: { damage: [2, 4, 8, 12], defense: [6, 15, 28, 42] },
+    necklace: { damage: [4, 9, 17, 26], defense: [3, 8, 16, 24] },
+    ring: { damage: [3, 8, 15, 24], defense: [4, 10, 18, 28] },
   };
   const slotCaps = caps[slot] || caps.ring;
   return {
@@ -283,7 +305,7 @@ function setItemDurability(itemId, value) {
 function itemDurabilityFactor(itemId) {
   const durability = itemDurability(itemId);
   if (durability <= 0) return 0;
-  return 0.42 + durability * 0.0058;
+  return 0.5 + durability * 0.005;
 }
 
 function equippedDurabilityAverage() {
@@ -294,25 +316,25 @@ function equippedDurabilityAverage() {
 
 function slotWearMultiplier(slot) {
   return {
-    weapon: 1.2,
-    offhand: 1.05,
-    chest: 1.45,
-    pants: 1.05,
-    boots: 0.9,
-    necklace: 0.55,
-    ring: 0.5,
+    weapon: 0.75,
+    offhand: 0.65,
+    chest: 0.9,
+    pants: 0.65,
+    boots: 0.55,
+    necklace: 0.35,
+    ring: 0.32,
   }[slot] || 1;
 }
 
 function repairSlotMultiplier(slot) {
   return {
-    weapon: 1.2,
-    offhand: 1.05,
-    chest: 1.55,
-    pants: 1.15,
-    boots: 0.95,
-    necklace: 0.75,
-    ring: 0.7,
+    weapon: 0.78,
+    offhand: 0.68,
+    chest: 0.95,
+    pants: 0.72,
+    boots: 0.62,
+    necklace: 0.48,
+    ring: 0.45,
   }[slot] || 1;
 }
 
@@ -322,7 +344,7 @@ function damageEquippedItems(enemy, extraLoss = 0) {
     const itemId = state.equipment[slot];
     const item = getItem(itemId);
     if (!item) return;
-    const baseLoss = random(2, enemy.elite ? 8 : 5) + extraLoss;
+    const baseLoss = random(1, enemy.elite ? 4 : 3) + Math.ceil(extraLoss * 0.5);
     const loss = Math.max(1, Math.ceil(baseLoss * slotWearMultiplier(slot)));
     const nextDurability = itemDurability(itemId) - loss;
     setItemDurability(itemId, nextDurability);
@@ -622,7 +644,7 @@ function createQuestRewardItem(quest) {
   const base = Math.max(5, Math.floor(quest.rewardXp / 115) + Math.floor(state.level * 0.7));
   const power = qualityPower[quality] * 0.92;
   const namePool = lootNames[slot][quality];
-  const stats = rollSlotStats(slot, base, power);
+  const stats = normalizeRolledItemStats(slot, quality, rollSlotStats(slot, base, power));
 
   return {
     id: `quest-reward-${quest.id}`,
@@ -691,7 +713,7 @@ function generateLootItem(enemy, enemyId) {
   const power = qualityPower[quality];
   const namePool = lootNames[slot][quality];
   const id = `loot-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  const stats = rollSlotStats(slot, base, power);
+  const stats = normalizeRolledItemStats(slot, quality, rollSlotStats(slot, base, power));
 
   return {
     id,
@@ -1087,8 +1109,8 @@ function repairCostForSlot(slot) {
   if (!item) return 0;
   const missing = 100 - itemDurability(itemId);
   if (!missing) return 0;
-  const qualityMultiplier = { common: 1.1, rare: 2, epic: 3.1, legendary: 4.8 }[item.quality] || 1;
-  const upgradeMultiplier = 1 + (item.upgrade || 0) * 0.32;
-  return Math.ceil(missing * repairSlotMultiplier(slot) * qualityMultiplier * upgradeMultiplier * (0.78 + state.level * 0.045));
+  const qualityMultiplier = { common: 0.75, rare: 1.25, epic: 1.9, legendary: 2.8 }[item.quality] || 1;
+  const upgradeMultiplier = 1 + (item.upgrade || 0) * 0.18;
+  return Math.ceil(missing * repairSlotMultiplier(slot) * qualityMultiplier * upgradeMultiplier * (0.42 + state.level * 0.025));
 }
 
