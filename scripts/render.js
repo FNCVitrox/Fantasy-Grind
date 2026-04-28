@@ -577,7 +577,7 @@ function renderMaterialDropRows(enemyId) {
 function lootCompletion(enemyId) {
   const enemy = enemies[enemyId];
   const discovered = groupedBestiaryLoot(enemyId).length;
-  const generatedLimit = Math.max(0, maxBestiaryLootPerEnemy - enemy.drops.length);
+  const generatedLimit = generatedLootPoolCount(enemy);
   const total = enemy.drops.length + generatedLimit;
   const fixedFound = enemy.drops.filter((drop) => state.discoveredLoot[enemyId]?.[`fixed:${drop.id}`]).length;
   const generatedFound = Math.min(generatedLimit, discovered);

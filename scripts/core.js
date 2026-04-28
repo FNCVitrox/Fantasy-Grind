@@ -28,7 +28,7 @@ const $ = (id) => {
 const random = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const balanceVersion = 3;
 const eliteEncounterChance = 0.06;
-const maxBestiaryLootPerEnemy = 15;
+const maxBestiaryLootPerEnemy = 20;
 const generatedLootPoolSize = maxBestiaryLootPerEnemy;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -773,17 +773,17 @@ function advanceLootQueue() {
 }
 
 function generateLootItem(enemy, enemyId) {
-  const slot = lootSlots[random(0, lootSlots.length - 1)];
-  const quality = rollQuality(enemy);
+  const lootPick = pickGeneratedLootTemplate(enemy);
+  const slot = lootPick.slot;
+  const quality = lootPick.quality;
   const base = Math.max(1, Math.floor(enemy.level * 0.82) + random(-2, 1));
   const power = qualityPower[quality];
-  const namePool = lootNames[slot][quality];
   const id = `loot-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const stats = normalizeRolledItemStats(slot, quality, rollSlotStats(slot, base, power));
 
   return {
     id,
-    name: namePool[random(0, namePool.length - 1)],
+    name: lootPick.name,
     slot,
     quality,
     damage: stats.damage,
@@ -793,6 +793,40 @@ function generateLootItem(enemy, enemyId) {
     fixed: false,
     sourceEnemy: enemyId,
   };
+}
+
+function pickGeneratedLootTemplate(enemy) {
+  const profile = enemy.generatedLoot || {};
+  const slots = (profile.slots || lootSlots).filter((slot) => lootSlots.includes(slot));
+  const qualities = (profile.qualities || Object.keys(qualityLabel)).filter((quality) => qualityPower[quality]);
+  const slot = slots.length ? slots[random(0, slots.length - 1)] : lootSlots[random(0, lootSlots.length - 1)];
+  const rolledQuality = rollQuality(enemy);
+  const quality = nearestAllowedQuality(rolledQuality, qualities.length ? qualities : Object.keys(qualityPower));
+  const namePool = lootNames[slot][quality] || lootNames[slot].common;
+
+  return {
+    slot,
+    quality,
+    name: namePool[random(0, namePool.length - 1)],
+  };
+}
+
+function nearestAllowedQuality(quality, allowedQualities) {
+  const order = ["common", "rare", "epic", "legendary"];
+  const allowed = allowedQualities.filter((item) => order.includes(item));
+  if (allowed.includes(quality)) return quality;
+
+  const targetIndex = order.indexOf(quality);
+  return allowed
+    .slice()
+    .sort((a, b) => Math.abs(order.indexOf(a) - targetIndex) - Math.abs(order.indexOf(b) - targetIndex))[0] || "common";
+}
+
+function generatedLootPoolCount(enemy) {
+  const profile = enemy.generatedLoot || {};
+  const slots = (profile.slots || lootSlots).filter((slot) => lootSlots.includes(slot));
+  const qualities = (profile.qualities || Object.keys(qualityPower)).filter((quality) => qualityPower[quality]);
+  return (slots.length || lootSlots.length) * (qualities.length || Object.keys(qualityPower).length) * 3;
 }
 
 function rollSlotStats(slot, base, power) {

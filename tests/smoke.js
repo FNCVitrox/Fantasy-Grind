@@ -69,6 +69,10 @@ assert.strictEqual(context.defaultState().level, 1);
 assert.strictEqual(vm.runInContext("enemies.wolf.name", context), "Waldwolf");
 assert.strictEqual(vm.runInContext("zones.meadow.enemies[0]", context), "wolf");
 assert.strictEqual(vm.runInContext("eliteEncounterChance", context), 0.06);
+assert(
+  vm.runInContext("Object.values(enemies).every((enemy) => generatedLootPoolCount(enemy) + enemy.drops.length >= 15 && generatedLootPoolCount(enemy) + enemy.drops.length <= 20)", context),
+  "enemy item pools should stay between 15 and 20 items",
+);
 assert.strictEqual(
   vm.runInContext("normalizeRolledItemStats('weapon', 'common', { damage: 999, defense: 0 }).damage", context),
   vm.runInContext("itemStatCap('weapon', 'common').damage", context),
