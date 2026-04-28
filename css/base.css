@@ -691,7 +691,7 @@ h2 {
 
 .materials {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 6px;
   margin-bottom: 8px;
 }
@@ -778,8 +778,8 @@ h2 {
 
 .material span {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
   white-space: nowrap;
 }
 

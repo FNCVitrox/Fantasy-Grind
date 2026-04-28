@@ -28,15 +28,18 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .materials,
   .smith-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .materials {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 }
 
 @media (min-width: 1061px) and (max-width: 1320px) {
   .materials {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 
   .smith-grid {
