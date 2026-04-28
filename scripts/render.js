@@ -113,11 +113,20 @@ function renderEquipment() {
     const durability = itemDurability(id);
     const repairCost = repairCostForSlot(slot);
     const quality = itemQuality(item);
-    return `<button class="equipment-chip item-hover-row rarity-card rarity-${quality}" type="button" data-open-equipment data-tooltip-key="${cacheTooltipItem(item)}">
+    const setName = item.set ? setBonuses[item.set]?.name || item.set : "";
+    return `<button class="equipment-chip rarity-card rarity-${quality}" type="button" data-open-equipment>
       <strong>${labelFor(slotLabel, slot)}</strong>
       <span class="quality-${quality}">${escapeHtml(item.name)}</span>
       <small>${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</small>
       <small class="${durability <= 25 ? "durability-low" : ""}">${durability}% · ${repairCost} Gold</small>
+      <span class="equipment-hover-detail" aria-hidden="true">
+        <b class="quality-${quality}">${escapeHtml(item.name)}</b>
+        <em>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</em>
+        <em>Schaden: ${item.damage || 0} · Verteidigung: ${item.defense || 0}</em>
+        <em>Haltbarkeit: ${durability}%</em>
+        <em>Reparatur: ${repairCost} Gold</em>
+        ${setName ? `<em>Set: ${escapeHtml(setName)}</em>` : ""}
+      </span>
     </button>`;
   }).join("");
   if (isModalOpen("equipmentModal")) renderEquipmentDetails();

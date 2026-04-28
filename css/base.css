@@ -528,6 +528,7 @@ h2 {
 }
 
 .equipment-chip {
+  position: relative;
   min-width: 0;
   display: grid;
   gap: 3px;
@@ -536,6 +537,10 @@ h2 {
   padding: 8px;
   text-align: left;
   border-radius: 8px;
+}
+
+.equipment-chip.rarity-card {
+  overflow: visible;
 }
 
 .side-zone-map .zone span {
@@ -562,6 +567,55 @@ h2 {
 .equipment-chip span,
 .equipment-chip small {
   color: var(--muted);
+}
+
+.equipment-chip .equipment-hover-detail {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 80;
+  width: min(280px, 72vw);
+  display: none;
+  gap: 5px;
+  padding: 10px 12px;
+  color: var(--text);
+  background: rgba(7, 17, 28, 0.97);
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  border-radius: 8px;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.36);
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  pointer-events: none;
+}
+
+.equipment-chip:nth-last-child(-n + 2) .equipment-hover-detail {
+  left: auto;
+  right: 0;
+}
+
+.equipment-chip:hover .equipment-hover-detail,
+.equipment-chip:focus-visible .equipment-hover-detail {
+  display: grid;
+}
+
+.equipment-hover-detail b,
+.equipment-hover-detail em {
+  display: block;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.equipment-hover-detail b {
+  font-size: 13px;
+}
+
+.equipment-hover-detail em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.35;
 }
 
 .zone small,
