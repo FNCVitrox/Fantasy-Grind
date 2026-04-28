@@ -804,7 +804,7 @@ h2 {
 
 .smith-card {
   display: grid;
-  grid-template-columns: minmax(320px, 1.35fr) minmax(340px, 1fr) minmax(280px, 1fr) minmax(170px, auto);
+  grid-template-columns: minmax(320px, 1.35fr) minmax(340px, 1fr) minmax(280px, 1fr);
   align-items: center;
   gap: 10px;
   border: 1px solid var(--line);
@@ -855,9 +855,24 @@ h2 {
   border-radius: 8px;
   background: rgba(63, 214, 163, 0.07);
   color: var(--muted);
+  cursor: pointer;
+  text-align: left;
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
   min-height: 44px;
   align-content: center;
+}
+
+.upgrade-preview:hover,
+.upgrade-preview:focus-visible {
+  border-color: rgba(63, 214, 163, 0.82);
+  background: rgba(63, 214, 163, 0.13);
+  box-shadow: 0 0 0 3px rgba(63, 214, 163, 0.12), 0 0 24px rgba(63, 214, 163, 0.18);
+  animation: upgrade-preview-pulse 900ms ease-in-out infinite;
+}
+
+.upgrade-preview:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
 }
 
 .upgrade-preview span {
@@ -876,20 +891,6 @@ h2 {
 
 .upgrade-preview b {
   color: var(--green);
-}
-
-.smith-card:has([data-upgrade]:hover) .upgrade-preview,
-.smith-card:has([data-upgrade]:focus-visible) .upgrade-preview {
-  border-color: rgba(63, 214, 163, 0.82);
-  background: rgba(63, 214, 163, 0.13);
-  box-shadow: 0 0 0 3px rgba(63, 214, 163, 0.12), 0 0 24px rgba(63, 214, 163, 0.18);
-  animation: upgrade-preview-pulse 900ms ease-in-out infinite;
-}
-
-.smith-card button {
-  min-height: 40px;
-  min-width: 158px;
-  font-weight: 800;
 }
 
 @keyframes upgrade-preview-pulse {

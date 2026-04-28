@@ -204,20 +204,20 @@ function renderSmith() {
       .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)
       .join(" · ");
     const maxed = (item.upgrade || 0) >= 4;
+    const disabled = !canUpgrade(item) || maxed;
     return `<div class="smith-card rarity-card rarity-${quality}">
       <div class="smith-item-main">
         <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
         <p>+${item.upgrade || 0}/4 · Dmg ${item.damage} · Def ${item.defense} · Haltbarkeit ${itemDurability(itemId)}%</p>
       </div>
-      <div class="upgrade-preview">
-        <span>Nach Upgrade</span>
+      <button class="upgrade-preview" type="button" data-upgrade="${slot}" ${disabled ? "disabled" : ""}>
+        <span>${maxed ? "Maximal" : "Nach Upgrade"}</span>
         <strong>+${preview.upgrade}/4 · Dmg ${preview.damage}${damageGain ? ` <b>+${damageGain}</b>` : ""} · Def ${preview.defense}${defenseGain ? ` <b>+${defenseGain}</b>` : ""}</strong>
-      </div>
+      </button>
       <div class="smith-cost-block">
         <p>${cost.gold} Gold</p>
         <p class="smith-material-cost">${materialText}</p>
       </div>
-      <button type="button" data-upgrade="${slot}" ${!canUpgrade(item) || maxed ? "disabled" : ""}>${maxed ? "Maximal" : "Verbessern"}</button>
     </div>`;
   }).join("");
 
