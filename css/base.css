@@ -605,7 +605,7 @@ h2 {
 
 .materials {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -688,6 +688,13 @@ h2 {
 
 .material strong {
   color: var(--gold);
+}
+
+.gold-material {
+  border-color: rgba(216, 174, 75, 0.72);
+  background:
+    linear-gradient(135deg, rgba(216, 174, 75, 0.14), transparent),
+    #0c1723;
 }
 
 .smith-grid {

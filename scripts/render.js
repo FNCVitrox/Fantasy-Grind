@@ -146,9 +146,12 @@ function renderEquipmentDetails() {
 }
 
 function renderSmith() {
-  $("materials").innerHTML = Object.entries(materialLabel).map(([id, label]) =>
-    `<div class="material"><span>${label}</span><strong>${state.materials[id] || 0}</strong></div>`
-  ).join("");
+  $("materials").innerHTML = [
+    `<div class="material gold-material"><span>Gold</span><strong>${state.gold}</strong></div>`,
+    ...Object.entries(materialLabel).map(([id, label]) =>
+      `<div class="material"><span>${label}</span><strong>${state.materials[id] || 0}</strong></div>`
+    ),
+  ].join("");
   $("smithHome").hidden = smithView !== "home";
   $("smithUpgradeSection").hidden = smithView !== "upgrade";
   $("smithSalvageSection").hidden = smithView !== "salvage";
