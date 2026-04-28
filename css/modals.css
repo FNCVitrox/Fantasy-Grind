@@ -627,7 +627,7 @@ button.drop-row span:last-child {
 .enemy-sprite.elite-variant .enemy-body {
   transform: scale(1.1);
   border-color: #e2b855;
-  box-shadow: 0 0 24px rgba(226, 184, 85, 0.45), inset 0 0 18px rgba(226, 184, 85, 0.16);
+  box-shadow: 0 0 24px rgba(226, 184, 85, 0.45), inset 0 0 18px rgba(226, 184, 85, 0.16), 0 0 0 3px rgba(226, 184, 85, 0.12);
   filter: saturate(1.2) brightness(1.08);
 }
 
@@ -688,6 +688,12 @@ button.drop-row span:last-child {
   border: 2px solid #86a564;
 }
 
+.enemy-body::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
 .enemy-extra,
 .enemy-eye {
   position: absolute;
@@ -701,7 +707,7 @@ button.drop-row span:last-child {
   height: 16px;
   border-radius: 50%;
   background: #f1c96b;
-  box-shadow: 20px 0 0 #f1c96b, 0 0 12px #d8ae4b;
+  box-shadow: 20px 0 0 #f1c96b, 0 0 12px #d8ae4b, 20px 0 12px #d8ae4b;
 }
 
 .enemy-wolf .enemy-body {
@@ -709,8 +715,12 @@ button.drop-row span:last-child {
   height: 62px;
   margin-top: 24px;
   border-radius: 48% 38% 32% 44%;
-  background: linear-gradient(135deg, #68727a, #26313a 70%);
+  background:
+    radial-gradient(circle at 70% 34%, rgba(222, 230, 238, 0.14), transparent 18%),
+    linear-gradient(155deg, transparent 0 22%, rgba(12, 19, 25, 0.42) 23% 28%, transparent 29% 44%, rgba(12, 19, 25, 0.32) 45% 50%, transparent 51%),
+    linear-gradient(135deg, #7e8992, #35414b 54%, #1f2932 100%);
   border-color: #9aa7b7;
+  box-shadow: inset -10px -8px 0 rgba(0, 0, 0, 0.18);
 }
 
 .enemy-wolf .enemy-body::before {
@@ -723,6 +733,27 @@ button.drop-row span:last-child {
   border-radius: 42% 58% 48% 42%;
   background: linear-gradient(135deg, #7f8992, #26313a);
   border: 2px solid #9aa7b7;
+}
+
+.enemy-wolf .enemy-body::after {
+  right: -29px;
+  top: 29px;
+  width: 19px;
+  height: 8px;
+  border-radius: 0 0 12px 12px;
+  background: linear-gradient(90deg, #e9e2d1 0 28%, transparent 29% 38%, #e9e2d1 39% 68%, transparent 69%);
+  transform: rotate(4deg);
+}
+
+.enemy-wolf .enemy-extra-a::after,
+.enemy-wolf .enemy-extra-b::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 9px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 9px solid #26313a;
 }
 
 .enemy-wolf .enemy-extra-a,
@@ -756,8 +787,21 @@ button.drop-row span:last-child {
 
 .enemy-bandit .enemy-body {
   border-radius: 28px 28px 16px 16px;
-  background: linear-gradient(135deg, #6d4e35, #28201b 58%, #4b2525 59%);
+  background:
+    linear-gradient(90deg, transparent 0 32%, rgba(216, 174, 75, 0.45) 33% 39%, transparent 40% 58%, rgba(216, 174, 75, 0.35) 59% 65%, transparent 66%),
+    linear-gradient(135deg, #7d5940, #30251f 58%, #5a2c2b 59%);
   border-color: #a7794c;
+  box-shadow: inset 0 -12px 0 rgba(0, 0, 0, 0.18);
+}
+
+.enemy-bandit .enemy-body::after {
+  left: 18px;
+  top: 29px;
+  width: 40px;
+  height: 12px;
+  border-radius: 10px;
+  background: #171313;
+  box-shadow: 9px 20px 0 -3px rgba(167, 121, 76, 0.75);
 }
 
 .enemy-bandit .enemy-extra-a {
@@ -773,11 +817,12 @@ button.drop-row span:last-child {
 .enemy-bandit .enemy-extra-b {
   right: -16px;
   top: 9px;
-  width: 7px;
+  width: 8px;
   height: 70px;
   border-radius: 6px;
-  background: linear-gradient(180deg, #d8d0bc, #7e878d);
+  background: linear-gradient(180deg, #eee5cf 0 12%, #8f979d 13% 76%, #4f2c20 77%);
   transform: rotate(-20deg);
+  box-shadow: -5px 44px 0 -1px #2a1713;
 }
 
 .enemy-boar .enemy-body {
@@ -785,18 +830,33 @@ button.drop-row span:last-child {
   height: 64px;
   margin-top: 24px;
   border-radius: 54% 46% 35% 42%;
-  background: linear-gradient(135deg, #7c513e, #2c211c 68%);
+  background:
+    radial-gradient(circle at 76% 56%, #c28d76 0 7%, transparent 8%),
+    linear-gradient(160deg, transparent 0 18%, rgba(20, 13, 11, 0.5) 19% 23%, transparent 24% 42%, rgba(20, 13, 11, 0.38) 43% 47%, transparent 48%),
+    linear-gradient(135deg, #8b5c45, #3b2a23 62%, #241a17 100%);
   border-color: #b68460;
+  box-shadow: inset -14px -8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.enemy-boar .enemy-body::after {
+  right: -10px;
+  top: 29px;
+  width: 26px;
+  height: 18px;
+  border-radius: 46%;
+  background: #9b6956;
+  border: 2px solid #d0a07c;
 }
 
 .enemy-boar .enemy-extra-a,
 .enemy-boar .enemy-extra-b {
-  right: -15px;
-  top: 34px;
-  width: 28px;
-  height: 10px;
+  right: -21px;
+  top: 35px;
+  width: 34px;
+  height: 9px;
   border-radius: 50%;
   background: #e0d7c4;
+  z-index: 2;
 }
 
 .enemy-boar .enemy-extra-a {
@@ -820,8 +880,22 @@ button.drop-row span:last-child {
 .enemy-knight .enemy-body,
 .enemy-ratguard .enemy-body {
   border-radius: 20px 20px 12px 12px;
-  background: linear-gradient(135deg, #a8b0b9, #465361 54%, #20262d 55%);
+  background:
+    linear-gradient(90deg, transparent 0 16%, rgba(241, 201, 107, 0.55) 17% 22%, transparent 23% 77%, rgba(241, 201, 107, 0.42) 78% 83%, transparent 84%),
+    linear-gradient(135deg, #c4cbd4, #596675 54%, #20262d 55%);
   border-color: #d8dee9;
+  box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.22), 0 0 18px rgba(216, 222, 233, 0.12);
+}
+
+.enemy-knight .enemy-body::after,
+.enemy-ratguard .enemy-body::after {
+  left: 22px;
+  top: 26px;
+  width: 32px;
+  height: 8px;
+  border-radius: 8px;
+  background: #101820;
+  box-shadow: 0 18px 0 -3px rgba(216, 174, 75, 0.58);
 }
 
 .enemy-knight .enemy-extra-a,
@@ -831,7 +905,9 @@ button.drop-row span:last-child {
   width: 48px;
   height: 44px;
   border-radius: 22px 22px 12px 12px;
-  background: linear-gradient(135deg, #d8dee9, #687483);
+  background:
+    linear-gradient(90deg, transparent 0 43%, #1b222b 44% 56%, transparent 57%),
+    linear-gradient(135deg, #eef2f6, #7a8796);
   border: 2px solid #d8ae4b;
 }
 
@@ -847,14 +923,52 @@ button.drop-row span:last-child {
 }
 
 .enemy-ratguard .enemy-body {
-  background: linear-gradient(135deg, #6f7d8f, #242a35 52%, #3f4d37 53%);
+  background:
+    linear-gradient(90deg, transparent 0 15%, rgba(150, 161, 115, 0.6) 16% 24%, transparent 25% 76%, rgba(150, 161, 115, 0.42) 77% 84%, transparent 85%),
+    linear-gradient(135deg, #788698, #28303b 52%, #3f4d37 53%);
   border-color: #96a173;
+}
+
+.enemy-ratguard .enemy-extra-a::before,
+.enemy-ratguard .enemy-extra-a::after {
+  content: "";
+  position: absolute;
+  top: -12px;
+  width: 12px;
+  height: 21px;
+  border-radius: 8px 8px 0 0;
+  background: #7d8790;
+  border: 2px solid #96a173;
+}
+
+.enemy-ratguard .enemy-extra-a::before {
+  left: 4px;
+  transform: rotate(-16deg);
+}
+
+.enemy-ratguard .enemy-extra-a::after {
+  right: 4px;
+  transform: rotate(16deg);
 }
 
 .enemy-acolyte .enemy-body {
   border-radius: 34px 34px 18px 18px;
-  background: linear-gradient(135deg, #2f3340, #111318 55%, #4c3b6b 56%);
+  background:
+    radial-gradient(circle at 50% 28%, rgba(166, 120, 194, 0.38), transparent 18%),
+    linear-gradient(90deg, transparent 0 45%, rgba(199, 180, 228, 0.48) 46% 54%, transparent 55%),
+    linear-gradient(135deg, #343846, #111318 55%, #4c3b6b 56%);
   border-color: #a678c2;
+  box-shadow: 0 0 22px rgba(166, 120, 194, 0.18), inset 0 -14px 0 rgba(0, 0, 0, 0.2);
+}
+
+.enemy-acolyte .enemy-body::after {
+  left: 25px;
+  top: 34px;
+  width: 26px;
+  height: 7px;
+  border-radius: 8px;
+  background: #d9c8ef;
+  box-shadow: 0 17px 0 -2px rgba(166, 120, 194, 0.8);
 }
 
 .enemy-acolyte .enemy-extra-a {
@@ -873,16 +987,30 @@ button.drop-row span:last-child {
   width: 9px;
   height: 82px;
   border-radius: 8px;
-  background: linear-gradient(180deg, #c7b4e4, #5f4477);
-  box-shadow: 0 -8px 14px rgba(166, 120, 194, 0.8);
+  background: linear-gradient(180deg, #f0d9ff 0 10%, #c7b4e4 11% 28%, #5f4477 29%);
+  box-shadow: 0 -8px 14px rgba(166, 120, 194, 0.8), 0 0 0 3px rgba(166, 120, 194, 0.14);
 }
 
 .enemy-brute .enemy-body {
   width: 92px;
   height: 100px;
   border-radius: 38px 38px 18px 18px;
-  background: linear-gradient(135deg, #57514a, #242322 60%, #783f35 61%);
+  background:
+    linear-gradient(90deg, transparent 0 18%, rgba(216, 208, 188, 0.38) 19% 25%, transparent 26% 74%, rgba(216, 208, 188, 0.3) 75% 81%, transparent 82%),
+    radial-gradient(circle at 50% 18%, rgba(182, 132, 96, 0.32), transparent 18%),
+    linear-gradient(135deg, #655d55, #292827 60%, #87483c 61%);
   border-color: #b68460;
+  box-shadow: inset 0 -18px 0 rgba(0, 0, 0, 0.24);
+}
+
+.enemy-brute .enemy-body::after {
+  left: 24px;
+  top: 34px;
+  width: 42px;
+  height: 10px;
+  border-radius: 8px;
+  background: #181716;
+  box-shadow: 0 24px 0 -3px rgba(216, 208, 188, 0.5);
 }
 
 .enemy-brute .enemy-extra-a {
@@ -898,10 +1026,12 @@ button.drop-row span:last-child {
 .enemy-brute .enemy-extra-b {
   right: -25px;
   top: 28px;
-  width: 18px;
+  width: 20px;
   height: 70px;
   border-radius: 10px;
-  background: linear-gradient(180deg, #5b4034, #1a1715);
+  background:
+    radial-gradient(circle at 50% 14%, #d8d0bc 0 23%, transparent 24%),
+    linear-gradient(180deg, #5b4034, #1a1715);
   border: 2px solid #d8d0bc;
   transform: rotate(-24deg);
 }
@@ -910,9 +1040,22 @@ button.drop-row span:last-child {
   width: 92px;
   height: 104px;
   border-radius: 40px 40px 14px 14px;
-  background: linear-gradient(135deg, #1c2027, #4c3b6b 48%, #101116 49%);
+  background:
+    radial-gradient(circle at 50% 20%, rgba(226, 184, 85, 0.28), transparent 17%),
+    linear-gradient(90deg, transparent 0 18%, rgba(226, 184, 85, 0.5) 19% 24%, transparent 25% 75%, rgba(166, 120, 194, 0.5) 76% 81%, transparent 82%),
+    linear-gradient(135deg, #252a32, #4c3b6b 48%, #101116 49%);
   border-color: #e2b855;
   box-shadow: 0 0 28px rgba(226, 184, 85, 0.28);
+}
+
+.enemy-champion .enemy-body::after {
+  left: 23px;
+  top: 31px;
+  width: 46px;
+  height: 10px;
+  border-radius: 9px;
+  background: linear-gradient(90deg, #f1c96b 0 28%, transparent 29% 38%, #f1c96b 39% 68%, transparent 69%);
+  box-shadow: 0 26px 0 -3px rgba(226, 184, 85, 0.65), 0 0 16px rgba(226, 184, 85, 0.55);
 }
 
 .enemy-champion .enemy-extra-a {
@@ -933,6 +1076,18 @@ button.drop-row span:last-child {
   background: linear-gradient(180deg, #f4df93, #a678c2 45%, #3b254d);
   transform: rotate(-14deg);
   box-shadow: 0 0 18px rgba(166, 120, 194, 0.9);
+}
+
+.enemy-champion .enemy-extra-b::before {
+  content: "";
+  position: absolute;
+  left: -9px;
+  top: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(244, 223, 147, 0.85);
+  box-shadow: 0 0 18px rgba(226, 184, 85, 0.7);
 }
 
 .sprite-shadow {
