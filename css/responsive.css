@@ -29,7 +29,7 @@
   }
 
   .smith-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .materials {
@@ -43,7 +43,11 @@
   }
 
   .smith-grid {
-    grid-template-columns: repeat(3, minmax(240px, 1fr));
+    grid-template-columns: 1fr;
+  }
+
+  .smith-card {
+    grid-template-columns: minmax(220px, 1fr) minmax(210px, 0.9fr) minmax(210px, 0.9fr) minmax(132px, auto);
   }
 }
 
@@ -135,6 +139,10 @@
   .materials,
   .smith-grid,
   .smith-choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .smith-card {
     grid-template-columns: 1fr;
   }
 

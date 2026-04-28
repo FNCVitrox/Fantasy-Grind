@@ -205,15 +205,18 @@ function renderSmith() {
       .join(" · ");
     const maxed = (item.upgrade || 0) >= 4;
     return `<div class="smith-card rarity-card rarity-${quality}">
-      <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
-      <p>Stufe +${item.upgrade || 0}/4 · Dmg ${item.damage} · Def ${item.defense}</p>
+      <div class="smith-item-main">
+        <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
+        <p>+${item.upgrade || 0}/4 · Dmg ${item.damage} · Def ${item.defense} · Haltbarkeit ${itemDurability(itemId)}%</p>
+      </div>
       <div class="upgrade-preview">
         <span>Nach Upgrade</span>
         <strong>+${preview.upgrade}/4 · Dmg ${preview.damage}${damageGain ? ` <b>+${damageGain}</b>` : ""} · Def ${preview.defense}${defenseGain ? ` <b>+${defenseGain}</b>` : ""}</strong>
       </div>
-      <p>Haltbarkeit: ${itemDurability(itemId)}%</p>
-      <p>Kosten: ${cost.gold} Gold</p>
-      <p class="smith-material-cost">${materialText}</p>
+      <div class="smith-cost-block">
+        <p>${cost.gold} Gold</p>
+        <p class="smith-material-cost">${materialText}</p>
+      </div>
       <button type="button" data-upgrade="${slot}" ${!canUpgrade(item) || maxed ? "disabled" : ""}>${maxed ? "Maximal" : "Verbessern"}</button>
     </div>`;
   }).join("");
