@@ -196,6 +196,9 @@ function renderSmith() {
     if (!item) return "";
     const quality = itemQuality(item);
     const cost = upgradeCost(item);
+    const preview = previewUpgradedItem(item);
+    const damageGain = preview.damage - item.damage;
+    const defenseGain = preview.defense - item.defense;
     const materialText = Object.entries(cost.materials)
       .filter(([, amount]) => amount > 0)
       .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)
@@ -204,6 +207,10 @@ function renderSmith() {
     return `<div class="smith-card rarity-card rarity-${quality}">
       <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
       <p>Stufe +${item.upgrade || 0}/4 · +${item.damage} Schaden · +${item.defense} Verteidigung</p>
+      <div class="upgrade-preview">
+        <span>Nach Upgrade</span>
+        <strong>+${preview.upgrade}/4 · ${preview.damage} Schaden${damageGain ? ` <b>+${damageGain}</b>` : ""} · ${preview.defense} Verteidigung${defenseGain ? ` <b>+${defenseGain}</b>` : ""}</strong>
+      </div>
       <p>Haltbarkeit: ${itemDurability(itemId)}%</p>
       <p>Kosten: ${cost.gold} Gold</p>
       <p>${materialText}</p>

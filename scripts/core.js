@@ -1087,6 +1087,23 @@ function canUpgrade(item) {
   return state.gold >= cost.gold && Object.entries(cost.materials).every(([id, amount]) => (state.materials[id] || 0) >= amount);
 }
 
+function previewUpgradedItem(item) {
+  const upgraded = { ...item, upgrade: (item.upgrade || 0) + 1 };
+  if (item.slot === "weapon") upgraded.damage += 2;
+  if (item.slot === "offhand") {
+    upgraded.damage += 1;
+    upgraded.defense += 2;
+  }
+  if (item.slot === "chest") upgraded.defense += 3;
+  if (item.slot === "pants" || item.slot === "boots") upgraded.defense += 2;
+  if (item.slot === "necklace" || item.slot === "ring") {
+    upgraded.damage += 1;
+    upgraded.defense += 1;
+  }
+  upgraded.name = item.name.replace(/\s\+\d+$/, "") + ` +${upgraded.upgrade}`;
+  return upgraded;
+}
+
 function upgradeEquipped(slot) {
   const item = getItem(state.equipment[slot]);
   if (!item || !canUpgrade(item)) {
@@ -1098,19 +1115,7 @@ function upgradeEquipped(slot) {
   Object.entries(cost.materials).forEach(([id, amount]) => {
     state.materials[id] -= amount;
   });
-  const upgraded = { ...item, upgrade: (item.upgrade || 0) + 1 };
-  if (slot === "weapon") upgraded.damage += 2;
-  if (slot === "offhand") {
-    upgraded.damage += 1;
-    upgraded.defense += 2;
-  }
-  if (slot === "chest") upgraded.defense += 3;
-  if (slot === "pants" || slot === "boots") upgraded.defense += 2;
-  if (slot === "necklace" || slot === "ring") {
-    upgraded.damage += 1;
-    upgraded.defense += 1;
-  }
-  upgraded.name = item.name.replace(/\s\+\d+$/, "") + ` +${upgraded.upgrade}`;
+  const upgraded = previewUpgradedItem(item);
   state.customItems[upgraded.id] = upgraded;
   log(`${upgraded.name} beim Schmied verbessert.`, "drop");
   save();
