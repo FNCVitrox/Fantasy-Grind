@@ -277,6 +277,8 @@ $("equipmentModal").addEventListener("click", (event) => {
 });
 $("exportSaveBtn").addEventListener("click", exportSave);
 $("importSaveBtn").addEventListener("click", importSave);
+$("exportSaveTopBtn").addEventListener("click", exportSave);
+$("importSaveTopBtn").addEventListener("click", importSave);
 $("resetBtn").addEventListener("click", () => {
   if (!confirm("Spielstand wirklich löschen?")) return;
   state = defaultState();
@@ -364,6 +366,8 @@ function setControlsDisabled(disabled) {
     if (button.id === "resetBtn") return;
     if (button.id === "exportSaveBtn") return;
     if (button.id === "importSaveBtn") return;
+    if (button.id === "exportSaveTopBtn") return;
+    if (button.id === "importSaveTopBtn") return;
     if (button.id === "toggleLogBtn") return;
     if (button.id === "closeLogBtn") return;
     if (button.id === "closeRepairBtn") return;

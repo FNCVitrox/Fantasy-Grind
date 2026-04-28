@@ -179,6 +179,26 @@ h2 {
     rgba(216, 174, 75, 0.12);
 }
 
+.save-button::before {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  background:
+    linear-gradient(180deg, rgba(216, 174, 75, 0.78) 0 24%, transparent 25%),
+    linear-gradient(90deg, transparent 17%, rgba(216, 174, 75, 0.72) 18% 72%, transparent 73%),
+    rgba(216, 174, 75, 0.12);
+}
+
+.load-button::before {
+  width: 28px;
+  height: 24px;
+  border-radius: 5px;
+  background:
+    linear-gradient(180deg, transparent 0 30%, rgba(216, 174, 75, 0.75) 31% 44%, transparent 45%),
+    linear-gradient(135deg, transparent 0 38%, rgba(216, 174, 75, 0.86) 39% 55%, transparent 56%),
+    rgba(216, 174, 75, 0.12);
+}
+
 .game-layout {
   display: grid;
   grid-template-columns: 300px minmax(520px, 1fr) 280px;

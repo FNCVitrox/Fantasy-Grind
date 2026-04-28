@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="./css/responsive.css?v=zone-modal-1" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.5.8</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.6.0</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
@@ -27,6 +27,12 @@
         </button>
         <button class="book-button smith-button" id="openSmithBtn" type="button" aria-label="Schmied öffnen">
           <span>Schmied</span>
+        </button>
+        <button class="book-button save-button" id="exportSaveTopBtn" type="button" aria-label="Spielstand sichern">
+          <span>Sichern</span>
+        </button>
+        <button class="book-button load-button" id="importSaveTopBtn" type="button" aria-label="Spielstand laden">
+          <span>Laden</span>
         </button>
       </section>
 
@@ -287,10 +293,10 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=zone-modal-1"></script>
-    <script src="./scripts/core.js?v=zone-modal-1"></script>
-    <script src="./scripts/render.js?v=zone-modal-1"></script>
-    <script src="./scripts/events.js?v=zone-modal-1"></script>
+    <script src="./scripts/data.js?v=save-protect-1"></script>
+    <script src="./scripts/core.js?v=save-protect-1"></script>
+    <script src="./scripts/render.js?v=save-protect-1"></script>
+    <script src="./scripts/events.js?v=save-protect-1"></script>
   </body>
 </html>
 
