@@ -196,13 +196,14 @@
 
 .quest-board {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
 }
 
 .quest-offer {
   display: grid;
-  gap: 8px;
-  align-content: start;
-  min-height: 230px;
+  grid-template-rows: 52px 88px minmax(104px, auto) 52px;
+  gap: 10px;
+  min-height: 310px;
   background:
     linear-gradient(180deg, rgba(216, 174, 75, 0.08), transparent),
     #07111b;
@@ -223,19 +224,45 @@
     #07111b;
 }
 
-.quest-offer.rare strong {
+.quest-offer.rare .quest-offer-title {
   color: #d6b2ed;
 }
 
-.quest-offer button {
-  min-height: 36px;
+.quest-offer-title {
+  display: -webkit-box;
+  min-height: 52px;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.quest-offer-body {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 88px;
+}
+
+.quest-offer-body p {
+  margin: 0;
+}
+
+.quest-offer-action {
+  align-self: end;
+}
+
+.quest-offer-action button {
+  width: 100%;
+  min-height: 52px;
   font-weight: 800;
 }
 
 .reward-list {
   display: grid;
   gap: 4px;
-  padding: 8px;
+  align-content: start;
+  min-height: 104px;
+  padding: 12px;
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.18);
 }
@@ -361,9 +388,33 @@
 
 .bestiary-content-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.32fr);
   gap: 10px;
   align-items: start;
+}
+
+.bestiary-selected-detail {
+  position: sticky;
+  top: 0;
+  display: grid;
+  gap: 8px;
+  min-height: 120px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--muted);
+}
+
+.bestiary-selected-detail > strong {
+  color: var(--gold);
+}
+
+.bestiary-selected-detail .item-tooltip {
+  min-width: 0;
+  max-width: none;
+  border-color: rgba(216, 174, 75, 0.35);
+  box-shadow: none;
 }
 
 .bestiary-overview {
@@ -533,13 +584,13 @@ button.drop-row span:last-child {
 
 .battle-stage {
   position: relative;
-  min-height: 210px;
+  min-height: 188px;
   display: grid;
   grid-template-columns: minmax(90px, 1fr) minmax(110px, 0.6fr) minmax(90px, 1fr);
   align-items: end;
   gap: 12px;
   overflow: hidden;
-  padding: 18px 18px 14px;
+  padding: 14px 18px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
@@ -1026,7 +1077,7 @@ button.drop-row span:last-child {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding: 14px;
+  padding: 12px;
   background: #0c1723;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1182,5 +1233,83 @@ button.drop-row span:last-child {
 .log .drop {
   border-color: var(--gold);
   color: #f6df9b;
+}
+
+.repair-window {
+  width: min(720px, 100%);
+}
+
+.repair-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(7, 17, 27, 0.72);
+}
+
+.repair-summary strong {
+  color: var(--gold);
+}
+
+.repair-summary button {
+  min-height: 38px;
+  font-weight: 800;
+}
+
+.repair-list {
+  display: grid;
+  gap: 8px;
+}
+
+.repair-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(7, 17, 27, 0.66);
+}
+
+.repair-row strong,
+.repair-row p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.repair-row p {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.repair-row button {
+  min-width: 132px;
+  min-height: 36px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.equipment-window {
+  width: min(860px, 100%);
+}
+
+.zone-window {
+  width: min(620px, 100%);
+}
+
+.zone-modal-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.equipment-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 

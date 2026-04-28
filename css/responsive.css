@@ -7,6 +7,14 @@
     min-height: auto;
   }
 
+  .equipment-belt {
+    grid-template-columns: 1fr;
+  }
+
+  .equipment-belt .equipment {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .topbar {
     align-items: flex-start;
     flex-direction: column;
@@ -27,9 +35,16 @@
     padding-top: 9px;
   }
 
-  .status-grid,
-  .map {
+  .zone-options {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .side-zone-map .zone-options {
+    grid-template-columns: 1fr;
+  }
+
+  .zone-modal-options {
+    grid-template-columns: 1fr;
   }
 
   .combat-card {
@@ -52,6 +67,19 @@
     grid-template-columns: 1fr 1fr;
   }
 
+  .repair-summary,
+  .repair-row {
+    grid-template-columns: 1fr;
+  }
+
+  .repair-summary {
+    display: grid;
+  }
+
+  .repair-row button {
+    width: 100%;
+  }
+
   .loot-window .loot-choices {
     grid-template-columns: 1fr;
   }
@@ -64,6 +92,10 @@
   .bestiary-filters,
   .bestiary-content-grid {
     grid-template-columns: 1fr;
+  }
+
+  .bestiary-selected-detail {
+    position: static;
   }
 
   .drop-list {
@@ -83,7 +115,25 @@
   }
 
   .materials,
-  .smith-grid {
+  .smith-grid,
+  .smith-choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .equipment-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .equipment-belt .equipment {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .zone-map summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .smith-greeting {
     grid-template-columns: 1fr;
   }
 

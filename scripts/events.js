@@ -2,7 +2,7 @@
   button.addEventListener("click", () => {
     selectedZone = button.dataset.zone;
     selectedEnemy = zones[selectedZone].enemies[0];
-    document.querySelectorAll("[data-zone]").forEach((zoneButton) => zoneButton.classList.toggle("active", zoneButton === button));
+    closeZone();
     render();
   });
 });
@@ -139,28 +139,55 @@ $("bestiary").addEventListener("mouseout", (event) => {
   hideFloatingTooltip();
 });
 
-$("equipment").addEventListener("mouseover", (event) => {
+$("equipmentDetails").addEventListener("mouseover", (event) => {
   const row = event.target.closest(".set-hover-row");
   if (!row || row.contains(event.relatedTarget)) return;
   showFloatingTooltip(row);
   positionFloatingTooltip(event);
 });
 
-$("equipment").addEventListener("mousemove", (event) => {
+$("equipmentDetails").addEventListener("mousemove", (event) => {
   if (event.target.closest(".set-hover-row")) {
     positionFloatingTooltip(event);
   }
 });
 
-$("equipment").addEventListener("mouseout", (event) => {
+$("equipmentDetails").addEventListener("mouseout", (event) => {
   const row = event.target.closest(".set-hover-row");
   if (!row || row.contains(event.relatedTarget)) return;
   hideFloatingTooltip();
 });
 
+$("equipment").addEventListener("click", (event) => {
+  if (!event.target.closest("[data-open-equipment]")) return;
+  renderEquipmentDetails();
+  openModal("equipmentModal");
+});
+
 $("smithGrid").addEventListener("click", (event) => {
   const button = event.target.closest("[data-upgrade]");
   if (button) upgradeEquipped(button.dataset.upgrade);
+});
+
+$("smithHome").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-smith-view]");
+  if (!button) return;
+  smithView = button.dataset.smithView;
+  renderSmith();
+});
+
+$("smithUpgradeSection").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-smith-view]");
+  if (!button) return;
+  smithView = button.dataset.smithView;
+  renderSmith();
+});
+
+$("smithSalvageSection").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-smith-view]");
+  if (!button) return;
+  smithView = button.dataset.smithView;
+  renderSmith();
 });
 
 $("salvageList").addEventListener("click", (event) => {
@@ -181,7 +208,10 @@ $("fightBtn").addEventListener("click", () => {
   fight();
 });
 $("restBtn").addEventListener("click", rest);
-$("repairBtn").addEventListener("click", repair);
+$("repairBtn").addEventListener("click", () => {
+  renderRepairModal();
+  openModal("repairModal");
+});
 $("sellAllBtn").addEventListener("click", sellAllInventoryItems);
 $("salvageAllBtn").addEventListener("click", salvageAllInventoryItems);
 $("openBestiaryBtn").addEventListener("click", () => {
@@ -191,6 +221,11 @@ $("openBestiaryBtn").addEventListener("click", () => {
 $("closeBestiaryBtn").addEventListener("click", closeBestiary);
 $("bestiaryModal").addEventListener("click", (event) => {
   if (event.target.id === "bestiaryModal") closeBestiary();
+});
+$("openZoneBtn").addEventListener("click", () => openModal("zoneModal"));
+$("closeZoneBtn").addEventListener("click", closeZone);
+$("zoneModal").addEventListener("click", (event) => {
+  if (event.target.id === "zoneModal") closeZone();
 });
 $("openQuestBoardBtn").addEventListener("click", () => {
   renderQuestBoard();
@@ -209,6 +244,7 @@ $("inventoryModal").addEventListener("click", (event) => {
   if (event.target.id === "inventoryModal") closeInventory();
 });
 $("openSmithBtn").addEventListener("click", () => {
+  smithView = "home";
   renderSmith();
   openModal("smithModal");
 });
@@ -223,6 +259,21 @@ $("toggleLogBtn").addEventListener("click", () => {
 $("closeLogBtn").addEventListener("click", closeLog);
 $("logModal").addEventListener("click", (event) => {
   if (event.target.id === "logModal") closeLog();
+});
+$("repairList").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-repair-slot]");
+  if (button) repairSlot(button.dataset.repairSlot);
+});
+$("repairSummary").addEventListener("click", (event) => {
+  if (event.target.closest("[data-repair-all]")) repair();
+});
+$("closeRepairBtn").addEventListener("click", closeRepair);
+$("repairModal").addEventListener("click", (event) => {
+  if (event.target.id === "repairModal") closeRepair();
+});
+$("closeEquipmentBtn").addEventListener("click", closeEquipment);
+$("equipmentModal").addEventListener("click", (event) => {
+  if (event.target.id === "equipmentModal") closeEquipment();
 });
 $("resetBtn").addEventListener("click", () => {
   if (!confirm("Spielstand wirklich löschen?")) return;
@@ -239,6 +290,10 @@ function closeBestiary() {
   closeModal("bestiaryModal");
 }
 
+function closeZone() {
+  closeModal("zoneModal");
+}
+
 function closeQuestBoard() {
   closeModal("questBoardModal");
 }
@@ -253,6 +308,14 @@ function closeSmith() {
 
 function closeLog() {
   closeModal("logModal");
+}
+
+function closeRepair() {
+  closeModal("repairModal");
+}
+
+function closeEquipment() {
+  closeModal("equipmentModal");
 }
 
 function openModal(id) {
@@ -277,9 +340,13 @@ function setControlsDisabled(disabled) {
     if (button.id === "resetBtn") return;
     if (button.id === "toggleLogBtn") return;
     if (button.id === "closeLogBtn") return;
+    if (button.id === "closeRepairBtn") return;
+    if (button.id === "closeEquipmentBtn") return;
     if (button.id === "fightBtn") return;
     if (button.id === "openBestiaryBtn") return;
     if (button.id === "closeBestiaryBtn") return;
+    if (button.id === "openZoneBtn") return;
+    if (button.id === "closeZoneBtn") return;
     if (button.id === "openQuestBoardBtn") return;
     if (button.id === "closeQuestBoardBtn") return;
     if (button.id === "openInventoryBtn") return;

@@ -1,25 +1,20 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=hard-balance-1" />
-    <link rel="stylesheet" href="./css/modals.css?v=hard-balance-1" />
-    <link rel="stylesheet" href="./css/responsive.css?v=hard-balance-1" />
+    <link rel="stylesheet" href="./css/base.css?v=zone-modal-1" />
+    <link rel="stylesheet" href="./css/modals.css?v=zone-modal-1" />
+    <link rel="stylesheet" href="./css/responsive.css?v=zone-modal-1" />
   </head>
   <body>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.5.8</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
           <p class="eyebrow">Fantasy Grind</p>
           <h1>Grauwacht</h1>
-        </div>
-        <div class="status-grid">
-          <div><span>Level</span><strong id="level">1</strong></div>
-          <div><span>Gold</span><strong id="gold">0</strong></div>
-          <div><span>Ruhm</span><strong id="renown">0</strong></div>
-          <div><span>Tode</span><strong id="deaths">0</strong></div>
         </div>
         <button class="book-button" id="openBestiaryBtn" type="button" aria-label="Bestiarium öffnen">
           <span>Bestiarium</span>
@@ -55,6 +50,11 @@
             </svg>
           </div>
           <h2>Krieger</h2>
+          <div class="character-status" aria-label="Charakterwerte">
+            <div><span>Level</span><strong id="level">1</strong></div>
+            <div><span>Gold</span><strong id="gold">0</strong></div>
+            <div><span>Ruhm</span><strong id="renown">0</strong></div>
+          </div>
           <div class="bar-block">
             <div class="bar-label"><span>Leben</span><b id="hpText"></b></div>
             <div class="bar"><span id="hpBar"></span></div>
@@ -68,26 +68,16 @@
             <button id="restBtn" type="button">Rasten</button>
             <button id="repairBtn" type="button">Reparieren</button>
           </div>
-          <section class="log-panel compact" id="logPanel" aria-label="Kampfprotokoll">
-            <div>
-              <h2>Protokoll</h2>
-              <p id="logPreview" class="log-preview">Noch keine Einträge.</p>
-            </div>
-            <button id="toggleLogBtn" type="button" aria-haspopup="dialog">Öffnen</button>
-          </section>
         </aside>
 
         <section class="panel world-panel" aria-label="Welt und Kampf">
-          <div class="map">
-            <button class="zone active" type="button" data-zone="meadow">
-              <span>Startzone</span>
-              <small>Level 1-15</small>
-            </button>
-            <button class="zone" type="button" data-zone="dungeon">
-              <span>Dungeon</span>
-              <small>Level 10-20</small>
-            </button>
-          </div>
+          <section class="equipment-belt" aria-label="Ausrüstungsübersicht">
+            <div>
+              <p class="eyebrow">Ausrüstung</p>
+              <h2>Gürtel</h2>
+            </div>
+            <div class="equipment" id="equipment"></div>
+          </section>
           <div class="battle-stage" id="battleStage" aria-label="Kampfanimation">
             <div class="combatant hero-sprite" id="heroSprite">
               <div class="sprite-shadow"></div>
@@ -124,14 +114,28 @@
           </div>
         </section>
 
-        <aside class="panel side-panel" aria-label="Ausrüstung und Quests">
+        <aside class="panel side-panel" aria-label="Gebiete und Quests">
           <section>
-            <h2>Ausrüstung</h2>
-            <div class="equipment" id="equipment"></div>
+            <h2>Gebiet</h2>
+            <div class="map zone-map side-zone-map" id="zoneMap">
+              <div>
+                <small>Aktiv</small>
+                <strong id="activeZoneName">Startzone</strong>
+                <em id="activeZoneRange">Level 1-15</em>
+              </div>
+              <button id="openZoneBtn" type="button">Wechseln</button>
+            </div>
           </section>
           <section>
             <h2>Quests</h2>
             <div class="quests" id="quests"></div>
+          </section>
+          <section class="log-panel compact" id="logPanel" aria-label="Kampfprotokoll">
+            <div>
+              <h2>Protokoll</h2>
+              <p id="logPreview" class="log-preview">Noch keine Einträge.</p>
+            </div>
+            <button id="toggleLogBtn" type="button" aria-haspopup="dialog">Öffnen</button>
           </section>
         </aside>
       </section>
@@ -147,6 +151,27 @@
           <span id="lootCounter">1 von 3</span>
         </div>
         <div class="loot-choices" id="lootChoices"></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="zoneModal" aria-hidden="true">
+      <div class="modal-window zone-window" role="dialog" aria-modal="true" aria-labelledby="zoneTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow">Reisekarte</p>
+            <h2 id="zoneTitle">Gebiet wählen</h2>
+          </div>
+          <button class="modal-close" id="closeZoneBtn" type="button" aria-label="Gebiete schließen">Schließen</button>
+        </div>
+        <div class="zone-options zone-modal-options">
+          <button class="zone active" type="button" data-zone="meadow">
+            <span>Startzone</span>
+            <small>Level 1-15</small>
+          </button>
+          <button class="zone" type="button" data-zone="dungeon">
+            <span>Dungeon</span>
+            <small>Level 10-20</small>
+          </button>
+        </div>
       </div>
     </div>
     <div class="modal-overlay" id="bestiaryModal" aria-hidden="true">
@@ -199,11 +224,21 @@
           <button class="modal-close" id="closeSmithBtn" type="button" aria-label="Schmied schließen">Schließen</button>
         </div>
         <div class="materials" id="materials"></div>
-        <div class="smith-grid" id="smithGrid"></div>
-        <section class="salvage-section">
+        <div class="smith-home" id="smithHome"></div>
+        <section class="smith-section" id="smithUpgradeSection" hidden>
+          <div class="section-title">
+            <h3>Verbessern</h3>
+            <button class="bulk-action" type="button" data-smith-view="home">Zurück</button>
+          </div>
+          <div class="smith-grid" id="smithGrid"></div>
+        </section>
+        <section class="smith-section salvage-section" id="smithSalvageSection" hidden>
           <div class="section-title">
             <h3>Items zerlegen</h3>
-            <button class="bulk-action" id="salvageAllBtn" type="button">Alles zerlegen</button>
+            <div class="section-actions">
+              <button class="bulk-action" type="button" data-smith-view="home">Zurück</button>
+              <button class="bulk-action" id="salvageAllBtn" type="button">Alles zerlegen</button>
+            </div>
           </div>
           <div class="salvage-list" id="salvageList"></div>
         </section>
@@ -224,10 +259,36 @@
         <div id="log" class="log"></div>
       </div>
     </div>
+    <div class="modal-overlay" id="repairModal" aria-hidden="true">
+      <div class="modal-window repair-window" role="dialog" aria-modal="true" aria-labelledby="repairTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow">Werkbank</p>
+            <h2 id="repairTitle">Ausrüstung reparieren</h2>
+          </div>
+          <button class="modal-close" id="closeRepairBtn" type="button" aria-label="Reparatur schließen">Schließen</button>
+        </div>
+        <div class="repair-summary" id="repairSummary"></div>
+        <div class="repair-list" id="repairList"></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="equipmentModal" aria-hidden="true">
+      <div class="modal-window equipment-window" role="dialog" aria-modal="true" aria-labelledby="equipmentTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow">Ausrüstung</p>
+            <h2 id="equipmentTitle">Getragene Ausrüstung</h2>
+          </div>
+          <button class="modal-close" id="closeEquipmentBtn" type="button" aria-label="Ausrüstung schließen">Schließen</button>
+        </div>
+        <div class="equipment-detail-grid" id="equipmentDetails"></div>
+      </div>
+    </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=hard-balance-1"></script>
-    <script src="./scripts/core.js?v=hard-balance-1"></script>
-    <script src="./scripts/render.js?v=hard-balance-1"></script>
-    <script src="./scripts/events.js?v=hard-balance-1"></script>
+    <script src="./scripts/data.js?v=zone-modal-1"></script>
+    <script src="./scripts/core.js?v=zone-modal-1"></script>
+    <script src="./scripts/render.js?v=zone-modal-1"></script>
+    <script src="./scripts/events.js?v=zone-modal-1"></script>
   </body>
 </html>
+

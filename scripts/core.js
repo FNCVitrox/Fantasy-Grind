@@ -13,6 +13,7 @@ let selectedBestiarySearch = "";
 let selectedBestiaryPage = 0;
 let selectedBestiaryItemKey = "";
 let logExpanded = false;
+let smithView = "home";
 let combatWatchdog = 0;
 const tooltipItemCache = new Map();
 const bestiaryLootCache = new Map();
@@ -160,6 +161,7 @@ function migrateEquipmentSlots(loaded) {
 
 function normalizeItemSlot(item) {
   if (item?.slot === "armor") item.slot = "chest";
+  if (item?.slot && !equipmentSlots.includes(item.slot)) item.slot = "ring";
   normalizeItemQuality(item);
   return item;
 }
@@ -167,6 +169,7 @@ function normalizeItemSlot(item) {
 function normalizeItemQuality(item) {
   if (!item) return item;
   if (item.quality === "very-rare") item.quality = "epic";
+  if (!["common", "rare", "epic", "legendary"].includes(item.quality)) item.quality = "common";
   const baseName = item.name?.replace(/\s\+\d+$/, "");
   const legendaryNames = new Set(Object.values(lootNames).flatMap((byQuality) => byQuality.legendary || []));
   if (item.quality === "epic" && (legendaryNames.has(baseName) || ["ashenGreatsword", "crownShard"].includes(item.id))) {
@@ -1038,6 +1041,27 @@ function repair() {
   });
   state.durability = equippedDurabilityAverage();
   log(`Der Schmied repariert deine ausgerüsteten Items vollständig. Kosten: ${cost} Gold.`);
+  save();
+  render();
+}
+
+function repairSlot(slot) {
+  const itemId = state.equipment[slot];
+  const item = getItem(itemId);
+  if (!item) return;
+  const cost = repairCostForSlot(slot);
+  if (!cost) {
+    log(`${item.name} ist bereits vollständig repariert.`);
+    return;
+  }
+  if (state.gold < cost) {
+    log(`Für ${item.name} fehlen ${cost - state.gold} Gold.`, "bad");
+    return;
+  }
+  state.gold -= cost;
+  setItemDurability(itemId, 100);
+  state.durability = equippedDurabilityAverage();
+  log(`${item.name} repariert. Kosten: ${cost} Gold.`);
   save();
   render();
 }
