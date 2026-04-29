@@ -76,7 +76,13 @@ assert(vm.runInContext("state.level = 9; state.renown = 8; questAvailable(getQue
 assert.strictEqual(vm.runInContext("eliteEncounterChance", context), 0.06);
 assert.strictEqual(vm.runInContext("knownClassAbilities().length", context), 3);
 assert(vm.runInContext("state = defaultState(); const normal = totalStats().damage; state.build = 'damage'; totalStats().damage > normal", context), "damage build should increase damage");
-assert(vm.runInContext("state = defaultState(); warriorHeavyStrikeMultiplier() > 1", context), "warrior heavy strike should boost attacks");
+assert.strictEqual(
+  vm.runInContext("state = defaultState(); state.build = 'tank'; knownClassAbilities().map(([id]) => id).join(',')", context),
+  "shieldWall,tauntingBlow,lastStand",
+);
+assert(vm.runInContext("state = defaultState(); state.build = 'damage'; hasBuildAbility('execute')", context), "damage build should know execute");
+assert(vm.runInContext("state = defaultState(); state.build = 'bruiser'; hasBuildAbility('counterBlow') && hasBuildAbility('shatter')", context), "bruiser build should know counter and shatter");
+assert.strictEqual(vm.runInContext("abilityDamage(10, 1.75)", context), 17);
 assert(
   vm.runInContext("Object.values(enemies).every((enemy) => generatedLootPoolCount(enemy) + enemy.drops.length >= 15 && generatedLootPoolCount(enemy) + enemy.drops.length <= 20)", context),
   "enemy item pools should stay between 15 and 20 items",

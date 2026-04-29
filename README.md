@@ -7,7 +7,7 @@ Das Spiel ist aktuell ein spielbarer Alpha-Prototyp. Der Fokus liegt auf einem k
 ## Aktueller Stand
 
 - Spielbarer Krieger mit Level, XP, Leben, Gold, Ruhm, Schaden, Verteidigung und Haltbarkeit
-- Krieger mit drei automatischen Fähigkeiten und den Builds Tank, Schaden und Bruiser
+- Krieger mit drei automatischen Fähigkeiten pro Build: Tank, Schaden und Bruiser
 - Automatische Kämpfe mit Animationen, Schadenstexten und Kampfprotokoll
 - Normale Gebiete zum Farmen und separate Dungeons mit Boss-Reihen
 - Mehrere Gegner mit eigenen Werten, Materialien und begrenzten Loot-Pools
@@ -114,6 +114,6 @@ Dadurch lässt sich das Spiel direkt im Browser starten und leicht weiterentwick
 
 ## Status
 
-Aktuelle Version: Alpha v0.8.3
+Aktuelle Version: Alpha v0.8.4
 
 Das Projekt ist noch in Entwicklung. Viele Systeme sind bereits spielbar, aber Balance, Inhalte und Komfort werden weiter ausgebaut.

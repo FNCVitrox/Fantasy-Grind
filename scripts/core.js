@@ -52,7 +52,7 @@ function defaultState() {
     renown: 0,
     characterClass: "warrior",
     build: "bruiser",
-    knownAbilities: ["heavyStrike", "shieldWall", "battleRush"],
+    knownAbilities: [],
     durability: 100,
     itemDurability: {},
     equipment: {
@@ -128,9 +128,9 @@ function parseSavedState(raw) {
     loaded.nextEncounters = loaded.nextEncounters || {};
     loaded.characterClass = classCatalog[loaded.characterClass] ? loaded.characterClass : "warrior";
     loaded.build = buildCatalog[loaded.build] ? loaded.build : "bruiser";
-    loaded.knownAbilities = Array.isArray(loaded.knownAbilities) && loaded.knownAbilities.length
+    loaded.knownAbilities = Array.isArray(loaded.knownAbilities)
       ? loaded.knownAbilities.filter((id) => abilityCatalog[id])
-      : [...classCatalog[loaded.characterClass].abilities];
+      : [];
     migrateEquipmentSlots(loaded);
     loaded.itemDurability = loaded.itemDurability || {};
     loaded.materials = normalizeMaterials(loaded.materials);
@@ -387,9 +387,17 @@ function activeBuild() {
 }
 
 function knownClassAbilities() {
-  const fallback = activeClass().abilities || [];
-  const known = Array.isArray(state.knownAbilities) && state.knownAbilities.length ? state.knownAbilities : fallback;
-  return known.map((id) => [id, abilityCatalog[id]]).filter(([, ability]) => ability);
+  return activeBuildAbilityIds().map((id) => [id, abilityCatalog[id]]).filter(([, ability]) => ability);
+}
+
+function activeBuildAbilityIds() {
+  const build = activeBuild();
+  const active = activeClass();
+  return build.abilities || active.buildAbilities?.[state.build] || active.abilities || [];
+}
+
+function hasBuildAbility(id) {
+  return activeBuildAbilityIds().includes(id);
 }
 
 function setBuild(buildId) {
@@ -628,21 +636,8 @@ function questAvailable(quest) {
   return Boolean(quest && questTargetAvailable(quest.target));
 }
 
-function warriorHeavyStrikeMultiplier() {
-  if (state.build === "damage") return 1.75;
-  if (state.build === "tank") return 1.4;
-  return 1.55;
-}
-
-function warriorShieldWallReduction() {
-  if (state.build === "tank") return 0.55;
-  if (state.build === "damage") return 0.25;
-  return 0.38;
-}
-
-function warriorBattleRushHeal(maxHp) {
-  const ratio = state.build === "bruiser" ? 0.18 : state.build === "tank" ? 0.14 : 0.11;
-  return Math.max(8, Math.floor(maxHp * ratio));
+function abilityDamage(baseHit, multiplier) {
+  return Math.max(1, Math.floor(baseHit * multiplier));
 }
 
 async function fight() {
@@ -665,34 +660,85 @@ async function fight() {
   const stats = totalStats();
   let rounds = 0;
   const events = [];
-  const fightState = { battleRushUsed: false };
+  const fightState = {
+    sustainUsed: false,
+    nextEnemyDamageMultiplier: 1,
+    lastCounterRound: -99,
+    lastExecuteRound: -99,
+  };
 
   while (playerHp > 0 && enemyHp > 0 && rounds < 80) {
     rounds += 1;
-    if (state.characterClass === "warrior" && !fightState.battleRushUsed && playerHp <= stats.maxHp * 0.45) {
-      const heal = Math.min(stats.maxHp - playerHp, warriorBattleRushHeal(stats.maxHp));
+
+    if (!fightState.sustainUsed && hasBuildAbility("lastStand") && playerHp <= stats.maxHp * 0.4) {
+      const heal = Math.min(stats.maxHp - playerHp, Math.max(8, Math.floor(stats.maxHp * 0.14)));
       if (heal > 0) {
         playerHp += heal;
-        fightState.battleRushUsed = true;
+        fightState.sustainUsed = true;
+        fightState.nextEnemyDamageMultiplier = Math.min(fightState.nextEnemyDamageMultiplier, 0.85);
+        events.push({ actor: "hero", damage: 0, text: `Letztes Aufbäumen heilt ${heal} Leben und festigt die Deckung.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
+      }
+    } else if (!fightState.sustainUsed && hasBuildAbility("battleRush") && playerHp <= stats.maxHp * 0.45) {
+      const heal = Math.min(stats.maxHp - playerHp, Math.max(8, Math.floor(stats.maxHp * 0.18)));
+      if (heal > 0) {
+        playerHp += heal;
+        fightState.sustainUsed = true;
         events.push({ actor: "hero", damage: 0, text: `Kampfrausch heilt ${heal} Leben.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
       }
     }
 
-    const heavyStrike = state.characterClass === "warrior" && rounds % 3 === 0;
-    const damageMultiplier = heavyStrike ? warriorHeavyStrikeMultiplier() : 1;
-    const playerHit = Math.max(1, Math.floor((random(stats.damage - 4, stats.damage + 3) - Math.floor(enemy.defense * 1.08)) * damageMultiplier));
+    const shatter = hasBuildAbility("shatter") && rounds % 3 === 0;
+    const armorIgnore = shatter ? Math.floor(enemy.defense * 0.45) : 0;
+    const effectiveDefense = Math.max(0, enemy.defense - armorIgnore);
+    const basePlayerHit = Math.max(1, random(stats.damage - 4, stats.damage + 3) - Math.floor(effectiveDefense * 1.08));
+    let playerHit = basePlayerHit;
+    let playerText = `Du triffst für ${playerHit}.`;
+
+    if (hasBuildAbility("execute") && enemyHp <= enemy.hp * 0.3 && rounds - fightState.lastExecuteRound >= 2) {
+      playerHit = abilityDamage(basePlayerHit, 1.5);
+      fightState.lastExecuteRound = rounds;
+      playerText = `Hinrichten trifft für ${playerHit}.`;
+    } else if (hasBuildAbility("heavyStrike") && rounds % 3 === 0) {
+      playerHit = abilityDamage(basePlayerHit, 1.75);
+      playerText = `Schwerer Hieb trifft für ${playerHit}.`;
+    } else if (shatter) {
+      playerHit = abilityDamage(basePlayerHit, 1.3);
+      playerText = `Zerschmettern bricht die Deckung und trifft für ${playerHit}.`;
+    } else if (hasBuildAbility("tauntingBlow") && rounds % 3 === 0) {
+      fightState.nextEnemyDamageMultiplier = Math.min(fightState.nextEnemyDamageMultiplier, 0.75);
+      playerText = `Spottender Schlag trifft für ${playerHit} und schwächt den Konter.`;
+    }
+
     enemyHp -= playerHit;
     events.push({
       actor: "hero",
       damage: playerHit,
       enemyHp: Math.max(0, enemyHp),
       playerHp: Math.max(0, playerHp),
-      text: heavyStrike ? `Schwerer Hieb trifft für ${playerHit}.` : `Du triffst für ${playerHit}.`,
+      text: playerText,
     });
+
+    if (enemyHp > 0 && hasBuildAbility("bladeFlurry") && rounds % 4 === 0) {
+      const flurryHit = abilityDamage(basePlayerHit, 0.45);
+      enemyHp -= flurryHit;
+      events.push({
+        actor: "hero",
+        damage: flurryHit,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: `Klingenserie trifft zusätzlich für ${flurryHit}.`,
+      });
+    }
+
     if (enemyHp <= 0) break;
-    const shieldWall = state.characterClass === "warrior" && rounds % 4 === 0;
+
+    const shieldWall = hasBuildAbility("shieldWall") && rounds % 4 === 0;
     const enemyBaseHit = Math.max(1, random(enemy.damage[0], enemy.damage[1]) - Math.floor(stats.defense * 0.42));
-    const enemyHit = shieldWall ? Math.max(1, Math.floor(enemyBaseHit * (1 - warriorShieldWallReduction()))) : enemyBaseHit;
+    const enemyDamageMultiplier = shieldWall
+      ? Math.min(fightState.nextEnemyDamageMultiplier, 0.45)
+      : fightState.nextEnemyDamageMultiplier;
+    const enemyHit = Math.max(1, Math.floor(enemyBaseHit * enemyDamageMultiplier));
+    fightState.nextEnemyDamageMultiplier = 1;
     playerHp -= enemyHit;
     events.push({
       actor: "enemy",
@@ -701,6 +747,25 @@ async function fight() {
       playerHp: Math.max(0, playerHp),
       text: shieldWall ? `Schildwall dämpft den Treffer auf ${enemyHit}.` : `${enemy.name} trifft für ${enemyHit}.`,
     });
+
+    if (
+      playerHp > 0
+      && enemyHp > 0
+      && hasBuildAbility("counterBlow")
+      && enemyBaseHit >= Math.max(10, stats.maxHp * 0.12)
+      && rounds - fightState.lastCounterRound >= 3
+    ) {
+      const counterHit = abilityDamage(basePlayerHit, 0.5);
+      fightState.lastCounterRound = rounds;
+      enemyHp -= counterHit;
+      events.push({
+        actor: "hero",
+        damage: counterHit,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: `Konterschlag antwortet für ${counterHit}.`,
+      });
+    }
   }
 
   isFighting = true;
