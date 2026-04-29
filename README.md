@@ -1,48 +1,109 @@
 # Fantasy Grind
 
-Fantasy Grind ist ein browserbasiertes Fantasy-Grind-RPG rund um Ausrüstung, Risiko und langsame Progression. Du spielst einen Krieger der Grauwacht, kämpfst gegen Gegner in verschiedenen Gebieten, sammelst Gold, Materialien und Ausrüstung, erledigst Quests und verbesserst deine Items beim Schmied.
+Fantasy Grind ist ein browserbasiertes Fantasy-Grind-RPG rund um Ausrüstung, Risiko, Loot und langsame Progression. Du spielst einen Krieger der Grauwacht, kämpfst dich durch normale Gebiete und separate Dungeons, sammelst Gold, Materialien und Ausrüstung, erledigst Quests und verbesserst deine Items beim Schmied.
 
-Das Spiel ist aktuell ein spielbarer Alpha-Prototyp. Der Fokus liegt auf einem klaren Loop: Gegner wählen, Kampf starten, Belohnung bekommen, Ausrüstung prüfen, reparieren oder verbessern und dann den nächsten Schritt wagen.
+Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht bereits: Gegner wählen, Kampf starten, Belohnung bekommen, Ausrüstung prüfen, reparieren oder verbessern und den nächsten Schritt wagen.
 
-## Aktueller Stand
+## Aktuelle Version
+
+Alpha v0.8.8
+
+## Was Bereits Spielbar Ist
 
 - Spielbarer Krieger mit Level, XP, Leben, Gold, Ruhm, Schaden, Verteidigung und Haltbarkeit
-- Krieger mit drei automatischen Fähigkeiten pro Build: Tank, Schaden und Bruiser
-- Automatische Kämpfe mit Animationen, Schadenstexten und Kampfprotokoll
-- Normale Gebiete zum Farmen und separate Dungeons mit Boss-Reihen
-- Mehrere Gegner mit eigenen Werten, Materialien und begrenzten Loot-Pools
-- Gegnerfähigkeiten: normale Gegner haben einfache Skills, Elite-Gegner mehrere Skills und Dungeon-Bosse eigene aktive und passive Fähigkeiten
-- Normale Gegner haben ungefähr 19 mögliche Items, stärkere Gegner bis zu 20
+- Drei Krieger-Builds: Tank, Schaden und Bruiser
+- Jeder Build hat drei automatische Fähigkeiten
+- Automatische Kämpfe mit Animationen, Schadenstexten, HP-Balken und Kampfprotokoll
+- Gegner haben eigene Fähigkeiten
+- Normale Gegner haben einfache Fähigkeiten
+- Elite-Gegner haben mehrere Fähigkeiten
+- Dungeon-Bosse haben aktive Fähigkeiten und passive Effekte
+- Normale Gebiete zum Farmen
+- Separate Dungeons mit Boss-Reihen
+- Freischaltungen über Level und Ruhm
+- Quest-Tafel mit normalen und seltenen Quests
+- Quests erscheinen nur, wenn die passenden Gegner schon erreichbar sind
+- Bestiarium mit Gegnerwerten, Fähigkeiten, Drops, Materialien und entdecktem Loot
+- Loot-Pools pro Gegner sind begrenzt, damit das Bestiarium übersichtlich bleibt
 - Ausrüstungsslots: Waffe, zweite Hand, Brustpanzer, Hose, Stiefel, Halskette und Ring
 - Item-Qualitäten: Gewöhnlich, Selten, Episch und Legendär
 - Set-Boni für besondere Ausrüstung
-- Bestiarium mit Gegnerinfos, Drops, Materialien und entdeckten Items
-- Quest-Tafel mit normalen und seltenen Quests
 - Inventar mit Ausrüsten, Verkaufen und Zerlegen
 - Schmied zum Verbessern, Zerlegen und Reparieren von Ausrüstung
-- Mehrteiliges Materialsystem mit Eisenstücken, Lederresten, Runensplittern, Set-Materialien und seltenen magischen Komponenten
-- Lokaler Spielstand im Browser mit Sicherungs- und Ladefunktion
-- Automatische Backup-Speicherung, damit Spielstände nicht so leicht verloren gehen
-- Freischaltungen über Level und Ruhm, damit neue Gebiete und Dungeons schrittweise aufgehen
-- Quest-Tafel bietet nur Aufgaben an, deren Gegner in freigeschalteten Reisezielen erreichbar sind
+- Materialsystem mit Eisenstücken, Lederresten, Runensplittern, Set-Materialien und seltenen Komponenten
+- Lokaler Spielstand im Browser
+- Sicherungs- und Ladefunktion für Spielstände
+- Automatische Backup-Speicherung
 
 ## Spielidee
 
-Fantasy Grind soll kein schnelles Wegwerfspiel sein. Fortschritt soll sich verdient anfühlen. Ein gutes Item, ein geschaffter Elite-Gegner oder ein abgeschlossenes Questziel soll spürbar etwas bedeuten.
+Fantasy Grind soll sich wie ein stetiger Aufstieg anfühlen. Fortschritt soll verdient sein: ein gutes Item, ein geschaffter Elite-Gegner, ein neues Gebiet oder ein abgeschlossener Dungeon soll wirklich etwas bedeuten.
 
-Die wichtigste Entscheidung ist nicht Reaktionsgeschwindigkeit, sondern Vorbereitung:
+Die wichtigste Entscheidung ist Vorbereitung:
 
 - Ist mein Leben hoch genug?
 - Ist meine Ausrüstung noch haltbar?
+- Welcher Build passt zum Gegner?
 - Lohnt sich der stärkere Gegner?
 - Spare ich Gold oder verbessere ich ein Item?
 - Repariere ich jetzt oder riskiere ich noch einen Kampf?
 
-Tod ist kein kompletter Reset, aber er kostet Fortschritt. Dadurch soll Risiko wichtig bleiben.
+Tod ist kein kompletter Reset, aber er kostet Fortschritt. Dadurch bleiben Risiko, Haltbarkeit und Gold wichtig.
+
+## Builds Und Fähigkeiten
+
+Der Krieger hat aktuell drei Builds:
+
+- Tank: mehr Leben und Verteidigung, defensive Fähigkeiten und Schadensdämpfung
+- Schaden: mehr Angriffskraft, stärkere Treffer und Hinrichten bei schwachen Gegnern
+- Bruiser: ausgewogener Build mit Heilung, Kontern und Rüstungsbruch
+
+Die Fähigkeiten laufen im Auto-Kampf automatisch. Der Spieler muss also nicht jede Runde manuell klicken, aber die Build-Wahl verändert deutlich, wie sich Kämpfe anfühlen.
+
+## Gegner Und Bosse
+
+Gegner sind nicht nur Werteblöcke. Viele haben eigene Kampfmechaniken:
+
+- Blutung, Gift und Brennen
+- Starke Angriffe in bestimmten Runden
+- Heilung
+- Schadensreduktion
+- Schwächung des nächsten Spielerangriffs
+- Boss-Passiven wie zweite Phase, Standhaftigkeit oder stärkere Heilung
+
+Normale Gegner bleiben einfacher. Elite-Gegner und Dungeon-Bosse sind gefährlicher und sollen Vorbereitung belohnen.
+
+## Gebiete Und Dungeons
+
+Das Spiel trennt normale Gebiete und Dungeons:
+
+- Normale Gebiete sind zum Farmen, Leveln, Questen und Looten gedacht.
+- Dungeons sind separate Herausforderungen mit Boss-Gegnern.
+- Neue Ziele werden über Level und Ruhm freigeschaltet.
+
+Das Ziel ist, dass sich jedes neue Gebiet wie ein sinnvoller Schritt nach vorne anfühlt.
+
+## Schmied, Materialien Und Loot
+
+Der Schmied ist ein wichtiger Teil der Progression:
+
+- Items verbessern
+- Ausrüstung reparieren
+- Items zerlegen
+- Materialien sammeln und ausgeben
+- Gold und Materialien direkt im Schmied sehen
+
+Items sollen nicht nur stärker werden, sondern auch Entscheidungen erzeugen: behalten, verkaufen, zerlegen oder verbessern.
+
+## Spielstand
+
+Der Fortschritt wird lokal im Browser gespeichert. Zusätzlich gibt es eine Sicherungs- und Ladefunktion.
+
+Wichtig: Wenn Browserdaten gelöscht werden, kann der lokale Spielstand verschwinden. Deshalb ist die Sicherungsdatei nützlich, wenn du deinen Fortschritt langfristig behalten möchtest.
 
 ## Spielen
 
-Das Projekt ist eine statische Browser-App.
+Fantasy Grind ist eine statische Browser-App.
 
 1. Repository herunterladen oder klonen.
 2. `index.html` im Browser öffnen.
@@ -50,71 +111,48 @@ Das Projekt ist eine statische Browser-App.
 
 Es ist kein Server und keine Installation nötig.
 
-## Spielstand
-
-Der Fortschritt wird lokal im Browser gespeichert. Zusätzlich gibt es oben im Spiel Buttons zum Sichern und Laden.
-
-Wichtig: Wenn Browserdaten gelöscht werden, kann der lokale Spielstand verschwinden. Deshalb ist die Sicherungsdatei nützlich, wenn du deinen Fortschritt behalten möchtest.
-
-## Geplante Features
-
-Die folgenden Ideen sind für spätere Versionen geplant oder werden noch getestet:
-
-- Weitere Klassen wie Magier, Schurke und Bogenschütze
-- Drei Fähigkeiten pro neuer Klasse
-- Manuelles und automatisches Kampfsystem mit Wechselmöglichkeit
-- Fähigkeiten, die im Auto-Modus automatisch eingesetzt werden
-- Lernsystem für neue Fähigkeiten, zum Beispiel über Schule, Schriftrollen oder eine Zauberin
-- Unterschiedliche Builds pro Klasse, zum Beispiel Tank, Schaden oder Bruiser beim Krieger
-- Item-Bilder statt nur Textdarstellung
-- Eine Hexe oder Zauberin zum Verzaubern von Items
-- Achievements
-- Zufällige Ereignisse vor Kämpfen
-- Ereignisse wie Lagerheilung, einmalige Artefakte, verfluchte Items, mehrere Gegner oder ein Shop
-- Neue Gebiete, die durch Level, Schlüssel oder besondere Anforderungen freigeschaltet werden
-- Weitere Balance-Arbeit bei Items, Gegnern, Gold, Reparaturkosten und Upgrade-Kosten
-- Schutz gegen zu starkes Gold-Farming
-- Mögliche Einschränkung, dass sehr schwache Gegner vor zu starken Spielern fliehen
-- Spezialitems, mit denen alte Low-Level-Gegner trotzdem bekämpft werden können
-
-## Roadmap
-
-### Kurzfristig
-
-- Item- und Gegnerbalance weiter verbessern
-- Bestiarium und Loot-Anzeige weiter verfeinern
-- Mehr Klarheit bei Belohnungen, Materialien und Ausrüstungsvergleichen
-- Kleine UI-Verbesserungen und bessere Lesbarkeit auf mobilen Geräten
-
-### Mittelfristig
-
-- Klassen und Fähigkeiten einführen
-- Builds pro Klasse ermöglichen
-- Verzauberungssystem entwickeln
-- Achievements ergänzen
-- Mehr Gebiete und Progressionshürden einbauen
-
-### Langfristig
-
-- Größere Welt mit mehr Gegnergruppen
-- Tiefere Item-Systeme mit Bildern, Sets, Verzauberungen und Spezialeffekten
-- Mehr Kampfentscheidungen für Spieler, ohne den Auto-Grind zu verlieren
-- Besseres Balancing für lange Spielzeit
-
 ## Technik
 
-Fantasy Grind ist aktuell bewusst einfach aufgebaut:
+Das Projekt ist bewusst einfach gehalten:
 
 - HTML
 - CSS
 - JavaScript
-- Lokale Speicherung über `localStorage`
+- `localStorage` für Spielstände
 - Keine externen Frameworks
 
 Dadurch lässt sich das Spiel direkt im Browser starten und leicht weiterentwickeln.
 
+## Roadmap
+
+Kurzfristig:
+
+- Gegnerfähigkeiten weiter balancieren
+- Bosskämpfe klarer voneinander unterscheiden
+- Bestiarium weiter verbessern
+- Mehr Übersicht bei Loot, Materialien und Ausrüstungsvergleichen
+- UI weiter glätten
+
+Mittelfristig:
+
+- Weitere Klassen wie Magier, Schurke und Bogenschütze
+- Drei passende Fähigkeiten pro Build
+- Manuelles und automatisches Kampfsystem mit Wechselmöglichkeit
+- Lernsystem für Fähigkeiten, z.B. Schule, Schriftrollen oder Zauberin
+- Verzauberungssystem über eine Hexe oder Zauberin
+- Achievements
+- Item-Bilder statt nur Textdarstellung
+
+Langfristig:
+
+- Größere Welt mit mehr Gegnergruppen
+- Mehr Dungeons mit eigenen Boss-Mechaniken
+- Zufällige Ereignisse vor Kämpfen
+- Ereignisse wie Lagerheilung, Artefakte, verfluchte Items, mehrere Gegner oder ein Shop
+- Schutz gegen zu starkes Gold-Farming
+- Mögliche Einschränkung, dass zu schwache Gegner vor sehr starken Spielern fliehen
+- Spezialitems, mit denen alte Low-Level-Gegner trotzdem bekämpft werden können
+
 ## Status
 
-Aktuelle Version: Alpha v0.8.8
-
-Das Projekt ist noch in Entwicklung. Viele Systeme sind bereits spielbar, aber Balance, Inhalte und Komfort werden weiter ausgebaut.
+Fantasy Grind ist noch in Entwicklung. Viele Systeme sind bereits spielbar, aber Balance, Inhalte und Komfort werden weiter ausgebaut.
