@@ -20,6 +20,10 @@
     flex-direction: column;
   }
 
+  .topbar > div:first-child {
+    min-width: 0;
+  }
+
   .book-button {
     width: 100%;
   }
@@ -61,7 +65,7 @@
 
 @media (max-width: 620px) {
   .shell {
-    width: min(100vw - 18px, 1480px);
+    width: min(100vw - 18px, 1720px);
     padding-top: 9px;
   }
 

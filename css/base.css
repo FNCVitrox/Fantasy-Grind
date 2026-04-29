@@ -30,9 +30,8 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 16% 10%, rgba(52, 213, 216, 0.18), transparent 32%),
-    radial-gradient(circle at 82% 16%, rgba(73, 182, 255, 0.13), transparent 30%),
-    linear-gradient(135deg, #07111b 0%, #0e1d2d 52%, #121729 100%);
+    linear-gradient(90deg, rgba(14, 83, 82, 0.22), transparent 24%, transparent 72%, rgba(70, 42, 76, 0.2)),
+    linear-gradient(180deg, #061019 0%, #0c1a28 48%, #111322 100%);
   color: var(--text);
   font-family: "Segoe UI", Arial, sans-serif;
 }
@@ -83,9 +82,9 @@ button:disabled {
 }
 
 .shell {
-  width: min(1480px, calc(100% - 28px));
+  width: min(1720px, calc(100% - 24px));
   margin: 0 auto;
-  padding: 18px 0 28px;
+  padding: 12px 0 22px;
 }
 
 .topbar,
@@ -98,13 +97,16 @@ button:disabled {
 .topbar {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 18px;
-  padding: 14px 18px;
+  align-items: stretch;
+  gap: 10px;
+  padding: 10px 12px;
   border-radius: 8px;
 }
 
 .topbar > div:first-child {
+  display: grid;
+  align-content: center;
+  min-width: 230px;
   margin-right: auto;
 }
 
@@ -115,7 +117,7 @@ p {
 }
 
 h1 {
-  font-size: clamp(30px, 5vw, 54px);
+  font-size: clamp(32px, 3.8vw, 48px);
   line-height: 0.95;
 }
 
@@ -134,20 +136,24 @@ h2 {
 .book-button {
   display: grid;
   place-items: center;
-  min-width: 120px;
-  min-height: 58px;
+  flex: 0 1 116px;
+  min-width: 102px;
+  min-height: 52px;
+  padding: 4px 8px 6px;
   border-color: rgba(52, 213, 216, 0.62);
   background:
     linear-gradient(90deg, rgba(52, 213, 216, 0.14), transparent 50%),
     #07111b;
+  font-size: 13px;
   font-weight: 800;
+  line-height: 1.05;
 }
 
 .book-button::before {
   content: "";
-  width: 28px;
-  height: 20px;
-  margin-bottom: 4px;
+  width: 24px;
+  height: 18px;
+  margin-bottom: 2px;
   border: 2px solid var(--gold);
   border-radius: 4px 4px 2px 2px;
   background:
@@ -157,7 +163,7 @@ h2 {
 
 .book-button .button-price {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -224,22 +230,22 @@ h2 {
 
 .game-layout {
   display: grid;
-  grid-template-columns: 300px minmax(520px, 1fr) 280px;
+  grid-template-columns: minmax(260px, 292px) minmax(0, 1fr) minmax(250px, 286px);
   align-items: start;
-  gap: 14px;
-  margin-top: 14px;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .panel {
   border-radius: 8px;
-  padding: 16px;
+  padding: 12px;
 }
 
 .character-panel,
 .side-panel {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
   align-self: start;
 }
 
@@ -247,7 +253,7 @@ h2 {
   display: grid;
   place-items: center;
   width: 100%;
-  min-height: 190px;
+  min-height: 160px;
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -258,7 +264,7 @@ h2 {
 }
 
 .portrait svg {
-  width: min(78%, 180px);
+  width: min(70%, 150px);
 }
 
 .portrait:hover,
@@ -275,7 +281,7 @@ h2 {
 }
 
 .character-status div {
-  padding: 9px;
+  padding: 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #0c1723;
@@ -288,11 +294,11 @@ h2 {
 }
 
 .character-status strong {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .xp-overview {
-  padding: 10px;
+  padding: 8px 9px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #0c1723;
@@ -300,11 +306,11 @@ h2 {
 
 .class-card {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .class-card h3 {
-  margin: 0 0 6px;
+  margin: 0 0 5px;
   font-size: 15px;
 }
 
@@ -315,11 +321,11 @@ h2 {
 }
 
 .build-list button {
-  min-height: 64px;
+  min-height: 58px;
   display: grid;
   gap: 3px;
   align-content: center;
-  padding: 8px;
+  padding: 7px;
   text-align: left;
 }
 
@@ -348,7 +354,7 @@ h2 {
 .ability-chip {
   display: grid;
   gap: 2px;
-  padding: 8px;
+  padding: 7px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #0c1723;
@@ -495,10 +501,10 @@ h2 {
 
 .equipment-belt {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 10px;
   align-items: center;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(7, 17, 27, 0.72);
@@ -506,7 +512,7 @@ h2 {
 
 .equipment-belt h2 {
   margin-top: 2px;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .equipment-belt .equipment {
@@ -514,7 +520,7 @@ h2 {
 }
 
 .map {
-  padding: 12px;
+  padding: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
@@ -524,7 +530,7 @@ h2 {
 }
 
 .side-zone-map {
-  padding: 10px;
+  padding: 9px;
 }
 
 .side-zone-map > div small,
@@ -534,7 +540,7 @@ h2 {
 }
 
 .side-zone-map > div strong {
-  font-size: 22px;
+  font-size: 20px;
 }
 
 .side-zone-map > div em {
@@ -544,7 +550,7 @@ h2 {
 
 .side-zone-map > button {
   width: 100%;
-  margin-top: 12px;
+  margin-top: 10px;
   color: var(--accent);
 }
 
@@ -579,7 +585,7 @@ h2 {
 }
 
 .side-zone-map summary strong {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .zone-map summary em {
@@ -597,7 +603,7 @@ h2 {
 
 .side-zone-map summary b {
   width: 100%;
-  padding: 8px 10px;
+  padding: 7px 10px;
   text-align: center;
 }
 
@@ -619,8 +625,8 @@ h2 {
 
 .side-zone-map .zone-options {
   grid-template-columns: 1fr;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .zone {
@@ -632,7 +638,7 @@ h2 {
 }
 
 .side-zone-map .zone {
-  min-height: 58px;
+  min-height: 52px;
 }
 
 .travel-section:nth-child(2) .zone {
@@ -668,10 +674,10 @@ h2 {
   position: relative;
   min-width: 0;
   display: grid;
-  gap: 3px;
-  min-height: 74px;
+  gap: 2px;
+  min-height: 66px;
   align-content: center;
-  padding: 8px;
+  padding: 7px;
   text-align: left;
   border-radius: 8px;
 }
@@ -685,12 +691,12 @@ h2 {
 }
 
 .equipment-chip strong {
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .equipment-chip span,
 .equipment-chip small {
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .equipment-chip strong,
@@ -770,15 +776,26 @@ h2 {
 .enemy {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
-  min-height: 62px;
+  min-height: 54px;
+  padding: 8px 10px;
   text-align: left;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
 
 .enemy.active {
   border-color: var(--gold);
-  background: #17283a;
+  background:
+    linear-gradient(90deg, rgba(216, 174, 75, 0.12), transparent 42%),
+    #142438;
+  box-shadow: inset 3px 0 0 rgba(242, 193, 78, 0.72);
+}
+
+.enemy:hover,
+.enemy:focus-visible {
+  border-color: rgba(52, 213, 216, 0.72);
+  transform: translateY(-1px);
 }
 
 .enemy strong,

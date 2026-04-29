@@ -619,18 +619,19 @@ button.drop-row span:last-child {
 
 .battle-stage {
   position: relative;
-  min-height: 204px;
+  min-height: 208px;
   display: grid;
-  grid-template-columns: minmax(90px, 1fr) minmax(110px, 0.6fr) minmax(90px, 1fr);
+  grid-template-columns: minmax(120px, 1fr) minmax(120px, 0.7fr) minmax(120px, 1fr);
   align-items: end;
-  gap: 12px;
+  gap: 14px;
   overflow: hidden;
-  padding: 24px 18px 12px;
+  padding: 24px 22px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
-    linear-gradient(180deg, rgba(109, 149, 184, 0.12), transparent 45%),
-    linear-gradient(0deg, rgba(88, 67, 44, 0.42), transparent 34%),
+    linear-gradient(180deg, rgba(109, 149, 184, 0.14), transparent 44%),
+    linear-gradient(0deg, rgba(88, 67, 44, 0.38), transparent 34%),
+    linear-gradient(90deg, rgba(52, 213, 216, 0.06), transparent 35%, transparent 65%, rgba(242, 193, 78, 0.06)),
     #0a1622;
 }
 
@@ -649,7 +650,7 @@ button.drop-row span:last-child {
   z-index: 1;
   display: grid;
   justify-items: center;
-  gap: 7px;
+  gap: 6px;
   min-width: 150px;
   transform: translateZ(0);
 }
@@ -1397,18 +1398,27 @@ button.drop-row span:last-child {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  padding: 12px;
-  background: #0c1723;
+  gap: 14px;
+  padding: 10px 12px;
+  background:
+    linear-gradient(90deg, rgba(52, 213, 216, 0.08), transparent 38%),
+    #0c1723;
   border: 1px solid var(--line);
   border-radius: 8px;
 }
 
 .primary {
   min-width: 160px;
+  min-height: 40px;
   background: #2b4c78;
   border-color: #49b6ff;
   font-weight: 800;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.primary:hover,
+.primary:focus-visible {
+  background: #315987;
 }
 
 .quality-common {
@@ -1482,9 +1492,9 @@ button.drop-row span:last-child {
 
 .log-panel {
   display: grid;
-  gap: 12px;
-  margin-top: 12px;
-  padding: 12px;
+  gap: 9px;
+  margin-top: 8px;
+  padding: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(7, 17, 27, 0.72);
@@ -1494,8 +1504,8 @@ button.drop-row span:last-child {
   max-width: 100%;
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 12px;
+  line-height: 1.32;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1504,7 +1514,7 @@ button.drop-row span:last-child {
 
 .log-panel h2 {
   margin-bottom: 3px;
-  font-size: 17px;
+  font-size: 16px;
 }
 
 .log-panel button {
