@@ -10,12 +10,11 @@
   renderHeroBuildVisual();
   renderClassPanel();
   const currentRestCost = restCost();
-  const restPrice = state.hp >= state.maxHp
-    ? "Voll geheilt"
-    : state.gold >= currentRestCost
-      ? `${currentRestCost} Gold`
-      : "kostenlos";
-  renderCachedHtml("restBtn", `${currentRestCost}|${restPrice}`, () => `<span class="button-main">Lagerplatz</span><span class="button-price">${restPrice}</span>`);
+  const restPrice = state.gold >= currentRestCost ? `${currentRestCost} Gold` : "kostenlos";
+  const restLabel = state.hp >= state.maxHp
+    ? `<span class="button-main">Lagerplatz</span>`
+    : `<span class="button-main">Lagerplatz</span><span class="button-price">${restPrice}</span>`;
+  renderCachedHtml("restBtn", `${state.hp >= state.maxHp ? "full" : restPrice}`, () => restLabel);
   setDisabled("restBtn", state.hp >= state.maxHp);
 
   renderMap();
