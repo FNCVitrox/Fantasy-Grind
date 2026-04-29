@@ -9,6 +9,7 @@
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
   $("xpText").textContent = state.level >= 20 ? "Max" : `${state.xp}/${needed}`;
   $("xpBar").style.width = `${state.level >= 20 ? 100 : Math.max(2, (state.xp / needed) * 100)}%`;
+  renderClassPanel();
   $("stats").innerHTML = [
     ["Schaden", stats.damage],
     ["Verteidigung", stats.defense],
@@ -59,6 +60,22 @@ function renderMap() {
     button.disabled = !isZoneUnlocked(button.dataset.zone);
   });
   renderZoneOptions();
+}
+
+function renderClassPanel() {
+  $("className").textContent = activeClass().name;
+  $("buildList").innerHTML = Object.entries(buildCatalog).map(([id, build]) => `
+    <button class="${state.build === id ? "active" : ""}" type="button" data-build="${id}">
+      <strong>${escapeHtml(build.name)}</strong>
+      <span>${escapeHtml(build.description)}</span>
+    </button>
+  `).join("");
+  $("abilityList").innerHTML = knownClassAbilities().map(([id, ability]) => `
+    <div class="ability-chip" data-ability="${id}">
+      <strong>${escapeHtml(ability.name)}</strong>
+      <span>${escapeHtml(ability.text)}</span>
+    </div>
+  `).join("");
 }
 
 function renderEnemies() {

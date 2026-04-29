@@ -24,6 +24,10 @@
     width: 100%;
   }
 
+  .build-list {
+    grid-template-columns: 1fr;
+  }
+
   .drop-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

@@ -50,6 +50,9 @@ function defaultState() {
     gold: 20,
     deaths: 0,
     renown: 0,
+    characterClass: "warrior",
+    build: "bruiser",
+    knownAbilities: ["heavyStrike", "shieldWall", "battleRush"],
     durability: 100,
     itemDurability: {},
     equipment: {
@@ -123,6 +126,11 @@ function parseSavedState(raw) {
     loaded.discoveredLoot = loaded.discoveredLoot || {};
     loaded.lootQueue = Array.isArray(loaded.lootQueue) ? loaded.lootQueue : [];
     loaded.nextEncounters = loaded.nextEncounters || {};
+    loaded.characterClass = classCatalog[loaded.characterClass] ? loaded.characterClass : "warrior";
+    loaded.build = buildCatalog[loaded.build] ? loaded.build : "bruiser";
+    loaded.knownAbilities = Array.isArray(loaded.knownAbilities) && loaded.knownAbilities.length
+      ? loaded.knownAbilities.filter((id) => abilityCatalog[id])
+      : [...classCatalog[loaded.characterClass].abilities];
     migrateEquipmentSlots(loaded);
     loaded.itemDurability = loaded.itemDurability || {};
     loaded.materials = normalizeMaterials(loaded.materials);
@@ -359,11 +367,39 @@ function totalStats() {
   const itemDamage = equipped.reduce((sum, [id, item]) => sum + Math.floor(item.damage * itemDurabilityFactor(id)), 0);
   const itemDefense = equipped.reduce((sum, [id, item]) => sum + Math.floor(item.defense * itemDurabilityFactor(id)), 0);
   const setStats = activeSetBonusStats();
+  const build = activeBuild();
+  const baseDamage = 7 + state.level * 2.25 + itemDamage + setStats.damage;
+  const baseDefense = 2 + state.level * 1.45 + itemDefense + setStats.defense;
+  const baseHp = 90 + state.level * 6.5 + setStats.maxHp;
   return {
-    damage: Math.floor(7 + state.level * 2.25 + itemDamage + setStats.damage),
-    defense: Math.floor(2 + state.level * 1.45 + itemDefense + setStats.defense),
-    maxHp: Math.floor(90 + state.level * 6.5 + setStats.maxHp),
+    damage: Math.floor(baseDamage * (build.damageMultiplier || 1)),
+    defense: Math.floor(baseDefense * (build.defenseMultiplier || 1)),
+    maxHp: Math.floor(baseHp * (build.maxHpMultiplier || 1)),
   };
+}
+
+function activeClass() {
+  return classCatalog[state.characterClass] || classCatalog.warrior;
+}
+
+function activeBuild() {
+  return buildCatalog[state.build] || buildCatalog.bruiser;
+}
+
+function knownClassAbilities() {
+  const fallback = activeClass().abilities || [];
+  const known = Array.isArray(state.knownAbilities) && state.knownAbilities.length ? state.knownAbilities : fallback;
+  return known.map((id) => [id, abilityCatalog[id]]).filter(([, ability]) => ability);
+}
+
+function setBuild(buildId) {
+  if (!buildCatalog[buildId]) return;
+  state.build = buildId;
+  syncDerivedStats();
+  state.hp = Math.min(state.hp, state.maxHp);
+  log(`Build gewechselt: ${buildCatalog[buildId].name}.`, "drop");
+  save();
+  render();
 }
 
 function activeSetBonusStats() {
@@ -592,6 +628,23 @@ function questAvailable(quest) {
   return Boolean(quest && questTargetAvailable(quest.target));
 }
 
+function warriorHeavyStrikeMultiplier() {
+  if (state.build === "damage") return 1.75;
+  if (state.build === "tank") return 1.4;
+  return 1.55;
+}
+
+function warriorShieldWallReduction() {
+  if (state.build === "tank") return 0.55;
+  if (state.build === "damage") return 0.25;
+  return 0.38;
+}
+
+function warriorBattleRushHeal(maxHp) {
+  const ratio = state.build === "bruiser" ? 0.18 : state.build === "tank" ? 0.14 : 0.11;
+  return Math.max(8, Math.floor(maxHp * ratio));
+}
+
 async function fight() {
   if (isFighting) return;
   const enemy = getPreparedEncounter(selectedEnemy);
@@ -612,16 +665,42 @@ async function fight() {
   const stats = totalStats();
   let rounds = 0;
   const events = [];
+  const fightState = { battleRushUsed: false };
 
   while (playerHp > 0 && enemyHp > 0 && rounds < 80) {
     rounds += 1;
-    const playerHit = Math.max(1, random(stats.damage - 4, stats.damage + 3) - Math.floor(enemy.defense * 1.08));
+    if (state.characterClass === "warrior" && !fightState.battleRushUsed && playerHp <= stats.maxHp * 0.45) {
+      const heal = Math.min(stats.maxHp - playerHp, warriorBattleRushHeal(stats.maxHp));
+      if (heal > 0) {
+        playerHp += heal;
+        fightState.battleRushUsed = true;
+        events.push({ actor: "hero", damage: 0, text: `Kampfrausch heilt ${heal} Leben.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
+      }
+    }
+
+    const heavyStrike = state.characterClass === "warrior" && rounds % 3 === 0;
+    const damageMultiplier = heavyStrike ? warriorHeavyStrikeMultiplier() : 1;
+    const playerHit = Math.max(1, Math.floor((random(stats.damage - 4, stats.damage + 3) - Math.floor(enemy.defense * 1.08)) * damageMultiplier));
     enemyHp -= playerHit;
-    events.push({ actor: "hero", damage: playerHit, enemyHp: Math.max(0, enemyHp), playerHp: Math.max(0, playerHp) });
+    events.push({
+      actor: "hero",
+      damage: playerHit,
+      enemyHp: Math.max(0, enemyHp),
+      playerHp: Math.max(0, playerHp),
+      text: heavyStrike ? `Schwerer Hieb trifft für ${playerHit}.` : `Du triffst für ${playerHit}.`,
+    });
     if (enemyHp <= 0) break;
-    const enemyHit = Math.max(1, random(enemy.damage[0], enemy.damage[1]) - Math.floor(stats.defense * 0.42));
+    const shieldWall = state.characterClass === "warrior" && rounds % 4 === 0;
+    const enemyBaseHit = Math.max(1, random(enemy.damage[0], enemy.damage[1]) - Math.floor(stats.defense * 0.42));
+    const enemyHit = shieldWall ? Math.max(1, Math.floor(enemyBaseHit * (1 - warriorShieldWallReduction()))) : enemyBaseHit;
     playerHp -= enemyHit;
-    events.push({ actor: "enemy", damage: enemyHit, enemyHp: Math.max(0, enemyHp), playerHp: Math.max(0, playerHp) });
+    events.push({
+      actor: "enemy",
+      damage: enemyHit,
+      enemyHp: Math.max(0, enemyHp),
+      playerHp: Math.max(0, playerHp),
+      text: shieldWall ? `Schildwall dämpft den Treffer auf ${enemyHit}.` : `${enemy.name} trifft für ${enemyHit}.`,
+    });
   }
 
   isFighting = true;

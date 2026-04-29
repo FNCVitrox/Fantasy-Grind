@@ -264,6 +264,62 @@ h2 {
   font-size: 20px;
 }
 
+.class-card {
+  display: grid;
+  gap: 10px;
+}
+
+.class-card h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.build-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.build-list button {
+  min-height: 64px;
+  display: grid;
+  gap: 3px;
+  align-content: center;
+  padding: 8px;
+  text-align: left;
+}
+
+.build-list button.active {
+  border-color: var(--gold);
+  background: rgba(216, 174, 75, 0.13);
+}
+
+.build-list strong,
+.ability-chip strong {
+  font-size: 12px;
+}
+
+.build-list span,
+.ability-chip span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.ability-list {
+  display: grid;
+  gap: 6px;
+}
+
+.ability-chip {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0c1723;
+}
+
 .bar-block {
   display: grid;
   gap: 6px;

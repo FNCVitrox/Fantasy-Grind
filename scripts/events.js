@@ -236,6 +236,10 @@ $("fightBtn").addEventListener("click", () => {
   fight();
 });
 $("restBtn").addEventListener("click", rest);
+$("buildList").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-build]");
+  if (button) setBuild(button.dataset.build);
+});
 $("sellAllBtn").addEventListener("click", sellAllInventoryItems);
 $("salvageAllBtn").addEventListener("click", salvageAllInventoryItems);
 $("openBestiaryBtn").addEventListener("click", () => {
@@ -459,10 +463,10 @@ async function playCombatAnimation(enemy, events, playerWon) {
     const attackClass = event.actor === "hero" ? "hero-attacks enemy-hit" : "enemy-attacks hero-hit";
     const side = event.actor === "hero" ? "right" : "left";
     stage.className = `battle-stage ${attackClass}`;
-    $("battleText").textContent = event.actor === "hero"
+    $("battleText").textContent = event.text || (event.actor === "hero"
       ? `Du triffst für ${event.damage}.`
-      : `${enemy.name} trifft für ${event.damage}.`;
-    spawnDamage(event.damage, side);
+      : `${enemy.name} trifft für ${event.damage}.`);
+    if (event.damage > 0) spawnDamage(event.damage, side);
     await waitCombat(470);
     stage.className = "battle-stage";
     await waitCombat(110);

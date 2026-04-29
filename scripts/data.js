@@ -5,6 +5,53 @@ const saveExportVersion = 1;
 
 const xpForLevel = (level) => Math.floor(115 * Math.pow(level, 1.78) + level * 48);
 
+const classCatalog = {
+  warrior: {
+    name: "Krieger",
+    description: "Standhaft, direkt und stark mit Waffen.",
+    abilities: ["heavyStrike", "shieldWall", "battleRush"],
+  },
+};
+
+const buildCatalog = {
+  tank: {
+    name: "Tank",
+    description: "Mehr Leben und Verteidigung. Schildwall ist stärker.",
+    damageMultiplier: 0.92,
+    defenseMultiplier: 1.18,
+    maxHpMultiplier: 1.16,
+  },
+  damage: {
+    name: "Schaden",
+    description: "Mehr Schaden, aber etwas weniger Leben.",
+    damageMultiplier: 1.16,
+    defenseMultiplier: 0.94,
+    maxHpMultiplier: 0.94,
+  },
+  bruiser: {
+    name: "Bruiser",
+    description: "Ausgewogen. Kampfrausch heilt stärker.",
+    damageMultiplier: 1.06,
+    defenseMultiplier: 1.06,
+    maxHpMultiplier: 1.04,
+  },
+};
+
+const abilityCatalog = {
+  heavyStrike: {
+    name: "Schwerer Hieb",
+    text: "Jede 3. Runde ein stärkerer Angriff.",
+  },
+  shieldWall: {
+    name: "Schildwall",
+    text: "Jede 4. Runde wird der Gegentreffer reduziert.",
+  },
+  battleRush: {
+    name: "Kampfrausch",
+    text: "Einmal pro Kampf Heilung, wenn das Leben niedrig ist.",
+  },
+};
+
 const zones = {
   meadow: {
     name: "Grauwacht-Wald",

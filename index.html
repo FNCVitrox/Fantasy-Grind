@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=quest-gates-1" />
-    <link rel="stylesheet" href="./css/modals.css?v=quest-gates-1" />
-    <link rel="stylesheet" href="./css/responsive.css?v=quest-gates-1" />
+    <link rel="stylesheet" href="./css/base.css?v=warrior-skills-1" />
+    <link rel="stylesheet" href="./css/modals.css?v=warrior-skills-1" />
+    <link rel="stylesheet" href="./css/responsive.css?v=warrior-skills-1" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.2</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.3</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
@@ -56,12 +56,22 @@
               <path d="M80 28v24M57 42l13 12M103 42 90 54" stroke="#d4af37" stroke-width="6" stroke-linecap="round" />
             </svg>
           </div>
-          <h2>Krieger</h2>
+          <h2 id="className">Krieger</h2>
           <div class="character-status" aria-label="Charakterwerte">
             <div><span>Level</span><strong id="level">1</strong></div>
             <div><span>Gold</span><strong id="gold">0</strong></div>
             <div><span>Ruhm</span><strong id="renown">0</strong></div>
           </div>
+          <section class="class-card" aria-label="Klasse und Fähigkeiten">
+            <div>
+              <h3>Build</h3>
+              <div class="build-list" id="buildList"></div>
+            </div>
+            <div>
+              <h3>Fähigkeiten</h3>
+              <div class="ability-list" id="abilityList"></div>
+            </div>
+          </section>
           <div class="bar-block">
             <div class="bar-label"><span>Leben</span><b id="hpText"></b></div>
             <div class="bar"><span id="hpBar"></span></div>
@@ -283,10 +293,10 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=quest-gates-1"></script>
-    <script src="./scripts/core.js?v=quest-gates-1"></script>
-    <script src="./scripts/render.js?v=quest-gates-1"></script>
-    <script src="./scripts/events.js?v=quest-gates-1"></script>
+    <script src="./scripts/data.js?v=warrior-skills-1"></script>
+    <script src="./scripts/core.js?v=warrior-skills-1"></script>
+    <script src="./scripts/render.js?v=warrior-skills-1"></script>
+    <script src="./scripts/events.js?v=warrior-skills-1"></script>
   </body>
 </html>
 
