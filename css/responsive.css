@@ -35,6 +35,10 @@
   .materials {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
+
+  .smith-renown {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (min-width: 1061px) and (max-width: 1320px) {
@@ -138,7 +142,8 @@
 
   .materials,
   .smith-grid,
-  .smith-choice-grid {
+  .smith-choice-grid,
+  .smith-renown {
     grid-template-columns: 1fr;
   }
 

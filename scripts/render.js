@@ -157,6 +157,7 @@ function renderEquipmentDetails() {
 
 function renderSmith() {
   renderSmithMaterials();
+  renderSmithRenown();
   $("smithHome").hidden = smithView !== "home";
   $("smithUpgradeSection").hidden = smithView !== "upgrade";
   $("smithSalvageSection").hidden = smithView !== "salvage";
@@ -173,6 +174,19 @@ function renderSmithMaterials() {
       `<div class="material"><span>${label}</span><strong>${state.materials[id] || 0}</strong></div>`
     ),
   ].join("");
+}
+
+function renderSmithRenown() {
+  const rank = renownRank();
+  const next = nextRenownRank();
+  $("smithRenown").innerHTML = `
+    <div>
+      <span>Ruhm ${state.renown}</span>
+      <strong>${escapeHtml(rank.name)}</strong>
+    </div>
+    <p>${escapeHtml(rank.benefit)}</p>
+    <small>${next ? `Nächster Rang bei ${next.threshold} Ruhm: ${escapeHtml(next.benefit)}` : "Alle Ruhm-Vorteile freigeschaltet."}</small>
+  `;
 }
 
 function renderSmithHome() {
@@ -217,6 +231,7 @@ function renderSmithUpgrade() {
       .filter(([, amount]) => amount > 0)
       .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)
       .join(" · ");
+    const discountText = renownUpgradeDiscount() ? " · Ruhm-Rabatt aktiv" : "";
     const maxed = (item.upgrade || 0) >= 4;
     const disabled = maxed || !canPayUpgradeCost(cost);
     return `<div class="smith-card rarity-card rarity-${quality}">
@@ -229,7 +244,7 @@ function renderSmithUpgrade() {
         <strong>+${preview.upgrade}/4 · Dmg ${preview.damage}${damageGain ? ` <b>+${damageGain}</b>` : ""} · Def ${preview.defense}${defenseGain ? ` <b>+${defenseGain}</b>` : ""}</strong>
       </button>
       <div class="smith-cost-block">
-        <p>${cost.gold} Gold</p>
+        <p>${cost.gold} Gold${discountText}</p>
         <p class="smith-material-cost">${materialText}</p>
       </div>
     </div>`;
@@ -244,8 +259,9 @@ function renderSmithSalvage() {
         const quality = itemQuality(item);
         const slot = itemSlot(item);
         const materials = Object.entries(salvageValue(item)).map(([id, amount]) => `${amount} ${labelFor(materialLabel, id)}`).join(" · ");
+        const bonusChance = Math.round(renownSalvageBonusChance(item) * 100);
         return `<div class="salvage-row rarity-card rarity-${quality}">
-          <span><strong class="quality-${quality}">${escapeHtml(item.name)}</strong><small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${materials}</small></span>
+          <span><strong class="quality-${quality}">${escapeHtml(item.name)}</strong><small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${materials}${bonusChance ? ` · ${bonusChance}% Bonus` : ""}</small></span>
           <button type="button" data-salvage="${index}">Zerlegen</button>
         </div>`;
       }).join("")
@@ -384,7 +400,7 @@ function renderQuests() {
     return `<div class="quest rarity-card rarity-${rarity} ${done ? "done" : ""}">
       <strong><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}</strong>
       <p>${escapeHtml(quest.text)}</p>
-      <p>${done ? "Abgeschlossen" : `${value}/${quest.needed}`} · Belohnung: ${quest.rewardXp} XP, ${quest.rewardGold} Gold</p>
+      <p>${done ? "Abgeschlossen" : `${value}/${quest.needed}`} · Belohnung: ${quest.rewardXp} XP, ${quest.rewardGold} Gold, ${questRenownReward(quest)} Ruhm</p>
     </div>`;
   }).join("");
 }
@@ -418,7 +434,7 @@ function renderQuestBoard() {
       <div class="reward-list">
         <span>Belohnung: ${quest.rewardXp} XP</span>
         <span>Gold: ${quest.rewardGold}</span>
-        <span>Ruhm: 1</span>
+        <span>Ruhm: ${questRenownReward(quest)}</span>
         ${quest.rewardItem ? `<span>Item: ${quest.rare ? "legendär" : "episch"}</span>` : ""}
       </div>
       <div class="quest-offer-action">${button}</div>

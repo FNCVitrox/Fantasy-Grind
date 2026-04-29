@@ -31,6 +31,15 @@ const balanceVersion = 3;
 const eliteEncounterChance = 0.06;
 const maxBestiaryLootPerEnemy = 20;
 const generatedLootPoolSize = maxBestiaryLootPerEnemy;
+const renownRanks = [
+  { threshold: 0, name: "Fremder", benefit: "Noch kein Vorteil" },
+  { threshold: 5, name: "Bekannter Kämpfer", benefit: "Reparaturen -10%" },
+  { threshold: 10, name: "Verlässliche Klinge", benefit: "Quest-Tafel hält 4 Aufträge bereit" },
+  { threshold: 15, name: "Schmiedefreund", benefit: "Zerlegen kann Bonus-Material geben" },
+  { threshold: 20, name: "Held der Grauwacht", benefit: "Upgrades -8% Goldkosten" },
+  { threshold: 30, name: "Eliteschrecken", benefit: "Elite-Gegner und Zerlegen geben bessere Chancen" },
+  { threshold: 40, name: "Meister der Grauwacht", benefit: "Seltene Aufträge erscheinen öfter" },
+];
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function defaultState() {
   return {
@@ -482,6 +491,56 @@ function gainXp(amount) {
   }
 }
 
+function renownRank() {
+  return renownRanks
+    .slice()
+    .reverse()
+    .find((rank) => state.renown >= rank.threshold) || renownRanks[0];
+}
+
+function nextRenownRank() {
+  return renownRanks.find((rank) => state.renown < rank.threshold) || null;
+}
+
+function questRenownReward(quest) {
+  if (quest.rare || quest.rarity === "legendary") return 3;
+  if (quest.rarity === "epic") return 2;
+  return 1;
+}
+
+function renownRepairDiscount() {
+  return state.renown >= 5 ? 0.1 : 0;
+}
+
+function renownUpgradeDiscount() {
+  return state.renown >= 20 ? 0.08 : 0;
+}
+
+function renownQuestBoardSize() {
+  return state.renown >= 10 ? 4 : 3;
+}
+
+function renownRareQuestBonus() {
+  if (state.renown >= 40) return 0.028;
+  if (state.renown >= 10) return 0.01;
+  return 0;
+}
+
+function renownSalvageBonusChance(item) {
+  if (state.renown < 15) return 0;
+  const base = { common: 0.05, rare: 0.12, epic: 0.22, legendary: 0.35 }[item.quality] || 0.05;
+  return Math.min(0.55, base + (state.renown >= 30 ? 0.08 : 0));
+}
+
+function maybeGrantBattleRenown(enemy) {
+  if (!enemy.elite) return;
+  const guaranteed = enemy.level >= 20;
+  const chance = state.renown >= 30 ? 0.14 : 0.08;
+  if (!guaranteed && Math.random() > chance) return;
+  state.renown += 1;
+  log(`Dein Ruf wächst: +1 Ruhm für den Sieg gegen ${enemy.name}.`, "drop");
+}
+
 async function fight() {
   if (isFighting) return;
   const enemy = getPreparedEncounter(selectedEnemy);
@@ -534,6 +593,7 @@ async function fight() {
       grantMaterials(enemy.baseId || selectedEnemy, enemy.eliteVariant);
       createLootChoices(enemy, enemy.baseId || selectedEnemy);
       updateQuestProgress(enemy);
+      maybeGrantBattleRenown(enemy);
       maybeDropRareQuest(enemy);
       refreshQuestBoard(false);
       log(`Sieg gegen ${enemy.name} nach ${rounds} Runden. +${enemy.xp} XP, +${gold} Gold.`, "good");
@@ -658,20 +718,21 @@ function updateQuestProgress(enemy) {
       state.questBoard = state.questBoard.filter((id) => id !== quest.id);
       state.gold += quest.rewardGold;
       gainXp(quest.rewardXp);
-      state.renown += 1;
+      const renown = questRenownReward(quest);
+      state.renown += renown;
       if (quest.rewardItem) {
         const reward = createQuestRewardItem(quest);
         state.customItems[reward.id] = reward;
         queueLootBatch([reward]);
         log(`Questbelohnung erhalten: ${reward.name} (${qualityLabel[reward.quality]}).`, "drop");
       }
-      log(`Quest abgeschlossen: ${quest.name}. +${quest.rewardXp} XP, +${quest.rewardGold} Gold.`, "drop");
+      log(`Quest abgeschlossen: ${quest.name}. +${quest.rewardXp} XP, +${quest.rewardGold} Gold, +${renown} Ruhm.`, "drop");
     }
   });
 }
 
 function maybeDropRareQuest(enemy) {
-  const chance = enemy.elite ? 0.035 : enemy.tags.dungeon ? 0.022 : 0.012;
+  const chance = (enemy.elite ? 0.035 : enemy.tags.dungeon ? 0.022 : 0.012) + renownRareQuestBonus();
   if (Math.random() > chance) return;
 
   const template = pickRareQuestTemplate(enemy);
@@ -686,7 +747,7 @@ function maybeDropRareQuest(enemy) {
 
   state.rareQuests[id] = quest;
   state.questBoard.unshift(id);
-  state.questBoard = uniqueQuestIds(state.questBoard).slice(0, 5);
+  state.questBoard = uniqueQuestIds(state.questBoard).slice(0, state.renown >= 40 ? 6 : 5);
   log(`Seltene Quest-Schriftrolle gefunden: ${quest.name}. Sie liegt auf der Quest-Tafel.`, "drop");
 }
 
@@ -713,7 +774,7 @@ function refreshQuestBoard(force) {
     .filter((id) => !state.completedQuests.includes(id))
     .filter((id) => !state.activeQuests.includes(id));
 
-  while (state.questBoard.length < 3 && candidates.length) {
+  while (state.questBoard.length < renownQuestBoardSize() && candidates.length) {
     const index = random(0, candidates.length - 1);
     state.questBoard.push(candidates.splice(index, 1)[0]);
   }
@@ -1059,8 +1120,9 @@ function upgradeCost(item) {
   if (item.set) {
     materials[setMaterial] = (materials[setMaterial] || 0) + 1 + Math.floor(level / 2);
   }
+  const baseGold = Math.floor(28 * qualityMultiplier * Math.pow(level + 1, 1.18));
   return {
-    gold: Math.floor(28 * qualityMultiplier * Math.pow(level + 1, 1.18)),
+    gold: Math.max(1, Math.floor(baseGold * (1 - renownUpgradeDiscount()))),
     materials,
   };
 }
@@ -1140,6 +1202,32 @@ function salvageValue(item) {
   return Object.fromEntries(Object.entries(result).filter(([, amount]) => amount > 0));
 }
 
+function rollSalvageValue(item) {
+  const result = salvageValue(item);
+  const bonus = salvageBonusMaterials(item);
+  if (bonus) addMaterials(result, bonus.materials);
+  return { materials: result, bonus };
+}
+
+function salvageBonusMaterials(item) {
+  if (!item || Math.random() > renownSalvageBonusChance(item)) return null;
+  const amount = item.quality === "legendary" ? 2 : 1;
+  const options = [];
+
+  if (item.set) options.push(setMaterialForItem(item));
+  if (["weapon", "offhand"].includes(item.slot)) options.push("oathSteel", "scrap");
+  if (["chest", "pants", "boots"].includes(item.slot)) options.push("leather", "sinew");
+  if (["necklace", "ring"].includes(item.slot)) options.push("moonDust", "shard");
+  if (["epic", "legendary"].includes(item.quality)) options.push("shard");
+  if (item.quality === "legendary") options.push("emberCore");
+
+  const material = options[random(0, options.length - 1)] || "scrap";
+  return {
+    materials: { [material]: amount },
+    text: `Sauber zerlegt: +${amount} ${materialLabel[material]}.`,
+  };
+}
+
 function addMaterials(target, source) {
   Object.entries(source).forEach(([id, amount]) => {
     target[id] = (target[id] || 0) + amount;
@@ -1170,7 +1258,7 @@ function salvageInventoryItem(index) {
   const itemId = state.inventory[index];
   const item = getItem(itemId);
   if (!item) return;
-  const materials = salvageValue(item);
+  const { materials, bonus } = rollSalvageValue(item);
   Object.entries(materials).forEach(([id, amount]) => {
     state.materials[id] = (state.materials[id] || 0) + amount;
   });
@@ -1178,6 +1266,7 @@ function salvageInventoryItem(index) {
   delete state.itemDurability[itemId];
   const text = Object.entries(materials).map(([id, amount]) => `${amount} ${materialLabel[id]}`).join(", ");
   log(`${item.name} zerlegt. Erhalten: ${text}.`, "drop");
+  if (bonus) log(bonus.text, "drop");
   save();
   render();
 }
@@ -1186,12 +1275,15 @@ function salvageAllInventoryItems() {
   if (!state.inventory.length) return;
   const gained = {};
   let count = 0;
+  let bonusCount = 0;
 
   state.inventory.forEach((itemId) => {
     const item = getItem(itemId);
     if (!item) return;
     count += 1;
-    Object.entries(salvageValue(item)).forEach(([id, amount]) => {
+    const { materials, bonus } = rollSalvageValue(item);
+    if (bonus) bonusCount += 1;
+    Object.entries(materials).forEach(([id, amount]) => {
       gained[id] = (gained[id] || 0) + amount;
       state.materials[id] = (state.materials[id] || 0) + amount;
     });
@@ -1201,6 +1293,7 @@ function salvageAllInventoryItems() {
   state.inventory = [];
   const text = Object.entries(gained).map(([id, amount]) => `${amount} ${materialLabel[id]}`).join(", ");
   log(`${count} Items zerlegt. Erhalten: ${text}.`, "drop");
+  if (bonusCount) log(`${bonusCount} Items wurden sauber zerlegt und gaben Bonus-Material.`, "drop");
   save();
   render();
 }
@@ -1284,6 +1377,7 @@ function repairCostForSlot(slot) {
   if (!missing) return 0;
   const qualityMultiplier = { common: 0.75, rare: 1.25, epic: 1.9, legendary: 2.8 }[item.quality] || 1;
   const upgradeMultiplier = 1 + (item.upgrade || 0) * 0.18;
-  return Math.ceil(missing * repairSlotMultiplier(slot) * qualityMultiplier * upgradeMultiplier * (0.42 + state.level * 0.025));
+  const baseCost = missing * repairSlotMultiplier(slot) * qualityMultiplier * upgradeMultiplier * (0.42 + state.level * 0.025);
+  return Math.ceil(baseCost * (1 - renownRepairDiscount()));
 }
 
