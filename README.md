@@ -22,6 +22,7 @@ Das Spiel ist aktuell ein spielbarer Alpha-Prototyp. Der Fokus liegt auf einem k
 - Lokaler Spielstand im Browser mit Sicherungs- und Ladefunktion
 - Automatische Backup-Speicherung, damit Spielstände nicht so leicht verloren gehen
 - Freischaltungen über Level und Ruhm, damit neue Gebiete und Dungeons schrittweise aufgehen
+- Quest-Tafel bietet nur Aufgaben an, deren Gegner in freigeschalteten Reisezielen erreichbar sind
 
 ## Spielidee
 
@@ -112,6 +113,6 @@ Dadurch lässt sich das Spiel direkt im Browser starten und leicht weiterentwick
 
 ## Status
 
-Aktuelle Version: Alpha v0.8.1
+Aktuelle Version: Alpha v0.8.2
 
 Das Projekt ist noch in Entwicklung. Viele Systeme sind bereits spielbar, aber Balance, Inhalte und Komfort werden weiter ausgebaut.

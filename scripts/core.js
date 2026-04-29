@@ -69,7 +69,7 @@ function defaultState() {
     materials: emptyMaterials(),
     discoveredLoot: {},
     quests: { wolves: 0, rust: 0, elites: 0 },
-    questBoard: ["wolves", "rust", "elites"],
+    questBoard: ["wolves", "rust", "boars"],
     activeQuests: [],
     completedQuests: [],
     rareQuests: {},
@@ -126,7 +126,7 @@ function parseSavedState(raw) {
     migrateEquipmentSlots(loaded);
     loaded.itemDurability = loaded.itemDurability || {};
     loaded.materials = normalizeMaterials(loaded.materials);
-    loaded.questBoard = Array.isArray(loaded.questBoard) ? loaded.questBoard : ["wolves", "rust", "elites"];
+    loaded.questBoard = Array.isArray(loaded.questBoard) ? loaded.questBoard : ["wolves", "rust", "boars"];
     loaded.rareQuests = loaded.rareQuests || {};
     loaded.winsSinceQuestRefresh = loaded.winsSinceQuestRefresh || 0;
     applyBalanceMigration(loaded);
@@ -573,6 +573,25 @@ function selectZone(zoneId) {
   return true;
 }
 
+function unlockedEnemyIds() {
+  return Object.entries(zones)
+    .filter(([zoneId]) => isZoneUnlocked(zoneId))
+    .flatMap(([, zone]) => zone.enemies);
+}
+
+function questTargetAvailable(target) {
+  return unlockedEnemyIds().some((enemyId) => {
+    const enemy = enemies[enemyId];
+    if (!enemy) return false;
+    if (target === "elite") return enemy.elite || !enemy.boss;
+    return Boolean(enemy.tags?.[target]);
+  });
+}
+
+function questAvailable(quest) {
+  return Boolean(quest && questTargetAvailable(quest.target));
+}
+
 async function fight() {
   if (isFighting) return;
   const enemy = getPreparedEncounter(selectedEnemy);
@@ -797,7 +816,10 @@ function refreshQuestBoard(force) {
   }
   state.questBoard = uniqueQuestIds(state.questBoard)
     .filter((id) => !state.completedQuests.includes(id))
-    .filter((id) => getQuestById(id));
+    .filter((id) => {
+      const quest = getQuestById(id);
+      return quest && (isQuestActive(id) || questAvailable(quest));
+    });
 
   if (!force && state.winsSinceQuestRefresh < 4) return;
 
@@ -805,7 +827,8 @@ function refreshQuestBoard(force) {
     .map((quest) => quest.id)
     .filter((id) => !state.questBoard.includes(id))
     .filter((id) => !state.completedQuests.includes(id))
-    .filter((id) => !state.activeQuests.includes(id));
+    .filter((id) => !state.activeQuests.includes(id))
+    .filter((id) => questAvailable(getQuestById(id)));
 
   while (state.questBoard.length < renownQuestBoardSize() && candidates.length) {
     const index = random(0, candidates.length - 1);

@@ -70,6 +70,8 @@ assert.strictEqual(vm.runInContext("enemies.wolf.name", context), "Waldwolf");
 assert.strictEqual(vm.runInContext("zones.meadow.enemies[0]", context), "wolf");
 assert(vm.runInContext("Object.values(zones).filter((zone) => zone.type === 'dungeon').every((zone) => zone.enemies.every((id) => enemies[id].boss))", context), "dungeons should contain boss enemies");
 assert(vm.runInContext("Object.values(enemies).flatMap((enemy) => enemy.drops).every((drop) => items[drop.id])", context), "all fixed enemy drops need item data");
+assert(vm.runInContext("state = defaultState(); questAvailable(getQuestById('wolves')) && !questAvailable(getQuestById('fields'))", context), "early quest board should only offer reachable quest targets");
+assert(vm.runInContext("state.level = 9; state.renown = 8; questAvailable(getQuestById('fields'))", context), "field quests should unlock when the field zone unlocks");
 assert.strictEqual(vm.runInContext("eliteEncounterChance", context), 0.06);
 assert(
   vm.runInContext("Object.values(enemies).every((enemy) => generatedLootPoolCount(enemy) + enemy.drops.length >= 15 && generatedLootPoolCount(enemy) + enemy.drops.length <= 20)", context),

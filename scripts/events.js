@@ -258,6 +258,7 @@ $("zoneModal").addEventListener("click", (event) => {
   if (event.target.id === "zoneModal") closeZone();
 });
 $("openQuestBoardBtn").addEventListener("click", () => {
+  refreshQuestBoard(true);
   renderQuestBoard();
   openModal("questBoardModal");
 });

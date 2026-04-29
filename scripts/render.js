@@ -433,7 +433,13 @@ function renderQuests() {
 function renderQuestBoard() {
   state.questBoard = uniqueQuestIds(state.questBoard)
     .filter((id) => !state.completedQuests.includes(id))
-    .filter((id) => getQuestById(id));
+    .filter((id) => {
+      const quest = getQuestById(id);
+      return quest && (isQuestActive(id) || questAvailable(quest));
+    });
+  if (state.questBoard.length < renownQuestBoardSize()) {
+    refreshQuestBoard(true);
+  }
   const boardQuests = state.questBoard.map(getQuestById).filter(Boolean);
 
   if (!boardQuests.length) {
@@ -470,9 +476,14 @@ function renderQuestBoard() {
 
 function acceptQuest(questId) {
   if (isQuestActive(questId) || state.completedQuests.includes(questId)) return;
+  const quest = getQuestById(questId);
+  if (!questAvailable(quest)) {
+    log("Diese Quest passt noch nicht zu deinen freigeschalteten Gebieten.", "bad");
+    render();
+    return;
+  }
   state.activeQuests.push(questId);
   state.quests[questId] = state.quests[questId] || 0;
-  const quest = getQuestById(questId);
   log(`Quest angenommen: ${quest.name}.`, "drop");
   save();
   render();
