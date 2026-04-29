@@ -18,6 +18,7 @@ let combatWatchdog = 0;
 let bestiarySearchFrame = 0;
 const tooltipItemCache = new Map();
 const bestiaryLootCache = new Map();
+const renderCache = {};
 
 const elementCache = new Map();
 const $ = (id) => {
@@ -361,11 +362,16 @@ function getItem(itemId) {
 }
 
 function totalStats() {
-  const equipped = Object.values(state.equipment)
-    .map((id) => [id, getItem(id)])
-    .filter(([, item]) => item);
-  const itemDamage = equipped.reduce((sum, [id, item]) => sum + Math.floor(item.damage * itemDurabilityFactor(id)), 0);
-  const itemDefense = equipped.reduce((sum, [id, item]) => sum + Math.floor(item.defense * itemDurabilityFactor(id)), 0);
+  let itemDamage = 0;
+  let itemDefense = 0;
+  equipmentSlots.forEach((slot) => {
+    const id = state.equipment[slot];
+    const item = getItem(id);
+    if (!item) return;
+    const durabilityFactor = itemDurabilityFactor(id);
+    itemDamage += Math.floor(item.damage * durabilityFactor);
+    itemDefense += Math.floor(item.defense * durabilityFactor);
+  });
   const setStats = activeSetBonusStats();
   const build = activeBuild();
   const baseDamage = 7 + state.level * 2.25 + itemDamage + setStats.damage;
@@ -425,7 +431,9 @@ function activeSetBonusStats() {
 
 function activeSetCounts() {
   const counts = {};
-  Object.values(state.equipment).map(getItem).filter(Boolean).forEach((item) => {
+  equipmentSlots.forEach((slot) => {
+    const item = getItem(state.equipment[slot]);
+    if (!item) return;
     if (!item.set) return;
     counts[item.set] = counts[item.set] || { id: item.set, count: 0 };
     counts[item.set].count += 1;
@@ -453,9 +461,15 @@ function itemDurabilityFactor(itemId) {
 }
 
 function equippedDurabilityAverage() {
-  const ids = Object.values(state.equipment).filter((id) => getItem(id));
-  if (!ids.length) return 100;
-  return Math.round(ids.reduce((sum, id) => sum + itemDurability(id), 0) / ids.length);
+  let total = 0;
+  let count = 0;
+  equipmentSlots.forEach((slot) => {
+    const id = state.equipment[slot];
+    if (!getItem(id)) return;
+    total += itemDurability(id);
+    count += 1;
+  });
+  return count ? Math.round(total / count) : 100;
 }
 
 function slotWearMultiplier(slot) {
@@ -1761,8 +1775,7 @@ function repairSlot(slot) {
   render();
 }
 
-function riskFor(enemy) {
-  const stats = totalStats();
+function riskFor(enemy, stats = totalStats()) {
   const score = stats.damage * 2.1 + stats.defense * 1.6 + state.hp * 0.42;
   const danger = enemy.hp * 0.42 + enemy.damage[1] * 3.1 + enemy.defense * 2;
   return score >= danger ? "Machbar" : score >= danger * 0.78 ? "Riskant" : "Tödlich";

@@ -1,27 +1,28 @@
 ﻿function render() {
   syncDerivedStats();
   const stats = totalStats();
-  $("level").textContent = state.level;
-  $("gold").textContent = state.gold;
-  $("renown").textContent = state.renown;
-  $("hpText").textContent = `${state.hp}/${state.maxHp}`;
-  $("hpBar").style.width = `${Math.max(2, (state.hp / state.maxHp) * 100)}%`;
+  setText("level", state.level);
+  setText("gold", state.gold);
+  setText("renown", state.renown);
+  setText("hpText", `${state.hp}/${state.maxHp}`);
+  setBarWidth("hpBar", Math.max(2, (state.hp / state.maxHp) * 100));
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
-  $("xpText").textContent = state.level >= 20 ? "Max" : `${state.xp}/${needed}`;
-  $("xpBar").style.width = `${state.level >= 20 ? 100 : Math.max(2, (state.xp / needed) * 100)}%`;
+  setText("xpText", state.level >= 20 ? "Max" : `${state.xp}/${needed}`);
+  setBarWidth("xpBar", state.level >= 20 ? 100 : Math.max(2, (state.xp / needed) * 100));
   renderHeroBuildVisual();
   renderClassPanel();
-  $("stats").innerHTML = [
+  const durabilityAverage = equippedDurabilityAverage();
+  renderCachedHtml("stats", `${stats.damage}|${stats.defense}|${durabilityAverage}`, () => [
     ["Schaden", stats.damage],
     ["Verteidigung", stats.defense],
-    ["Haltbarkeit", `${equippedDurabilityAverage()}%`],
-  ].map(([label, value]) => `<div class="stat"><span>${label}</span><strong>${value}</strong></div>`).join("");
+    ["Haltbarkeit", `${durabilityAverage}%`],
+  ].map(([label, value]) => `<div class="stat"><span>${label}</span><strong>${value}</strong></div>`).join(""));
   const currentRestCost = restCost();
-  $("restBtn").innerHTML = `<span class="button-main">Rasten</span><span class="button-price">${currentRestCost} Gold</span>`;
-  $("restBtn").disabled = state.gold < currentRestCost;
+  renderCachedHtml("restBtn", currentRestCost, () => `<span class="button-main">Rasten</span><span class="button-price">${currentRestCost} Gold</span>`);
+  setDisabled("restBtn", state.gold < currentRestCost);
 
   renderMap();
-  renderEnemies();
+  renderEnemies(stats);
   renderEquipment();
   renderLootChoices();
   renderQuests();
@@ -30,15 +31,41 @@
   if (isModalOpen("smithModal")) renderSmith();
   if (isModalOpen("repairModal")) renderRepairModal();
   if (isModalOpen("equipmentModal")) renderEquipmentDetails();
-  renderSelectedEnemy();
+  renderSelectedEnemy(stats);
   renderLog();
-  $("fightBtn").textContent = isFighting ? (skipCombat ? "Überspringe..." : "Skip") : "Kampf starten";
-  $("fightBtn").disabled = isFighting ? skipCombat : state.pendingLoot.length > 0;
+  setText("fightBtn", isFighting ? (skipCombat ? "Überspringe..." : "Skip") : "Kampf starten");
+  setDisabled("fightBtn", isFighting ? skipCombat : state.pendingLoot.length > 0);
+}
+
+function setText(id, value) {
+  const element = $(id);
+  const text = String(value);
+  if (element.textContent !== text) element.textContent = text;
+}
+
+function setBarWidth(id, value) {
+  const width = `${Math.max(0, Math.min(100, value))}%`;
+  if ($(id).style.width !== width) $(id).style.width = width;
+}
+
+function setDisabled(id, disabled) {
+  const element = $(id);
+  if (element.disabled !== disabled) element.disabled = disabled;
+}
+
+function renderCachedHtml(id, signature, htmlFactory) {
+  const key = `html:${id}`;
+  const nextSignature = String(signature);
+  if (renderCache[key] === nextSignature) return false;
+  $(id).innerHTML = htmlFactory();
+  renderCache[key] = nextSignature;
+  return true;
 }
 
 function renderHeroBuildVisual() {
   const build = ["tank", "damage", "bruiser"].includes(state.build) ? state.build : "bruiser";
-  $("heroSprite").className = `combatant hero-sprite hero-build-${build}`;
+  const className = `combatant hero-sprite hero-build-${build}`;
+  if ($("heroSprite").className !== className) $("heroSprite").className = className;
 }
 
 function itemQuality(item) {
@@ -59,8 +86,11 @@ function escapeToken(value, allowed, fallback) {
 
 function renderMap() {
   const zoneData = zones[selectedZone] || zones.meadow;
-  $("activeZoneName").textContent = zoneData.name;
-  $("activeZoneRange").textContent = `${zoneKindLabel(zoneData)} · ${zoneData.range || "Unbekannt"}`;
+  setText("activeZoneName", zoneData.name);
+  setText("activeZoneRange", `${zoneKindLabel(zoneData)} · ${zoneData.range || "Unbekannt"}`);
+  const mapSignature = `${selectedZone}|${zoneUnlockSignature()}`;
+  if (renderCache.map === mapSignature) return;
+  renderCache.map = mapSignature;
   document.querySelectorAll("[data-zone]").forEach((button) => {
     button.classList.toggle("active", button.dataset.zone === selectedZone);
     button.disabled = !isZoneUnlocked(button.dataset.zone);
@@ -69,7 +99,10 @@ function renderMap() {
 }
 
 function renderClassPanel() {
-  $("className").textContent = activeClass().name;
+  setText("className", activeClass().name);
+  const signature = `${state.characterClass}|${state.build}`;
+  if (renderCache.classPanel === signature) return;
+  renderCache.classPanel = signature;
   $("buildList").innerHTML = Object.entries(buildCatalog).map(([id, build]) => `
     <button class="${state.build === id ? "active" : ""}" type="button" data-build="${id}">
       <strong>${escapeHtml(build.name)}</strong>
@@ -84,10 +117,21 @@ function renderClassPanel() {
   `).join("");
 }
 
-function renderEnemies() {
+function renderEnemies(stats = totalStats()) {
+  const signature = [
+    selectedZone,
+    selectedEnemy,
+    state.hp,
+    stats.damage,
+    stats.defense,
+    stats.maxHp,
+    zoneEncounterSignature(selectedZone),
+  ].join("|");
+  if (renderCache.enemies === signature) return;
+  renderCache.enemies = signature;
   $("enemyList").innerHTML = zones[selectedZone].enemies.map((id) => {
     const enemy = getPreparedEncounter(id);
-    const risk = riskFor(enemy);
+    const risk = riskFor(enemy, stats);
     const ok = risk === "Machbar";
     const rarity = enemyRarity(enemy);
     const safeRarity = escapeToken(rarity, ["common", "rare", "epic", "legendary"], "common");
@@ -127,9 +171,12 @@ function enemyRarity(enemy) {
   return "common";
 }
 
-function renderSelectedEnemy() {
+function renderSelectedEnemy(stats = totalStats()) {
+  const signature = `${selectedEnemy}|${state.hp}|${state.maxHp}|${state.level}|${state.build}|${zoneEncounterSignature(selectedZone)}|${equipmentSignature()}`;
+  if (renderCache.selectedEnemy === signature) return;
+  renderCache.selectedEnemy = signature;
   const enemy = getPreparedEncounter(selectedEnemy);
-  $("selectedEnemyName").textContent = enemy.name;
+  setText("selectedEnemyName", enemy.name);
   const eliteNote = enemy.eliteVariant
     ? "Bereit: Elite-Version."
     : enemy.boss
@@ -138,14 +185,15 @@ function renderSelectedEnemy() {
       ? "Elite-Gegner."
       : `Nach jedem Kampf ${Math.round(eliteEncounterChance * 100)}% Chance auf Elite-Version.`;
   const abilityCount = enemyAbilityEntries(enemy).length;
-  $("selectedEnemyMeta").textContent = `Level ${enemy.level}, ${enemy.hp} Leben, ${abilityCount} Fähigkeiten, Drop-Chancen niedrig, Risiko: ${riskFor(enemy)}. ${eliteNote}`;
+  setText("selectedEnemyMeta", `Level ${enemy.level}, ${enemy.hp} Leben, ${abilityCount} Fähigkeiten, Drop-Chancen niedrig, Risiko: ${riskFor(enemy, stats)}. ${eliteNote}`);
   setBattleEnemyVisual(enemy);
   $("battleText").textContent = `${enemy.name} wartet.`;
 }
 
 function setBattleEnemyVisual(enemy) {
-  $("enemySpriteName").textContent = enemy.name;
-  $("enemySprite").className = `combatant enemy-sprite ${enemy.sprite}${enemy.eliteVariant ? " elite-variant" : ""}`;
+  setText("enemySpriteName", enemy.name);
+  const className = `combatant enemy-sprite ${enemy.sprite}${enemy.eliteVariant ? " elite-variant" : ""}`;
+  if ($("enemySprite").className !== className) $("enemySprite").className = className;
   updateBattleHealth(state.hp, state.maxHp, enemy.hp, enemy.hp);
 }
 
@@ -167,7 +215,33 @@ function updateCombatHealth(side, current, max) {
   bar.parentElement.classList.toggle("low", percent <= 30);
 }
 
+function zoneUnlockSignature() {
+  return Object.keys(zones).map((id) => `${id}:${isZoneUnlocked(id) ? 1 : 0}`).join(",");
+}
+
+function zoneEncounterSignature(zoneId) {
+  return (zones[zoneId]?.enemies || [])
+    .map((id) => `${id}:${state.nextEncounters[id]?.elite ? 1 : 0}`)
+    .join(",");
+}
+
+function equipmentSignature() {
+  return equipmentSlots
+    .map((slot) => {
+      const id = state.equipment[slot] || "";
+      const item = getItem(id);
+      return `${slot}:${id}:${item?.damage ?? ""}:${item?.defense ?? ""}:${item?.upgrade ?? 0}:${state.itemDurability[id] ?? ""}`;
+    })
+    .join("|");
+}
+
 function renderEquipment() {
+  const signature = `${equipmentSignature()}|${state.level}|${state.renown}`;
+  if (renderCache.equipment === signature) {
+    if (isModalOpen("equipmentModal")) renderEquipmentDetails();
+    return;
+  }
+  renderCache.equipment = signature;
   const slots = equipmentSlots.map((slot) => [slot, state.equipment[slot]]);
   $("equipment").innerHTML = slots.map(([slot, id]) => {
     const item = getItem(id);
@@ -376,17 +450,23 @@ function renderInventory() {
 function renderLootChoices() {
   const modal = $("lootModal");
   if (!state.pendingLoot.length) {
-    modal.classList.remove("open");
-    modal.setAttribute("aria-hidden", "true");
-    $("lootChoices").innerHTML = "";
+    if (renderCache.lootChoices !== "empty") {
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+      $("lootChoices").innerHTML = "";
+      renderCache.lootChoices = "empty";
+    }
     return;
   }
 
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
   const isQuestReward = state.pendingLoot.every((item) => item.sourceType === "quest");
-  $("lootTitle").textContent = isQuestReward ? "Questbelohnung" : "Wähle ein Item";
-  $("lootCounter").textContent = isQuestReward ? "Belohnung" : `1 von ${state.pendingLoot.length}`;
+  setText("lootTitle", isQuestReward ? "Questbelohnung" : "Wähle ein Item");
+  setText("lootCounter", isQuestReward ? "Belohnung" : `1 von ${state.pendingLoot.length}`);
+  const signature = lootChoicesSignature();
+  if (renderCache.lootChoices === signature) return;
+  renderCache.lootChoices = signature;
   $("lootChoices").innerHTML = state.pendingLoot.map((item, index) => {
     if (!item) return "";
     const quality = itemQuality(item);
@@ -414,6 +494,25 @@ function renderLootChoices() {
     </div>`;
   }).join("");
 
+}
+
+function lootChoicesSignature() {
+  return state.pendingLoot.map((item) => {
+    if (!item) return "empty";
+    return [
+      item.id,
+      item.name,
+      item.slot,
+      item.quality,
+      item.damage,
+      item.defense,
+      item.durability ?? 100,
+      item.set || "",
+      item.sourceType || "",
+      item.discoveryNew ? 1 : 0,
+      item.discoveryCount || 0,
+    ].join(":");
+  }).join("|");
 }
 
 function lootDiscoveryStatus(item) {
@@ -455,6 +554,9 @@ function compareClass(diff) {
 function renderQuests() {
   state.activeQuests = state.activeQuests.filter((id) => !state.completedQuests.includes(id));
   const active = state.activeQuests.map(getQuestById).filter(Boolean);
+  const signature = active.map((quest) => `${quest.id}:${Math.floor(state.quests[quest.id] || 0)}:${state.completedQuests.includes(quest.id) ? 1 : 0}`).join("|") || "empty";
+  if (renderCache.quests === signature) return;
+  renderCache.quests = signature;
 
   if (!active.length) {
     $("quests").innerHTML = `<div class="inventory-empty">Keine aktive Quest. Öffne die Quest-Tafel.</div>`;
@@ -484,6 +586,12 @@ function renderQuestBoard() {
     refreshQuestBoard(true);
   }
   const boardQuests = state.questBoard.map(getQuestById).filter(Boolean);
+  const signature = boardQuests.map((quest) => {
+    const active = isQuestActive(quest.id);
+    return `${quest.id}:${active ? 1 : 0}:${Math.floor(state.quests[quest.id] || 0)}:${state.completedQuests.includes(quest.id) ? 1 : 0}`;
+  }).join("|") || "empty";
+  if (renderCache.questBoard === signature) return;
+  renderCache.questBoard = signature;
 
   if (!boardQuests.length) {
     $("questBoard").innerHTML = `<div class="inventory-empty">Die Tafel ist leer. Gewonnene Kämpfe bringen bald neue Aufträge.</div>`;
@@ -544,6 +652,7 @@ function renderBestiary() {
     bestiaryListHtml = renderBestiaryList();
     container.innerHTML = `${bestiaryListHtml}<div class="bestiary-detail" id="bestiaryDetail"></div>`;
     elementCache.delete("bestiaryDetail");
+    renderCache.bestiaryDetail = "";
     bestiaryListDirty = false;
   }
   updateBestiaryActiveCard();
@@ -581,11 +690,13 @@ function updateBestiaryActiveCard() {
 function renderBestiaryDetail() {
   const detailEnemy = enemies[selectedBestiaryEnemy] || enemies.wolf;
   const discovered = groupedBestiaryLoot(selectedBestiaryEnemy);
-  const categories = bestiaryCategories(selectedBestiaryEnemy, detailEnemy, discovered);
-  const categoryRows = renderBestiaryCategoryRows(selectedBestiaryEnemy, detailEnemy, discovered);
-
   const detail = document.getElementById("bestiaryDetail");
   if (!detail) return;
+  const signature = bestiaryDetailSignature(selectedBestiaryEnemy, detailEnemy, discovered);
+  if (renderCache.bestiaryDetail === signature) return;
+  renderCache.bestiaryDetail = signature;
+  const categories = bestiaryCategories(selectedBestiaryEnemy, detailEnemy, discovered);
+  const categoryRows = renderBestiaryCategoryRows(selectedBestiaryEnemy, detailEnemy, discovered);
 
   detail.innerHTML = `
     <div class="detail-head">
@@ -610,6 +721,25 @@ function renderBestiaryDetail() {
     </div>
     <p class="loot-note">Items werden zusammengefasst, seitenweise geladen und Details erscheinen direkt neben der Liste.</p>
   `;
+}
+
+function bestiaryDetailSignature(enemyId, enemy, discovered) {
+  const discoveredSignature = discovered
+    .map((item) => `${bestiaryItemKey(item)}:${item.count || 0}:${item.damage}:${item.defense}:${item.set || ""}`)
+    .join("|");
+  return [
+    enemyId,
+    enemy.level,
+    enemy.hp,
+    enemy.damage?.join("-"),
+    enemy.defense,
+    selectedBestiaryCategory,
+    selectedBestiaryFilter,
+    selectedBestiarySearch,
+    selectedBestiaryPage,
+    selectedBestiaryItemKey,
+    discoveredSignature,
+  ].join("~");
 }
 
 function renderEnemyAbilities(enemy) {
@@ -1007,7 +1137,10 @@ function formatChance(chance) {
 }
 
 function renderLog() {
-  $("logPreview").textContent = state.log[0] || "Noch keine Einträge.";
+  const signature = state.log.slice(0, 18).join("\n") || "empty";
+  if (renderCache.log === signature) return;
+  renderCache.log = signature;
+  setText("logPreview", state.log[0] || "Noch keine Einträge.");
   $("log").innerHTML = state.log.slice(0, 18).map((entry, index) => {
     const type = entry.includes("Tod") ? "bad" : entry.includes("Seltener") || entry.includes("Quest") || entry.includes("ausgerüstet") ? "drop" : index === 0 ? "good" : "";
     return `<div class="${type}">${escapeHtml(entry)}</div>`;
