@@ -471,6 +471,7 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
       ? `Du triffst für ${event.damage}.`
       : `${enemy.name} trifft für ${event.damage}.`);
     updateBattleHealth(event.playerHp, playerMaxHp, event.enemyHp, enemyMaxHp);
+    highlightAbilityUse(event.abilityId);
     if (event.damage > 0) spawnDamage(event.damage, side);
     await waitCombat(470);
     stage.className = "battle-stage";
@@ -491,6 +492,17 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
   stage.classList.add(playerWon ? "victory" : "defeat");
   $("battleText").textContent = playerWon ? "Sieg" : "Niederlage";
   await waitCombat(skipCombat ? 180 : 780);
+}
+
+function highlightAbilityUse(abilityId) {
+  if (!abilityId) return;
+  const chip = [...document.querySelectorAll("[data-ability]")]
+    .find((entry) => entry.dataset.ability === abilityId);
+  if (!chip) return;
+  chip.classList.remove("ability-used");
+  void chip.offsetWidth;
+  chip.classList.add("ability-used");
+  window.setTimeout(() => chip.classList.remove("ability-used"), 760);
 }
 
 function spawnDamage(amount, side) {

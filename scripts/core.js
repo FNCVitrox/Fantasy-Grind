@@ -822,14 +822,14 @@ async function fight() {
         playerHp += heal;
         fightState.sustainUsed = true;
         fightState.nextEnemyDamageMultiplier = Math.min(fightState.nextEnemyDamageMultiplier, 0.85);
-        events.push({ actor: "hero", damage: 0, text: `Letztes Aufbäumen heilt ${heal} Leben und festigt die Deckung.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
+        events.push({ actor: "hero", abilityId: "lastStand", damage: 0, text: `Letztes Aufbäumen heilt ${heal} Leben und festigt die Deckung.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
       }
     } else if (!fightState.sustainUsed && hasBuildAbility("battleRush") && playerHp <= stats.maxHp * 0.45) {
       const heal = Math.min(stats.maxHp - playerHp, Math.max(8, Math.floor(stats.maxHp * 0.18)));
       if (heal > 0) {
         playerHp += heal;
         fightState.sustainUsed = true;
-        events.push({ actor: "hero", damage: 0, text: `Kampfrausch heilt ${heal} Leben.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
+        events.push({ actor: "hero", abilityId: "battleRush", damage: 0, text: `Kampfrausch heilt ${heal} Leben.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
       }
     }
 
@@ -839,19 +839,24 @@ async function fight() {
     const basePlayerHit = Math.max(1, random(stats.damage - 4, stats.damage + 3) - Math.floor(effectiveDefense * 1.08));
     let playerHit = basePlayerHit;
     let playerText = `Du triffst für ${playerHit}.`;
+    let playerAbilityId = "";
 
     if (hasBuildAbility("execute") && enemyHp <= enemy.hp * 0.3 && rounds - fightState.lastExecuteRound >= 2) {
       playerHit = abilityDamage(basePlayerHit, 1.5);
       fightState.lastExecuteRound = rounds;
+      playerAbilityId = "execute";
       playerText = `Hinrichten trifft für ${playerHit}.`;
     } else if (hasBuildAbility("heavyStrike") && rounds % 3 === 0) {
       playerHit = abilityDamage(basePlayerHit, 1.75);
+      playerAbilityId = "heavyStrike";
       playerText = `Schwerer Hieb trifft für ${playerHit}.`;
     } else if (shatter) {
       playerHit = abilityDamage(basePlayerHit, 1.3);
+      playerAbilityId = "shatter";
       playerText = `Zerschmettern bricht die Deckung und trifft für ${playerHit}.`;
     } else if (hasBuildAbility("tauntingBlow") && rounds % 3 === 0) {
       fightState.nextEnemyDamageMultiplier = Math.min(fightState.nextEnemyDamageMultiplier, 0.75);
+      playerAbilityId = "tauntingBlow";
       playerText = `Spottender Schlag trifft für ${playerHit} und schwächt den Konter.`;
     }
 
@@ -878,6 +883,7 @@ async function fight() {
     enemyHp -= playerHit;
     events.push({
       actor: "hero",
+      abilityId: playerAbilityId,
       damage: playerHit,
       enemyHp: Math.max(0, enemyHp),
       playerHp: Math.max(0, playerHp),
@@ -889,6 +895,7 @@ async function fight() {
       enemyHp -= flurryHit;
       events.push({
         actor: "hero",
+        abilityId: "bladeFlurry",
         damage: flurryHit,
         enemyHp: Math.max(0, enemyHp),
         playerHp: Math.max(0, playerHp),
@@ -932,6 +939,7 @@ async function fight() {
     }
     events.push({
       actor: "enemy",
+      abilityId: shieldWall ? "shieldWall" : "",
       damage: enemyHit,
       enemyHp: Math.max(0, enemyHp),
       playerHp: Math.max(0, playerHp),
@@ -950,6 +958,7 @@ async function fight() {
       enemyHp -= counterHit;
       events.push({
         actor: "hero",
+        abilityId: "counterBlow",
         damage: counterHit,
         enemyHp: Math.max(0, enemyHp),
         playerHp: Math.max(0, playerHp),
