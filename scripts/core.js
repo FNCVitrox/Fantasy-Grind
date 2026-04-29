@@ -404,7 +404,7 @@ function setBuild(buildId) {
   if (!buildCatalog[buildId]) return;
   state.build = buildId;
   syncDerivedStats();
-  state.hp = Math.min(state.hp, state.maxHp);
+  state.hp = state.maxHp;
   log(`Build gewechselt: ${buildCatalog[buildId].name}.`, "drop");
   save();
   render();

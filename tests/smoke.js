@@ -82,6 +82,7 @@ assert.strictEqual(
 );
 assert(vm.runInContext("state = defaultState(); state.build = 'damage'; hasBuildAbility('execute')", context), "damage build should know execute");
 assert(vm.runInContext("state = defaultState(); state.build = 'bruiser'; hasBuildAbility('counterBlow') && hasBuildAbility('shatter')", context), "bruiser build should know counter and shatter");
+assert.strictEqual(vm.runInContext("renderLog = () => {}; render = () => {}; state = defaultState(); state.build = 'damage'; syncDerivedStats(); state.hp = 10; setBuild('tank'); state.hp", context), vm.runInContext("state.maxHp", context));
 assert.strictEqual(vm.runInContext("abilityDamage(10, 1.75)", context), 17);
 assert(
   vm.runInContext("Object.values(enemies).every((enemy) => generatedLootPoolCount(enemy) + enemy.drops.length >= 15 && generatedLootPoolCount(enemy) + enemy.drops.length <= 20)", context),
