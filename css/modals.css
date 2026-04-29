@@ -1523,6 +1523,45 @@ button.drop-row span:last-child {
   font-weight: 800;
 }
 
+.save-window {
+  width: min(560px, 100%);
+}
+
+.save-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.save-actions button {
+  display: grid;
+  gap: 5px;
+  align-content: center;
+  min-height: 92px;
+  padding: 14px;
+  text-align: left;
+}
+
+.save-actions strong {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.save-actions span,
+.save-hint {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.save-hint {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(242, 193, 78, 0.42);
+  border-radius: 8px;
+  background: rgba(242, 193, 78, 0.08);
+  font-size: 13px;
+}
+
 .modal-head-actions {
   display: flex;
   align-items: center;

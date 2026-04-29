@@ -320,6 +320,11 @@ $("closePlayerStatsBtn").addEventListener("click", closePlayerStats);
 $("playerStatsModal").addEventListener("click", (event) => {
   if (event.target.id === "playerStatsModal") closePlayerStats();
 });
+$("openSaveMenuBtn").addEventListener("click", () => openModal("saveModal"));
+$("closeSaveBtn").addEventListener("click", closeSave);
+$("saveModal").addEventListener("click", (event) => {
+  if (event.target.id === "saveModal") closeSave();
+});
 $("exportSaveTopBtn").addEventListener("click", exportSave);
 $("importSaveTopBtn").addEventListener("click", importSave);
 $("saveFileInput").addEventListener("change", importSaveFile);
@@ -370,6 +375,10 @@ function closeEquipment() {
 
 function closePlayerStats() {
   closeModal("playerStatsModal");
+}
+
+function closeSave() {
+  closeModal("saveModal");
 }
 
 function exportSave() {
@@ -429,8 +438,10 @@ function closeModal(id) {
 function setControlsDisabled(disabled) {
   document.querySelectorAll("button").forEach((button) => {
     if (button.id === "resetBtn") return;
+    if (button.id === "openSaveMenuBtn") return;
     if (button.id === "exportSaveTopBtn") return;
     if (button.id === "importSaveTopBtn") return;
+    if (button.id === "closeSaveBtn") return;
     if (button.id === "toggleLogBtn") return;
     if (button.id === "closeLogBtn") return;
     if (button.id === "closeRepairBtn") return;

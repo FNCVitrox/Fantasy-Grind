@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=0.8.21" />
-    <link rel="stylesheet" href="./css/modals.css?v=0.8.21" />
-    <link rel="stylesheet" href="./css/responsive.css?v=0.8.21" />
+    <link rel="stylesheet" href="./css/base.css?v=0.8.22" />
+    <link rel="stylesheet" href="./css/modals.css?v=0.8.22" />
+    <link rel="stylesheet" href="./css/responsive.css?v=0.8.22" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.21</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.22</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
@@ -31,11 +31,8 @@
         <button class="book-button smith-button" id="openSmithBtn" type="button" aria-label="Schmied öffnen">
           <span>Schmied</span>
         </button>
-        <button class="book-button save-button" id="exportSaveTopBtn" type="button" aria-label="Spielstand sichern">
-          <span>Sichern</span>
-        </button>
-        <button class="book-button load-button" id="importSaveTopBtn" type="button" aria-label="Spielstand laden">
-          <span>Laden</span>
+        <button class="book-button save-menu-button" id="openSaveMenuBtn" type="button" aria-label="Spielstand öffnen">
+          <span>Spielstand</span>
         </button>
         <input id="saveFileInput" type="file" accept="application/json,.json" hidden />
       </section>
@@ -270,6 +267,28 @@
         <div id="log" class="log"></div>
       </div>
     </div>
+    <div class="modal-overlay" id="saveModal" aria-hidden="true">
+      <div class="modal-window save-window" role="dialog" aria-modal="true" aria-labelledby="saveTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow">Sicherung</p>
+            <h2 id="saveTitle">Spielstand</h2>
+          </div>
+          <button class="modal-close" id="closeSaveBtn" type="button" aria-label="Spielstand schließen">Schließen</button>
+        </div>
+        <div class="save-actions">
+          <button id="exportSaveTopBtn" type="button">
+            <strong>Spielstand herunterladen</strong>
+            <span>Speichert deinen Fortschritt als JSON-Datei.</span>
+          </button>
+          <button id="importSaveTopBtn" type="button">
+            <strong>Spielstand laden</strong>
+            <span>Lädt eine zuvor heruntergeladene JSON-Datei.</span>
+          </button>
+        </div>
+        <p class="save-hint">Für sicheren Fortschritt regelmäßig herunterladen. Browser-Speicher kann bei Preview-Links oder gelöschten Website-Daten verloren gehen.</p>
+      </div>
+    </div>
     <div class="modal-overlay" id="repairModal" aria-hidden="true">
       <div class="modal-window repair-window" role="dialog" aria-modal="true" aria-labelledby="repairTitle">
         <div class="modal-window-head">
@@ -308,10 +327,10 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=0.8.21"></script>
-    <script src="./scripts/core.js?v=0.8.21"></script>
-    <script src="./scripts/render.js?v=0.8.21"></script>
-    <script src="./scripts/events.js?v=0.8.21"></script>
+    <script src="./scripts/data.js?v=0.8.22"></script>
+    <script src="./scripts/core.js?v=0.8.22"></script>
+    <script src="./scripts/render.js?v=0.8.22"></script>
+    <script src="./scripts/events.js?v=0.8.22"></script>
   </body>
 </html>
 

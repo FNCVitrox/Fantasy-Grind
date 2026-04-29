@@ -143,6 +143,10 @@
     grid-template-columns: 1fr;
   }
 
+  .save-actions {
+    grid-template-columns: 1fr;
+  }
+
   .bestiary-window .bestiary {
     grid-template-columns: 1fr;
     overflow: auto;

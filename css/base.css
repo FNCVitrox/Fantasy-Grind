@@ -220,12 +220,8 @@ h2 {
   background: var(--gold);
 }
 
-.save-button::before {
+.save-menu-button::before {
   background: var(--blue);
-}
-
-.load-button::before {
-  background: var(--aqua);
 }
 
 .game-layout {
