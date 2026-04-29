@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.18
+Alpha v0.8.19
 
 ## Was Bereits Spielbar Ist
 
@@ -41,6 +41,7 @@ Alpha v0.8.18
 - Materialsystem mit Eisenstücken, Lederresten, Runensplittern, Set-Materialien und seltenen Komponenten
 - Lokaler Spielstand im Browser
 - Gebiet, Gegnerauswahl und Bestiarium-Auswahl bleiben nach F5 erhalten
+- Zusätzlicher F5-Schutz für GitHub-Preview/Action-Links über mehrere Browser-Speicher-Fallbacks
 - Sicherungs- und Ladefunktion für Spielstände
 - Automatische Backup-Speicherung
 

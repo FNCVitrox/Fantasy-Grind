@@ -97,7 +97,7 @@ function load() {
   ];
 
   for (const candidate of candidates) {
-    const raw = localStorage.getItem(candidate.key);
+    const raw = storageGet(candidate.key);
     if (!raw) continue;
     const loaded = parseSavedState(raw);
     if (!loaded) continue;
@@ -107,8 +107,8 @@ function load() {
         ...(loaded.log || []),
       ].slice(0, 40);
       const restored = JSON.stringify(loaded);
-      localStorage.setItem(saveKey, restored);
-      localStorage.setItem(saveBackupKey, restored);
+      storageSet(saveKey, restored);
+      storageSet(saveBackupKey, restored);
     }
     return loaded;
   }
@@ -183,6 +183,64 @@ function restoreUiSelection() {
   selectedEnemy = ui.selectedEnemy;
   selectedBestiaryZone = ui.selectedBestiaryZone;
   selectedBestiaryEnemy = ui.selectedBestiaryEnemy;
+}
+
+function readWindowNameStore() {
+  if (typeof window === "undefined") return {};
+  try {
+    const parsed = window.name ? JSON.parse(window.name) : {};
+    return parsed && typeof parsed === "object" && parsed.__fantasyGrindSaves
+      ? parsed.__fantasyGrindSaves
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeWindowNameStore(store) {
+  if (typeof window === "undefined") return;
+  try {
+    window.name = JSON.stringify({ __fantasyGrindSaves: store });
+  } catch {
+    // Some preview/sandbox pages can block storage writes. Other stores may still work.
+  }
+}
+
+function storageGet(key) {
+  const stores = [
+    typeof localStorage !== "undefined" ? localStorage : null,
+    typeof sessionStorage !== "undefined" ? sessionStorage : null,
+  ].filter(Boolean);
+
+  for (const store of stores) {
+    try {
+      const value = store.getItem(key);
+      if (value) return value;
+    } catch {
+      // Continue with the next fallback store.
+    }
+  }
+
+  return readWindowNameStore()[key] || null;
+}
+
+function storageSet(key, value) {
+  const stores = [
+    typeof localStorage !== "undefined" ? localStorage : null,
+    typeof sessionStorage !== "undefined" ? sessionStorage : null,
+  ].filter(Boolean);
+
+  for (const store of stores) {
+    try {
+      store.setItem(key, value);
+    } catch {
+      // Continue with the next fallback store.
+    }
+  }
+
+  const windowStore = readWindowNameStore();
+  windowStore[key] = value;
+  writeWindowNameStore(windowStore);
 }
 
 function applyBalanceMigration(loaded) {
@@ -312,13 +370,13 @@ function normalizeItemQuality(item) {
 
 function save() {
   syncUiState();
-  const previous = localStorage.getItem(saveKey);
+  const previous = storageGet(saveKey);
   const next = JSON.stringify(state);
   if (previous && previous !== next) {
-    localStorage.setItem(savePreviousKey, previous);
+    storageSet(savePreviousKey, previous);
   }
-  localStorage.setItem(saveKey, next);
-  localStorage.setItem(saveBackupKey, next);
+  storageSet(saveKey, next);
+  storageSet(saveBackupKey, next);
 }
 
 function exportSaveData() {
