@@ -229,16 +229,26 @@ h2 {
 .portrait {
   display: grid;
   place-items: center;
+  width: 100%;
   min-height: 190px;
+  padding: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
     linear-gradient(45deg, rgba(216, 174, 75, 0.12), transparent),
     #0c1723;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .portrait svg {
   width: min(78%, 180px);
+}
+
+.portrait:hover,
+.portrait:focus-visible {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(216, 174, 75, 0.12), 0 18px 36px rgba(0, 0, 0, 0.22);
+  transform: translateY(-1px);
 }
 
 .character-status {
@@ -262,6 +272,13 @@ h2 {
 
 .character-status strong {
   font-size: 20px;
+}
+
+.xp-overview {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0c1723;
 }
 
 .class-card {

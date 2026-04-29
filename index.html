@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=ability-highlight-1" />
-    <link rel="stylesheet" href="./css/modals.css?v=ability-highlight-1" />
-    <link rel="stylesheet" href="./css/responsive.css?v=ability-highlight-1" />
+    <link rel="stylesheet" href="./css/base.css?v=player-stats-1" />
+    <link rel="stylesheet" href="./css/modals.css?v=player-stats-1" />
+    <link rel="stylesheet" href="./css/responsive.css?v=player-stats-1" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.11</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.13</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
@@ -39,7 +39,7 @@
 
       <section class="game-layout">
         <aside class="panel character-panel" aria-label="Charakter">
-          <div class="portrait">
+          <button class="portrait" id="openPlayerStatsBtn" type="button" aria-label="Spielerwerte öffnen">
             <svg viewBox="0 0 160 160" role="img" aria-label="Kriegerporträt">
               <defs>
                 <linearGradient id="steel" x1="0" x2="1" y1="0" y2="1">
@@ -55,12 +55,16 @@
               <path d="M38 134h84l-14-36H52z" fill="#8a2f2f" />
               <path d="M80 28v24M57 42l13 12M103 42 90 54" stroke="#d4af37" stroke-width="6" stroke-linecap="round" />
             </svg>
-          </div>
+          </button>
           <h2 id="className">Krieger</h2>
           <div class="character-status" aria-label="Charakterwerte">
             <div><span>Level</span><strong id="level">1</strong></div>
             <div><span>Gold</span><strong id="gold">0</strong></div>
             <div><span>Ruhm</span><strong id="renown">0</strong></div>
+          </div>
+          <div class="bar-block xp-overview">
+            <div class="bar-label"><span>XP</span><b id="xpText"></b></div>
+            <div class="bar xp"><span id="xpBar"></span></div>
           </div>
           <section class="class-card" aria-label="Klasse und Fähigkeiten">
             <div>
@@ -72,15 +76,6 @@
               <div class="ability-list" id="abilityList"></div>
             </div>
           </section>
-          <div class="bar-block">
-            <div class="bar-label"><span>Leben</span><b id="hpText"></b></div>
-            <div class="bar"><span id="hpBar"></span></div>
-          </div>
-          <div class="bar-block">
-            <div class="bar-label"><span>XP</span><b id="xpText"></b></div>
-            <div class="bar xp"><span id="xpBar"></span></div>
-          </div>
-          <div class="stats" id="stats"></div>
           <div class="actions">
             <button id="restBtn" type="button">Rasten</button>
           </div>
@@ -300,11 +295,23 @@
         <div class="equipment-detail-grid" id="equipmentDetails"></div>
       </div>
     </div>
+    <div class="modal-overlay" id="playerStatsModal" aria-hidden="true">
+      <div class="modal-window player-stats-window" role="dialog" aria-modal="true" aria-labelledby="playerStatsTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow">Charakter</p>
+            <h2 id="playerStatsTitle">Spielerwerte</h2>
+          </div>
+          <button class="modal-close" id="closePlayerStatsBtn" type="button" aria-label="Spielerwerte schließen">Schließen</button>
+        </div>
+        <div class="player-stats-detail" id="playerStatsDetails"></div>
+      </div>
+    </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=render-cache-1"></script>
-    <script src="./scripts/core.js?v=render-cache-1"></script>
-    <script src="./scripts/render.js?v=render-cache-1"></script>
-    <script src="./scripts/events.js?v=render-cache-1"></script>
+    <script src="./scripts/data.js?v=player-stats-1"></script>
+    <script src="./scripts/core.js?v=player-stats-1"></script>
+    <script src="./scripts/render.js?v=player-stats-1"></script>
+    <script src="./scripts/events.js?v=player-stats-1"></script>
   </body>
 </html>
 

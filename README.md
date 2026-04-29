@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.12
+Alpha v0.8.13
 
 ## Was Bereits Spielbar Ist
 
@@ -14,6 +14,7 @@ Alpha v0.8.12
 - Drei Krieger-Builds: Tank, Schaden und Bruiser
 - Jeder Build hat drei automatische Fähigkeiten
 - Jeder Build hat eine eigene kleine Charakteroptik im Kampffeld
+- Klickbares Charakterporträt mit eigenem Spielerwerte-Fenster
 - Benutzte Spielerfähigkeiten leuchten während des Kampfes kurz in der linken Fähigkeitsliste auf
 - Automatische Kämpfe mit Animationen, Schadenstexten, HP-Balken und Kampfprotokoll
 - Gegner haben eigene Fähigkeiten

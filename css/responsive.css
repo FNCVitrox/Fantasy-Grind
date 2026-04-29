@@ -184,6 +184,17 @@
     grid-template-columns: 1fr;
   }
 
+  .player-stats-hero,
+  .player-progress-grid,
+  .player-stat-grid,
+  .player-stat-sources {
+    grid-template-columns: 1fr;
+  }
+
+  .player-stat-currency {
+    justify-content: stretch;
+  }
+
   .equipment-belt .equipment {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

@@ -4,19 +4,11 @@
   setText("level", state.level);
   setText("gold", state.gold);
   setText("renown", state.renown);
-  setText("hpText", `${state.hp}/${state.maxHp}`);
-  setBarWidth("hpBar", Math.max(2, (state.hp / state.maxHp) * 100));
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
   setText("xpText", state.level >= 20 ? "Max" : `${state.xp}/${needed}`);
   setBarWidth("xpBar", state.level >= 20 ? 100 : Math.max(2, (state.xp / needed) * 100));
   renderHeroBuildVisual();
   renderClassPanel();
-  const durabilityAverage = equippedDurabilityAverage();
-  renderCachedHtml("stats", `${stats.damage}|${stats.defense}|${durabilityAverage}`, () => [
-    ["Schaden", stats.damage],
-    ["Verteidigung", stats.defense],
-    ["Haltbarkeit", `${durabilityAverage}%`],
-  ].map(([label, value]) => `<div class="stat"><span>${label}</span><strong>${value}</strong></div>`).join(""));
   const currentRestCost = restCost();
   renderCachedHtml("restBtn", currentRestCost, () => `<span class="button-main">Rasten</span><span class="button-price">${currentRestCost} Gold</span>`);
   setDisabled("restBtn", state.gold < currentRestCost);
@@ -31,6 +23,7 @@
   if (isModalOpen("smithModal")) renderSmith();
   if (isModalOpen("repairModal")) renderRepairModal();
   if (isModalOpen("equipmentModal")) renderEquipmentDetails();
+  if (isModalOpen("playerStatsModal")) renderPlayerStatsDetails(stats);
   renderSelectedEnemy(stats);
   renderLog();
   setText("fightBtn", isFighting ? (skipCombat ? "Überspringe..." : "Skip") : "Kampf starten");
@@ -115,6 +108,95 @@ function renderClassPanel() {
       <span>${escapeHtml(ability.text)}</span>
     </div>
   `).join("");
+}
+
+function renderPlayerStatsDetails(stats = totalStats()) {
+  const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
+  const durabilityAverage = equippedDurabilityAverage();
+  const setStats = activeSetBonusStats();
+  const build = activeBuild();
+  const signature = [
+    state.level,
+    state.xp,
+    needed,
+    state.hp,
+    state.maxHp,
+    state.gold,
+    state.renown,
+    state.build,
+    stats.damage,
+    stats.defense,
+    stats.maxHp,
+    durabilityAverage,
+    setStats.damage,
+    setStats.defense,
+    setStats.maxHp,
+    equipmentSignature(),
+  ].join("|");
+  if (renderCache.playerStats === signature) return;
+  renderCache.playerStats = signature;
+
+  const xpPercent = state.level >= 20 ? 100 : Math.max(2, Math.min(100, (state.xp / needed) * 100));
+  const hpPercent = Math.max(2, Math.min(100, (state.hp / state.maxHp) * 100));
+  const buildDamage = Math.round(((build.damageMultiplier || 1) - 1) * 100);
+  const buildDefense = Math.round(((build.defenseMultiplier || 1) - 1) * 100);
+  const buildHp = Math.round(((build.maxHpMultiplier || 1) - 1) * 100);
+  const setLines = Object.values(activeSetCounts())
+    .filter(({ count }) => count >= 2)
+    .map(({ id, count }) => `<span>${escapeHtml(setBonuses[id]?.name || id)} · ${count} Teile</span>`)
+    .join("");
+
+  $("playerStatsDetails").innerHTML = `
+    <section class="player-stats-hero">
+      <div>
+        <p class="eyebrow">${escapeHtml(activeClass().name)} · ${escapeHtml(build.name)}</p>
+        <h3>Level ${state.level}</h3>
+      </div>
+      <div class="player-stat-currency">
+        <span>Gold <strong>${state.gold}</strong></span>
+        <span>Ruhm <strong>${state.renown}</strong></span>
+      </div>
+    </section>
+    <section class="player-progress-grid">
+      <div class="player-progress-card">
+        <div class="bar-label"><span>Leben</span><b>${state.hp}/${state.maxHp}</b></div>
+        <div class="bar"><span style="width:${hpPercent}%"></span></div>
+      </div>
+      <div class="player-progress-card">
+        <div class="bar-label"><span>XP</span><b>${state.level >= 20 ? "Max" : `${state.xp}/${needed}`}</b></div>
+        <div class="bar xp"><span style="width:${xpPercent}%"></span></div>
+      </div>
+    </section>
+    <section class="player-stat-grid">
+      ${renderPlayerStat("Schaden", stats.damage)}
+      ${renderPlayerStat("Verteidigung", stats.defense)}
+      ${renderPlayerStat("Max. Leben", stats.maxHp)}
+      ${renderPlayerStat("Haltbarkeit", `${durabilityAverage}%`)}
+    </section>
+    <section class="player-stat-sources">
+      <div>
+        <strong>Build-Bonus</strong>
+        <span>Schaden ${formatSignedPercent(buildDamage)}</span>
+        <span>Verteidigung ${formatSignedPercent(buildDefense)}</span>
+        <span>Leben ${formatSignedPercent(buildHp)}</span>
+      </div>
+      <div>
+        <strong>Set-Boni</strong>
+        ${setLines || "<span>Kein aktiver Set-Bonus</span>"}
+        <span>Gesamt: +${setStats.damage} Schaden · +${setStats.defense} Verteidigung · +${setStats.maxHp} Leben</span>
+      </div>
+    </section>
+  `;
+}
+
+function renderPlayerStat(label, value) {
+  return `<div class="player-stat-card"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`;
+}
+
+function formatSignedPercent(value) {
+  if (value > 0) return `+${value}%`;
+  if (value < 0) return `${value}%`;
+  return "0%";
 }
 
 function renderEnemies(stats = totalStats()) {

@@ -236,6 +236,10 @@ $("fightBtn").addEventListener("click", () => {
   fight();
 });
 $("restBtn").addEventListener("click", rest);
+$("openPlayerStatsBtn").addEventListener("click", () => {
+  renderPlayerStatsDetails();
+  openModal("playerStatsModal");
+});
 $("buildList").addEventListener("click", (event) => {
   const button = event.target.closest("[data-build]");
   if (button) setBuild(button.dataset.build);
@@ -310,6 +314,10 @@ $("closeEquipmentBtn").addEventListener("click", closeEquipment);
 $("equipmentModal").addEventListener("click", (event) => {
   if (event.target.id === "equipmentModal") closeEquipment();
 });
+$("closePlayerStatsBtn").addEventListener("click", closePlayerStats);
+$("playerStatsModal").addEventListener("click", (event) => {
+  if (event.target.id === "playerStatsModal") closePlayerStats();
+});
 $("exportSaveTopBtn").addEventListener("click", exportSave);
 $("importSaveTopBtn").addEventListener("click", importSave);
 $("saveFileInput").addEventListener("change", importSaveFile);
@@ -354,6 +362,10 @@ function closeRepair() {
 
 function closeEquipment() {
   closeModal("equipmentModal");
+}
+
+function closePlayerStats() {
+  closeModal("playerStatsModal");
 }
 
 function exportSave() {
@@ -419,6 +431,8 @@ function setControlsDisabled(disabled) {
     if (button.id === "closeLogBtn") return;
     if (button.id === "closeRepairBtn") return;
     if (button.id === "closeEquipmentBtn") return;
+    if (button.id === "openPlayerStatsBtn") return;
+    if (button.id === "closePlayerStatsBtn") return;
     if (button.id === "fightBtn") return;
     if (button.id === "openBestiaryBtn") return;
     if (button.id === "closeBestiaryBtn") return;
