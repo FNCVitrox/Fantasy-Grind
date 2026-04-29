@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.19
+Alpha v0.8.20
 
 ## Was Bereits Spielbar Ist
 
@@ -39,11 +39,9 @@ Alpha v0.8.19
 - Inventar mit Ausrüsten, Verkaufen und Zerlegen
 - Schmied zum Verbessern, Zerlegen und Reparieren von Ausrüstung
 - Materialsystem mit Eisenstücken, Lederresten, Runensplittern, Set-Materialien und seltenen Komponenten
-- Lokaler Spielstand im Browser
-- Gebiet, Gegnerauswahl und Bestiarium-Auswahl bleiben nach F5 erhalten
-- Zusätzlicher F5-Schutz für GitHub-Preview/Action-Links über mehrere Browser-Speicher-Fallbacks
-- Sicherungs- und Ladefunktion für Spielstände
-- Automatische Backup-Speicherung
+- Sicherungs- und Ladefunktion für Spielstände über eine JSON-Datei
+- Empfehlung: Spielstand regelmäßig herunterladen, damit Fortschritt sicher erhalten bleibt
+- Browser-Speicher wird genutzt, ist aber je nach Browser, GitHub-Preview-Link oder gelöschten Website-Daten nicht garantiert
 
 ## Spielidee
 
@@ -107,9 +105,15 @@ Items sollen nicht nur stärker werden, sondern auch Entscheidungen erzeugen: be
 
 ## Spielstand
 
-Der Fortschritt wird lokal im Browser gespeichert. Zusätzlich gibt es eine Sicherungs- und Ladefunktion.
+Der sichere Weg ist die Sicherungsdatei:
 
-Wichtig: Wenn Browserdaten gelöscht werden, kann der lokale Spielstand verschwinden. Deshalb ist die Sicherungsdatei nützlich, wenn du deinen Fortschritt langfristig behalten möchtest.
+1. Im Spiel auf `Sichern` klicken.
+2. Die heruntergeladene JSON-Datei behalten.
+3. Später im Spiel auf `Laden` klicken und diese Datei auswählen.
+
+Der Browser versucht den Fortschritt zusätzlich lokal zu speichern. Das ist bequem, aber nicht zuverlässig genug, um sich darauf zu verlassen. Besonders GitHub-Preview- oder Action-Links, private Browserfenster, gelöschte Website-Daten oder ein anderer Browser können dazu führen, dass der lokale Speicher leer ist.
+
+Deshalb gilt: Wer seinen Fortschritt behalten möchte, sollte regelmäßig den Spielstand herunterladen.
 
 ## Spielen
 
