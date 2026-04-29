@@ -12,7 +12,7 @@ const scripts = ["scripts/data.js", "scripts/core.js", "scripts/render.js"].map(
 assert(!/[Ã�]/.test(html), "index.html still contains likely mojibake characters");
 
 const htmlIds = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
-const dynamicIds = new Set(["bestiaryDetail", "bestiarySearch"]);
+const dynamicIds = new Set(["bestiaryDetail", "bestiarySearch", "smithGreeting", "smithGreetingText"]);
 const referencedIds = new Set(
   [...scripts.join("\n").matchAll(/\$\("([^"]+)"\)/g)].map((match) => match[1]),
 );

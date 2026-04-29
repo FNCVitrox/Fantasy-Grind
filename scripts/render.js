@@ -417,6 +417,126 @@ function renderSmith() {
   if (smithView === "salvage") renderSmithSalvage();
 }
 
+const smithDialogues = {
+  0: [
+    {
+      title: "Der Schmied hebt den Hammer.",
+      text: "Bring mir Beute, Eisen und Splitter. Ich mache daraus etwas, das dich am Leben hält.",
+    },
+    {
+      title: "Der Schmied mustert deine Ausrüstung.",
+      text: "Neu hier? Dann hör gut zu: rostige Klingen gewinnen keine langen Kämpfe.",
+    },
+    {
+      title: "Der Schmied nickt knapp.",
+      text: "Gold auf den Tisch, Material daneben. Freundliche Worte härten keinen Stahl.",
+    },
+  ],
+  5: [
+    {
+      title: "Der Schmied erkennt dich wieder.",
+      text: "Du kommst öfter zurück, als ich erwartet habe. Gut. Deine Sachen halten schon mehr aus.",
+    },
+    {
+      title: "Der Schmied legt neues Werkzeug bereit.",
+      text: "Für dich nehme ich mir einen sauberen Amboss. Reparaturen werden etwas günstiger.",
+    },
+    {
+      title: "Der Schmied schmunzelt trocken.",
+      text: "Du überlebst. Das ist in Grauwacht fast schon ein Empfehlungsschreiben.",
+    },
+  ],
+  10: [
+    {
+      title: "Der Schmied grüßt dich mit einem Nicken.",
+      text: "Die Quest-Tafel hört auf deinen Namen. Mehr Aufträge bedeuten mehr Gründe für bessere Klingen.",
+    },
+    {
+      title: "Der Schmied zeigt auf die Wandtafel.",
+      text: "Ich habe den Boten gesagt, sie sollen dir mehr Arbeit bringen. Du kannst sie wohl gebrauchen.",
+    },
+    {
+      title: "Der Schmied prüft eine Klinge im Licht.",
+      text: "Verlässliche Hände bekommen verlässliche Aufträge. Such dir aus, was dich nicht umbringt.",
+    },
+  ],
+  15: [
+    {
+      title: "Der Schmied nimmt sich Zeit.",
+      text: "Aus Schrott kann man mehr holen, wenn man weiß, wo man schneiden muss. Ich helfe dir beim Zerlegen.",
+    },
+    {
+      title: "Der Schmied sortiert deine Beute.",
+      text: "Wegwerfen wäre Verschwendung. Gib mir die Teile, ich finde noch brauchbares Material darin.",
+    },
+    {
+      title: "Der Schmied klopft gegen den Amboss.",
+      text: "Du bringst mir gute Arbeit. Dafür hole ich dir aus altem Zeug ein bisschen mehr heraus.",
+    },
+  ],
+  20: [
+    {
+      title: "Der Schmied wirkt zufrieden.",
+      text: "Jetzt reden wir nicht mehr über Flickwerk. Deine Upgrades bekommen meinen besten Preis.",
+    },
+    {
+      title: "Der Schmied legt die schweren Werkzeuge bereit.",
+      text: "Held der Grauwacht, hm? Dann soll deine Ausrüstung auch danach klingen.",
+    },
+    {
+      title: "Der Schmied lächelt fast.",
+      text: "Ich feilsche nicht gern. Bei dir mache ich eine Ausnahme. Mach etwas Sinnvolles daraus.",
+    },
+  ],
+  30: [
+    {
+      title: "Der Schmied senkt die Stimme.",
+      text: "Elite-Gegner tragen bessere Spuren am Stahl. Bring sie mir, ich erkenne den Wert.",
+    },
+    {
+      title: "Der Schmied prüft deine Narben.",
+      text: "Wer Eliten jagt, braucht mehr als Mut. Deine Beute behandle ich entsprechend.",
+    },
+    {
+      title: "Der Schmied arbeitet ohne aufzusehen.",
+      text: "Du suchst die gefährlichen Kämpfe. Gut. Gefährliche Beute lässt sich besser verwerten.",
+    },
+  ],
+  40: [
+    {
+      title: "Der Schmied spricht wie zu einem Verbündeten.",
+      text: "Meister der Grauwacht. Für dich halte ich die seltenen Aufträge nicht mehr unter der Theke.",
+    },
+    {
+      title: "Der Schmied reicht dir das beste Werkzeug.",
+      text: "Du hast dir Vertrauen verdient. Wenn etwas Besonderes auftaucht, erfährst du es zuerst.",
+    },
+    {
+      title: "Der Schmied schlägt den Hammer langsam an.",
+      text: "Jetzt bauen wir nicht nur Ausrüstung. Jetzt bauen wir Legenden, Stück für Stück.",
+    },
+  ],
+};
+
+function smithDialogueForRank() {
+  const rank = renownRank();
+  const lines = smithDialogues[rank.threshold] || smithDialogues[0];
+  const greeting = $("smithGreeting");
+  const previous = Number(greeting?.dataset.dialogueIndex ?? -1);
+  let index = random(0, lines.length - 1);
+  if (lines.length > 1 && index === previous) index = (index + 1) % lines.length;
+  return { ...lines[index], index };
+}
+
+function renderSmithGreeting() {
+  const dialogue = smithDialogueForRank();
+  $("smithGreetingText").innerHTML = `
+    <strong>${escapeHtml(dialogue.title)}</strong>
+    <p>"${escapeHtml(dialogue.text)}"</p>
+  `;
+  $("smithGreeting").dataset.dialogueIndex = String(dialogue.index);
+}
+
 function renderSmithMaterials() {
   $("materials").innerHTML = [
     `<div class="material gold-material"><span>Gold</span><strong>${state.gold}</strong></div>`,
@@ -440,14 +560,11 @@ function renderSmithRenown() {
 }
 
 function renderSmithHome() {
-  if ($("smithHome").dataset.rendered === "true") return;
-  $("smithHome").innerHTML = `
-    <div class="smith-greeting">
+  if ($("smithHome").dataset.rendered !== "true") {
+    $("smithHome").innerHTML = `
+    <div class="smith-greeting" id="smithGreeting">
       <div class="smith-avatar" aria-hidden="true"></div>
-      <div>
-        <strong>Der Schmied hebt den Hammer.</strong>
-        <p>"Bring mir Beute, Eisen und Splitter. Ich mache daraus etwas, das dich am Leben hält."</p>
-      </div>
+      <div id="smithGreetingText"></div>
     </div>
     <div class="smith-choice-grid">
       <button type="button" data-smith-view="upgrade">
@@ -464,7 +581,9 @@ function renderSmithHome() {
       </button>
     </div>
   `;
-  $("smithHome").dataset.rendered = "true";
+    $("smithHome").dataset.rendered = "true";
+  }
+  renderSmithGreeting();
 }
 
 function renderSmithUpgrade() {
