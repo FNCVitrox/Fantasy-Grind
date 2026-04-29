@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.13
+Alpha v0.8.14
 
 ## Was Bereits Spielbar Ist
 
@@ -15,6 +15,7 @@ Alpha v0.8.13
 - Jeder Build hat drei automatische Fähigkeiten
 - Jeder Build hat eine eigene kleine Charakteroptik im Kampffeld
 - Klickbares Charakterporträt mit eigenem Spielerwerte-Fenster
+- Lagerplatz in der oberen Leiste zum Heilen
 - Benutzte Spielerfähigkeiten leuchten während des Kampfes kurz in der linken Fähigkeitsliste auf
 - Automatische Kämpfe mit Animationen, Schadenstexten, HP-Balken und Kampfprotokoll
 - Gegner haben eigene Fähigkeiten

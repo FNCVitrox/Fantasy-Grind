@@ -155,6 +155,23 @@ h2 {
     rgba(52, 213, 216, 0.12);
 }
 
+.book-button .button-price {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.camp-button::before {
+  width: 30px;
+  height: 22px;
+  border-radius: 50% 50% 8px 8px;
+  background:
+    radial-gradient(circle at 50% 58%, rgba(224, 100, 95, 0.95) 0 20%, transparent 21%),
+    radial-gradient(circle at 35% 70%, rgba(242, 193, 78, 0.9) 0 13%, transparent 14%),
+    linear-gradient(90deg, transparent 0 36%, rgba(216, 174, 75, 0.85) 37% 44%, transparent 45% 55%, rgba(216, 174, 75, 0.85) 56% 63%, transparent 64%),
+    rgba(216, 174, 75, 0.12);
+}
+
 .quest-board-button::before {
   width: 28px;
   height: 24px;

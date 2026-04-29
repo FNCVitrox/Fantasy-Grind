@@ -4,18 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=player-stats-1" />
-    <link rel="stylesheet" href="./css/modals.css?v=player-stats-1" />
-    <link rel="stylesheet" href="./css/responsive.css?v=player-stats-1" />
+    <link rel="stylesheet" href="./css/base.css?v=camp-button-1" />
+    <link rel="stylesheet" href="./css/modals.css?v=camp-button-1" />
+    <link rel="stylesheet" href="./css/responsive.css?v=camp-button-1" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.13</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.14</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
           <p class="eyebrow">Fantasy Grind</p>
           <h1>Grauwacht</h1>
         </div>
+        <button class="book-button camp-button" id="restBtn" type="button" aria-label="Am Lagerplatz heilen">
+          <span>Lagerplatz</span>
+        </button>
         <button class="book-button" id="openBestiaryBtn" type="button" aria-label="Bestiarium öffnen">
           <span>Bestiarium</span>
         </button>
@@ -76,9 +79,6 @@
               <div class="ability-list" id="abilityList"></div>
             </div>
           </section>
-          <div class="actions">
-            <button id="restBtn" type="button">Rasten</button>
-          </div>
         </aside>
 
         <section class="panel world-panel" aria-label="Welt und Kampf">
@@ -308,10 +308,10 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=player-stats-1"></script>
-    <script src="./scripts/core.js?v=player-stats-1"></script>
-    <script src="./scripts/render.js?v=player-stats-1"></script>
-    <script src="./scripts/events.js?v=player-stats-1"></script>
+    <script src="./scripts/data.js?v=camp-button-1"></script>
+    <script src="./scripts/core.js?v=camp-button-1"></script>
+    <script src="./scripts/render.js?v=camp-button-1"></script>
+    <script src="./scripts/events.js?v=camp-button-1"></script>
   </body>
 </html>
 

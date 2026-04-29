@@ -1721,14 +1721,17 @@ function salvageAllInventoryItems() {
 
 function rest() {
   const cost = restCost();
-  if (state.gold < cost) {
-    log(`Für eine Rast fehlen ${cost - state.gold} Gold.`, "bad");
+  syncDerivedStats();
+  if (state.hp >= state.maxHp) {
+    log("Du bist bereits vollständig erholt.");
     return;
   }
-  state.gold -= cost;
-  syncDerivedStats();
+  const paid = Math.min(state.gold, cost);
+  state.gold -= paid;
   state.hp = state.maxHp;
-  log(`Du rastest am Feuer. Leben vollständig erholt. Kosten: ${cost} Gold.`);
+  log(paid >= cost
+    ? `Du rastest am Lagerplatz. Leben vollständig erholt. Kosten: ${cost} Gold.`
+    : "Du rastest am Lagerplatz. Ohne genug Gold hilft dir die Grauwacht trotzdem beim Heilen.");
   save();
   render();
 }
