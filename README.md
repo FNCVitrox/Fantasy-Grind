@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.16
+Alpha v0.8.17
 
 ## Was Bereits Spielbar Ist
 
@@ -20,6 +20,7 @@ Alpha v0.8.16
 - Benutzte Spielerfähigkeiten leuchten während des Kampfes kurz in der linken Fähigkeitsliste auf
 - Automatische Kämpfe mit Animationen, Schadenstexten, HP-Balken und Kampfprotokoll
 - Breitere und kompaktere Haupt-UI mit mehr Platz für Kampf, Ausrüstung und Gegnerauswahl
+- Ruhigere normale Menübuttons in der oberen Leiste
 - Gegner haben eigene Fähigkeiten
 - Normale Gegner haben einfache Fähigkeiten
 - Elite-Gegner haben mehrere Fähigkeiten
