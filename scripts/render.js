@@ -52,12 +52,13 @@ function escapeToken(value, allowed, fallback) {
 
 function renderMap() {
   const zoneData = zones[selectedZone] || zones.meadow;
-  const ranges = { meadow: "Level 1-15", dungeon: "Level 10-20" };
   $("activeZoneName").textContent = zoneData.name;
-  $("activeZoneRange").textContent = ranges[selectedZone] || "Unbekannt";
+  $("activeZoneRange").textContent = `${zoneKindLabel(zoneData)} · ${zoneData.range || "Unbekannt"}`;
   document.querySelectorAll("[data-zone]").forEach((button) => {
     button.classList.toggle("active", button.dataset.zone === selectedZone);
+    button.disabled = !isZoneUnlocked(button.dataset.zone);
   });
+  renderZoneOptions();
 }
 
 function renderEnemies() {
@@ -68,10 +69,32 @@ function renderEnemies() {
     const rarity = enemyRarity(enemy);
     const safeRarity = escapeToken(rarity, ["common", "rare", "epic", "legendary"], "common");
     return `<button class="enemy rarity-card rarity-${safeRarity} ${id === selectedEnemy ? "active" : ""}" type="button" data-enemy="${id}">
-      <span><strong>${escapeHtml(enemy.name)}</strong><p><span class="quality-${safeRarity}">${labelFor(rarityLabel, safeRarity)}</span> · Level ${enemy.level}${enemy.elite ? " · Elite" : ""} · ${enemy.xp} XP</p></span>
+      <span><strong>${escapeHtml(enemy.name)}</strong><p><span class="quality-${safeRarity}">${labelFor(rarityLabel, safeRarity)}</span> · Level ${enemy.level}${enemy.boss ? " · Boss" : enemy.elite ? " · Elite" : ""} · ${enemy.xp} XP</p></span>
       <em class="risk ${ok ? "ok" : ""}">${risk}</em>
     </button>`;
   }).join("");
+}
+
+function renderZoneOptions() {
+  const container = document.getElementById("zoneOptions");
+  if (!container) return;
+  const section = (type, title) => {
+    const entries = Object.entries(zones).filter(([, zone]) => zone.type === type);
+    return `<section class="travel-section">
+      <h3>${title}</h3>
+      <div class="zone-options">
+        ${entries.map(([id, zone]) => {
+          const locked = !isZoneUnlocked(id);
+          return `<button class="zone ${id === selectedZone ? "active" : ""}" type="button" data-zone="${id}" ${locked ? "disabled" : ""}>
+            <span>${escapeHtml(zone.name)}</span>
+            <small>${escapeHtml(zone.range || "")}</small>
+            <em>${locked ? escapeHtml(zoneLockText(id)) : `${zone.enemies.length} ${type === "dungeon" ? "Bosse" : "Gegner"}`}</em>
+          </button>`;
+        }).join("")}
+      </div>
+    </section>`;
+  };
+  container.innerHTML = `${section("zone", "Normale Gebiete")}${section("dungeon", "Dungeons")}`;
 }
 
 function enemyRarity(enemy) {
@@ -86,6 +109,8 @@ function renderSelectedEnemy() {
   $("selectedEnemyName").textContent = enemy.name;
   const eliteNote = enemy.eliteVariant
     ? "Bereit: Elite-Version."
+    : enemy.boss
+      ? "Dungeon-Boss mit besseren Belohnungen."
     : enemy.elite
       ? "Elite-Gegner."
       : `Nach jedem Kampf ${Math.round(eliteEncounterChance * 100)}% Chance auf Elite-Version.`;
@@ -485,7 +510,7 @@ function renderBestiaryList() {
       const completion = lootCompletion(id);
       return `<button class="bestiary-card ${id === selectedBestiaryEnemy ? "active" : ""}" type="button" data-bestiary="${id}">
         <strong>${escapeHtml(enemy.name)}</strong>
-        <p>Level ${enemy.level}${enemy.elite ? " · Elite" : ""} · ${enemy.hp} Leben</p>
+        <p>Level ${enemy.level}${enemy.boss ? " · Boss" : enemy.elite ? " · Elite" : ""} · ${enemy.hp} Leben</p>
         <p>Loot entdeckt: ${completion.found}/${completion.total} · ${completion.percent}%</p>
         <div class="completion-bar"><span style="width:${completion.percent}%"></span></div>
       </button>`;
@@ -515,7 +540,7 @@ function renderBestiaryDetail() {
         <h2>${escapeHtml(detailEnemy.name)}</h2>
       </div>
     </div>
-    <p>Level ${detailEnemy.level}${detailEnemy.elite ? " · Elite" : ""} · ${detailEnemy.hp} Leben · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} Schaden · ${detailEnemy.defense} Rüstung</p>
+    <p>Level ${detailEnemy.level}${detailEnemy.boss ? " · Boss" : detailEnemy.elite ? " · Elite" : ""} · ${detailEnemy.hp} Leben · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} Schaden · ${detailEnemy.defense} Rüstung</p>
     <h3>Sammlung</h3>
     <div class="bestiary-category-grid">
       ${categories.map((category) => `<button class="bestiary-category ${selectedBestiaryCategory === category.id ? "active" : ""}" type="button" data-bestiary-category="${category.id}">

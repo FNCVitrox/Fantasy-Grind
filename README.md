@@ -8,7 +8,7 @@ Das Spiel ist aktuell ein spielbarer Alpha-Prototyp. Der Fokus liegt auf einem k
 
 - Spielbarer Krieger mit Level, XP, Leben, Gold, Ruhm, Schaden, Verteidigung und Haltbarkeit
 - Automatische Kämpfe mit Animationen, Schadenstexten und Kampfprotokoll
-- Zwei Gebiete: Startzone und Dungeon
+- Normale Gebiete zum Farmen und separate Dungeons mit Boss-Reihen
 - Mehrere Gegner mit eigenen Werten, Materialien und begrenzten Loot-Pools
 - Normale Gegner haben ungefähr 19 mögliche Items, stärkere Gegner bis zu 20
 - Ausrüstungsslots: Waffe, zweite Hand, Brustpanzer, Hose, Stiefel, Halskette und Ring
@@ -21,6 +21,7 @@ Das Spiel ist aktuell ein spielbarer Alpha-Prototyp. Der Fokus liegt auf einem k
 - Mehrteiliges Materialsystem mit Eisenstücken, Lederresten, Runensplittern, Set-Materialien und seltenen magischen Komponenten
 - Lokaler Spielstand im Browser mit Sicherungs- und Ladefunktion
 - Automatische Backup-Speicherung, damit Spielstände nicht so leicht verloren gehen
+- Freischaltungen über Level und Ruhm, damit neue Gebiete und Dungeons schrittweise aufgehen
 
 ## Spielidee
 
@@ -111,6 +112,6 @@ Dadurch lässt sich das Spiel direkt im Browser starten und leicht weiterentwick
 
 ## Status
 
-Aktuelle Version: Alpha v0.8.0
+Aktuelle Version: Alpha v0.8.1
 
 Das Projekt ist noch in Entwicklung. Viele Systeme sind bereits spielbar, aber Balance, Inhalte und Komfort werden weiter ausgebaut.

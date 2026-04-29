@@ -498,6 +498,15 @@ h2 {
   margin-top: 12px;
 }
 
+.travel-options {
+  display: grid;
+  gap: 16px;
+}
+
+.travel-section h3 {
+  margin: 0 0 8px;
+}
+
 .side-zone-map .zone-options {
   grid-template-columns: 1fr;
   gap: 8px;
@@ -516,10 +525,22 @@ h2 {
   min-height: 58px;
 }
 
-.zone[data-zone="dungeon"] {
+.travel-section:nth-child(2) .zone {
   background:
     linear-gradient(180deg, rgba(176, 137, 255, 0.16), transparent),
     #11172a;
+}
+
+.zone em {
+  display: block;
+  margin-top: 6px;
+  color: var(--gold);
+  font-style: normal;
+}
+
+.zone:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
 }
 
 .zone.active {

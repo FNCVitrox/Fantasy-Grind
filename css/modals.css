@@ -1455,7 +1455,7 @@ button.drop-row span:last-child {
 }
 
 .zone-window {
-  width: min(620px, 100%);
+  width: min(900px, 100%);
 }
 
 .zone-modal-options {

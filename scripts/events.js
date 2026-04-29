@@ -249,6 +249,12 @@ $("bestiaryModal").addEventListener("click", (event) => {
 $("openZoneBtn").addEventListener("click", () => openModal("zoneModal"));
 $("closeZoneBtn").addEventListener("click", closeZone);
 $("zoneModal").addEventListener("click", (event) => {
+  const zone = event.target.closest("[data-zone]");
+  if (zone) {
+    if (selectZone(zone.dataset.zone)) closeZone();
+    render();
+    return;
+  }
   if (event.target.id === "zoneModal") closeZone();
 });
 $("openQuestBoardBtn").addEventListener("click", () => {

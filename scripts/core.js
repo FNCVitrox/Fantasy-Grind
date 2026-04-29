@@ -541,6 +541,38 @@ function maybeGrantBattleRenown(enemy) {
   log(`Dein Ruf wächst: +1 Ruhm für den Sieg gegen ${enemy.name}.`, "drop");
 }
 
+function zoneKindLabel(zone) {
+  return zone?.type === "dungeon" ? "Dungeon" : "Gebiet";
+}
+
+function isZoneUnlocked(zoneId) {
+  const zone = zones[zoneId];
+  if (!zone) return false;
+  const unlock = zone.unlock || {};
+  return state.level >= (unlock.level || 1) && state.renown >= (unlock.renown || 0);
+}
+
+function zoneLockText(zoneId) {
+  const zone = zones[zoneId];
+  if (!zone || isZoneUnlocked(zoneId)) return "";
+  const unlock = zone.unlock || {};
+  const missing = [];
+  if (state.level < (unlock.level || 1)) missing.push(`Level ${unlock.level}`);
+  if (state.renown < (unlock.renown || 0)) missing.push(`${unlock.renown} Ruhm`);
+  return `Benötigt ${missing.join(" und ")}`;
+}
+
+function selectZone(zoneId) {
+  if (!zones[zoneId]) return false;
+  if (!isZoneUnlocked(zoneId)) {
+    log(`${zones[zoneId].name} ist noch gesperrt. ${zoneLockText(zoneId)}.`, "bad");
+    return false;
+  }
+  selectedZone = zoneId;
+  selectedEnemy = zones[selectedZone].enemies[0];
+  return true;
+}
+
 async function fight() {
   if (isFighting) return;
   const enemy = getPreparedEncounter(selectedEnemy);
@@ -752,6 +784,7 @@ function maybeDropRareQuest(enemy) {
 }
 
 function pickRareQuestTemplate(enemy) {
+  if (enemy.tags.ash) return rareQuestTemplates.find((quest) => quest.key === "ash");
   if (enemy.tags.elite) return rareQuestTemplates.find((quest) => quest.key === "elite");
   if (enemy.tags.dungeon) return rareQuestTemplates.find((quest) => quest.key === "dungeon");
   if (enemy.tags.bandit) return rareQuestTemplates.find((quest) => quest.key === "bandit");

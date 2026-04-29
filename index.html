@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=renown-system-1" />
-    <link rel="stylesheet" href="./css/modals.css?v=renown-system-1" />
-    <link rel="stylesheet" href="./css/responsive.css?v=renown-system-1" />
+    <link rel="stylesheet" href="./css/base.css?v=dungeon-content-1" />
+    <link rel="stylesheet" href="./css/modals.css?v=dungeon-content-1" />
+    <link rel="stylesheet" href="./css/responsive.css?v=dungeon-content-1" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.0</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.1</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
@@ -126,8 +126,8 @@
             <div class="map zone-map side-zone-map" id="zoneMap">
               <div>
                 <small>Aktiv</small>
-                <strong id="activeZoneName">Startzone</strong>
-                <em id="activeZoneRange">Level 1-15</em>
+                <strong id="activeZoneName">Grauwacht-Wald</strong>
+                <em id="activeZoneRange">Gebiet · Level 1-6</em>
               </div>
               <button id="openZoneBtn" type="button">Wechseln</button>
             </div>
@@ -164,20 +164,11 @@
         <div class="modal-window-head">
           <div>
             <p class="eyebrow">Reisekarte</p>
-            <h2 id="zoneTitle">Gebiet wählen</h2>
+            <h2 id="zoneTitle">Reiseziel wählen</h2>
           </div>
           <button class="modal-close" id="closeZoneBtn" type="button" aria-label="Gebiete schließen">Schließen</button>
         </div>
-        <div class="zone-options zone-modal-options">
-          <button class="zone active" type="button" data-zone="meadow">
-            <span>Startzone</span>
-            <small>Level 1-15</small>
-          </button>
-          <button class="zone" type="button" data-zone="dungeon">
-            <span>Dungeon</span>
-            <small>Level 10-20</small>
-          </button>
-        </div>
+        <div class="travel-options" id="zoneOptions"></div>
       </div>
     </div>
     <div class="modal-overlay" id="bestiaryModal" aria-hidden="true">
@@ -292,10 +283,10 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=renown-system-1"></script>
-    <script src="./scripts/core.js?v=renown-system-1"></script>
-    <script src="./scripts/render.js?v=renown-system-1"></script>
-    <script src="./scripts/events.js?v=renown-system-1"></script>
+    <script src="./scripts/data.js?v=dungeon-content-1"></script>
+    <script src="./scripts/core.js?v=dungeon-content-1"></script>
+    <script src="./scripts/render.js?v=dungeon-content-1"></script>
+    <script src="./scripts/events.js?v=dungeon-content-1"></script>
   </body>
 </html>
 
