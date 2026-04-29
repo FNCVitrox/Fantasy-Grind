@@ -1352,9 +1352,9 @@ button.drop-row span:last-child {
 }
 
 .damage-number.critical {
-  color: #ffe082;
+  color: #ff4f4f;
   font-size: 30px;
-  text-shadow: 0 2px 0 #7a241c, 0 0 16px rgba(242, 193, 78, 0.95);
+  text-shadow: 0 2px 0 #4d0808, 0 0 16px rgba(255, 79, 79, 0.95);
 }
 
 @keyframes hero-lunge {

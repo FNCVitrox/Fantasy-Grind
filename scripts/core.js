@@ -672,6 +672,29 @@ function rollPlayerCritical(hit, stats) {
   };
 }
 
+function enemyCriticalStats(enemy) {
+  if (enemy.critChance || enemy.critDamage) {
+    return {
+      critChance: enemy.critChance ?? 0.03,
+      critDamage: enemy.critDamage ?? 1.5,
+    };
+  }
+  if (enemy.boss) return { critChance: 0.09, critDamage: 1.7 };
+  if (enemy.elite || enemy.eliteVariant) return { critChance: 0.06, critDamage: 1.6 };
+  return { critChance: 0.03, critDamage: 1.5 };
+}
+
+function rollEnemyCritical(hit, enemy) {
+  const stats = enemyCriticalStats(enemy);
+  if (hit <= 0 || Math.random() >= stats.critChance) {
+    return { damage: hit, critical: false };
+  }
+  return {
+    damage: Math.max(1, Math.floor(hit * stats.critDamage)),
+    critical: true,
+  };
+}
+
 function criticalText(text, damage) {
   const replacement = `kritisch für ${damage}`;
   return text.includes(" für ")
@@ -962,6 +985,8 @@ async function fight() {
     const abilityMultiplier = enemyAbility?.damageMultiplier || 1;
     const passiveEnemyMultiplier = enemyDamagePassiveMultiplier(enemy, enemyHp);
     let enemyHit = Math.max(1, Math.floor(enemyBaseHit * enemyDamageMultiplier * abilityMultiplier * passiveEnemyMultiplier));
+    const enemyCrit = rollEnemyCritical(enemyHit, enemy);
+    enemyHit = enemyCrit.damage;
     fightState.nextEnemyDamageMultiplier = 1;
     playerHp -= enemyHit;
     let enemyText = shieldWall ? `Schildwall dämpft den Treffer auf ${enemyHit}.` : `${enemy.name} trifft für ${enemyHit}.`;
@@ -985,10 +1010,12 @@ async function fight() {
         }
       }
     }
+    if (enemyCrit.critical) enemyText = criticalText(enemyText, enemyHit);
     events.push({
       actor: "enemy",
       abilityId: shieldWall ? "shieldWall" : "",
       damage: enemyHit,
+      critical: enemyCrit.critical,
       enemyHp: Math.max(0, enemyHp),
       playerHp: Math.max(0, playerHp),
       text: enemyText,
@@ -998,7 +1025,7 @@ async function fight() {
       playerHp > 0
       && enemyHp > 0
       && hasBuildAbility("counterBlow")
-      && enemyBaseHit >= Math.max(10, stats.maxHp * 0.12)
+      && (enemyCrit.critical || enemyBaseHit >= Math.max(10, stats.maxHp * 0.12))
       && rounds - fightState.lastCounterRound >= 3
     ) {
       const counterCrit = rollPlayerCritical(abilityDamage(basePlayerHit, 0.5), stats);
@@ -1152,6 +1179,8 @@ function createEliteEnemy(base, enemyId) {
     drops: base.drops.map((drop) => ({ ...drop, chance: Math.min(0.12, drop.chance * 1.45) })),
     abilities,
     passives: [...new Set(base.passives || [])].filter((id) => enemyAbilityCatalog[id]),
+    critChance: 0.06,
+    critDamage: 1.6,
     elite: true,
     eliteVariant: true,
     tags: { ...base.tags, elite: 1 },

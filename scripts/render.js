@@ -290,7 +290,8 @@ function renderSelectedEnemy(stats = totalStats()) {
       ? "Elite-Gegner."
       : `Nach jedem Kampf ${Math.round(eliteEncounterChance * 100)}% Chance auf Elite-Version.`;
   const abilityCount = enemyAbilityEntries(enemy).length;
-  setText("selectedEnemyMeta", `Level ${enemy.level}, ${enemy.hp} Leben, ${abilityCount} Fähigkeiten, Drop-Chancen niedrig, Risiko: ${riskFor(enemy, stats)}. ${eliteNote}`);
+  const enemyCrit = enemyCriticalStats(enemy);
+  setText("selectedEnemyMeta", `Level ${enemy.level}, ${enemy.hp} Leben, ${abilityCount} Fähigkeiten, Crit ${formatPercent(enemyCrit.critChance)} / ${formatPercent(enemyCrit.critDamage)}, Risiko: ${riskFor(enemy, stats)}. ${eliteNote}`);
   setBattleEnemyVisual(enemy);
   $("battleText").textContent = `${enemy.name} wartet.`;
 }
@@ -823,7 +824,7 @@ function renderBestiaryDetail() {
         <h2>${escapeHtml(detailEnemy.name)}</h2>
       </div>
     </div>
-    <p>Level ${detailEnemy.level}${detailEnemy.boss ? " · Boss" : detailEnemy.elite ? " · Elite" : ""} · ${detailEnemy.hp} Leben · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} Schaden · ${detailEnemy.defense} Rüstung</p>
+    <p>Level ${detailEnemy.level}${detailEnemy.boss ? " · Boss" : detailEnemy.elite ? " · Elite" : ""} · ${detailEnemy.hp} Leben · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} Schaden · ${detailEnemy.defense} Rüstung · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)}</p>
     ${renderEnemyAbilities(detailEnemy)}
     <h3>Sammlung</h3>
     <div class="bestiary-category-grid">
@@ -851,6 +852,8 @@ function bestiaryDetailSignature(enemyId, enemy, discovered) {
     enemy.hp,
     enemy.damage?.join("-"),
     enemy.defense,
+    enemyCriticalStats(enemy).critChance,
+    enemyCriticalStats(enemy).critDamage,
     selectedBestiaryCategory,
     selectedBestiaryFilter,
     selectedBestiarySearch,
