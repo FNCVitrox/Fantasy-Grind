@@ -131,7 +131,8 @@ function renderSelectedEnemy() {
     : enemy.elite
       ? "Elite-Gegner."
       : `Nach jedem Kampf ${Math.round(eliteEncounterChance * 100)}% Chance auf Elite-Version.`;
-  $("selectedEnemyMeta").textContent = `Level ${enemy.level}, ${enemy.hp} Leben, Drop-Chancen niedrig, Risiko: ${riskFor(enemy)}. ${eliteNote}`;
+  const abilityCount = enemyAbilityEntries(enemy).length;
+  $("selectedEnemyMeta").textContent = `Level ${enemy.level}, ${enemy.hp} Leben, ${abilityCount} Fähigkeiten, Drop-Chancen niedrig, Risiko: ${riskFor(enemy)}. ${eliteNote}`;
   setBattleEnemyVisual(enemy);
   $("battleText").textContent = `${enemy.name} wartet.`;
 }
@@ -588,6 +589,7 @@ function renderBestiaryDetail() {
       </div>
     </div>
     <p>Level ${detailEnemy.level}${detailEnemy.boss ? " · Boss" : detailEnemy.elite ? " · Elite" : ""} · ${detailEnemy.hp} Leben · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} Schaden · ${detailEnemy.defense} Rüstung</p>
+    ${renderEnemyAbilities(detailEnemy)}
     <h3>Sammlung</h3>
     <div class="bestiary-category-grid">
       ${categories.map((category) => `<button class="bestiary-category ${selectedBestiaryCategory === category.id ? "active" : ""}" type="button" data-bestiary-category="${category.id}">
@@ -602,6 +604,17 @@ function renderBestiaryDetail() {
     </div>
     <p class="loot-note">Items werden zusammengefasst, seitenweise geladen und Details erscheinen direkt neben der Liste.</p>
   `;
+}
+
+function renderEnemyAbilities(enemy) {
+  const entries = enemyAbilityEntries(enemy);
+  if (!entries.length) return "";
+  return `<section class="enemy-ability-list" aria-label="Gegnerfähigkeiten">
+    ${entries.map(([id, ability]) => `<div class="enemy-ability ${ability.type === "passive" ? "passive" : ""}" data-enemy-ability="${escapeAttr(id)}">
+      <strong>${escapeHtml(ability.name)}</strong>
+      <span>${ability.type === "passive" ? "Passiv" : "Aktiv"} · ${escapeHtml(ability.text)}</span>
+    </div>`).join("")}
+  </section>`;
 }
 
 function bestiaryCategories(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {

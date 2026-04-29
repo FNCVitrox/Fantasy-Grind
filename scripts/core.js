@@ -640,6 +640,133 @@ function abilityDamage(baseHit, multiplier) {
   return Math.max(1, Math.floor(baseHit * multiplier));
 }
 
+function enemyAbilityIds(enemy) {
+  return [...new Set(enemy?.abilities || [])].filter((id) => enemyAbilityCatalog[id]);
+}
+
+function enemyPassiveIds(enemy) {
+  return [...new Set(enemy?.passives || [])].filter((id) => enemyAbilityCatalog[id]);
+}
+
+function enemyAbilityEntries(enemy) {
+  return [...enemyAbilityIds(enemy), ...enemyPassiveIds(enemy)]
+    .map((id) => [id, enemyAbilityCatalog[id]])
+    .filter(([, ability]) => ability);
+}
+
+function eliteBonusAbilityFor(enemy) {
+  if (enemy.tags?.beast || enemy.tags?.wolf) return "eliteFury";
+  return "eliteGuard";
+}
+
+function enemyHealMultiplier(enemy, enemyHp) {
+  return enemyPassiveIds(enemy).includes("unholyRenewal") && enemyHp <= enemy.hp * 0.5 ? 1.45 : 1;
+}
+
+function enemyDamagePassiveMultiplier(enemy, enemyHp) {
+  const passives = enemyPassiveIds(enemy);
+  let multiplier = 1;
+  if (passives.includes("forgeFire") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.15;
+  if (passives.includes("noblePride") && enemyHp <= enemy.hp * 0.4) multiplier *= 1.25;
+  if (passives.includes("secondPhase") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.18;
+  return multiplier;
+}
+
+function enemyDamageTakenMultiplier(enemy, enemyHp, rounds, hit) {
+  const passives = enemyPassiveIds(enemy);
+  let multiplier = 1;
+  const defensive = [];
+
+  enemyAbilityIds(enemy).forEach((id) => {
+    if (id === "mistForm" && rounds % 4 === 0) {
+      multiplier *= 0.55;
+      defensive.push("Nebelform");
+    }
+    if (id === "emberDodge" && rounds % 3 === 0) {
+      multiplier *= 0.7;
+      defensive.push("Glutausweichen");
+    }
+    if (id === "crownShield" && rounds % 4 === 0) {
+      multiplier *= 0.55;
+      defensive.push("Kronenschild");
+    }
+    if (id === "guardStance" && rounds % 4 === 0) {
+      multiplier *= 0.65;
+      defensive.push("Schildhaltung");
+    }
+    if (id === "boneArmor" && rounds % 4 === 0) {
+      multiplier *= 0.65;
+      defensive.push("Knochenpanzer");
+    }
+    if (id === "hardenArmor" && rounds % 4 === 0) {
+      multiplier *= 0.6;
+      defensive.push("Rüstung härten");
+    }
+    if (id === "ironWall" && rounds % 4 === 0) {
+      multiplier *= 0.55;
+      defensive.push("Eisenwand");
+    }
+    if (id === "eliteGuard" && rounds % 4 === 0) {
+      multiplier *= 0.75;
+      defensive.push("Elite-Deckung");
+    }
+  });
+
+  if (passives.includes("prisonDiscipline") && rounds % 5 === 0) {
+    multiplier *= 0.75;
+    defensive.push("Kerkerdisziplin");
+  }
+  if (passives.includes("lastGuard") && enemyHp <= enemy.hp * 0.3) {
+    multiplier *= 0.8;
+    defensive.push("Standhaft");
+  }
+  if (passives.includes("heavyBody") && hit <= enemy.level * 2) {
+    multiplier *= 0.8;
+    defensive.push("Schwerer Körper");
+  }
+  if (passives.includes("royalHide")) {
+    multiplier *= 0.9;
+  }
+  if (passives.includes("secondPhase") && enemyHp <= enemy.hp * 0.5) {
+    multiplier *= 0.82;
+    defensive.push("Zweite Phase");
+  }
+
+  return { multiplier: Math.max(0.25, multiplier), defensive };
+}
+
+function triggeredEnemyAbility(enemy, rounds, playerHp, playerMaxHp, enemyHp) {
+  return enemyAbilityIds(enemy).map((id) => {
+    if (id === "ambush" && rounds === 1) return { id, damageMultiplier: 1.55 };
+    if (id === "bloodBite" && rounds % 3 === 0) return { id, damageMultiplier: 1.18, dot: { name: "Blutung", damage: Math.max(1, Math.ceil(enemy.level * 0.65)), turns: 2 } };
+    if (id === "ironBite" && rounds % 3 === 0) return { id, damageMultiplier: 1.22, playerDamageMultiplier: 0.9 };
+    if (id === "tuskCharge" && rounds % 4 === 0) return { id, damageMultiplier: 1.55 };
+    if (id === "shieldBash" && rounds % 3 === 0) return { id, damageMultiplier: 1.1, playerDamageMultiplier: 0.8 };
+    if (id === "guardBash" && rounds % 3 === 0) return { id, damageMultiplier: 1.25, playerDamageMultiplier: 0.88 };
+    if (id === "chainHook" && rounds % 4 === 0) return { id, damageMultiplier: 1.2, playerDamageMultiplier: 0.82 };
+    if (id === "poisonClaws" && rounds % 3 === 0) return { id, damageMultiplier: 1, dot: { name: "Gift", damage: Math.max(1, Math.ceil(enemy.level * 0.7)), turns: 3 } };
+    if (id === "lifeDrain" && rounds % 4 === 0) return { id, damageMultiplier: 1.05, healRatio: 0.45 };
+    if (id === "burningBlade" && rounds % 3 === 0) return { id, damageMultiplier: 1.25, dot: { name: "Brennen", damage: Math.max(1, Math.ceil(enemy.level * 0.75)), turns: 2 } };
+    if (id === "flameBite" && rounds % 4 === 0) return { id, damageMultiplier: 1.4, dot: { name: "Brennen", damage: Math.max(1, Math.ceil(enemy.level * 0.85)), turns: 2 } };
+    if (id === "judgementStrike" && playerHp <= playerMaxHp * 0.45 && rounds % 2 === 0) return { id, damageMultiplier: 1.45 };
+    if (id === "boneCurse" && rounds % 3 === 0) return { id, damageMultiplier: 0.95, playerDamageMultiplier: 0.75 };
+    if (id === "graveMend" && rounds % 4 === 0) return { id, damageMultiplier: 0.75, healFlatRatio: 0.08 };
+    if (id === "crushingBlow" && rounds % 4 === 0) return { id, damageMultiplier: 1.65 };
+    if (id === "forgeSmash" && rounds % 3 === 0) return { id, damageMultiplier: 1.45 };
+    if (id === "emberChains" && rounds % 4 === 0) return { id, damageMultiplier: 1.15, playerDamageMultiplier: 0.82, dot: { name: "Brennen", damage: Math.max(1, Math.ceil(enemy.level * 0.85)), turns: 2 } };
+    if (id === "dukeCommand" && rounds % 3 === 0) return { id, damageMultiplier: 1.35 };
+    if (id === "executionOrder" && playerHp <= playerMaxHp * 0.42 && rounds % 2 === 0) return { id, damageMultiplier: 1.7 };
+    if (id === "emberPrayer" && rounds % 4 === 0) return { id, damageMultiplier: 0.8, healFlatRatio: 0.07 };
+    if (id === "ashNova" && rounds % 5 === 0) return { id, damageMultiplier: 1.45, dot: { name: "Aschebrand", damage: Math.max(1, Math.ceil(enemy.level * 0.9)), turns: 2 } };
+    if (id === "crownMaul" && rounds % 4 === 0) return { id, damageMultiplier: 1.55 };
+    if (id === "ashBlade" && rounds % 3 === 0) return { id, damageMultiplier: 1.35, dot: { name: "Brennen", damage: Math.max(1, Math.ceil(enemy.level * 0.95)), turns: 2 } };
+    if (id === "hollowGaze" && rounds % 4 === 0) return { id, damageMultiplier: 0.9, playerDamageMultiplier: 0.7 };
+    if (id === "championLeap" && rounds % 5 === 0) return { id, damageMultiplier: 1.75 };
+    if (id === "eliteFury" && rounds % 4 === 0) return { id, damageMultiplier: 1.25 };
+    return null;
+  }).find(Boolean);
+}
+
 async function fight() {
   if (isFighting) return;
   const enemy = getPreparedEncounter(selectedEnemy);
@@ -663,12 +790,31 @@ async function fight() {
   const fightState = {
     sustainUsed: false,
     nextEnemyDamageMultiplier: 1,
+    playerDamageMultiplier: 1,
+    playerDots: [],
     lastCounterRound: -99,
     lastExecuteRound: -99,
   };
 
   while (playerHp > 0 && enemyHp > 0 && rounds < 80) {
     rounds += 1;
+
+    if (fightState.playerDots.length) {
+      const dotDamage = fightState.playerDots.reduce((sum, dot) => sum + dot.damage, 0);
+      playerHp -= dotDamage;
+      const dotNames = [...new Set(fightState.playerDots.map((dot) => dot.name))].join(", ");
+      fightState.playerDots = fightState.playerDots
+        .map((dot) => ({ ...dot, turns: dot.turns - 1 }))
+        .filter((dot) => dot.turns > 0);
+      events.push({
+        actor: "enemy",
+        damage: dotDamage,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: `${dotNames} verursacht ${dotDamage} Schaden.`,
+      });
+      if (playerHp <= 0) break;
+    }
 
     if (!fightState.sustainUsed && hasBuildAbility("lastStand") && playerHp <= stats.maxHp * 0.4) {
       const heal = Math.min(stats.maxHp - playerHp, Math.max(8, Math.floor(stats.maxHp * 0.14)));
@@ -709,6 +855,26 @@ async function fight() {
       playerText = `Spottender Schlag trifft für ${playerHit} und schwächt den Konter.`;
     }
 
+    if (fightState.playerDamageMultiplier < 1) {
+      playerHit = abilityDamage(playerHit, fightState.playerDamageMultiplier);
+      playerText += " Dein Angriff ist geschwächt.";
+      fightState.playerDamageMultiplier = 1;
+    }
+
+    const enemyDefense = enemyDamageTakenMultiplier(enemy, enemyHp, rounds, playerHit);
+    if (enemyDefense.multiplier < 1) {
+      playerHit = abilityDamage(playerHit, enemyDefense.multiplier);
+      if (enemyDefense.defensive.length) {
+        events.push({
+          actor: "enemy",
+          damage: 0,
+          enemyHp: Math.max(0, enemyHp),
+          playerHp: Math.max(0, playerHp),
+          text: `${enemy.name} nutzt ${enemyDefense.defensive.join(" + ")}.`,
+        });
+      }
+    }
+
     enemyHp -= playerHit;
     events.push({
       actor: "hero",
@@ -734,18 +900,42 @@ async function fight() {
 
     const shieldWall = hasBuildAbility("shieldWall") && rounds % 4 === 0;
     const enemyBaseHit = Math.max(1, random(enemy.damage[0], enemy.damage[1]) - Math.floor(stats.defense * 0.42));
+    const enemyAbility = triggeredEnemyAbility(enemy, rounds, playerHp, stats.maxHp, enemyHp);
     const enemyDamageMultiplier = shieldWall
       ? Math.min(fightState.nextEnemyDamageMultiplier, 0.45)
       : fightState.nextEnemyDamageMultiplier;
-    const enemyHit = Math.max(1, Math.floor(enemyBaseHit * enemyDamageMultiplier));
+    const abilityMultiplier = enemyAbility?.damageMultiplier || 1;
+    const passiveEnemyMultiplier = enemyDamagePassiveMultiplier(enemy, enemyHp);
+    let enemyHit = Math.max(1, Math.floor(enemyBaseHit * enemyDamageMultiplier * abilityMultiplier * passiveEnemyMultiplier));
     fightState.nextEnemyDamageMultiplier = 1;
     playerHp -= enemyHit;
+    let enemyText = shieldWall ? `Schildwall dämpft den Treffer auf ${enemyHit}.` : `${enemy.name} trifft für ${enemyHit}.`;
+    if (enemyAbility) {
+      const ability = enemyAbilityCatalog[enemyAbility.id];
+      enemyText = `${enemy.name}: ${ability.name} trifft für ${enemyHit}.`;
+      if (enemyAbility.playerDamageMultiplier) {
+        fightState.playerDamageMultiplier = Math.min(fightState.playerDamageMultiplier, enemyAbility.playerDamageMultiplier);
+        enemyText += " Dein nächster Angriff wird schwächer.";
+      }
+      if (enemyAbility.dot) {
+        fightState.playerDots.push(enemyAbility.dot);
+        enemyText += ` ${enemyAbility.dot.name} hält an.`;
+      }
+      if (enemyAbility.healRatio || enemyAbility.healFlatRatio) {
+        const healBase = enemyAbility.healRatio ? enemyHit * enemyAbility.healRatio : enemy.hp * enemyAbility.healFlatRatio;
+        const heal = Math.min(enemy.hp - enemyHp, Math.max(1, Math.floor(healBase * enemyHealMultiplier(enemy, enemyHp))));
+        if (heal > 0) {
+          enemyHp += heal;
+          enemyText += ` Heilt ${heal}.`;
+        }
+      }
+    }
     events.push({
       actor: "enemy",
       damage: enemyHit,
       enemyHp: Math.max(0, enemyHp),
       playerHp: Math.max(0, playerHp),
-      text: shieldWall ? `Schildwall dämpft den Treffer auf ${enemyHit}.` : `${enemy.name} trifft für ${enemyHit}.`,
+      text: enemyText,
     });
 
     if (
@@ -886,6 +1076,8 @@ function prepareNextEncounter(enemyId) {
 }
 
 function createEliteEnemy(base, enemyId) {
+  const bonusAbility = eliteBonusAbilityFor(base);
+  const abilities = [...new Set([...(base.abilities || []), bonusAbility])].filter((id) => enemyAbilityCatalog[id]);
   return {
     ...base,
     baseId: enemyId,
@@ -897,6 +1089,8 @@ function createEliteEnemy(base, enemyId) {
     xp: Math.ceil(base.xp * 1.65),
     gold: [Math.ceil(base.gold[0] * 1.35), Math.ceil(base.gold[1] * 1.65)],
     drops: base.drops.map((drop) => ({ ...drop, chance: Math.min(0.12, drop.chance * 1.45) })),
+    abilities,
+    passives: [...new Set(base.passives || [])].filter((id) => enemyAbilityCatalog[id]),
     elite: true,
     eliteVariant: true,
     tags: { ...base.tags, elite: 1 },
