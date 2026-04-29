@@ -139,6 +139,25 @@ function renderSelectedEnemy() {
 function setBattleEnemyVisual(enemy) {
   $("enemySpriteName").textContent = enemy.name;
   $("enemySprite").className = `combatant enemy-sprite ${enemy.sprite}${enemy.eliteVariant ? " elite-variant" : ""}`;
+  updateBattleHealth(state.hp, state.maxHp, enemy.hp, enemy.hp);
+}
+
+function updateBattleHealth(playerHp, playerMaxHp, enemyHp, enemyMaxHp) {
+  updateCombatHealth("Hero", playerHp, playerMaxHp);
+  updateCombatHealth("Enemy", enemyHp, enemyMaxHp);
+}
+
+function updateCombatHealth(side, current, max) {
+  const text = $(`battle${side}HpText`);
+  const bar = $(`battle${side}HpBar`);
+  if (!text || !bar) return;
+
+  const safeMax = Math.max(1, Math.floor(max || 1));
+  const safeCurrent = Math.max(0, Math.min(safeMax, Math.floor(current || 0)));
+  const percent = Math.max(0, Math.min(100, (safeCurrent / safeMax) * 100));
+  text.textContent = `${safeCurrent}/${safeMax}`;
+  bar.style.width = `${percent}%`;
+  bar.parentElement.classList.toggle("low", percent <= 30);
 }
 
 function renderEquipment() {

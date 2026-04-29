@@ -451,8 +451,12 @@ function waitCombat(ms) {
   });
 }
 
-async function playCombatAnimation(enemy, events, playerWon) {
+async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) {
   const stage = $("battleStage");
+  const playerMaxHp = combatHealth.playerMaxHp || state.maxHp;
+  const enemyMaxHp = combatHealth.enemyMaxHp || enemy.hp;
+  const startPlayerHp = combatHealth.playerStartHp ?? state.hp;
+  updateBattleHealth(startPlayerHp, playerMaxHp, enemyMaxHp, enemyMaxHp);
   $("battleText").textContent = `${enemy.name} tritt vor.`;
   stage.classList.remove("victory", "defeat", "hero-attacks", "enemy-attacks", "hero-hit", "enemy-hit");
   await waitCombat(280);
@@ -466,6 +470,7 @@ async function playCombatAnimation(enemy, events, playerWon) {
     $("battleText").textContent = event.text || (event.actor === "hero"
       ? `Du triffst für ${event.damage}.`
       : `${enemy.name} trifft für ${event.damage}.`);
+    updateBattleHealth(event.playerHp, playerMaxHp, event.enemyHp, enemyMaxHp);
     if (event.damage > 0) spawnDamage(event.damage, side);
     await waitCombat(470);
     stage.className = "battle-stage";
@@ -475,6 +480,11 @@ async function playCombatAnimation(enemy, events, playerWon) {
   if (!skipCombat && events.length > visibleEvents.length) {
     $("battleText").textContent = "Der Kampf zieht sich schwer und staubig hin.";
     await waitCombat(420);
+  }
+
+  const finalEvent = events[events.length - 1];
+  if (finalEvent) {
+    updateBattleHealth(finalEvent.playerHp, playerMaxHp, finalEvent.enemyHp, enemyMaxHp);
   }
 
   stage.className = "battle-stage";

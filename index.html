@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=build-hp-fix-1" />
-    <link rel="stylesheet" href="./css/modals.css?v=build-hp-fix-1" />
-    <link rel="stylesheet" href="./css/responsive.css?v=build-hp-fix-1" />
+    <link rel="stylesheet" href="./css/base.css?v=combat-hp-bars-1" />
+    <link rel="stylesheet" href="./css/modals.css?v=combat-hp-bars-1" />
+    <link rel="stylesheet" href="./css/responsive.css?v=combat-hp-bars-1" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.5</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.6</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
@@ -103,6 +103,10 @@
                 <span class="hero-sword"></span>
               </div>
               <b>Krieger</b>
+              <div class="combat-health hero-health" aria-label="Krieger Leben">
+                <div class="combat-health-label"><span>Leben</span><strong id="battleHeroHpText">0/0</strong></div>
+                <div class="combat-health-bar"><span id="battleHeroHpBar"></span></div>
+              </div>
             </div>
             <div class="battle-center">
               <span class="slash" id="slashFx"></span>
@@ -117,6 +121,10 @@
                 <span class="enemy-eye"></span>
               </div>
               <b id="enemySpriteName">Waldwolf</b>
+              <div class="combat-health enemy-health" aria-label="Gegner Leben">
+                <div class="combat-health-label"><span>Leben</span><strong id="battleEnemyHpText">0/0</strong></div>
+                <div class="combat-health-bar enemy"><span id="battleEnemyHpBar"></span></div>
+              </div>
             </div>
           </div>
           <div class="enemy-list" id="enemyList"></div>
@@ -293,10 +301,10 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=build-hp-fix-1"></script>
-    <script src="./scripts/core.js?v=build-hp-fix-1"></script>
-    <script src="./scripts/render.js?v=build-hp-fix-1"></script>
-    <script src="./scripts/events.js?v=build-hp-fix-1"></script>
+    <script src="./scripts/data.js?v=combat-hp-bars-1"></script>
+    <script src="./scripts/core.js?v=combat-hp-bars-1"></script>
+    <script src="./scripts/render.js?v=combat-hp-bars-1"></script>
+    <script src="./scripts/events.js?v=combat-hp-bars-1"></script>
   </body>
 </html>
 

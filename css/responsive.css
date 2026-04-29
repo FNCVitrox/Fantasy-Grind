@@ -82,6 +82,30 @@
     flex-direction: column;
   }
 
+  .battle-stage {
+    grid-template-columns: minmax(86px, 1fr) minmax(58px, 0.42fr) minmax(86px, 1fr);
+    gap: 6px;
+    padding: 12px 8px 10px;
+  }
+
+  .combatant {
+    min-width: 0;
+  }
+
+  .combat-health {
+    width: 100%;
+    padding: 6px;
+  }
+
+  .combat-health-label {
+    gap: 4px;
+    font-size: 10px;
+  }
+
+  .combat-health-label strong {
+    font-size: 11px;
+  }
+
   .primary {
     width: 100%;
   }

@@ -776,7 +776,11 @@ async function fight() {
   $("fightBtn").disabled = false;
   armCombatWatchdog(25000);
   try {
-    await playCombatAnimation(enemy, events, playerHp > 0);
+    await playCombatAnimation(enemy, events, playerHp > 0, {
+      playerStartHp: state.hp,
+      playerMaxHp: stats.maxHp,
+      enemyMaxHp: enemy.hp,
+    });
 
     damageEquippedItems(enemy);
 

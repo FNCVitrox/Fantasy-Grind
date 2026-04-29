@@ -614,8 +614,8 @@ button.drop-row span:last-child {
   z-index: 1;
   display: grid;
   justify-items: center;
-  gap: 8px;
-  min-width: 88px;
+  gap: 7px;
+  min-width: 150px;
   transform: translateZ(0);
 }
 
@@ -633,6 +633,58 @@ button.drop-row span:last-child {
 
 .enemy-sprite.elite-variant b {
   color: #f1c96b;
+}
+
+.combat-health {
+  width: min(180px, 100%);
+  display: grid;
+  gap: 4px;
+  padding: 7px 8px;
+  border: 1px solid rgba(109, 149, 184, 0.32);
+  border-radius: 8px;
+  background: rgba(7, 17, 27, 0.82);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+}
+
+.combat-health-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.combat-health-label strong {
+  color: var(--text);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.combat-health-bar {
+  height: 9px;
+  overflow: hidden;
+  border: 1px solid rgba(109, 149, 184, 0.45);
+  border-radius: 99px;
+  background: rgba(3, 9, 15, 0.9);
+}
+
+.combat-health-bar span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ef646b, #eea365);
+  transition: width 220ms ease;
+}
+
+.combat-health-bar.enemy span {
+  background: linear-gradient(90deg, #d74d5a, #f0c04f);
+}
+
+.combat-health-bar.low span {
+  background: linear-gradient(90deg, #8b1e2d, #ef646b);
 }
 
 .hero-body,
