@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.17
+Alpha v0.8.18
 
 ## Was Bereits Spielbar Ist
 
@@ -40,6 +40,7 @@ Alpha v0.8.17
 - Schmied zum Verbessern, Zerlegen und Reparieren von Ausrüstung
 - Materialsystem mit Eisenstücken, Lederresten, Runensplittern, Set-Materialien und seltenen Komponenten
 - Lokaler Spielstand im Browser
+- Gebiet, Gegnerauswahl und Bestiarium-Auswahl bleiben nach F5 erhalten
 - Sicherungs- und Ladefunktion für Spielstände
 - Automatische Backup-Speicherung
 

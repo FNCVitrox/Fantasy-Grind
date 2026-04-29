@@ -1,8 +1,8 @@
 ﻿let state = load();
-let selectedZone = "meadow";
-let selectedEnemy = "wolf";
-let selectedBestiaryZone = "meadow";
-let selectedBestiaryEnemy = "wolf";
+let selectedZone = state.ui?.selectedZone || "meadow";
+let selectedEnemy = state.ui?.selectedEnemy || zones[selectedZone]?.enemies?.[0] || "wolf";
+let selectedBestiaryZone = state.ui?.selectedBestiaryZone || selectedZone;
+let selectedBestiaryEnemy = state.ui?.selectedBestiaryEnemy || selectedEnemy;
 let isFighting = false;
 let skipCombat = false;
 let bestiaryListDirty = true;
@@ -78,6 +78,12 @@ function defaultState() {
     completedQuests: [],
     rareQuests: {},
     winsSinceQuestRefresh: 0,
+    ui: {
+      selectedZone: "meadow",
+      selectedEnemy: "wolf",
+      selectedBestiaryZone: "meadow",
+      selectedBestiaryEnemy: "wolf",
+    },
     balanceVersion: 3,
     log: ["Du erreichst das Lager Grauwacht. Der Grind beginnt langsam."],
   };
@@ -138,11 +144,45 @@ function parseSavedState(raw) {
     loaded.questBoard = Array.isArray(loaded.questBoard) ? loaded.questBoard : ["wolves", "rust", "boars"];
     loaded.rareQuests = loaded.rareQuests || {};
     loaded.winsSinceQuestRefresh = loaded.winsSinceQuestRefresh || 0;
+    loaded.ui = normalizeSavedUi(loaded.ui);
     applyBalanceMigration(loaded);
     return loaded;
   } catch {
     return null;
   }
+}
+
+function normalizeSavedUi(ui = {}) {
+  const selectedZoneId = zones[ui.selectedZone] ? ui.selectedZone : "meadow";
+  const zoneEnemies = zones[selectedZoneId]?.enemies || zones.meadow.enemies;
+  const selectedEnemyId = zoneEnemies.includes(ui.selectedEnemy) ? ui.selectedEnemy : zoneEnemies[0];
+  const bestiaryZoneId = zones[ui.selectedBestiaryZone] ? ui.selectedBestiaryZone : selectedZoneId;
+  const bestiaryEnemies = zones[bestiaryZoneId]?.enemies || zoneEnemies;
+  const bestiaryEnemyId = bestiaryEnemies.includes(ui.selectedBestiaryEnemy) ? ui.selectedBestiaryEnemy : bestiaryEnemies[0];
+  return {
+    selectedZone: selectedZoneId,
+    selectedEnemy: selectedEnemyId,
+    selectedBestiaryZone: bestiaryZoneId,
+    selectedBestiaryEnemy: bestiaryEnemyId,
+  };
+}
+
+function syncUiState() {
+  state.ui = normalizeSavedUi({
+    selectedZone,
+    selectedEnemy,
+    selectedBestiaryZone,
+    selectedBestiaryEnemy,
+  });
+}
+
+function restoreUiSelection() {
+  const ui = normalizeSavedUi(state.ui);
+  state.ui = ui;
+  selectedZone = ui.selectedZone;
+  selectedEnemy = ui.selectedEnemy;
+  selectedBestiaryZone = ui.selectedBestiaryZone;
+  selectedBestiaryEnemy = ui.selectedBestiaryEnemy;
 }
 
 function applyBalanceMigration(loaded) {
@@ -271,6 +311,7 @@ function normalizeItemQuality(item) {
 }
 
 function save() {
+  syncUiState();
   const previous = localStorage.getItem(saveKey);
   const next = JSON.stringify(state);
   if (previous && previous !== next) {
@@ -306,6 +347,7 @@ function importSaveData(raw) {
   }
 
   state = loaded;
+  restoreUiSelection();
   state.log = [
     "Spielstand erfolgreich importiert.",
     ...(state.log || []),
@@ -636,6 +678,7 @@ function selectZone(zoneId) {
   }
   selectedZone = zoneId;
   selectedEnemy = zones[selectedZone].enemies[0];
+  save();
   return true;
 }
 

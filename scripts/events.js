@@ -2,6 +2,7 @@
   button.addEventListener("click", () => {
     selectedZone = button.dataset.zone;
     selectedEnemy = zones[selectedZone].enemies[0];
+    save();
     closeZone();
     render();
   });
@@ -11,6 +12,7 @@ $("enemyList").addEventListener("click", (event) => {
   const button = event.target.closest("[data-enemy]");
   if (!button) return;
   selectedEnemy = button.dataset.enemy;
+  save();
   renderEnemies();
   renderSelectedEnemy();
 });
@@ -331,6 +333,8 @@ $("resetBtn").addEventListener("click", () => {
 });
 
 render();
+save();
+window.addEventListener("beforeunload", save);
 
 function closeBestiary() {
   closeModal("bestiaryModal");
