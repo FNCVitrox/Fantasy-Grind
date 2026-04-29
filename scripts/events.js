@@ -486,7 +486,7 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
       : `${enemy.name} trifft für ${event.damage}.`);
     updateBattleHealth(event.playerHp, playerMaxHp, event.enemyHp, enemyMaxHp);
     highlightAbilityUse(event.abilityId);
-    if (event.damage > 0) spawnDamage(event.damage, side);
+    if (event.damage > 0) spawnDamage(event.damage, side, event.critical);
     await waitCombat(470);
     stage.className = "battle-stage";
     await waitCombat(110);
@@ -519,10 +519,10 @@ function highlightAbilityUse(abilityId) {
   window.setTimeout(() => chip.classList.remove("ability-used"), 760);
 }
 
-function spawnDamage(amount, side) {
+function spawnDamage(amount, side, critical = false) {
   const number = document.createElement("span");
-  number.className = `damage-number ${side}`;
-  number.textContent = `-${amount}`;
+  number.className = `damage-number ${side}${critical ? " critical" : ""}`;
+  number.textContent = critical ? `KRIT -${amount}` : `-${amount}`;
   $("battleStage").appendChild(number);
   window.setTimeout(() => number.remove(), 840);
 }

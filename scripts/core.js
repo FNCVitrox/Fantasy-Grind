@@ -188,6 +188,8 @@ function rebalanceSavedItem(item) {
   }, upgrade);
   item.damage = stats.damage;
   item.defense = stats.defense;
+  item.critChance = item.critChance || 0;
+  item.critDamage = item.critDamage || 0;
   return item;
 }
 
@@ -364,6 +366,8 @@ function getItem(itemId) {
 function totalStats() {
   let itemDamage = 0;
   let itemDefense = 0;
+  let itemCritChance = 0;
+  let itemCritDamage = 0;
   equipmentSlots.forEach((slot) => {
     const id = state.equipment[slot];
     const item = getItem(id);
@@ -371,6 +375,8 @@ function totalStats() {
     const durabilityFactor = itemDurabilityFactor(id);
     itemDamage += Math.floor(item.damage * durabilityFactor);
     itemDefense += Math.floor(item.defense * durabilityFactor);
+    itemCritChance += item.critChance || 0;
+    itemCritDamage += item.critDamage || 0;
   });
   const setStats = activeSetBonusStats();
   const build = activeBuild();
@@ -381,6 +387,8 @@ function totalStats() {
     damage: Math.floor(baseDamage * (build.damageMultiplier || 1)),
     defense: Math.floor(baseDefense * (build.defenseMultiplier || 1)),
     maxHp: Math.floor(baseHp * (build.maxHpMultiplier || 1)),
+    critChance: Math.min(0.65, 0.05 + itemCritChance + (build.critChanceBonus || 0)),
+    critDamage: Math.min(3.2, 1.5 + itemCritDamage + (build.critDamageBonus || 0)),
   };
 }
 
@@ -654,6 +662,23 @@ function abilityDamage(baseHit, multiplier) {
   return Math.max(1, Math.floor(baseHit * multiplier));
 }
 
+function rollPlayerCritical(hit, stats) {
+  if (hit <= 0 || Math.random() >= (stats.critChance || 0)) {
+    return { damage: hit, critical: false };
+  }
+  return {
+    damage: Math.max(1, Math.floor(hit * (stats.critDamage || 1.5))),
+    critical: true,
+  };
+}
+
+function criticalText(text, damage) {
+  const replacement = `kritisch für ${damage}`;
+  return text.includes(" für ")
+    ? text.replace(/für \d+/, replacement)
+    : `${text} Kritischer Treffer für ${damage}.`;
+}
+
 function enemyAbilityIds(enemy) {
   return [...new Set(enemy?.abilities || [])].filter((id) => enemyAbilityCatalog[id]);
 }
@@ -894,26 +919,35 @@ async function fight() {
       }
     }
 
+    const playerCrit = rollPlayerCritical(playerHit, stats);
+    playerHit = playerCrit.damage;
+    if (playerCrit.critical) playerText = criticalText(playerText, playerHit);
+
     enemyHp -= playerHit;
     events.push({
       actor: "hero",
       abilityId: playerAbilityId,
       damage: playerHit,
+      critical: playerCrit.critical,
       enemyHp: Math.max(0, enemyHp),
       playerHp: Math.max(0, playerHp),
       text: playerText,
     });
 
     if (enemyHp > 0 && hasBuildAbility("bladeFlurry") && rounds % 4 === 0) {
-      const flurryHit = abilityDamage(basePlayerHit, 0.45);
+      const flurryCrit = rollPlayerCritical(abilityDamage(basePlayerHit, 0.45), stats);
+      const flurryHit = flurryCrit.damage;
       enemyHp -= flurryHit;
       events.push({
         actor: "hero",
         abilityId: "bladeFlurry",
         damage: flurryHit,
+        critical: flurryCrit.critical,
         enemyHp: Math.max(0, enemyHp),
         playerHp: Math.max(0, playerHp),
-        text: `Klingenserie trifft zusätzlich für ${flurryHit}.`,
+        text: flurryCrit.critical
+          ? `Klingenserie trifft zusätzlich kritisch für ${flurryHit}.`
+          : `Klingenserie trifft zusätzlich für ${flurryHit}.`,
       });
     }
 
@@ -967,16 +1001,20 @@ async function fight() {
       && enemyBaseHit >= Math.max(10, stats.maxHp * 0.12)
       && rounds - fightState.lastCounterRound >= 3
     ) {
-      const counterHit = abilityDamage(basePlayerHit, 0.5);
+      const counterCrit = rollPlayerCritical(abilityDamage(basePlayerHit, 0.5), stats);
+      const counterHit = counterCrit.damage;
       fightState.lastCounterRound = rounds;
       enemyHp -= counterHit;
       events.push({
         actor: "hero",
         abilityId: "counterBlow",
         damage: counterHit,
+        critical: counterCrit.critical,
         enemyHp: Math.max(0, enemyHp),
         playerHp: Math.max(0, playerHp),
-        text: `Konterschlag antwortet für ${counterHit}.`,
+        text: counterCrit.critical
+          ? `Konterschlag antwortet kritisch für ${counterHit}.`
+          : `Konterschlag antwortet für ${counterHit}.`,
       });
     }
   }
@@ -1218,6 +1256,7 @@ function createQuestRewardItem(quest) {
   const power = qualityPower[quality] * 0.92;
   const namePool = lootNames[slot][quality];
   const stats = normalizeRolledItemStats(slot, quality, rollSlotStats(slot, base, power));
+  const critStats = rollCritStats(slot, quality);
 
   return {
     id: `quest-reward-${quest.id}`,
@@ -1226,6 +1265,7 @@ function createQuestRewardItem(quest) {
     quality,
     damage: stats.damage,
     defense: stats.defense,
+    ...critStats,
     set: questSet(quest),
     durability: 100,
     fixed: false,
@@ -1242,7 +1282,10 @@ function questSet(quest) {
 }
 
 function itemScore(item) {
-  return item.damage * 1.5 + item.defense;
+  return item.damage * 1.5
+    + item.defense
+    + (item.critChance || 0) * 90
+    + (item.critDamage || 0) * 28;
 }
 
 function createLootChoices(enemy, enemyId) {
@@ -1287,6 +1330,7 @@ function generateLootItem(enemy, enemyId) {
   const power = qualityPower[quality];
   const id = `loot-${Date.now()}-${Math.random().toString(16).slice(2)}`;
   const stats = normalizeRolledItemStats(slot, quality, rollSlotStats(slot, base, power));
+  const critStats = rollCritStats(slot, quality);
 
   return {
     id,
@@ -1295,6 +1339,7 @@ function generateLootItem(enemy, enemyId) {
     quality,
     damage: stats.damage,
     defense: stats.defense,
+    ...critStats,
     set: rollItemSet(enemy, quality),
     durability: 100,
     fixed: false,
@@ -1378,6 +1423,8 @@ function recordDiscoveredLoot(enemyId, lootItems) {
       quality: bestItem.quality,
       damage: bestItem.damage,
       defense: bestItem.defense,
+      critChance: bestItem.critChance || 0,
+      critDamage: bestItem.critDamage || 0,
       set: bestItem.set,
       fixed: bestItem.fixed,
       count: (existing?.count || 0) + 1,
@@ -1548,6 +1595,27 @@ function upgradeCost(item) {
   };
 }
 
+function rollCritStats(slot, quality) {
+  const qualityIndex = { common: 0, rare: 1, epic: 2, legendary: 3 }[quality] || 0;
+  const chanceBase = [0.005, 0.015, 0.03, 0.05][qualityIndex];
+  const damageBase = [0.02, 0.06, 0.12, 0.2][qualityIndex];
+  const [chanceScale, damageScale] = {
+    weapon: [1.25, 1],
+    offhand: [0.55, 0.35],
+    chest: [0, 0],
+    pants: [0, 0],
+    boots: [0.35, 0],
+    necklace: [0.45, 1.15],
+    ring: [1, 0.7],
+  }[slot] || [0, 0];
+  const critChance = Math.round((chanceBase * chanceScale + random(0, qualityIndex) * 0.002) * 1000) / 1000;
+  const critDamage = Math.round((damageBase * damageScale + random(0, qualityIndex) * 0.01) * 100) / 100;
+  return {
+    ...(critChance > 0 ? { critChance } : {}),
+    ...(critDamage > 0 ? { critDamage } : {}),
+  };
+}
+
 function primaryMaterialForSlot(slot) {
   if (slot === "weapon" || slot === "offhand") return "scrap";
   if (slot === "chest") return "chain";
@@ -1588,6 +1656,8 @@ function previewUpgradedItem(item) {
     upgraded.damage += 1;
     upgraded.defense += 1;
   }
+  if (item.slot === "weapon" || item.slot === "ring") upgraded.critChance = (upgraded.critChance || 0) + 0.005;
+  if (item.slot === "weapon" || item.slot === "necklace") upgraded.critDamage = (upgraded.critDamage || 0) + 0.03;
   upgraded.name = item.name.replace(/\s\+\d+$/, "") + ` +${upgraded.upgrade}`;
   return upgraded;
 }
@@ -1779,7 +1849,8 @@ function repairSlot(slot) {
 }
 
 function riskFor(enemy, stats = totalStats()) {
-  const score = stats.damage * 2.1 + stats.defense * 1.6 + state.hp * 0.42;
+  const expectedDamage = stats.damage * (1 + (stats.critChance || 0) * ((stats.critDamage || 1.5) - 1));
+  const score = expectedDamage * 2.1 + stats.defense * 1.6 + state.hp * 0.42;
   const danger = enemy.hp * 0.42 + enemy.damage[1] * 3.1 + enemy.defense * 2;
   return score >= danger ? "Machbar" : score >= danger * 0.78 ? "Riskant" : "Tödlich";
 }

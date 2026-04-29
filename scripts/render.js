@@ -131,6 +131,8 @@ function renderPlayerStatsDetails(stats = totalStats()) {
     stats.damage,
     stats.defense,
     stats.maxHp,
+    stats.critChance,
+    stats.critDamage,
     durabilityAverage,
     setStats.damage,
     setStats.defense,
@@ -176,6 +178,8 @@ function renderPlayerStatsDetails(stats = totalStats()) {
       ${renderPlayerStat("Verteidigung", stats.defense)}
       ${renderPlayerStat("Max. Leben", stats.maxHp)}
       ${renderPlayerStat("Haltbarkeit", `${durabilityAverage}%`)}
+      ${renderPlayerStat("Crit Chance", formatPercent(stats.critChance))}
+      ${renderPlayerStat("Crit Damage", formatPercent(stats.critDamage))}
     </section>
     <section class="player-stat-sources">
       <div>
@@ -183,6 +187,8 @@ function renderPlayerStatsDetails(stats = totalStats()) {
         <span>Schaden ${formatSignedPercent(buildDamage)}</span>
         <span>Verteidigung ${formatSignedPercent(buildDefense)}</span>
         <span>Leben ${formatSignedPercent(buildHp)}</span>
+        <span>Crit ${formatSignedPercent(Math.round((build.critChanceBonus || 0) * 100))} Chance</span>
+        <span>Crit ${formatSignedPercent(Math.round((build.critDamageBonus || 0) * 100))} Schaden</span>
       </div>
       <div>
         <strong>Set-Boni</strong>
@@ -203,6 +209,17 @@ function formatSignedPercent(value) {
   return "0%";
 }
 
+function formatPercent(value) {
+  return `${Math.round((value || 0) * 100)}%`;
+}
+
+function itemCritText(item) {
+  return [
+    item.critChance ? `Crit ${formatPercent(item.critChance)}` : "",
+    item.critDamage ? `Crit-Schaden +${formatPercent(item.critDamage)}` : "",
+  ].filter(Boolean).join(" · ");
+}
+
 function renderEnemies(stats = totalStats()) {
   const signature = [
     selectedZone,
@@ -211,6 +228,8 @@ function renderEnemies(stats = totalStats()) {
     stats.damage,
     stats.defense,
     stats.maxHp,
+    stats.critChance,
+    stats.critDamage,
     zoneEncounterSignature(selectedZone),
   ].join("|");
   if (renderCache.enemies === signature) return;
@@ -316,7 +335,7 @@ function equipmentSignature() {
     .map((slot) => {
       const id = state.equipment[slot] || "";
       const item = getItem(id);
-      return `${slot}:${id}:${item?.damage ?? ""}:${item?.defense ?? ""}:${item?.upgrade ?? 0}:${state.itemDurability[id] ?? ""}`;
+      return `${slot}:${id}:${item?.damage ?? ""}:${item?.defense ?? ""}:${item?.critChance ?? 0}:${item?.critDamage ?? 0}:${item?.upgrade ?? 0}:${state.itemDurability[id] ?? ""}`;
     })
     .join("|");
 }
@@ -350,6 +369,7 @@ function renderEquipment() {
         <b class="quality-${quality}">${escapeHtml(item.name)}</b>
         <em>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</em>
         <em>Schaden: ${item.damage || 0} · Verteidigung: ${item.defense || 0}</em>
+        ${itemCritText(item) ? `<em>${itemCritText(item)}</em>` : ""}
         <em>Haltbarkeit: ${durability}%</em>
         <em>Reparatur: ${repairCost} Gold</em>
         ${setName ? `<em>Set: ${escapeHtml(setName)}</em>` : ""}
@@ -377,6 +397,7 @@ function renderEquipmentDetails() {
       <p class="quality-${quality}">${escapeHtml(item.name)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</p>
       ${item.set ? `<p class="set-line set-hover-row"><span>${escapeHtml(setBonuses[item.set]?.name || item.set)}</span><span class="tooltip-source" data-set-tooltip-key="${setKey}"></span></p>` : ""}
       <p>+${item.damage} Schaden · +${item.defense} Verteidigung</p>
+      ${itemCritText(item) ? `<p>${itemCritText(item)}</p>` : ""}
       <p class="${itemDurability(id) <= 25 ? "durability-low" : ""}">Haltbarkeit: ${itemDurability(id)}%</p>
       ${slotRepairCost ? `<p>Reparatur: ${slotRepairCost} Gold</p>` : ""}
     </div>`;
@@ -455,6 +476,8 @@ function renderSmithUpgrade() {
     const preview = previewUpgradedItem(item);
     const damageGain = preview.damage - item.damage;
     const defenseGain = preview.defense - item.defense;
+    const critChanceGain = (preview.critChance || 0) - (item.critChance || 0);
+    const critDamageGain = (preview.critDamage || 0) - (item.critDamage || 0);
     const materialText = Object.entries(cost.materials)
       .filter(([, amount]) => amount > 0)
       .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)
@@ -465,11 +488,12 @@ function renderSmithUpgrade() {
     return `<div class="smith-card rarity-card rarity-${quality}">
       <div class="smith-item-main">
         <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
-        <p>+${item.upgrade || 0}/4 · Dmg ${item.damage} · Def ${item.defense} · Haltbarkeit ${itemDurability(itemId)}%</p>
+        <p>+${item.upgrade || 0}/4 · Dmg ${item.damage} · Def ${item.defense} · ${itemCritText(item) || "Kein Crit"} · Haltbarkeit ${itemDurability(itemId)}%</p>
       </div>
       <button class="upgrade-preview" type="button" data-upgrade="${slot}" ${disabled ? "disabled" : ""}>
         <span>${maxed ? "Maximal" : "Nach Upgrade"}</span>
         <strong>+${preview.upgrade}/4 · Dmg ${preview.damage}${damageGain ? ` <b>+${damageGain}</b>` : ""} · Def ${preview.defense}${defenseGain ? ` <b>+${defenseGain}</b>` : ""}</strong>
+        <em>${itemCritText(preview) || "Kein Crit"}${critChanceGain ? ` <b>+${formatPercent(critChanceGain)}</b>` : ""}${critDamageGain ? ` <b>+${formatPercent(critDamageGain)}</b>` : ""}</em>
       </button>
       <div class="smith-cost-block">
         <p>${cost.gold} Gold${discountText}</p>
@@ -518,6 +542,7 @@ function renderInventory() {
       <p>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · Wert ${sellValue(item)} Gold</p>
       ${item.set ? `<p class="set-line">${escapeHtml(setBonuses[item.set]?.name || item.set)}</p>` : ""}
       <p>+${item.damage} Schaden · +${item.defense} Verteidigung</p>
+      ${itemCritText(item) ? `<p>${itemCritText(item)}</p>` : ""}
       <p>Haltbarkeit: ${itemDurability(itemId)}%</p>
       <div class="loot-compare compact">
         <span class="${compare.powerClass}">${compare.powerText}</span>
@@ -566,6 +591,7 @@ function renderLootChoices() {
       <p class="loot-card-meta">${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)}</p>
       <p class="loot-card-set ${item.set ? "set-line" : "empty"}">${item.set ? escapeHtml(setBonuses[item.set]?.name || item.set) : "&nbsp;"}</p>
       <p class="loot-card-stats">+${item.damage} Schaden · +${item.defense} Verteidigung</p>
+      <p class="loot-card-value">${itemCritText(item) || "Kein Crit-Bonus"}</p>
       <p class="loot-card-value">Haltbarkeit: ${item.durability ?? 100}%</p>
       <p class="loot-card-value">Wert: ${sellValue(item)} Gold</p>
       <div class="loot-compare">
@@ -592,6 +618,8 @@ function lootChoicesSignature() {
       item.quality,
       item.damage,
       item.defense,
+      item.critChance || 0,
+      item.critDamage || 0,
       item.durability ?? 100,
       item.set || "",
       item.sourceType || "",
@@ -614,14 +642,18 @@ function compareLoot(item, current) {
   const powerDiff = itemScore(item) - itemScore(current);
   const damageDiff = item.damage - current.damage;
   const defenseDiff = item.defense - current.defense;
+  const critChanceDiff = (item.critChance || 0) - (current.critChance || 0);
+  const critDamageDiff = (item.critDamage || 0) - (current.critDamage || 0);
 
   return {
     powerText: compareText("Gesamt", powerDiff, " Kraft"),
     powerClass: compareClass(powerDiff),
     damageText: compareText("Schaden", damageDiff, ""),
     damageClass: compareClass(damageDiff),
-    defenseText: compareText("Verteidigung", defenseDiff, ""),
-    defenseClass: compareClass(defenseDiff),
+    defenseText: critChanceDiff || critDamageDiff
+      ? `Crit: ${critChanceDiff >= 0 ? "+" : ""}${formatPercent(critChanceDiff)} / ${critDamageDiff >= 0 ? "+" : ""}${formatPercent(critDamageDiff)}`
+      : compareText("Verteidigung", defenseDiff, ""),
+    defenseClass: compareClass(defenseDiff + critChanceDiff * 80 + critDamageDiff * 20),
   };
 }
 
@@ -811,7 +843,7 @@ function renderBestiaryDetail() {
 
 function bestiaryDetailSignature(enemyId, enemy, discovered) {
   const discoveredSignature = discovered
-    .map((item) => `${bestiaryItemKey(item)}:${item.count || 0}:${item.damage}:${item.defense}:${item.set || ""}`)
+    .map((item) => `${bestiaryItemKey(item)}:${item.count || 0}:${item.damage}:${item.defense}:${item.critChance || 0}:${item.critDamage || 0}:${item.set || ""}`)
     .join("|");
   return [
     enemyId,
@@ -1087,7 +1119,7 @@ function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLo
 }
 
 function cacheTooltipItem(item) {
-  const key = item.fixed ? `fixed:${item.id}` : `${item.name}|${item.slot}|${item.quality}|${item.damage}|${item.defense}`;
+  const key = item.fixed ? `fixed:${item.id}` : `${item.name}|${item.slot}|${item.quality}|${item.damage}|${item.defense}|${item.critChance || 0}|${item.critDamage || 0}`;
   tooltipItemCache.set(key, item);
   return escapeAttr(key);
 }
@@ -1127,6 +1159,7 @@ function renderItemTooltip(item) {
     ${item.set ? `<span>Set: ${escapeHtml(setBonuses[item.set]?.name || item.set)}</span>` : ""}
     ${upgradeLine}
     <span>Schaden: ${item.damage} · Verteidigung: ${item.defense}</span>
+    ${itemCritText(item) ? `<span>${itemCritText(item)}</span>` : ""}
     ${durabilityLine}
     ${repairLine}
     <span>Aktuell: ${escapeHtml(current.name)}</span>

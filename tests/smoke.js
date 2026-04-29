@@ -76,6 +76,7 @@ assert(vm.runInContext("state.level = 9; state.renown = 8; questAvailable(getQue
 assert.strictEqual(vm.runInContext("eliteEncounterChance", context), 0.06);
 assert.strictEqual(vm.runInContext("knownClassAbilities().length", context), 3);
 assert(vm.runInContext("state = defaultState(); const normal = totalStats().damage; state.build = 'damage'; totalStats().damage > normal", context), "damage build should increase damage");
+assert(vm.runInContext("state = defaultState(); state.build = 'damage'; totalStats().critChance > 0.1 && totalStats().critDamage > 1.7", context), "damage build should improve critical stats");
 assert.strictEqual(
   vm.runInContext("state = defaultState(); state.build = 'tank'; knownClassAbilities().map(([id]) => id).join(',')", context),
   "shieldWall,tauntingBlow,lastStand",
@@ -99,6 +100,7 @@ assert.strictEqual(vm.runInContext("questRenownReward({ rarity: 'epic' })", cont
 assert.strictEqual(vm.runInContext("state.renown = 20; renownUpgradeDiscount()", context), 0.08);
 assert(vm.runInContext("state.renown = 15; renownSalvageBonusChance({ quality: 'rare' }) > 0", context));
 assert.strictEqual(vm.runInContext("previewUpgradedItem({ slot: 'weapon', quality: 'common', name: 'Testklinge', damage: 10, defense: 0, upgrade: 0 }).damage", context), 12);
+assert(vm.runInContext("previewUpgradedItem({ slot: 'weapon', quality: 'common', name: 'Testklinge', damage: 10, defense: 0, critChance: 0.01, upgrade: 0 }).critChance > 0.01", context));
 assert.strictEqual(
   vm.runInContext("normalizeRolledItemStats('weapon', 'common', { damage: 999, defense: 0 }).damage", context),
   vm.runInContext("itemStatCap('weapon', 'common').damage", context),

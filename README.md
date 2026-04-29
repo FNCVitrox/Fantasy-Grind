@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.14
+Alpha v0.8.15
 
 ## Was Bereits Spielbar Ist
 
@@ -16,6 +16,7 @@ Alpha v0.8.14
 - Jeder Build hat eine eigene kleine Charakteroptik im Kampffeld
 - Klickbares Charakterporträt mit eigenem Spielerwerte-Fenster
 - Lagerplatz in der oberen Leiste zum Heilen
+- Crit Chance und Crit Damage als eigene Spieler- und Item-Werte
 - Benutzte Spielerfähigkeiten leuchten während des Kampfes kurz in der linken Fähigkeitsliste auf
 - Automatische Kämpfe mit Animationen, Schadenstexten, HP-Balken und Kampfprotokoll
 - Gegner haben eigene Fähigkeiten

@@ -1351,6 +1351,12 @@ button.drop-row span:last-child {
   right: 23%;
 }
 
+.damage-number.critical {
+  color: #ffe082;
+  font-size: 30px;
+  text-shadow: 0 2px 0 #7a241c, 0 0 16px rgba(242, 193, 78, 0.95);
+}
+
 @keyframes hero-lunge {
   45% { transform: translateX(58px) scale(1.04); }
 }
