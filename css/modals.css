@@ -619,13 +619,13 @@ button.drop-row span:last-child {
 
 .battle-stage {
   position: relative;
-  min-height: 188px;
+  min-height: 204px;
   display: grid;
   grid-template-columns: minmax(90px, 1fr) minmax(110px, 0.6fr) minmax(90px, 1fr);
   align-items: end;
   gap: 12px;
   overflow: hidden;
-  padding: 14px 18px 12px;
+  padding: 24px 18px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
@@ -767,6 +767,77 @@ button.drop-row span:last-child {
   background: linear-gradient(180deg, #f5f7fb, #7c8792);
   transform: rotate(26deg);
   transform-origin: bottom;
+}
+
+.hero-build-tank .hero-body {
+  width: 84px;
+  background: linear-gradient(135deg, #b7c1ce, #40516a 48%, #27384f 49%, #2d405f 100%);
+  border-color: #d8ae4b;
+  box-shadow: inset 0 0 0 3px rgba(216, 174, 75, 0.12);
+}
+
+.hero-build-tank .hero-helm {
+  left: 17px;
+  width: 50px;
+  background: linear-gradient(135deg, #eef2f7, #8a98a8);
+}
+
+.hero-build-tank .hero-shield {
+  left: -25px;
+  top: 22px;
+  width: 42px;
+  height: 52px;
+  border-radius: 18px 18px 24px 24px;
+  background: linear-gradient(135deg, #d8ae4b, #5c6a78 48%, #233142 49%);
+}
+
+.hero-build-tank .hero-sword {
+  right: -12px;
+  top: 8px;
+  height: 72px;
+  opacity: 0.82;
+}
+
+.hero-build-damage .hero-body {
+  width: 68px;
+  background: linear-gradient(135deg, #c7ced8, #273240 45%, #8d252b 46%, #3a1116 100%);
+  border-color: #e8edf4;
+}
+
+.hero-build-damage .hero-helm {
+  left: 11px;
+  width: 44px;
+  border-color: #f3d279;
+}
+
+.hero-build-damage .hero-shield {
+  left: -13px;
+  top: 35px;
+  width: 22px;
+  height: 30px;
+  opacity: 0.72;
+}
+
+.hero-build-damage .hero-sword {
+  right: -27px;
+  top: -18px;
+  width: 9px;
+  height: 104px;
+  background: linear-gradient(180deg, #fff7c7, #f0c04f 28%, #d7e1ec 29%, #7c8792);
+  filter: drop-shadow(0 0 8px rgba(240, 192, 79, 0.45));
+}
+
+.hero-build-bruiser .hero-body {
+  background: linear-gradient(135deg, #8e9aaa, #303b4c 48%, #963333 49%, #5b2220 100%);
+  border-color: #c8d0dc;
+}
+
+.hero-build-bruiser .hero-shield {
+  background: linear-gradient(135deg, #b95548, #5f2220);
+}
+
+.hero-build-bruiser .hero-sword {
+  height: 90px;
 }
 
 .enemy-body {

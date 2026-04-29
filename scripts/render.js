@@ -9,6 +9,7 @@
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
   $("xpText").textContent = state.level >= 20 ? "Max" : `${state.xp}/${needed}`;
   $("xpBar").style.width = `${state.level >= 20 ? 100 : Math.max(2, (state.xp / needed) * 100)}%`;
+  renderHeroBuildVisual();
   renderClassPanel();
   $("stats").innerHTML = [
     ["Schaden", stats.damage],
@@ -33,6 +34,11 @@
   renderLog();
   $("fightBtn").textContent = isFighting ? (skipCombat ? "Überspringe..." : "Skip") : "Kampf starten";
   $("fightBtn").disabled = isFighting ? skipCombat : state.pendingLoot.length > 0;
+}
+
+function renderHeroBuildVisual() {
+  const build = ["tank", "damage", "bruiser"].includes(state.build) ? state.build : "bruiser";
+  $("heroSprite").className = `combatant hero-sprite hero-build-${build}`;
 }
 
 function itemQuality(item) {

@@ -85,7 +85,8 @@
   .battle-stage {
     grid-template-columns: minmax(86px, 1fr) minmax(58px, 0.42fr) minmax(86px, 1fr);
     gap: 6px;
-    padding: 12px 8px 10px;
+    min-height: 196px;
+    padding: 22px 8px 10px;
   }
 
   .combatant {
