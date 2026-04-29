@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.9
+Alpha v0.8.10
 
 ## Was Bereits Spielbar Ist
 

@@ -891,6 +891,7 @@ button.drop-row span:last-child {
   border-radius: 42% 58% 48% 42%;
   background: linear-gradient(135deg, #7f8992, #26313a);
   border: 2px solid #9aa7b7;
+  z-index: 1;
 }
 
 .enemy-wolf .enemy-body::after {
@@ -916,21 +917,22 @@ button.drop-row span:last-child {
 
 .enemy-wolf .enemy-extra-a,
 .enemy-wolf .enemy-extra-b {
-  top: -13px;
+  top: -4px;
   width: 0;
   height: 0;
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
   border-bottom: 22px solid #8c96a0;
+  z-index: 2;
 }
 
 .enemy-wolf .enemy-extra-a {
-  right: -9px;
+  right: -16px;
   transform: rotate(18deg);
 }
 
 .enemy-wolf .enemy-extra-b {
-  right: 15px;
+  right: 2px;
   transform: rotate(-10deg);
 }
 
