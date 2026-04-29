@@ -114,10 +114,14 @@ $("bestiary").addEventListener("input", (event) => {
   selectedBestiarySearch = event.target.value;
   selectedBestiaryPage = 0;
   selectedBestiaryItemKey = "";
-  renderBestiaryDetail();
-  const search = document.getElementById("bestiarySearch");
-  search?.focus();
-  search?.setSelectionRange(search.value.length, search.value.length);
+  if (bestiarySearchFrame) cancelAnimationFrame(bestiarySearchFrame);
+  bestiarySearchFrame = requestAnimationFrame(() => {
+    bestiarySearchFrame = 0;
+    renderBestiaryDetail();
+    const search = document.getElementById("bestiarySearch");
+    search?.focus();
+    search?.setSelectionRange(search.value.length, search.value.length);
+  });
 });
 
 $("bestiary").addEventListener("mouseover", (event) => {

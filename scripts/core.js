@@ -15,6 +15,7 @@ let selectedBestiaryItemKey = "";
 let logExpanded = false;
 let smithView = "home";
 let combatWatchdog = 0;
+let bestiarySearchFrame = 0;
 const tooltipItemCache = new Map();
 const bestiaryLootCache = new Map();
 
@@ -1084,6 +1085,10 @@ function setMaterialForItem(item) {
 function canUpgrade(item) {
   if ((item.upgrade || 0) >= 4) return false;
   const cost = upgradeCost(item);
+  return canPayUpgradeCost(cost);
+}
+
+function canPayUpgradeCost(cost) {
   return state.gold >= cost.gold && Object.entries(cost.materials).every(([id, amount]) => (state.materials[id] || 0) >= amount);
 }
 

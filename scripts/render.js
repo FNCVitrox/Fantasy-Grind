@@ -156,15 +156,27 @@ function renderEquipmentDetails() {
 }
 
 function renderSmith() {
+  renderSmithMaterials();
+  $("smithHome").hidden = smithView !== "home";
+  $("smithUpgradeSection").hidden = smithView !== "upgrade";
+  $("smithSalvageSection").hidden = smithView !== "salvage";
+
+  if (smithView === "home") renderSmithHome();
+  if (smithView === "upgrade") renderSmithUpgrade();
+  if (smithView === "salvage") renderSmithSalvage();
+}
+
+function renderSmithMaterials() {
   $("materials").innerHTML = [
     `<div class="material gold-material"><span>Gold</span><strong>${state.gold}</strong></div>`,
     ...Object.entries(materialLabel).map(([id, label]) =>
       `<div class="material"><span>${label}</span><strong>${state.materials[id] || 0}</strong></div>`
     ),
   ].join("");
-  $("smithHome").hidden = smithView !== "home";
-  $("smithUpgradeSection").hidden = smithView !== "upgrade";
-  $("smithSalvageSection").hidden = smithView !== "salvage";
+}
+
+function renderSmithHome() {
+  if ($("smithHome").dataset.rendered === "true") return;
   $("smithHome").innerHTML = `
     <div class="smith-greeting">
       <div class="smith-avatar" aria-hidden="true"></div>
@@ -188,8 +200,10 @@ function renderSmith() {
       </button>
     </div>
   `;
-  $("salvageAllBtn").disabled = !state.inventory.length;
+  $("smithHome").dataset.rendered = "true";
+}
 
+function renderSmithUpgrade() {
   $("smithGrid").innerHTML = equipmentSlots.map((slot) => {
     const itemId = state.equipment[slot];
     const item = getItem(itemId);
@@ -204,7 +218,7 @@ function renderSmith() {
       .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)
       .join(" · ");
     const maxed = (item.upgrade || 0) >= 4;
-    const disabled = !canUpgrade(item) || maxed;
+    const disabled = maxed || !canPayUpgradeCost(cost);
     return `<div class="smith-card rarity-card rarity-${quality}">
       <div class="smith-item-main">
         <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
@@ -220,7 +234,10 @@ function renderSmith() {
       </div>
     </div>`;
   }).join("");
+}
 
+function renderSmithSalvage() {
+  $("salvageAllBtn").disabled = !state.inventory.length;
   $("salvageList").innerHTML = state.inventory.length
     ? state.inventory.map((itemId, index) => {
         const item = getItem(itemId);
@@ -468,8 +485,9 @@ function updateBestiaryActiveCard() {
 
 function renderBestiaryDetail() {
   const detailEnemy = enemies[selectedBestiaryEnemy] || enemies.wolf;
-  const categories = bestiaryCategories(selectedBestiaryEnemy, detailEnemy);
-  const categoryRows = renderBestiaryCategoryRows(selectedBestiaryEnemy, detailEnemy);
+  const discovered = groupedBestiaryLoot(selectedBestiaryEnemy);
+  const categories = bestiaryCategories(selectedBestiaryEnemy, detailEnemy, discovered);
+  const categoryRows = renderBestiaryCategoryRows(selectedBestiaryEnemy, detailEnemy, discovered);
 
   const detail = document.getElementById("bestiaryDetail");
   if (!detail) return;
@@ -492,14 +510,13 @@ function renderBestiaryDetail() {
     ${selectedBestiaryCategory === "overview" ? "" : renderBestiaryFilters()}
     <div class="bestiary-content-grid">
       <div class="drop-list">${categoryRows}</div>
-      ${renderBestiaryItemDetail(selectedBestiaryEnemy, detailEnemy)}
+      ${renderBestiaryItemDetail(selectedBestiaryEnemy, detailEnemy, discovered)}
     </div>
     <p class="loot-note">Items werden zusammengefasst, seitenweise geladen und Details erscheinen direkt neben der Liste.</p>
   `;
 }
 
-function bestiaryCategories(enemyId, enemy) {
-  const discovered = groupedBestiaryLoot(enemyId);
+function bestiaryCategories(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
   const countGroup = (group) => discovered.filter((item) => bestiaryItemGroup(item) === group).length;
   return [
     { id: "overview", label: "Übersicht", count: discovered.length + enemy.drops.length },
@@ -512,9 +529,9 @@ function bestiaryCategories(enemyId, enemy) {
   ].filter((category) => category.id === "overview" || category.count > 0);
 }
 
-function renderBestiaryCategoryRows(enemyId, enemy) {
+function renderBestiaryCategoryRows(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
   if (selectedBestiaryCategory === "overview") {
-    return renderBestiaryOverview(enemyId, enemy);
+    return renderBestiaryOverview(enemyId, enemy, discovered);
   }
   if (selectedBestiaryCategory === "fixed") {
     return renderFixedDropRows(enemy);
@@ -522,14 +539,14 @@ function renderBestiaryCategoryRows(enemyId, enemy) {
   if (selectedBestiaryCategory === "materials") {
     return renderMaterialDropRows(enemyId);
   }
-  return renderDiscoveredLootRows(enemyId, selectedBestiaryCategory);
+  return renderDiscoveredLootRows(enemyId, selectedBestiaryCategory, discovered);
 }
 
-function renderBestiaryOverview(enemyId, enemy) {
-  return renderAllBestiaryRows(enemyId, enemy);
+function renderBestiaryOverview(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
+  return renderAllBestiaryRows(enemyId, enemy, discovered);
 }
 
-function renderAllBestiaryRows(enemyId, enemy) {
+function renderAllBestiaryRows(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
   const fixedRows = enemy.drops.map((drop) => {
     const item = getItem(drop.id);
     const quality = itemQuality(item);
@@ -540,7 +557,8 @@ function renderAllBestiaryRows(enemyId, enemy) {
       <span>${formatChance(drop.chance)}</span>
     </button>`;
   });
-  const discoveredRows = groupedBestiaryLoot(enemyId)
+  const discoveredRows = discovered
+    .slice()
     .sort((a, b) => bestiaryRowRank(b) - bestiaryRowRank(a) || b.count - a.count || a.name.localeCompare(b.name))
     .map((item) => {
       const quality = itemQuality(item);
@@ -599,8 +617,7 @@ function lootCompletion(enemyId) {
   };
 }
 
-function renderDiscoveredLootRows(enemyId, category) {
-  const discovered = groupedBestiaryLoot(enemyId);
+function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiaryLoot(enemyId)) {
   const filtered = filterBestiaryLoot(discovered.filter((item) => {
     if (category === "sets") return item.set;
     return bestiaryItemGroup(item) === category;
@@ -714,7 +731,7 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;");
 }
 
-function renderBestiaryItemDetail(enemyId, enemy) {
+function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
   if (selectedBestiaryCategory === "overview") {
     return `<aside class="bestiary-selected-detail">
       <strong>Details</strong>
@@ -732,7 +749,7 @@ function renderBestiaryItemDetail(enemyId, enemy) {
 
   const item = selectedBestiaryItemKey.startsWith("fixed:")
     ? getItem(selectedBestiaryItemKey.replace("fixed:", ""))
-    : groupedBestiaryLoot(enemyId).find((entry) => bestiaryItemKey(entry) === selectedBestiaryItemKey);
+    : discovered.find((entry) => bestiaryItemKey(entry) === selectedBestiaryItemKey);
 
   if (!item) {
     return `<aside class="bestiary-selected-detail">
