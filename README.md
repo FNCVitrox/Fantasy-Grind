@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.25
+Alpha v0.8.26
 
 ## Was Bereits Spielbar Ist
 
@@ -45,7 +45,7 @@ Alpha v0.8.25
 - Schönerer Sicherungs-Dateiname mit Level, Ruhm, Gebiet und Datum
 - Dezente Sicherungs-Tipps nach Level-Up, sehr gutem Loot oder Dungeon-Boss
 - Größere Protokoll-Vorschau ohne Neustart-Button im Kampfverlauf
-- Loot-Auswahlkarten sind sauberer ausgerichtet, damit Vergleich und Buttons nicht überlappen
+- Loot-Auswahlkarten zeigen Angriff, Verteidigung, Crit-Chance und Crit-Schaden direkt und vergleichen diese Werte einzeln
 - Sicherungs- und Ladefunktion für Spielstände über eine JSON-Datei
 - Empfehlung: Spielstand regelmäßig herunterladen, damit Fortschritt sicher erhalten bleibt
 - Browser-Speicher wird genutzt, ist aber je nach Browser, GitHub-Preview-Link oder gelöschten Website-Daten nicht garantiert

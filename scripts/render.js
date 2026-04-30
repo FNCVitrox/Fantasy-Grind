@@ -736,15 +736,10 @@ function renderLootChoices() {
       <div class="loot-card-badge">${discovery ? `<span class="discovery-badge ${discovery.className}">${discovery.text}</span>` : ""}</div>
       <p class="loot-card-meta">${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)}</p>
       <p class="loot-card-set ${item.set ? "set-line" : "empty"}">${item.set ? escapeHtml(setBonuses[item.set]?.name || item.set) : "&nbsp;"}</p>
-      <p class="loot-card-stats">+${item.damage} Schaden · +${item.defense} Verteidigung</p>
-      <p class="loot-card-value">${itemCritText(item) || "Kein Crit-Bonus"}</p>
+      ${renderLootStatGrid(item)}
       <p class="loot-card-value">Haltbarkeit: ${item.durability ?? 100}%</p>
       <p class="loot-card-value">Wert: ${sellValue(item)} Gold</p>
-      <div class="loot-compare">
-        <span class="${compare.powerClass}">${compare.powerText}</span>
-        <span class="${compare.damageClass}">${compare.damageText}</span>
-        <span class="${compare.defenseClass}">${compare.defenseText}</span>
-      </div>
+      ${renderLootCompare(compare)}
       <div class="loot-actions">
         <button type="button" data-loot="${index}">Ins Inventar</button>
         <button type="button" data-equip-loot="${index}">Ausrüsten</button>
@@ -752,6 +747,24 @@ function renderLootChoices() {
     </div>`;
   }).join("");
 
+}
+
+function renderLootStatGrid(item) {
+  return `<div class="loot-stat-grid" aria-label="Itemwerte">
+    <span><em>Angriff</em><strong>${item.damage}</strong></span>
+    <span><em>Verteidigung</em><strong>${item.defense}</strong></span>
+    <span><em>Crit-Chance</em><strong>${formatPercent(item.critChance || 0)}</strong></span>
+    <span><em>Crit-Schaden</em><strong>${formatPercent(item.critDamage || 0)}</strong></span>
+  </div>`;
+}
+
+function renderLootCompare(compare) {
+  return `<div class="loot-compare">
+    <span class="${compare.damageClass}">${compare.damageText}</span>
+    <span class="${compare.defenseClass}">${compare.defenseText}</span>
+    <span class="${compare.critChanceClass}">${compare.critChanceText}</span>
+    <span class="${compare.critDamageClass}">${compare.critDamageText}</span>
+  </div>`;
 }
 
 function lootChoicesSignature() {
@@ -794,18 +807,26 @@ function compareLoot(item, current) {
   return {
     powerText: compareText("Gesamt", powerDiff, " Kraft"),
     powerClass: compareClass(powerDiff),
-    damageText: compareText("Schaden", damageDiff, ""),
+    damageText: compareText("Angriff", damageDiff, ""),
     damageClass: compareClass(damageDiff),
-    defenseText: critChanceDiff || critDamageDiff
-      ? `Crit: ${critChanceDiff >= 0 ? "+" : ""}${formatPercent(critChanceDiff)} / ${critDamageDiff >= 0 ? "+" : ""}${formatPercent(critDamageDiff)}`
-      : compareText("Verteidigung", defenseDiff, ""),
-    defenseClass: compareClass(defenseDiff + critChanceDiff * 80 + critDamageDiff * 20),
+    defenseText: compareText("Verteidigung", defenseDiff, ""),
+    defenseClass: compareClass(defenseDiff),
+    critChanceText: comparePercentText("Crit-Chance", critChanceDiff),
+    critChanceClass: compareClass(critChanceDiff),
+    critDamageText: comparePercentText("Crit-Schaden", critDamageDiff),
+    critDamageClass: compareClass(critDamageDiff),
   };
 }
 
 function compareText(label, diff, suffix) {
   if (diff > 0) return `${label}: besser (+${diff.toFixed(diff % 1 ? 1 : 0)}${suffix})`;
   if (diff < 0) return `${label}: schlechter (${diff.toFixed(diff % 1 ? 1 : 0)}${suffix})`;
+  return `${label}: gleich`;
+}
+
+function comparePercentText(label, diff) {
+  if (diff > 0) return `${label}: besser (+${formatPercent(diff)})`;
+  if (diff < 0) return `${label}: schlechter (${formatPercent(diff)})`;
   return `${label}: gleich`;
 }
 
