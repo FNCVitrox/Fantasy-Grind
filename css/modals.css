@@ -49,9 +49,9 @@
 }
 
 .loot-window .loot-card {
-  min-height: 330px;
+  min-height: 360px;
   height: 100%;
-  grid-template-rows: 42px 32px 26px 24px 30px 24px 28px minmax(98px, 1fr) 50px;
+  grid-template-rows: 42px 32px 24px 22px 26px 22px 22px 24px minmax(118px, auto) 50px;
   align-content: stretch;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
@@ -87,6 +87,8 @@
 .loot-card-value {
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-size: 14px;
+  line-height: 1.22;
 }
 
 .loot-card-set.empty {
@@ -100,15 +102,18 @@
   padding: 8px;
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.18);
+  overflow: hidden;
 }
 
 .loot-window .loot-compare {
-  min-height: 98px;
+  min-height: 118px;
   align-content: start;
 }
 
 .loot-window .loot-compare span {
-  line-height: 1.25;
+  line-height: 1.2;
+  font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 .loot-compare.compact {
