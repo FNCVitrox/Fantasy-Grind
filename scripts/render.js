@@ -1381,7 +1381,9 @@ function renderLog() {
   const signature = state.log.slice(0, 18).join("\n") || "empty";
   if (renderCache.log === signature) return;
   renderCache.log = signature;
-  setText("logPreview", state.log[0] || "Noch keine Einträge.");
+  $("logPreview").innerHTML = state.log.length
+    ? state.log.slice(0, 5).map(escapeHtml).join("<br>")
+    : "Noch keine Einträge.";
   $("log").innerHTML = state.log.slice(0, 18).map((entry, index) => {
     const type = entry.includes("Tod") ? "bad" : entry.includes("Seltener") || entry.includes("Quest") || entry.includes("ausgerüstet") ? "drop" : index === 0 ? "good" : "";
     return `<div class="${type}">${escapeHtml(entry)}</div>`;

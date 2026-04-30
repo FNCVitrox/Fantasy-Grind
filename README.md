@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.22
+Alpha v0.8.23
 
 ## Was Bereits Spielbar Ist
 
@@ -41,6 +41,7 @@ Alpha v0.8.22
 - Materialsystem mit Eisenstücken, Lederresten, Runensplittern, Set-Materialien und seltenen Komponenten
 - Schmied-Dialoge ändern sich je nach Ruhm-Rang und Beziehung zum Spieler
 - Ein gemeinsamer Spielstand-Button bündelt Herunterladen und Laden von Sicherungen
+- Größere Protokoll-Vorschau ohne Neustart-Button im Kampfverlauf
 - Sicherungs- und Ladefunktion für Spielstände über eine JSON-Datei
 - Empfehlung: Spielstand regelmäßig herunterladen, damit Fortschritt sicher erhalten bleibt
 - Browser-Speicher wird genutzt, ist aber je nach Browser, GitHub-Preview-Link oder gelöschten Website-Daten nicht garantiert

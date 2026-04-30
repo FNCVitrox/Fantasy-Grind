@@ -1492,9 +1492,9 @@ button.drop-row span:last-child {
 
 .log-panel {
   display: grid;
-  gap: 9px;
+  gap: 10px;
   margin-top: 8px;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(7, 17, 27, 0.72);
@@ -1502,12 +1502,13 @@ button.drop-row span:last-child {
 
 .log-preview {
   max-width: 100%;
+  min-height: 86px;
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1.32;
+  font-size: 13px;
+  line-height: 1.38;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
