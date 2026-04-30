@@ -143,6 +143,7 @@
     grid-template-columns: 1fr;
   }
 
+  .save-summary,
   .save-actions {
     grid-template-columns: 1fr;
   }

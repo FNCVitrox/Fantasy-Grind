@@ -320,7 +320,10 @@ $("closePlayerStatsBtn").addEventListener("click", closePlayerStats);
 $("playerStatsModal").addEventListener("click", (event) => {
   if (event.target.id === "playerStatsModal") closePlayerStats();
 });
-$("openSaveMenuBtn").addEventListener("click", () => openModal("saveModal"));
+$("openSaveMenuBtn").addEventListener("click", () => {
+  renderSaveSummary();
+  openModal("saveModal");
+});
 $("closeSaveBtn").addEventListener("click", closeSave);
 $("saveModal").addEventListener("click", (event) => {
   if (event.target.id === "saveModal") closeSave();
@@ -374,18 +377,18 @@ function closeSave() {
 }
 
 function exportSave() {
+  state.lastSaveExportAt = new Date().toISOString();
+  save();
   const blob = new Blob([exportSaveData()], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  const stamp = new Date().toISOString().slice(0, 10);
   link.href = url;
-  link.download = `fantasy-grind-save-${stamp}.json`;
+  link.download = saveFileName();
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
   log("Spielstand als Datei gesichert.", "drop");
-  save();
   render();
 }
 

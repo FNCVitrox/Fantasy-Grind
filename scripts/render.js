@@ -25,6 +25,7 @@
   if (isModalOpen("inventoryModal")) renderInventory();
   if (isModalOpen("questBoardModal")) renderQuestBoard();
   if (isModalOpen("smithModal")) renderSmith();
+  if (isModalOpen("saveModal")) renderSaveSummary();
   if (isModalOpen("repairModal")) renderRepairModal();
   if (isModalOpen("equipmentModal")) renderEquipmentDetails();
   if (isModalOpen("playerStatsModal")) renderPlayerStatsDetails(stats);
@@ -415,6 +416,31 @@ function renderSmith() {
   if (smithView === "home") renderSmithHome();
   if (smithView === "upgrade") renderSmithUpgrade();
   if (smithView === "salvage") renderSmithSalvage();
+}
+
+function formatSaveDate(value) {
+  if (!value) return "Noch nicht heruntergeladen";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unbekannt";
+  return date.toLocaleString("de-CH", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function renderSaveSummary() {
+  const zone = zones[selectedZone]?.name || "Unbekannt";
+  $("saveSummary").innerHTML = `
+    <div><span>Level</span><strong>${state.level}</strong></div>
+    <div><span>Gold</span><strong>${state.gold}</strong></div>
+    <div><span>Ruhm</span><strong>${state.renown}</strong></div>
+    <div><span>Gebiet</span><strong>${escapeHtml(zone)}</strong></div>
+    <div><span>Letzte Sicherung</span><strong>${escapeHtml(formatSaveDate(state.lastSaveExportAt))}</strong></div>
+    <div><span>Dateiname</span><strong>${escapeHtml(saveFileName())}</strong></div>
+  `;
 }
 
 const smithDialogues = {

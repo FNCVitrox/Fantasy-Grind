@@ -78,6 +78,7 @@ function defaultState() {
     completedQuests: [],
     rareQuests: {},
     winsSinceQuestRefresh: 0,
+    lastSaveExportAt: "",
     ui: {
       selectedZone: "meadow",
       selectedEnemy: "wolf",
@@ -144,6 +145,7 @@ function parseSavedState(raw) {
     loaded.questBoard = Array.isArray(loaded.questBoard) ? loaded.questBoard : ["wolves", "rust", "boars"];
     loaded.rareQuests = loaded.rareQuests || {};
     loaded.winsSinceQuestRefresh = loaded.winsSinceQuestRefresh || 0;
+    loaded.lastSaveExportAt = loaded.lastSaveExportAt || "";
     loaded.ui = normalizeSavedUi(loaded.ui);
     applyBalanceMigration(loaded);
     return loaded;
@@ -380,12 +382,24 @@ function save() {
 }
 
 function exportSaveData() {
+  const exportedAt = state.lastSaveExportAt || new Date().toISOString();
   return JSON.stringify({
     game: "Fantasy Grind",
     version: saveExportVersion,
-    exportedAt: new Date().toISOString(),
+    exportedAt,
     save: state,
   }, null, 2);
+}
+
+function saveFileName() {
+  const zone = zones[selectedZone]?.name || "Grauwacht";
+  const safeZone = zone
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const stamp = new Date().toISOString().slice(0, 10);
+  return `Fantasy-Grind-Level-${state.level}-Ruhm-${state.renown}-${safeZone}-${stamp}.json`;
 }
 
 function importSaveData(raw) {
@@ -641,6 +655,11 @@ function log(message, type = "") {
   renderLog(type);
 }
 
+function remindSaveBackup(reason) {
+  if (state.log.slice(0, 8).some((entry) => entry.startsWith("Tipp: Spielstand herunterladen"))) return;
+  log(`Tipp: Spielstand herunterladen - ${reason}`, "drop");
+}
+
 function gainXp(amount) {
   if (state.level >= 20) {
     state.renown += Math.max(1, Math.floor(amount / 30));
@@ -654,6 +673,7 @@ function gainXp(amount) {
     syncDerivedStats();
     state.hp = state.maxHp;
     log(`Level ${state.level} erreicht. Deine Wunden schließen sich, aber der nächste Schritt wird schwerer.`, "good");
+    remindSaveBackup("du hast gerade ein Level geschafft.");
   }
 }
 
@@ -1175,6 +1195,7 @@ async function fight() {
       maybeDropRareQuest(enemy);
       refreshQuestBoard(false);
       log(`Sieg gegen ${enemy.name} nach ${rounds} Runden. +${enemy.xp} XP, +${gold} Gold.`, "good");
+      if (enemy.boss) remindSaveBackup("du hast einen Dungeon-Boss besiegt.");
     } else {
       const xpLoss = Math.min(state.xp, Math.ceil(xpForLevel(state.level) * 0.1));
       const goldLoss = Math.min(state.gold, Math.ceil(14 + state.level * 6));
@@ -1627,6 +1648,9 @@ function chooseLoot(index, equipNow = false) {
   } else {
     state.inventory.push(item.id);
     log(`${item.name} gewählt und ins Inventar gelegt.`, "drop");
+  }
+  if (["epic", "legendary"].includes(itemQuality(item))) {
+    remindSaveBackup(`du hast ${qualityLabel[itemQuality(item)]}e Beute erhalten.`);
   }
   advanceLootQueue();
   save();

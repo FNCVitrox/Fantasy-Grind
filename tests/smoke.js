@@ -119,6 +119,8 @@ assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1-backup"]).gold, 123
 assert(vm.runInContext("window.name.includes('fantasy-grind-save-v1')", context), "save should also be mirrored into window.name for preview reloads");
 assert.strictEqual(vm.runInContext("selectedZone = 'meadow'; selectedEnemy = zones.meadow.enemies[1]; save(); load().ui.selectedEnemy", context), vm.runInContext("zones.meadow.enemies[1]", context));
 assert.strictEqual(vm.runInContext("state = defaultState(); render = () => {}; importSaveData(JSON.stringify({ ...defaultState(), ui: { selectedZone: 'meadow', selectedEnemy: zones.meadow.enemies[2] } })); selectedEnemy", context), vm.runInContext("zones.meadow.enemies[2]", context));
+assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; saveFileName().includes('Level-1-Ruhm-0-Grauwacht-Wald')", context), "save filename should include useful progress info");
+assert(vm.runInContext("state.log = []; remindSaveBackup('Testmoment.'); state.log[0].startsWith('Tipp: Spielstand herunterladen')", context), "important moments should create a save reminder");
 assert(vm.runInContext("const cachedSave = storageGet(saveKey); localStorage = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } }; storageGet(saveKey) === cachedSave", context), "window.name fallback should load when localStorage is blocked");
 assert(vm.runInContext("exportSaveData().includes('Fantasy Grind')", context));
 assert(vm.runInContext("state.gold = 0; restCost()", context) > 0);
