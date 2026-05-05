@@ -8,6 +8,22 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 Alpha v0.8.51
 
+## Tests Starten
+
+Im VS-Code-Terminal:
+
+```powershell
+npm test
+```
+
+Oder per Doppelklick:
+
+```text
+test-starten.bat
+```
+
+Wenn alles passt, steht am Ende `Smoke test passed` und `ALLE TESTS BESTANDEN`.
+
 ## Was Bereits Spielbar Ist
 
 - Spielbarer Krieger mit Level, XP, Leben, Gold, Ruhm, Schaden, Verteidigung und Haltbarkeit
