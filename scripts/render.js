@@ -282,6 +282,7 @@ function renderSelectedEnemy(stats = totalStats()) {
   if (renderCache.selectedEnemy === signature) return;
   renderCache.selectedEnemy = signature;
   const enemy = getPreparedEncounter(selectedEnemy);
+  resetBattleStageState();
   setText("selectedEnemyName", enemy.name);
   const eliteNote = enemy.eliteVariant
     ? "Bereit: Elite-Version."
@@ -295,6 +296,13 @@ function renderSelectedEnemy(stats = totalStats()) {
   setText("selectedEnemyMeta", `Level ${enemy.level}, ${enemy.hp} Leben, ${abilityCount} Fähigkeiten, Crit ${formatPercent(enemyCrit.critChance)} / ${formatPercent(enemyCrit.critDamage)}, Risiko: ${riskFor(enemy, stats)}. ${eliteNote}`);
   setBattleEnemyVisual(enemy);
   $("battleText").textContent = `${enemy.name} wartet.`;
+}
+
+function resetBattleStageState() {
+  if (isFighting) return;
+  const stage = $("battleStage");
+  if (stage.className !== "battle-stage") stage.className = "battle-stage";
+  stage.querySelectorAll(".damage-number").forEach((number) => number.remove());
 }
 
 function setBattleEnemyVisual(enemy) {
