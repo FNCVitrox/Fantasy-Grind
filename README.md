@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.43
+Alpha v0.8.44
 
 ## Was Bereits Spielbar Ist
 
@@ -37,6 +37,7 @@ Alpha v0.8.43
 - Separate Dungeons mit Boss-Reihen
 - Freischaltungen über Level und Ruhm
 - Quest-Tafel mit normalen und seltenen Quests
+- Neue Quests werden mit Marker an der Quest-Tafel und Neu-Badge in der Tafel sichtbar
 - Quests erscheinen nur, wenn die passenden Gegner schon erreichbar sind
 - Quest-Tafel filtert Aufträge nach dem aktuell gewählten Gebiet und zeigt passende Levelbereiche
 - Standardquests sind wiederholbar, damit die Quest-Tafel nach Abschlüssen weiter nutzbar bleibt

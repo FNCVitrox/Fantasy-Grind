@@ -74,6 +74,7 @@ function defaultState() {
     discoveredLoot: {},
     quests: { wolves: 0, rust: 0, elites: 0 },
     questBoard: ["wolves", "rust", "boars"],
+    unseenQuests: [],
     activeQuests: [],
     completedQuests: [],
     rareQuests: {},
@@ -1214,6 +1215,7 @@ function updateQuestProgress(enemy) {
       }
       state.activeQuests = state.activeQuests.filter((id) => id !== quest.id);
       state.questBoard = state.questBoard.filter((id) => id !== quest.id);
+      forgetNewQuest(quest.id);
       state.gold += quest.rewardGold;
       gainXp(quest.rewardXp);
       const renown = questRenownReward(quest);
@@ -1246,6 +1248,7 @@ function maybeDropRareQuest(enemy) {
   state.rareQuests[id] = quest;
   state.questBoard.unshift(id);
   state.questBoard = uniqueQuestIds(state.questBoard).slice(0, state.renown >= 40 ? 6 : 5);
+  markQuestAsNew(id);
   log(`Seltene Quest-Schriftrolle gefunden: ${quest.name}. Sie liegt auf der Quest-Tafel.`, "drop");
 }
 
@@ -1279,7 +1282,9 @@ function refreshQuestBoard(force) {
 
   while (state.questBoard.length < renownQuestBoardSize() && candidates.length) {
     const index = random(0, candidates.length - 1);
-    state.questBoard.push(candidates.splice(index, 1)[0]);
+    const [questId] = candidates.splice(index, 1);
+    state.questBoard.push(questId);
+    if (!force) markQuestAsNew(questId);
   }
 
   state.winsSinceQuestRefresh = 0;
@@ -1287,6 +1292,15 @@ function refreshQuestBoard(force) {
 
 function uniqueQuestIds(ids) {
   return [...new Set(ids)];
+}
+
+function markQuestAsNew(questId) {
+  state.unseenQuests = uniqueQuestIds([questId, ...(state.unseenQuests || [])])
+    .filter((id) => state.questBoard.includes(id));
+}
+
+function forgetNewQuest(questId) {
+  state.unseenQuests = (state.unseenQuests || []).filter((id) => id !== questId);
 }
 
 function getQuestById(questId) {

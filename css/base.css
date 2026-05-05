@@ -204,6 +204,26 @@ h2 {
   margin-top: 3px;
 }
 
+.quest-notice {
+  position: absolute;
+  z-index: 2;
+  top: 5px;
+  right: 7px;
+  min-width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  padding: 0 5px;
+  border: 1px solid rgba(242, 193, 78, 0.9);
+  border-radius: 999px;
+  background: #2f2210;
+  color: var(--gold);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  box-shadow: 0 0 18px rgba(242, 193, 78, 0.35);
+}
+
 .camp-button::before {
   background: linear-gradient(180deg, #f2c14e, #e0645f);
 }

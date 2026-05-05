@@ -21,6 +21,7 @@
   renderEnemies(stats);
   renderEquipment();
   renderLootChoices();
+  renderQuestNotice();
   renderQuests();
   if (isModalOpen("inventoryModal")) renderInventory();
   if (isModalOpen("questBoardModal")) renderQuestBoard();
@@ -261,6 +262,14 @@ function renderEnemies(stats = totalStats()) {
       <em class="risk ${riskLabelClass(risk)}">${risk}</em>
     </button>`;
   }).join("");
+}
+
+function renderQuestNotice() {
+  const notice = $("questNotice");
+  const count = (state.unseenQuests || []).filter((id) => state.questBoard.includes(id)).length;
+  if (!notice) return;
+  notice.hidden = count === 0;
+  setText("questNotice", count);
 }
 
 function riskLabelClass(risk) {
@@ -783,6 +792,7 @@ function renderQuestBoard() {
 
   $("questBoard").innerHTML = boardQuests.map((quest) => {
     const active = isQuestActive(quest.id);
+    const isNew = (state.unseenQuests || []).includes(quest.id);
     const value = Math.floor(state.quests[quest.id] || 0);
     const progress = active ? `${value}/${quest.needed}` : "Noch nicht angenommen";
     const levelRange = questLevelRange(quest);
@@ -791,8 +801,8 @@ function renderQuestBoard() {
         : `<button type="button" data-accept-quest="${quest.id}">Quest annehmen</button>`;
 
     const rarity = escapeToken(quest.rarity || (quest.rare ? "legendary" : "common"), ["common", "rare", "epic", "legendary"], "common");
-    return `<div class="quest-offer rarity-card rarity-${rarity} ${active ? "active" : ""} ${quest.rare ? "rare" : ""}">
-      <strong class="quest-offer-title"><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}</strong>
+    return `<div class="quest-offer rarity-card rarity-${rarity} ${active ? "active" : ""} ${quest.rare ? "rare" : ""} ${isNew ? "new" : ""}">
+      <strong class="quest-offer-title"><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}${isNew ? `<em>Neu</em>` : ""}</strong>
       <div class="quest-offer-body">
         <p>${escapeHtml(quest.text)}</p>
         <p>Status: ${progress}</p>
@@ -819,6 +829,7 @@ function acceptQuest(questId) {
     return;
   }
   state.activeQuests.push(questId);
+  forgetNewQuest(questId);
   state.quests[questId] = state.quests[questId] || 0;
   log(`Quest angenommen: ${quest.name}.`, "drop");
   save();

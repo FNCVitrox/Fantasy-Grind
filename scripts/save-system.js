@@ -117,6 +117,9 @@ function normalizeLoadedQuests(loaded, parsed) {
   }
   loaded.activeQuests = loaded.activeQuests.filter((id) => !isQuestCompletedPermanent(id));
   loaded.questBoard = Array.isArray(loaded.questBoard) ? loaded.questBoard : ["wolves", "rust", "boars"];
+  loaded.unseenQuests = Array.isArray(loaded.unseenQuests)
+    ? uniqueQuestIds(loaded.unseenQuests).filter((id) => loaded.questBoard.includes(id))
+    : [];
   loaded.rareQuests = loaded.rareQuests || {};
   loaded.winsSinceQuestRefresh = loaded.winsSinceQuestRefresh || 0;
 }
