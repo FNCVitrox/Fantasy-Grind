@@ -644,14 +644,14 @@ const setBonuses = {
 };
 
 const questCatalog = [
-  { id: "wolves", name: "Sichere den Waldrand", rarity: "common", text: "Töte 10 Waldwölfe.", target: "wolf", needed: 10, rewardXp: 70, rewardGold: 22 },
-  { id: "rust", name: "Rost für den Schmied", rarity: "rare", text: "Sammle 5 Rostsplitter von Wegräubern.", target: "rust", needed: 5, rewardXp: 135, rewardGold: 44 },
-  { id: "elites", name: "Mut unter Stein", rarity: "epic", text: "Besiege 3 Elite-Gegner.", target: "elite", needed: 3, rewardXp: 360, rewardGold: 95 },
-  { id: "boars", name: "Dornen im Acker", rarity: "common", text: "Erlege 7 Dornenkeiler.", target: "beast", needed: 7, rewardXp: 190, rewardGold: 55 },
-  { id: "dungeon", name: "Licht unter Stein", rarity: "epic", text: "Besiege 8 Dungeon-Gegner.", target: "dungeon", needed: 8, rewardXp: 330, rewardGold: 88 },
-  { id: "bandits", name: "Wege wieder sicher", rarity: "rare", text: "Besiege 9 Wegräuber.", target: "bandit", needed: 9, rewardXp: 155, rewardGold: 50 },
-  { id: "fields", name: "Nebel über den Feldern", rarity: "rare", text: "Vertreibe 6 Gegner aus den verfluchten Feldern.", target: "field", needed: 6, rewardXp: 260, rewardGold: 78 },
-  { id: "ash", name: "Asche im Wind", rarity: "epic", text: "Besiege 6 Gegner im Aschengrund.", target: "ash", needed: 6, rewardXp: 520, rewardGold: 135 },
+  { id: "wolves", name: "Sichere den Waldrand", rarity: "common", repeatable: true, text: "Töte 10 Waldwölfe.", target: "wolf", needed: 10, rewardXp: 70, rewardGold: 22 },
+  { id: "rust", name: "Rost für den Schmied", rarity: "rare", repeatable: true, text: "Sammle 5 Rostsplitter von Wegräubern.", target: "rust", needed: 5, rewardXp: 135, rewardGold: 44 },
+  { id: "elites", name: "Mut unter Stein", rarity: "epic", repeatable: true, text: "Besiege 3 Elite-Gegner.", target: "elite", needed: 3, rewardXp: 360, rewardGold: 95 },
+  { id: "boars", name: "Dornen im Acker", rarity: "common", repeatable: true, text: "Erlege 7 Dornenkeiler.", target: "beast", needed: 7, rewardXp: 190, rewardGold: 55 },
+  { id: "dungeon", name: "Licht unter Stein", rarity: "epic", repeatable: true, text: "Besiege 8 Dungeon-Gegner.", target: "dungeon", needed: 8, rewardXp: 330, rewardGold: 88 },
+  { id: "bandits", name: "Wege wieder sicher", rarity: "rare", repeatable: true, text: "Besiege 9 Wegräuber.", target: "bandit", needed: 9, rewardXp: 155, rewardGold: 50 },
+  { id: "fields", name: "Nebel über den Feldern", rarity: "rare", repeatable: true, text: "Vertreibe 6 Gegner aus den verfluchten Feldern.", target: "field", needed: 6, rewardXp: 260, rewardGold: 78 },
+  { id: "ash", name: "Asche im Wind", rarity: "epic", repeatable: true, text: "Besiege 6 Gegner im Aschengrund.", target: "ash", needed: 6, rewardXp: 520, rewardGold: 135 },
 ];
 
 const rareQuestTemplates = [

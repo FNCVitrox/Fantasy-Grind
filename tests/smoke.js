@@ -85,7 +85,7 @@ assert.strictEqual(
 );
 assert(vm.runInContext("state = defaultState(); state.build = 'damage'; hasBuildAbility('execute')", context), "damage build should know execute");
 assert(vm.runInContext("state = defaultState(); state.build = 'bruiser'; hasBuildAbility('counterBlow') && hasBuildAbility('shatter')", context), "bruiser build should know counter and shatter");
-assert.strictEqual(vm.runInContext("renderLog = () => {}; render = () => {}; state = defaultState(); state.build = 'damage'; syncDerivedStats(); state.hp = 10; setBuild('tank'); state.hp", context), vm.runInContext("state.maxHp", context));
+assert(vm.runInContext("renderLog = () => {}; render = () => {}; state = defaultState(); state.build = 'damage'; syncDerivedStats(); state.hp = Math.floor(state.maxHp / 2); setBuild('tank'); state.hp < state.maxHp && state.hp >= Math.floor(state.maxHp / 2)", context), "build changes should keep current health ratio instead of full healing");
 assert.strictEqual(vm.runInContext("abilityDamage(10, 1.75)", context), 17);
 assert.strictEqual(vm.runInContext("enemyCriticalStats(enemies.wolf).critChance", context), 0.03);
 assert.strictEqual(vm.runInContext("enemyCriticalStats(createEliteEnemy(enemies.wolf, 'wolf')).critDamage", context), 1.6);
@@ -126,5 +126,7 @@ assert(vm.runInContext("state.log = []; remindSaveBackup('Testmoment.'); state.l
 assert(vm.runInContext("const cachedSave = storageGet(saveKey); localStorage = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } }; storageGet(saveKey) === cachedSave", context), "window.name fallback should load when localStorage is blocked");
 assert(vm.runInContext("exportSaveData().includes('Fantasy Grind')", context));
 assert(vm.runInContext("state.gold = 0; restCost()", context) > 0);
+assert(vm.runInContext("render = () => {}; state = defaultState(); state.hp = 10; state.gold = 0; rest(); state.hp === state.maxHp && state.gold === 0", context), "resting without gold should heal without charging hidden costs");
+assert(vm.runInContext("state = defaultState(); state.completedQuests = ['wolves', 'rust', 'boars']; state.questBoard = []; refreshQuestBoard(true); state.questBoard.length > 0 && state.questBoard.every((id) => questAvailable(getQuestById(id)))", context), "repeatable standard quests should refill the board after completion");
 
 console.log("Smoke test passed");

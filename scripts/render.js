@@ -730,7 +730,7 @@ function renderQuests() {
 
 function renderQuestBoard() {
   state.questBoard = uniqueQuestIds(state.questBoard)
-    .filter((id) => !state.completedQuests.includes(id))
+    .filter((id) => !isQuestCompletedPermanent(id))
     .filter((id) => {
       const quest = getQuestById(id);
       return quest && (isQuestActive(id) || questAvailable(quest));
@@ -741,7 +741,7 @@ function renderQuestBoard() {
   const boardQuests = state.questBoard.map(getQuestById).filter(Boolean);
   const signature = boardQuests.map((quest) => {
     const active = isQuestActive(quest.id);
-    return `${quest.id}:${active ? 1 : 0}:${Math.floor(state.quests[quest.id] || 0)}:${state.completedQuests.includes(quest.id) ? 1 : 0}`;
+    return `${quest.id}:${active ? 1 : 0}:${Math.floor(state.quests[quest.id] || 0)}:${isQuestCompletedPermanent(quest.id) ? 1 : 0}`;
   }).join("|") || "empty";
   if (renderCache.questBoard === signature) return;
   renderCache.questBoard = signature;

@@ -105,12 +105,16 @@ function parseSavedState(raw) {
 }
 
 function normalizeLoadedQuests(loaded, parsed) {
+  loaded.completedQuests = (loaded.completedQuests || []).filter((id) => {
+    const quest = getQuestById(id);
+    return quest && !quest.repeatable;
+  });
   if (!Array.isArray(parsed.activeQuests)) {
     loaded.activeQuests = questCatalog
       .filter((quest) => (loaded.quests?.[quest.id] || 0) > 0 || loaded.completedQuests.includes(quest.id))
       .map((quest) => quest.id);
   }
-  loaded.activeQuests = loaded.activeQuests.filter((id) => !loaded.completedQuests.includes(id));
+  loaded.activeQuests = loaded.activeQuests.filter((id) => !isQuestCompletedPermanent(id));
   loaded.questBoard = Array.isArray(loaded.questBoard) ? loaded.questBoard : ["wolves", "rust", "boars"];
   loaded.rareQuests = loaded.rareQuests || {};
   loaded.winsSinceQuestRefresh = loaded.winsSinceQuestRefresh || 0;

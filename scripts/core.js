@@ -320,9 +320,10 @@ function hasBuildAbility(id) {
 
 function setBuild(buildId) {
   if (!buildCatalog[buildId]) return;
+  const hpRatio = state.maxHp > 0 ? state.hp / state.maxHp : 1;
   state.build = buildId;
   syncDerivedStats();
-  state.hp = state.maxHp;
+  state.hp = Math.max(1, Math.min(state.maxHp, Math.round(state.maxHp * hpRatio)));
   log(`Build gewechselt: ${buildCatalog[buildId].name}.`, "drop");
   save();
   render();
@@ -567,6 +568,11 @@ function questTargetAvailable(target) {
 
 function questAvailable(quest) {
   return Boolean(quest && questTargetAvailable(quest.target));
+}
+
+function isQuestCompletedPermanent(questId) {
+  const quest = getQuestById(questId);
+  return Boolean(quest && !quest.repeatable && state.completedQuests.includes(questId));
 }
 
 function abilityDamage(baseHit, multiplier) {
@@ -1102,13 +1108,17 @@ function createEliteEnemy(base, enemyId) {
 function updateQuestProgress(enemy) {
   state.activeQuests.map(getQuestById).filter(Boolean).forEach((quest) => {
     if (!isQuestActive(quest.id)) return;
-    if (state.completedQuests.includes(quest.id)) return;
+    if (isQuestCompletedPermanent(quest.id)) return;
     const current = state.quests[quest.id] || 0;
     const gain = enemy.tags[quest.target] || 0;
     if (!gain) return;
     state.quests[quest.id] = Math.min(quest.needed, current + gain);
     if (state.quests[quest.id] >= quest.needed) {
-      state.completedQuests.push(quest.id);
+      if (quest.repeatable) {
+        state.quests[quest.id] = 0;
+      } else {
+        state.completedQuests.push(quest.id);
+      }
       state.activeQuests = state.activeQuests.filter((id) => id !== quest.id);
       state.questBoard = state.questBoard.filter((id) => id !== quest.id);
       state.gold += quest.rewardGold;
@@ -1159,7 +1169,7 @@ function refreshQuestBoard(force) {
     state.winsSinceQuestRefresh += 1;
   }
   state.questBoard = uniqueQuestIds(state.questBoard)
-    .filter((id) => !state.completedQuests.includes(id))
+    .filter((id) => !isQuestCompletedPermanent(id))
     .filter((id) => {
       const quest = getQuestById(id);
       return quest && (isQuestActive(id) || questAvailable(quest));
@@ -1170,7 +1180,7 @@ function refreshQuestBoard(force) {
   const candidates = questCatalog
     .map((quest) => quest.id)
     .filter((id) => !state.questBoard.includes(id))
-    .filter((id) => !state.completedQuests.includes(id))
+    .filter((id) => !isQuestCompletedPermanent(id))
     .filter((id) => !state.activeQuests.includes(id))
     .filter((id) => questAvailable(getQuestById(id)));
 
@@ -1740,12 +1750,12 @@ function rest() {
     log("Du bist bereits vollständig erholt.");
     return;
   }
-  const paid = Math.min(state.gold, cost);
+  const paid = state.gold >= cost ? cost : 0;
   state.gold -= paid;
   state.hp = state.maxHp;
-  log(paid >= cost
+  log(paid
     ? `Du rastest am Lagerplatz. Leben vollständig erholt. Kosten: ${cost} Gold.`
-    : "Du rastest am Lagerplatz. Ohne genug Gold hilft dir die Grauwacht trotzdem beim Heilen.");
+    : "Du rastest am Lagerplatz. Ohne genug Gold heilt dich die Grauwacht kostenlos.");
   save();
   render();
 }
@@ -1794,9 +1804,10 @@ function repairSlot(slot) {
 
 function riskFor(enemy, stats = totalStats()) {
   const expectedDamage = stats.damage * (1 + (stats.critChance || 0) * ((stats.critDamage || 1.5) - 1));
-  const score = expectedDamage * 2.1 + stats.defense * 1.6 + state.hp * 0.42;
-  const danger = enemy.hp * 0.42 + enemy.damage[1] * 3.1 + enemy.defense * 2;
-  return score >= danger ? "Machbar" : score >= danger * 0.78 ? "Riskant" : "Tödlich";
+  const survivalHp = Math.max(state.hp, stats.maxHp * 0.72);
+  const score = expectedDamage * 2.25 + stats.defense * 1.75 + survivalHp * 0.45;
+  const danger = enemy.hp * 0.38 + enemy.damage[1] * 2.85 + enemy.defense * 1.85;
+  return score >= danger * 0.92 ? "Machbar" : score >= danger * 0.7 ? "Riskant" : "Tödlich";
 }
 
 function restCost() {
