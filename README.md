@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.47
+Alpha v0.8.48
 
 ## Was Bereits Spielbar Ist
 
@@ -45,6 +45,7 @@ Alpha v0.8.47
 - Gegner-Risiko nutzt eine Kampfschätzung mit Schaden, Leben, Crits, Fähigkeiten, Effekten und Haltbarkeit
 - Bestiarium mit Gegnerwerten, Fähigkeiten, Drops, Materialien und entdecktem Loot
 - Bestiarium registriert Loot erst nach aktiver Auswahl und zeigt Items nur als Neu oder Bekannt
+- Bestiarium zeigt den Ausrüstungsfortschritt wieder als Balken, ohne störende Zahlenstatistik
 - Render-Optimierungen für flüssigere Schmied-, Quest-, Loot- und Bestiarium-Ansichten
 - Loot-Pools pro Gegner sind begrenzt, damit das Bestiarium übersichtlich bleibt
 - Ausrüstungsslots: Waffe, zweite Hand, Brustpanzer, Hose, Stiefel, Halskette und Ring

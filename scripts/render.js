@@ -891,6 +891,7 @@ function renderBestiaryList() {
         <strong>${escapeHtml(enemy.name)}</strong>
         <p>Level ${enemy.level}${enemy.boss ? " · Boss" : enemy.elite ? " · Elite" : ""} · ${enemy.hp} Leben</p>
         <p>Loot-Status: ${completion.found ? "Bekannt" : "Unbekannt"}</p>
+        <div class="completion-bar" aria-label="Entdeckter Ausrüstungsfortschritt"><span style="width:${completion.percent}%"></span></div>
       </button>`;
     }).join("")}
   </div>`;
