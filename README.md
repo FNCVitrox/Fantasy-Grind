@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.45
+Alpha v0.8.46
 
 ## Was Bereits Spielbar Ist
 
@@ -57,6 +57,7 @@ Alpha v0.8.45
 - Ein gemeinsamer Spielstand-Button bündelt Herunterladen und Laden von Sicherungen
 - Speichern, Laden, Import und Export sind als eigenes Save-System-Modul getrennt
 - Spielstand-Fenster zeigt Level, Gold, Ruhm, Gebiet, letzte Sicherung und Dateiname
+- Save-Dateien enthalten einen klaren Metadata-Block mit Zeitstempel, Fortschritt, Gebiet und Ausrüstung
 - Schönerer Sicherungs-Dateiname mit Level, Ruhm, Gebiet und Datum
 - Dezente Sicherungs-Tipps nach Level-Up, sehr gutem Loot oder Dungeon-Boss
 - Größere Protokoll-Vorschau ohne Neustart-Button im Kampfverlauf

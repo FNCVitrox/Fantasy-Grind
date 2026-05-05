@@ -44,8 +44,32 @@ function exportSaveData() {
     game: "Fantasy Grind",
     version: saveExportVersion,
     exportedAt,
+    metadata: buildSaveMetadata(exportedAt),
     save: state,
   }, null, 2);
+}
+
+function buildSaveMetadata(exportedAt = state.lastSaveExportAt || new Date().toISOString()) {
+  const zone = zones[selectedZone]?.name || "Grauwacht";
+  const needed = state.level >= 20 ? "Max" : xpForLevel(state.level);
+  return {
+    exportedAt,
+    character: classCatalog[state.characterClass]?.name || "Krieger",
+    build: buildCatalog[state.build]?.name || "Bruiser",
+    level: state.level,
+    xp: state.level >= 20 ? "Max" : `${state.xp}/${needed}`,
+    gold: state.gold,
+    renown: state.renown,
+    deaths: state.deaths || 0,
+    zone,
+    equipment: equipmentSlots.reduce((result, slot) => {
+      result[slot] = getItem(state.equipment[slot])?.name || "Leer";
+      return result;
+    }, {}),
+    activeQuests: (state.activeQuests || []).length,
+    inventoryItems: (state.inventory || []).length,
+    pendingLoot: (state.pendingLoot || []).length,
+  };
 }
 
 function saveFileName() {
@@ -55,7 +79,7 @@ function saveFileName() {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  const stamp = new Date().toISOString().slice(0, 10);
+  const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 16);
   return `Fantasy-Grind-Level-${state.level}-Ruhm-${state.renown}-${safeZone}-${stamp}.json`;
 }
 

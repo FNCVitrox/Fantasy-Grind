@@ -465,14 +465,32 @@ function formatSaveDate(value) {
 }
 
 function renderSaveSummary() {
-  const zone = zones[selectedZone]?.name || "Unbekannt";
+  const metadata = buildSaveMetadata(state.lastSaveExportAt || new Date().toISOString());
+  const activeQuestText = metadata.activeQuests === 1 ? "1 aktiv" : `${metadata.activeQuests} aktiv`;
+  const pendingLootText = metadata.pendingLoot ? `${metadata.pendingLoot} offen` : "keine";
   $("saveSummary").innerHTML = `
-    <div><span>Level</span><strong>${state.level}</strong></div>
-    <div><span>Gold</span><strong>${state.gold}</strong></div>
-    <div><span>Ruhm</span><strong>${state.renown}</strong></div>
-    <div><span>Gebiet</span><strong>${escapeHtml(zone)}</strong></div>
-    <div><span>Letzte Sicherung</span><strong>${escapeHtml(formatSaveDate(state.lastSaveExportAt))}</strong></div>
-    <div><span>Dateiname</span><strong>${escapeHtml(saveFileName())}</strong></div>
+    <section class="save-profile">
+      <div>
+        <span>Charakter</span>
+        <strong>${escapeHtml(metadata.character)} · ${escapeHtml(metadata.build)}</strong>
+      </div>
+      <div>
+        <span>Fortschritt</span>
+        <strong>Level ${metadata.level} · XP ${escapeHtml(metadata.xp)}</strong>
+      </div>
+    </section>
+    <section class="save-grid">
+      <div><span>Gold</span><strong>${metadata.gold}</strong></div>
+      <div><span>Ruhm</span><strong>${metadata.renown}</strong></div>
+      <div><span>Gebiet</span><strong>${escapeHtml(metadata.zone)}</strong></div>
+      <div><span>Quests</span><strong>${activeQuestText}</strong></div>
+      <div><span>Rucksack</span><strong>${metadata.inventoryItems} Items</strong></div>
+      <div><span>Beute</span><strong>${pendingLootText}</strong></div>
+    </section>
+    <section class="save-file-card">
+      <div><span>Letzte Sicherung</span><strong>${escapeHtml(formatSaveDate(state.lastSaveExportAt))}</strong></div>
+      <div><span>Dateiname</span><strong>${escapeHtml(saveFileName())}</strong></div>
+    </section>
   `;
 }
 
