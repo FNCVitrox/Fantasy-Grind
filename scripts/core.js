@@ -1900,7 +1900,7 @@ function riskFor(enemy, stats = totalStats()) {
   if (estimate.survivalRatio >= 2.05) return "Einfach";
   if (estimate.survivalRatio >= 1.18) return "Machbar";
   if (estimate.survivalRatio >= 0.72) return "Riskant";
-  return "Sehr gefährlich";
+  return "Tödlich";
 }
 
 function combatRiskEstimate(enemy, stats = totalStats()) {

@@ -265,7 +265,7 @@ function renderEnemies(stats = totalStats()) {
 
 function riskLabelClass(risk) {
   if (risk === "Einfach" || risk === "Machbar") return "ok";
-  if (risk === "Sehr gefährlich") return "deadly";
+  if (risk === "Tödlich") return "deadly";
   return "";
 }
 

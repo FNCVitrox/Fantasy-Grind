@@ -645,14 +645,14 @@ button.drop-row span:last-child {
 .risk {
   border-radius: 99px;
   padding: 4px 8px;
-  background: #2d1c1c;
-  color: #f0a196;
+  background: #3a2411;
+  color: #ffb36b;
   font-size: 12px;
 }
 
 .risk.ok {
-  background: #0f3340;
-  color: #9be7ff;
+  background: #103626;
+  color: #7cf0a8;
 }
 
 .risk.deadly {

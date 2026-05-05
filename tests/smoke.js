@@ -103,7 +103,7 @@ assert(!vm.runInContext("renderLootCompare(compareLoot({ damage: 0, defense: 5, 
 assert(vm.runInContext("renderLootCompare(compareLoot({ damage: 0, defense: 0, critChance: 0, critDamage: 0 }, { damage: 0, defense: 0, critChance: 0, critDamage: 0 })).includes('Keine Stat-')", context), "loot comparison should show a neutral fallback when nothing changes");
 assert.strictEqual(vm.runInContext("combatLogEntry({ round: 2, actor: 'hero', damage: 7, text: 'Du triffst für 7.' }).text", context), "R2 · Du: Du triffst für 7.");
 assert.strictEqual(vm.runInContext("combatLogEntry({ round: 3, actor: 'enemy', damage: 0, text: 'Kampfrausch heilt 12 Leben.' }).type", context), "heal");
-assert(vm.runInContext("['Einfach', 'Machbar', 'Riskant', 'Sehr gefährlich'].includes(riskFor(enemies.wolf))", context), "risk labels should use the clear risk scale");
+assert(vm.runInContext("['Einfach', 'Machbar', 'Riskant', 'Tödlich'].includes(riskFor(enemies.wolf))", context), "risk labels should use the clear risk scale");
 assert(vm.runInContext("state = defaultState(); state.hp = 10; riskFor(enemies.boar) !== 'Einfach'", context), "low current health should make risk stricter");
 assert(vm.runInContext("combatRiskEstimate(enemies.wolf).playerDamagePerRound > 0 && combatRiskEstimate(enemies.wolf).enemyDamagePerRound > 0", context), "risk estimate should expose positive combat pressure values");
 assert(vm.runInContext("Object.values(enemies).every((enemy) => (enemy.abilities || []).every((id) => enemyAbilityCatalog[id]) && (enemy.passives || []).every((id) => enemyAbilityCatalog[id]))", context), "enemy abilities and passives need catalog entries");
