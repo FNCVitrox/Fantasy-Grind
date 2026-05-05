@@ -29,7 +29,7 @@
   if (isModalOpen("repairModal")) renderRepairModal();
   if (isModalOpen("equipmentModal")) renderEquipmentDetails();
   if (isModalOpen("playerStatsModal")) renderPlayerStatsDetails(stats);
-  renderSelectedEnemy(stats);
+  renderSelectedEnemy();
   renderCombatLog();
   renderLog();
   setText("fightBtn", isFighting ? (skipCombat ? "Überspringe..." : "Skip") : "Kampf starten");
@@ -298,23 +298,14 @@ function enemyRarity(enemy) {
   return "common";
 }
 
-function renderSelectedEnemy(stats = totalStats()) {
+function renderSelectedEnemy() {
   const signature = `${selectedEnemy}|${state.hp}|${state.maxHp}|${state.level}|${state.build}|${zoneEncounterSignature(selectedZone)}|${equipmentSignature()}`;
   if (renderCache.selectedEnemy === signature) return;
   renderCache.selectedEnemy = signature;
   const enemy = getPreparedEncounter(selectedEnemy);
   resetBattleStageState();
   setText("selectedEnemyName", enemy.name);
-  const eliteNote = enemy.eliteVariant
-    ? "Bereit: Elite-Version."
-    : enemy.boss
-      ? "Dungeon-Boss mit besseren Belohnungen."
-    : enemy.elite
-      ? "Elite-Gegner."
-      : `Nach jedem Kampf ${Math.round(eliteEncounterChance * 100)}% Chance auf Elite-Version.`;
-  const abilityCount = enemyAbilityEntries(enemy).length;
-  const enemyCrit = enemyCriticalStats(enemy);
-  setText("selectedEnemyMeta", `Level ${enemy.level}, ${enemy.hp} Leben, ${abilityCount} Fähigkeiten, Crit ${formatPercent(enemyCrit.critChance)} / ${formatPercent(enemyCrit.critDamage)}, Risiko: ${riskFor(enemy, stats)}. ${eliteNote}`);
+  setText("selectedEnemyMeta", "");
   setBattleEnemyVisual(enemy);
   $("battleText").textContent = `${enemy.name} wartet.`;
 }

@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.40
+Alpha v0.8.41
 
 ## Was Bereits Spielbar Ist
 
@@ -21,6 +21,7 @@ Alpha v0.8.40
 - Automatische Kämpfe mit Animationen, Schadenstexten, HP-Balken und Kampfprotokoll
 - Eigenes Kampf-Log nach jedem Kampf mit Schaden, Heilung und Effekten beider Seiten
 - Kompakter Log-Button im Kampffeld öffnet das Kampf-Log ohne zusätzlichen Platz in der UI
+- Kompakte Kampfstart-Leiste zeigt nur noch das gewählte Ziel und vermeidet doppelte Bestiarium-Infos
 - Kampffeld setzt Sieg- und Todeszustände nach dem Kampf sauber zurück
 - Kampfende zeigt jetzt eine klare Sieg- oder Niederlage-Anzeige vor dem nächsten Ablauf
 - Beim Überspringen bleibt die Sieg- oder Niederlage-Anzeige ebenfalls kurz sichtbar

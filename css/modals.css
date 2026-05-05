@@ -1497,12 +1497,37 @@ button.drop-row span:last-child {
   justify-content: space-between;
   align-items: center;
   gap: 14px;
-  padding: 10px 12px;
+  min-height: 74px;
+  padding: 12px 14px;
   background:
-    linear-gradient(90deg, rgba(52, 213, 216, 0.08), transparent 38%),
+    linear-gradient(90deg, rgba(242, 193, 78, 0.1), transparent 24%),
+    linear-gradient(90deg, rgba(52, 213, 216, 0.08), transparent 46%),
     #0c1723;
   border: 1px solid var(--line);
   border-radius: 8px;
+}
+
+.target-command {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding-left: 22px;
+}
+
+.target-sigil {
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 10px;
+  height: 38px;
+  border-radius: 99px;
+  background: linear-gradient(180deg, var(--gold), rgba(52, 213, 216, 0.72));
+  box-shadow: 0 0 18px rgba(242, 193, 78, 0.24);
+}
+
+.target-command h2 {
+  margin: 0;
+  font-size: 24px;
 }
 
 .combat-log-window {
