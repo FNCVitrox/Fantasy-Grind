@@ -919,6 +919,83 @@ h2 {
   color: var(--muted);
 }
 
+.smith-mastery {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(216, 174, 75, 0.48);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(216, 174, 75, 0.12), transparent 42%),
+    #08131f;
+}
+
+.smith-mastery-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.smith-mastery-head div {
+  display: grid;
+  gap: 2px;
+}
+
+.smith-mastery-head span {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.smith-mastery-head strong {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.smith-mastery-head b {
+  color: var(--gold);
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.smith-mastery p,
+.smith-mastery-reward {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.smith-mastery-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 6px;
+}
+
+.smith-mastery-list span {
+  min-height: 34px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0c1723;
+  color: var(--muted);
+}
+
+.smith-mastery-list .done {
+  border-color: rgba(63, 214, 163, 0.46);
+  color: var(--green);
+}
+
+.smith-mastery-list .missing {
+  border-color: rgba(255, 203, 74, 0.22);
+}
+
+.smith-mastery button {
+  min-height: 42px;
+  font-weight: 900;
+}
+
 .smith-avatar {
   width: 76px;
   height: 76px;

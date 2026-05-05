@@ -195,6 +195,16 @@ $("smithGrid").addEventListener("click", (event) => {
 });
 
 $("smithHome").addEventListener("click", (event) => {
+  const startMission = event.target.closest("[data-start-smith-mission]");
+  if (startMission) {
+    startSmithMasteryMission(startMission.dataset.startSmithMission);
+    return;
+  }
+  const completeMission = event.target.closest("[data-complete-smith-mission]");
+  if (completeMission) {
+    completeSmithMasteryMission(completeMission.dataset.completeSmithMission);
+    return;
+  }
   if (event.target.closest("[data-open-repair]")) {
     renderRepairModal();
     openModal("repairModal");

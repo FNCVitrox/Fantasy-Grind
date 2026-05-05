@@ -12,7 +12,7 @@ const scripts = ["scripts/data.js", "scripts/save-system.js", "scripts/core.js",
 assert(!/[Ã�]/.test(html), "index.html still contains likely mojibake characters");
 
 const htmlIds = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
-const dynamicIds = new Set(["bestiaryDetail", "bestiarySearch", "smithGreeting", "smithGreetingText", "battleResult"]);
+const dynamicIds = new Set(["bestiaryDetail", "bestiarySearch", "smithGreeting", "smithGreetingText", "smithMastery", "battleResult"]);
 const referencedIds = new Set(
   [...scripts.join("\n").matchAll(/\$\("([^"]+)"\)/g)].map((match) => match[1]),
 );
@@ -120,6 +120,11 @@ assert(vm.runInContext("normalizeMaterials({ hide: 2, fang: 3, iron: 4 }).leathe
 assert.strictEqual(vm.runInContext("questRenownReward({ rarity: 'epic' })", context), 2);
 assert.strictEqual(vm.runInContext("state.renown = 20; renownUpgradeDiscount()", context), 0.08);
 assert(vm.runInContext("state.renown = 15; renownSalvageBonusChance({ quality: 'rare' }) > 0", context));
+assert.strictEqual(vm.runInContext("state = defaultState(); currentSmithMasteryLimit()", context), 5);
+assert.strictEqual(vm.runInContext("state = defaultState(); upgradeCost({ slot: 'weapon', quality: 'common', upgrade: 0 }).gold", context), 28);
+assert.strictEqual(vm.runInContext("state = defaultState(); upgradeCost({ slot: 'weapon', quality: 'common', upgrade: 5 }).materials.emberCore", context), 1);
+assert(vm.runInContext("state = defaultState(); state.gold = 999; state.materials.scrap = 99; canUpgrade({ slot: 'weapon', quality: 'common', upgrade: 4 }) && !canUpgrade({ slot: 'weapon', quality: 'common', upgrade: 5 })", context), "starter smith mastery should allow +5 but block higher upgrades");
+assert(vm.runInContext("state = defaultState(); state.level = 6; state.renown = 5; state.customItems.trainingSword = { ...items.trainingSword, id: 'trainingSword', name: 'Übungsschwert +5', upgrade: 5 }; canStartSmithMasteryMission(smithMasteryRanks[0])", context), "first smith mastery mission should unlock from level, renown and a maxed equipped item");
 assert.strictEqual(vm.runInContext("previewUpgradedItem({ slot: 'weapon', quality: 'common', name: 'Testklinge', damage: 10, defense: 0, upgrade: 0 }).damage", context), 12);
 assert(vm.runInContext("previewUpgradedItem({ slot: 'weapon', quality: 'common', name: 'Testklinge', damage: 10, defense: 0, critChance: 0.01, upgrade: 0 }).critChance > 0.01", context));
 assert.strictEqual(vm.runInContext("previewUpgradedItem({ slot: 'weapon', quality: 'common', name: 'Testklinge', damage: 10, defense: 0, critChance: 0.01, upgrade: 0 }).critChance", context), 0.02);

@@ -497,99 +497,99 @@ function renderSaveSummary() {
 const smithDialogues = {
   0: [
     {
-      title: "Der Schmied hebt den Hammer.",
-      text: "Bring mir Beute, Eisen und Splitter. Ich mache daraus etwas, das dich am Leben hält.",
+      title: "Borin Glutbart hebt den Hammer.",
+      text: "Bring mir Erz, nicht Ausreden.",
     },
     {
-      title: "Der Schmied mustert deine Ausrüstung.",
-      text: "Neu hier? Dann hör gut zu: rostige Klingen gewinnen keine langen Kämpfe.",
+      title: "Borin mustert deine Ausrüstung.",
+      text: "Eine Klinge lügt nicht. Entweder sie hält, oder sie bricht.",
     },
     {
-      title: "Der Schmied nickt knapp.",
+      title: "Der Zwergenmeister nickt knapp.",
       text: "Gold auf den Tisch, Material daneben. Freundliche Worte härten keinen Stahl.",
     },
   ],
   5: [
     {
-      title: "Der Schmied erkennt dich wieder.",
+      title: "Borin erkennt dich wieder.",
       text: "Du kommst öfter zurück, als ich erwartet habe. Gut. Deine Sachen halten schon mehr aus.",
     },
     {
-      title: "Der Schmied legt neues Werkzeug bereit.",
+      title: "Borin legt neues Werkzeug bereit.",
       text: "Für dich nehme ich mir einen sauberen Amboss. Reparaturen werden etwas günstiger.",
     },
     {
-      title: "Der Schmied schmunzelt trocken.",
+      title: "Borin schmunzelt trocken.",
       text: "Du überlebst. Das ist in Grauwacht fast schon ein Empfehlungsschreiben.",
     },
   ],
   10: [
     {
-      title: "Der Schmied grüßt dich mit einem Nicken.",
+      title: "Borin grüßt dich mit einem Nicken.",
       text: "Die Quest-Tafel hört auf deinen Namen. Mehr Aufträge bedeuten mehr Gründe für bessere Klingen.",
     },
     {
-      title: "Der Schmied zeigt auf die Wandtafel.",
+      title: "Borin zeigt auf die Wandtafel.",
       text: "Ich habe den Boten gesagt, sie sollen dir mehr Arbeit bringen. Du kannst sie wohl gebrauchen.",
     },
     {
-      title: "Der Schmied prüft eine Klinge im Licht.",
+      title: "Der Zwergenmeister prüft eine Klinge im Licht.",
       text: "Verlässliche Hände bekommen verlässliche Aufträge. Such dir aus, was dich nicht umbringt.",
     },
   ],
   15: [
     {
-      title: "Der Schmied nimmt sich Zeit.",
+      title: "Borin nimmt sich Zeit.",
       text: "Aus Schrott kann man mehr holen, wenn man weiß, wo man schneiden muss. Ich helfe dir beim Zerlegen.",
     },
     {
-      title: "Der Schmied sortiert deine Beute.",
+      title: "Borin sortiert deine Beute.",
       text: "Wegwerfen wäre Verschwendung. Gib mir die Teile, ich finde noch brauchbares Material darin.",
     },
     {
-      title: "Der Schmied klopft gegen den Amboss.",
+      title: "Borin klopft gegen den Amboss.",
       text: "Du bringst mir gute Arbeit. Dafür hole ich dir aus altem Zeug ein bisschen mehr heraus.",
     },
   ],
   20: [
     {
-      title: "Der Schmied wirkt zufrieden.",
+      title: "Borin wirkt zufrieden.",
       text: "Jetzt reden wir nicht mehr über Flickwerk. Deine Upgrades bekommen meinen besten Preis.",
     },
     {
-      title: "Der Schmied legt die schweren Werkzeuge bereit.",
+      title: "Borin legt die schweren Werkzeuge bereit.",
       text: "Held der Grauwacht, hm? Dann soll deine Ausrüstung auch danach klingen.",
     },
     {
-      title: "Der Schmied lächelt fast.",
+      title: "Borin lächelt fast.",
       text: "Ich feilsche nicht gern. Bei dir mache ich eine Ausnahme. Mach etwas Sinnvolles daraus.",
     },
   ],
   30: [
     {
-      title: "Der Schmied senkt die Stimme.",
+      title: "Borin senkt die Stimme.",
       text: "Elite-Gegner tragen bessere Spuren am Stahl. Bring sie mir, ich erkenne den Wert.",
     },
     {
-      title: "Der Schmied prüft deine Narben.",
+      title: "Borin prüft deine Narben.",
       text: "Wer Eliten jagt, braucht mehr als Mut. Deine Beute behandle ich entsprechend.",
     },
     {
-      title: "Der Schmied arbeitet ohne aufzusehen.",
+      title: "Borin arbeitet ohne aufzusehen.",
       text: "Du suchst die gefährlichen Kämpfe. Gut. Gefährliche Beute lässt sich besser verwerten.",
     },
   ],
   40: [
     {
-      title: "Der Schmied spricht wie zu einem Verbündeten.",
+      title: "Borin spricht wie zu einem Verbündeten.",
       text: "Meister der Grauwacht. Für dich halte ich die seltenen Aufträge nicht mehr unter der Theke.",
     },
     {
-      title: "Der Schmied reicht dir das beste Werkzeug.",
+      title: "Borin reicht dir das beste Werkzeug.",
       text: "Du hast dir Vertrauen verdient. Wenn etwas Besonderes auftaucht, erfährst du es zuerst.",
     },
     {
-      title: "Der Schmied schlägt den Hammer langsam an.",
+      title: "Borin schlägt den Hammer langsam an.",
       text: "Jetzt bauen wir nicht nur Ausrüstung. Jetzt bauen wir Legenden, Stück für Stück.",
     },
   ],
@@ -643,6 +643,7 @@ function renderSmithHome() {
       <div class="smith-avatar" aria-hidden="true"></div>
       <div id="smithGreetingText"></div>
     </div>
+    <div class="smith-mastery" id="smithMastery"></div>
     <div class="smith-choice-grid">
       <button type="button" data-smith-view="upgrade">
         <strong>Verbessern</strong>
@@ -661,6 +662,67 @@ function renderSmithHome() {
     $("smithHome").dataset.rendered = "true";
   }
   renderSmithGreeting();
+  renderSmithMasteryPanel();
+}
+
+function renderSmithMasteryPanel() {
+  const limit = currentSmithMasteryLimit();
+  const active = smithMasteryRankById(state.smithMastery.active);
+  const next = active || nextSmithMasteryRank();
+  if (!next) {
+    $("smithMastery").innerHTML = `
+      <div class="smith-mastery-head">
+        <div>
+          <span>Schmied-Meisterschaft</span>
+          <strong>Meisterzeichen der Grauwacht</strong>
+        </div>
+        <b>Limit +${limit}</b>
+      </div>
+      <p>Deine Ausrüstung trägt Borins stärkste Bindung. Mehr gibt der Amboss nicht her.</p>
+    `;
+    return;
+  }
+
+  const isActive = state.smithMastery.active === next.id;
+  const requirements = smithMasteryRequirementStatus(next);
+  const objectives = smithMasteryObjectiveStatus(next);
+  const readyToStart = canStartSmithMasteryMission(next);
+  const readyToComplete = canCompleteSmithMasteryMission(next);
+  const intro = {
+    emberAnvil: "Dein Stahl ist an seiner Grenze. Mein Amboss braucht heißeres Feuer.",
+    pressureSteel: "Du hast deinen Stahl weit gebracht. Jetzt braucht er Druck, nicht nur Feuer.",
+    watchMastermark: "Jetzt reden wir nicht mehr über bessere Arbeit. Jetzt reden wir über einen Schwur im Metall.",
+  }[next.id];
+  $("smithMastery").innerHTML = `
+    <div class="smith-mastery-head">
+      <div>
+        <span>Schmied-Meisterschaft</span>
+        <strong>${escapeHtml(isActive ? `Aktiv: ${next.name}` : `Nächster Auftrag: ${next.name}`)}</strong>
+      </div>
+      <b>Limit +${limit} → +${next.limit}</b>
+    </div>
+    <p>"${escapeHtml(intro)}"</p>
+    ${isActive ? renderSmithMasteryObjectives(objectives) : renderSmithMasteryRequirements(requirements)}
+    <div class="smith-mastery-reward">${escapeHtml(next.reward)}</div>
+    ${isActive
+      ? `<button type="button" data-complete-smith-mission="${next.id}" ${readyToComplete ? "" : "disabled"}>Meisterauftrag abschließen</button>`
+      : `<button type="button" data-start-smith-mission="${next.id}" ${readyToStart ? "" : "disabled"}>Meisterauftrag beginnen</button>`}
+  `;
+}
+
+function renderSmithMasteryRequirements(requirements) {
+  return `<div class="smith-mastery-list">
+    ${requirements.map((entry) => `<span class="${entry.done ? "done" : "missing"}">${entry.done ? "✓" : "•"} ${escapeHtml(entry.label)}</span>`).join("")}
+  </div>`;
+}
+
+function renderSmithMasteryObjectives(objectives) {
+  return `<div class="smith-mastery-list">
+    ${objectives.map((entry) => {
+      const done = entry.value >= entry.needed;
+      return `<span class="${done ? "done" : "missing"}">${done ? "✓" : "•"} ${escapeHtml(entry.label)} ${Math.min(entry.value, entry.needed)}/${entry.needed}</span>`;
+    }).join("")}
+  </div>`;
 }
 
 function renderSmithUpgrade() {
@@ -686,25 +748,30 @@ function renderSmithUpgrade() {
       .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)
       .join(" · ");
     const discountText = renownUpgradeDiscount() ? " · Ruhm-Rabatt aktiv" : "";
-    const maxed = (item.upgrade || 0) >= 4;
+    const limit = currentSmithMasteryLimit();
+    const maxed = (item.upgrade || 0) >= limit;
+    const hardMaxed = (item.upgrade || 0) >= 20;
     const disabled = maxed || !canPayUpgradeCost(cost);
+    const costHtml = maxed
+      ? `<p>${hardMaxed ? "Meisterarbeit vollendet" : "Meisterauftrag nötig"}</p><p class="smith-material-cost">${hardMaxed ? "Borin kann dieses Stück nicht weiter binden." : "Schalte das nächste globale Limit frei."}</p>`
+      : `<p>${cost.gold} Gold${discountText}</p><p class="smith-material-cost">${materialText}</p>`;
     return `<div class="smith-card rarity-card rarity-${quality}">
       <div class="smith-item-main">
         <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
-        <p>+${item.upgrade || 0}/4${statText ? ` · ${statText}` : ""} · Haltbarkeit ${itemDurability(itemId)}%</p>
+        <p>+${item.upgrade || 0}/${limit}${statText ? ` · ${statText}` : ""} · Haltbarkeit ${itemDurability(itemId)}%</p>
       </div>
       <button class="upgrade-preview" type="button" data-upgrade="${slot}" ${disabled ? "disabled" : ""}>
-        <span>${maxed ? "Maximal" : "Nach Upgrade"}</span>
-        <strong>+${preview.upgrade}/4${previewStatText ? ` · ${previewStatText}` : ""}</strong>
+        <span>${hardMaxed ? "Meisterarbeit vollendet" : maxed ? "Limit erreicht" : "Nach Upgrade"}</span>
+        <strong>${maxed ? `+${item.upgrade || 0}/${limit}` : `+${preview.upgrade}/${limit}${previewStatText ? ` · ${previewStatText}` : ""}`}</strong>
         <em>${[
-          damageGain ? `Dmg <b>+${damageGain}</b>` : "",
-          defenseGain ? `Def <b>+${defenseGain}</b>` : "",
-          critGainText,
+          maxed && !hardMaxed ? "Meisterauftrag bei Borin nötig" : "",
+          damageGain && !maxed ? `Dmg <b>+${damageGain}</b>` : "",
+          defenseGain && !maxed ? `Def <b>+${defenseGain}</b>` : "",
+          !maxed ? critGainText : "",
         ].filter(Boolean).join(" · ")}</em>
       </button>
       <div class="smith-cost-block">
-        <p>${cost.gold} Gold${discountText}</p>
-        <p class="smith-material-cost">${materialText}</p>
+        ${costHtml}
       </div>
     </div>`;
   }).join("");

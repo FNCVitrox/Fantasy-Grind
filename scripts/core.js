@@ -41,6 +41,64 @@ const renownRanks = [
   { threshold: 30, name: "Eliteschrecken", benefit: "Elite-Gegner und Zerlegen geben bessere Chancen" },
   { threshold: 40, name: "Meister der Grauwacht", benefit: "Seltene Aufträge erscheinen öfter" },
 ];
+const smithMasteryRanks = [
+  {
+    id: "emberAnvil",
+    name: "Glut des Ambosses",
+    limit: 10,
+    requirement: { level: 6, renown: 5, rank: 5 },
+    progress: { eliteKills: 2 },
+    materials: { scrap: 8, emberCore: 3, shard: 2 },
+    gold: 250,
+    rewardRenown: 2,
+    reward: "Ausrüstung kann bis +10 verbessert werden. Reparaturen dauerhaft -5%.",
+  },
+  {
+    id: "pressureSteel",
+    name: "Stahl unter Druck",
+    limit: 15,
+    requirement: { level: 12, renown: 15, rank: 15, bossKills: 1 },
+    progress: { eliteKills: 3, bossKills: 1 },
+    materials: { oathSteel: 5, shadowResin: 4, shard: 6 },
+    gold: 750,
+    rewardRenown: 4,
+    reward: "Ausrüstung kann bis +15 verbessert werden. Upgrade-Goldkosten dauerhaft -5%.",
+  },
+  {
+    id: "watchMastermark",
+    name: "Meisterzeichen der Grauwacht",
+    limit: 20,
+    requirement: { level: 20, renown: 35, rank: 30, bossKills: 2 },
+    progress: { eliteKills: 5, bossKills: 2 },
+    materials: { crownAsh: 6, oathSteel: 8, graveSeal: 5 },
+    gold: 1800,
+    sacrificeQuality: "epic",
+    rewardRenown: 8,
+    reward: "Ausrüstung kann bis +20 verbessert werden. Reparaturen dauerhaft zusätzlich -10%.",
+  },
+];
+const upgradeCostSteps = {
+  1: { gold: 28, basis: 3 },
+  2: { gold: 42, basis: 4 },
+  3: { gold: 58, basis: 5 },
+  4: { gold: 76, basis: 6 },
+  5: { gold: 96, basis: 7 },
+  6: { gold: 125, basis: 6, special: 1 },
+  7: { gold: 155, basis: 7, special: 1 },
+  8: { gold: 190, basis: 8, special: 2 },
+  9: { gold: 230, basis: 9, special: 2 },
+  10: { gold: 275, basis: 10, special: 3 },
+  11: { gold: 330, basis: 8, rare: 2 },
+  12: { gold: 390, basis: 9, rare: 2 },
+  13: { gold: 455, basis: 10, rare: 3 },
+  14: { gold: 525, basis: 11, rare: 3 },
+  15: { gold: 600, basis: 12, rare: 4 },
+  16: { gold: 700, basis: 10, boss: 2 },
+  17: { gold: 815, basis: 11, boss: 2 },
+  18: { gold: 945, basis: 12, boss: 3 },
+  19: { gold: 1090, basis: 13, boss: 3 },
+  20: { gold: 1250, basis: 15, boss: 4 },
+};
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function defaultState() {
   return {
@@ -78,6 +136,8 @@ function defaultState() {
     activeQuests: [],
     completedQuests: [],
     rareQuests: {},
+    combatStats: { eliteKills: 0, bossKills: 0 },
+    smithMastery: { limit: 5, active: null, completed: [], progress: {} },
     winsSinceQuestRefresh: 0,
     lastSaveExportAt: "",
     combatLog: [],
@@ -128,6 +188,47 @@ function normalizeMaterials(materials = {}) {
   });
 
   return { ...emptyMaterials(), ...next };
+}
+
+function normalizeCombatStats(stats = {}) {
+  return {
+    eliteKills: Math.max(0, Math.floor(stats.eliteKills || 0)),
+    bossKills: Math.max(0, Math.floor(stats.bossKills || 0)),
+  };
+}
+
+function normalizeSmithMastery(mastery = {}) {
+  const savedLimit = Math.max(5, Math.min(20, mastery.limit || 5));
+  const completed = Array.isArray(mastery.completed)
+    ? mastery.completed.filter((id) => smithMasteryRanks.some((rank) => rank.id === id))
+    : [];
+  smithMasteryRanks
+    .filter((rank) => rank.limit <= savedLimit && savedLimit > 5)
+    .forEach((rank) => completed.push(rank.id));
+  const highestCompletedLimit = smithMasteryRanks
+    .filter((rank) => completed.includes(rank.id))
+    .reduce((limit, rank) => Math.max(limit, rank.limit), 5);
+  const limit = Math.max(savedLimit, highestCompletedLimit);
+  const active = smithMasteryRanks.some((rank) => rank.id === mastery.active) && !completed.includes(mastery.active)
+    ? mastery.active
+    : null;
+  return {
+    limit: Math.max(limit, highestCompletedLimit),
+    active,
+    completed: [...new Set(completed)],
+    progress: normalizeSmithMasteryProgress(mastery.progress),
+  };
+}
+
+function normalizeSmithMasteryProgress(progress = {}) {
+  return smithMasteryRanks.reduce((result, rank) => {
+    const source = progress[rank.id] || {};
+    result[rank.id] = {
+      eliteKills: Math.max(0, Math.floor(source.eliteKills || 0)),
+      bossKills: Math.max(0, Math.floor(source.bossKills || 0)),
+    };
+    return result;
+  }, {});
 }
 
 function rebalanceSavedItem(item) {
@@ -545,11 +646,20 @@ function questRenownReward(quest) {
 }
 
 function renownRepairDiscount() {
-  return state.renown >= 5 ? 0.1 : 0;
+  return Math.min(0.35, (state.renown >= 5 ? 0.1 : 0) + smithMasteryRepairDiscount());
 }
 
 function renownUpgradeDiscount() {
-  return state.renown >= 20 ? 0.08 : 0;
+  return Math.min(0.25, (state.renown >= 20 ? 0.08 : 0) + smithMasteryUpgradeDiscount());
+}
+
+function smithMasteryRepairDiscount() {
+  const completed = state.smithMastery?.completed || [];
+  return (completed.includes("emberAnvil") ? 0.05 : 0) + (completed.includes("watchMastermark") ? 0.1 : 0);
+}
+
+function smithMasteryUpgradeDiscount() {
+  return state.smithMastery?.completed?.includes("pressureSteel") ? 0.05 : 0;
 }
 
 function renownQuestBoardSize() {
@@ -1080,6 +1190,7 @@ async function fight() {
       gainXp(enemy.xp);
       grantMaterials(enemy.baseId || selectedEnemy, enemy.eliteVariant);
       createLootChoices(enemy, enemy.baseId || selectedEnemy);
+      recordSmithMasteryBattle(enemy);
       updateQuestProgress(enemy);
       maybeGrantBattleRenown(enemy);
       maybeDropRareQuest(enemy);
@@ -1644,23 +1755,151 @@ function grantMaterials(enemyId, eliteBonus = false) {
   }
 }
 
-function upgradeCost(item) {
-  const level = item.upgrade || 0;
-  const qualityMultiplier = { common: 1, rare: 2.4, epic: 4, legendary: 7 }[item.quality];
-  const slotMaterial = primaryMaterialForSlot(item.slot);
-  const setMaterial = setMaterialForItem(item);
-  const materials = {
-    [slotMaterial]: Math.ceil(3 + level * qualityMultiplier),
-    leather: ["chest", "pants", "boots"].includes(item.slot) ? 2 + level : 0,
-    shard: ["epic", "legendary"].includes(item.quality) ? 1 + level : 0,
-  };
-  if (item.set) {
-    materials[setMaterial] = (materials[setMaterial] || 0) + 1 + Math.floor(level / 2);
+function currentSmithMasteryLimit() {
+  return Math.max(5, Math.min(20, state.smithMastery?.limit || 5));
+}
+
+function nextSmithMasteryRank() {
+  return smithMasteryRanks.find((rank) => !state.smithMastery.completed.includes(rank.id)) || null;
+}
+
+function smithMasteryRankById(id) {
+  return smithMasteryRanks.find((rank) => rank.id === id);
+}
+
+function hasEquippedItemAtLimit(limit = currentSmithMasteryLimit()) {
+  return equipmentSlots.some((slot) => {
+    const item = getItem(state.equipment[slot]);
+    return item && (item.upgrade || 0) >= limit;
+  });
+}
+
+function smithRankMeets(threshold = 0) {
+  return renownRank().threshold >= threshold;
+}
+
+function smithMasteryRequirementStatus(rank) {
+  const requirement = rank.requirement || {};
+  return [
+    { label: `Level ${requirement.level}`, done: state.level >= (requirement.level || 1) },
+    { label: `${requirement.renown} Ruhm`, done: state.renown >= (requirement.renown || 0) },
+    { label: "ein ausgerüstetes Item am aktuellen Limit", done: hasEquippedItemAtLimit() },
+    { label: "Schmied vertraut dir genug", done: smithRankMeets(requirement.rank || 0) },
+    ...(requirement.bossKills ? [{ label: `${requirement.bossKills} Dungeon-Boss besiegt`, done: (state.combatStats?.bossKills || 0) >= requirement.bossKills }] : []),
+  ];
+}
+
+function canStartSmithMasteryMission(rank) {
+  return Boolean(rank)
+    && !state.smithMastery.active
+    && !state.smithMastery.completed.includes(rank.id)
+    && smithMasteryRequirementStatus(rank).every((entry) => entry.done);
+}
+
+function startSmithMasteryMission(rankId) {
+  const rank = smithMasteryRankById(rankId);
+  if (!canStartSmithMasteryMission(rank)) {
+    log("Borin Glutbart schüttelt den Kopf. Für diesen Meisterauftrag fehlt dir noch etwas.", "bad");
+    return;
   }
-  const baseGold = Math.floor(28 * qualityMultiplier * Math.pow(level + 1, 1.18));
+  state.smithMastery.active = rank.id;
+  state.smithMastery.progress[rank.id] = { eliteKills: 0, bossKills: 0 };
+  log(`Meisterauftrag begonnen: ${rank.name}.`, "drop");
+  save();
+  render();
+}
+
+function smithMasteryProgress(rank) {
+  return state.smithMastery.progress[rank.id] || { eliteKills: 0, bossKills: 0 };
+}
+
+function smithMasteryObjectiveStatus(rank) {
+  const progress = smithMasteryProgress(rank);
+  const objectives = [];
+  if (rank.progress?.eliteKills) {
+    objectives.push({ label: "Elite-Gegner", value: progress.eliteKills || 0, needed: rank.progress.eliteKills });
+  }
+  if (rank.progress?.bossKills) {
+    objectives.push({ label: "Dungeon-Bosse", value: progress.bossKills || 0, needed: rank.progress.bossKills });
+  }
+  Object.entries(rank.materials || {}).forEach(([id, needed]) => {
+    objectives.push({ label: labelFor(materialLabel, id), value: state.materials[id] || 0, needed });
+  });
+  objectives.push({ label: "Gold", value: state.gold, needed: rank.gold });
+  if (rank.sacrificeQuality) {
+    objectives.push({ label: "Episches Opferstück", value: findSmithSacrificeItemId() ? 1 : 0, needed: 1 });
+  }
+  return objectives;
+}
+
+function canCompleteSmithMasteryMission(rank) {
+  return Boolean(rank)
+    && state.smithMastery.active === rank.id
+    && smithMasteryObjectiveStatus(rank).every((entry) => entry.value >= entry.needed);
+}
+
+function completeSmithMasteryMission(rankId) {
+  const rank = smithMasteryRankById(rankId);
+  if (!canCompleteSmithMasteryMission(rank)) {
+    log("Borin Glutbart knurrt: Bring mir Erz, nicht Ausreden.", "bad");
+    return;
+  }
+
+  state.gold -= rank.gold;
+  Object.entries(rank.materials || {}).forEach(([id, amount]) => {
+    state.materials[id] -= amount;
+  });
+  if (rank.sacrificeQuality) removeSmithSacrificeItem();
+  state.smithMastery.limit = rank.limit;
+  state.smithMastery.active = null;
+  state.smithMastery.completed = [...new Set([...state.smithMastery.completed, rank.id])];
+  state.renown += rank.rewardRenown;
+  log(`Borin Glutbart vollendet "${rank.name}". Neues Upgrade-Limit: +${rank.limit}. +${rank.rewardRenown} Ruhm.`, "drop");
+  remindSaveBackup("Borin hat seine Werkstatt erweitert.");
+  save();
+  render();
+}
+
+function recordSmithMasteryBattle(enemy) {
+  state.combatStats = normalizeCombatStats(state.combatStats);
+  if (enemy.elite) state.combatStats.eliteKills += 1;
+  if (enemy.boss) state.combatStats.bossKills += 1;
+
+  const active = smithMasteryRankById(state.smithMastery?.active);
+  if (!active) return;
+  const progress = smithMasteryProgress(active);
+  if (enemy.elite) progress.eliteKills = Math.min(active.progress?.eliteKills || 0, (progress.eliteKills || 0) + 1);
+  if (enemy.boss) progress.bossKills = Math.min(active.progress?.bossKills || 0, (progress.bossKills || 0) + 1);
+  state.smithMastery.progress[active.id] = progress;
+}
+
+function findSmithSacrificeItemId() {
+  return state.inventory.find((itemId) => {
+    const item = getItem(itemId);
+    return item && ["epic", "legendary"].includes(item.quality);
+  });
+}
+
+function removeSmithSacrificeItem() {
+  const itemId = findSmithSacrificeItemId();
+  if (!itemId) return;
+  state.inventory = state.inventory.filter((id) => id !== itemId);
+  delete state.customItems[itemId];
+  delete state.itemDurability[itemId];
+}
+
+function upgradeCost(item) {
+  const targetLevel = (item.upgrade || 0) + 1;
+  const step = upgradeCostSteps[targetLevel];
+  if (!step) return { gold: 0, materials: {} };
+  const slotMaterial = primaryMaterialForSlot(item.slot);
+  const materials = { [slotMaterial]: step.basis };
+  if (step.special) materials[specialUpgradeMaterialForItem(item)] = step.special;
+  if (step.rare) materials[rareUpgradeMaterialForItem(item)] = step.rare;
+  if (step.boss) materials[bossUpgradeMaterialForItem(item)] = step.boss;
   return {
-    gold: Math.max(1, Math.floor(baseGold * (1 - renownUpgradeDiscount()))),
-    materials,
+    gold: Math.max(1, Math.floor(step.gold * (1 - renownUpgradeDiscount()))),
+    materials: Object.fromEntries(Object.entries(materials).filter(([, amount]) => amount > 0)),
   };
 }
 
@@ -1693,6 +1932,24 @@ function primaryMaterialForSlot(slot) {
   return "moonDust";
 }
 
+function specialUpgradeMaterialForItem(item) {
+  if (["weapon", "offhand"].includes(item.slot)) return "emberCore";
+  if (["chest", "pants", "boots"].includes(item.slot)) return "sinew";
+  return "shard";
+}
+
+function rareUpgradeMaterialForItem(item) {
+  if (["weapon", "offhand"].includes(item.slot)) return "oathSteel";
+  if (["chest", "pants", "boots"].includes(item.slot)) return item.set === "crypt" ? "shadowResin" : "wolfFang";
+  return "graveSeal";
+}
+
+function bossUpgradeMaterialForItem(item) {
+  if (item.set === "crypt") return "graveSeal";
+  if (item.set === "iron") return "oathMark";
+  return "crownAsh";
+}
+
 function setMaterialForItem(item) {
   return {
     wolf: "wolfFang",
@@ -1703,7 +1960,7 @@ function setMaterialForItem(item) {
 }
 
 function canUpgrade(item) {
-  if ((item.upgrade || 0) >= 4) return false;
+  if ((item.upgrade || 0) >= currentSmithMasteryLimit()) return false;
   const cost = upgradeCost(item);
   return canPayUpgradeCost(cost);
 }
@@ -1733,8 +1990,12 @@ function previewUpgradedItem(item) {
 
 function upgradeEquipped(slot) {
   const item = getItem(state.equipment[slot]);
+  if (item && (item.upgrade || 0) >= currentSmithMasteryLimit()) {
+    log("Borin Glutbart knurrt: Der Stahl braucht erst bessere Bindung.", "bad");
+    return;
+  }
   if (!item || !canUpgrade(item)) {
-    log("Dem Schmied fehlen noch Materialien oder Gold.", "bad");
+    log("Borin Glutbart knurrt: Dem Amboss fehlen noch Material oder Gold.", "bad");
     return;
   }
   const cost = upgradeCost(item);

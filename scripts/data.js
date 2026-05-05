@@ -691,8 +691,8 @@ const materialLabel = {
 
 const materialDrops = {
   wolf: [{ id: "leather", min: 1, max: 2 }, { id: "sinew", min: 0, max: 1 }],
-  bandit: [{ id: "scrap", min: 1, max: 2 }, { id: "cloth", min: 0, max: 1 }],
-  boar: [{ id: "leather", min: 2, max: 3 }, { id: "sinew", min: 1, max: 2 }],
+  bandit: [{ id: "scrap", min: 1, max: 2 }, { id: "cloth", min: 0, max: 1 }, { id: "shard", min: 0, max: 1 }],
+  boar: [{ id: "leather", min: 2, max: 3 }, { id: "sinew", min: 1, max: 2 }, { id: "emberCore", min: 0, max: 1 }],
   oldKnight: [{ id: "scrap", min: 2, max: 4 }, { id: "oathSteel", min: 0, max: 1 }],
   roadThief: [{ id: "scrap", min: 2, max: 3 }, { id: "cloth", min: 1, max: 2 }],
   ironHound: [{ id: "scrap", min: 2, max: 4 }, { id: "sinew", min: 1, max: 2 }],

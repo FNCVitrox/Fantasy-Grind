@@ -61,6 +61,7 @@ function buildSaveMetadata(exportedAt = state.lastSaveExportAt || new Date().toI
     gold: state.gold,
     renown: state.renown,
     deaths: state.deaths || 0,
+    smithLimit: currentSmithMasteryLimit(),
     zone,
     equipment: equipmentSlots.reduce((result, slot) => {
       result[slot] = getItem(state.equipment[slot])?.name || "Leer";
@@ -120,6 +121,8 @@ function parseSavedState(raw) {
     migrateEquipmentSlots(loaded);
     loaded.itemDurability = loaded.itemDurability || {};
     loaded.combatLog = Array.isArray(loaded.combatLog) ? loaded.combatLog : [];
+    loaded.combatStats = normalizeCombatStats(loaded.combatStats);
+    loaded.smithMastery = normalizeSmithMastery(loaded.smithMastery);
     loaded.materials = normalizeMaterials(loaded.materials);
     loaded.ui = normalizeSavedUi(loaded.ui);
     applyBalanceMigration(loaded);
