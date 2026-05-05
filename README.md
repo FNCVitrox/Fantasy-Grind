@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.33
+Alpha v0.8.34
 
 ## Was Bereits Spielbar Ist
 
@@ -40,6 +40,7 @@ Alpha v0.8.33
 - Ausrüstungsslots: Waffe, zweite Hand, Brustpanzer, Hose, Stiefel, Halskette und Ring
 - Item-Qualitäten: Gewöhnlich, Selten, Episch und Legendär
 - Item-Stats folgen klaren Slot-Rollen: Waffen offensiv, Rüstung defensiv, Schmuck offensiv/spezial
+- Crit-Werte nutzen saubere 1%-Schritte statt Mini-Kommawerte
 - Set-Boni für besondere Ausrüstung
 - Inventar mit Ausrüsten, Verkaufen und Zerlegen
 - Schmied zum Verbessern, Zerlegen und Reparieren von Ausrüstung

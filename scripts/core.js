@@ -160,9 +160,13 @@ function normalizeItemStatsForSlot(item) {
   const rules = itemSlotRules(item.slot);
   item.damage = rules.damage ? Math.max(0, Math.floor(item.damage || 0)) : 0;
   item.defense = rules.defense ? Math.max(0, Math.floor(item.defense || 0)) : 0;
-  item.critChance = rules.critChance ? Math.max(0, item.critChance || 0) : 0;
-  item.critDamage = rules.critDamage ? Math.max(0, item.critDamage || 0) : 0;
+  item.critChance = rules.critChance ? normalizePercentStep(item.critChance || 0) : 0;
+  item.critDamage = rules.critDamage ? normalizePercentStep(item.critDamage || 0) : 0;
   return item;
+}
+
+function normalizePercentStep(value) {
+  return Math.max(0, Math.round((value || 0) * 100) / 100);
 }
 
 function itemStatBounds(slot, quality, upgrade = 0) {
@@ -1603,7 +1607,7 @@ function upgradeCost(item) {
 
 function rollCritStats(slot, quality) {
   const qualityIndex = { common: 0, rare: 1, epic: 2, legendary: 3 }[quality] || 0;
-  const chanceBase = [0.005, 0.015, 0.03, 0.05][qualityIndex];
+  const chanceBase = [0.01, 0.02, 0.04, 0.06][qualityIndex];
   const damageBase = [0.02, 0.06, 0.12, 0.2][qualityIndex];
   const [chanceScale, damageScale] = {
     weapon: [1.25, 1],
@@ -1614,8 +1618,8 @@ function rollCritStats(slot, quality) {
     necklace: [0.55, 1.15],
     ring: [1, 0.75],
   }[slot] || [0, 0];
-  const critChance = Math.round((chanceBase * chanceScale + random(0, qualityIndex) * 0.002) * 1000) / 1000;
-  const critDamage = Math.round((damageBase * damageScale + random(0, qualityIndex) * 0.01) * 100) / 100;
+  const critChance = normalizePercentStep(chanceBase * chanceScale + random(0, qualityIndex) * 0.01);
+  const critDamage = normalizePercentStep(damageBase * damageScale + random(0, qualityIndex) * 0.01);
   return {
     ...(critChance > 0 ? { critChance } : {}),
     ...(critDamage > 0 ? { critDamage } : {}),
@@ -1661,7 +1665,7 @@ function previewUpgradedItem(item) {
   if (item.slot === "necklace" || item.slot === "ring") {
     upgraded.damage += 1;
   }
-  if (item.slot === "weapon" || item.slot === "ring") upgraded.critChance = (upgraded.critChance || 0) + 0.005;
+  if (item.slot === "weapon" || item.slot === "ring") upgraded.critChance = (upgraded.critChance || 0) + 0.01;
   if (item.slot === "weapon" || item.slot === "necklace") upgraded.critDamage = (upgraded.critDamage || 0) + 0.03;
   normalizeItemStatsForSlot(upgraded);
   upgraded.name = item.name.replace(/\s\+\d+$/, "") + ` +${upgraded.upgrade}`;
