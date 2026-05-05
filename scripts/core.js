@@ -79,7 +79,6 @@ function defaultState() {
     rareQuests: {},
     winsSinceQuestRefresh: 0,
     lastSaveExportAt: "",
-    combatLog: [],
     ui: {
       selectedZone: "meadow",
       selectedEnemy: "wolf",
@@ -476,34 +475,6 @@ function log(message, type = "") {
   renderLog(type);
 }
 
-function resetCombatLog() {
-  state.combatLog = [];
-  renderCombatLog();
-}
-
-function setCombatLog(enemy, events, playerWon, rounds) {
-  const result = playerWon ? "Sieg" : "Niederlage";
-  const entries = [
-    { type: playerWon ? "good" : "bad", text: `${result} gegen ${enemy.name} nach ${rounds} Runden.` },
-    ...events.map(combatLogEntry),
-  ];
-  state.combatLog = entries.slice(0, 80);
-  renderCombatLog();
-}
-
-function combatLogEntry(event) {
-  const actor = event.actor === "hero" ? "Du" : "Gegner";
-  let type = event.actor === "hero" ? "hero" : "enemy";
-  if (event.critical) type = "critical";
-  if (event.damage === 0) type = "effect";
-  if (/\bheilt\b|\bheilen\b|\bheilung\b/i.test(event.text || "")) type = "heal";
-  const roundText = event.round ? `R${event.round}` : "R?";
-  return {
-    type,
-    text: `${roundText} · ${actor}: ${event.text || "Aktion ausgeführt."}`,
-  };
-}
-
 function remindSaveBackup(reason) {
   if (state.log.slice(0, 8).some((entry) => entry.startsWith("Tipp: Spielstand herunterladen"))) return;
   log(`Tipp: Spielstand herunterladen - ${reason}`, "drop");
@@ -846,7 +817,6 @@ async function fight() {
     return;
   }
 
-  resetCombatLog();
   let playerHp = state.hp;
   let enemyHp = enemy.hp;
   const stats = totalStats();
@@ -872,7 +842,6 @@ async function fight() {
         .map((dot) => ({ ...dot, turns: dot.turns - 1 }))
         .filter((dot) => dot.turns > 0);
       events.push({
-        round: rounds,
         actor: "enemy",
         damage: dotDamage,
         enemyHp: Math.max(0, enemyHp),
@@ -888,14 +857,14 @@ async function fight() {
         playerHp += heal;
         fightState.sustainUsed = true;
         fightState.nextEnemyDamageMultiplier = Math.min(fightState.nextEnemyDamageMultiplier, 0.85);
-        events.push({ round: rounds, actor: "hero", abilityId: "lastStand", damage: 0, text: `Letztes Aufbäumen heilt ${heal} Leben und festigt die Deckung.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
+        events.push({ actor: "hero", abilityId: "lastStand", damage: 0, text: `Letztes Aufbäumen heilt ${heal} Leben und festigt die Deckung.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
       }
     } else if (!fightState.sustainUsed && hasBuildAbility("battleRush") && playerHp <= stats.maxHp * 0.45) {
       const heal = Math.min(stats.maxHp - playerHp, Math.max(8, Math.floor(stats.maxHp * 0.18)));
       if (heal > 0) {
         playerHp += heal;
         fightState.sustainUsed = true;
-        events.push({ round: rounds, actor: "hero", abilityId: "battleRush", damage: 0, text: `Kampfrausch heilt ${heal} Leben.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
+        events.push({ actor: "hero", abilityId: "battleRush", damage: 0, text: `Kampfrausch heilt ${heal} Leben.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
       }
     }
 
@@ -937,7 +906,6 @@ async function fight() {
       playerHit = abilityDamage(playerHit, enemyDefense.multiplier);
       if (enemyDefense.defensive.length) {
         events.push({
-          round: rounds,
           actor: "enemy",
           damage: 0,
           enemyHp: Math.max(0, enemyHp),
@@ -953,7 +921,6 @@ async function fight() {
 
     enemyHp -= playerHit;
     events.push({
-      round: rounds,
       actor: "hero",
       abilityId: playerAbilityId,
       damage: playerHit,
@@ -968,7 +935,6 @@ async function fight() {
       const flurryHit = flurryCrit.damage;
       enemyHp -= flurryHit;
       events.push({
-        round: rounds,
         actor: "hero",
         abilityId: "bladeFlurry",
         damage: flurryHit,
@@ -1019,7 +985,6 @@ async function fight() {
     }
     if (enemyCrit.critical) enemyText = criticalText(enemyText, enemyHit);
     events.push({
-      round: rounds,
       actor: "enemy",
       abilityId: shieldWall ? "shieldWall" : "",
       damage: enemyHit,
@@ -1041,7 +1006,6 @@ async function fight() {
       fightState.lastCounterRound = rounds;
       enemyHp -= counterHit;
       events.push({
-        round: rounds,
         actor: "hero",
         abilityId: "counterBlow",
         damage: counterHit,
@@ -1068,7 +1032,6 @@ async function fight() {
       playerMaxHp: stats.maxHp,
       enemyMaxHp: enemy.hp,
     });
-    setCombatLog(enemy, events, playerHp > 0, rounds);
 
     damageEquippedItems(enemy);
 

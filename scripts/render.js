@@ -30,7 +30,6 @@
   if (isModalOpen("equipmentModal")) renderEquipmentDetails();
   if (isModalOpen("playerStatsModal")) renderPlayerStatsDetails(stats);
   renderSelectedEnemy(stats);
-  renderCombatLog();
   renderLog();
   setText("fightBtn", isFighting ? (skipCombat ? "Überspringe..." : "Skip") : "Kampf starten");
   setDisabled("fightBtn", isFighting ? skipCombat : state.pendingLoot.length > 0);
@@ -1337,17 +1336,6 @@ function renderLog() {
     const type = entry.includes("Tod") ? "bad" : entry.includes("Seltener") || entry.includes("Quest") || entry.includes("ausgerüstet") ? "drop" : index === 0 ? "good" : "";
     return `<div class="${type}">${escapeHtml(entry)}</div>`;
   }).join("") || `<div>Noch keine Einträge.</div>`;
-}
-
-function renderCombatLog() {
-  const entries = Array.isArray(state.combatLog) ? state.combatLog : [];
-  const signature = entries.map((entry) => `${entry.type}:${entry.text}`).join("\n") || "empty";
-  if (renderCache.combatLog === signature) return;
-  renderCache.combatLog = signature;
-  setText("combatLogSummary", entries.length ? `${entries.length} Einträge` : "Noch kein Kampf.");
-  $("combatLog").innerHTML = entries.length
-    ? entries.map((entry) => `<div class="combat-log-entry ${escapeToken(entry.type, ["hero", "enemy", "heal", "effect", "critical", "good", "bad"], "effect")}">${escapeHtml(entry.text)}</div>`).join("")
-    : `<div class="combat-log-empty">Starte einen Kampf, dann erscheinen hier Schaden, Heilung und Effekte.</div>`;
 }
 
 function renderRepairModal() {
