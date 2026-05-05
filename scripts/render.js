@@ -266,9 +266,11 @@ function renderEnemies(stats = totalStats()) {
 
 function renderQuestNotice() {
   const notice = $("questNotice");
+  const button = $("openQuestBoardBtn");
   const count = (state.unseenQuests || []).filter((id) => state.questBoard.includes(id)).length;
+  if (button) button.classList.toggle("has-new-quests", count > 0);
   if (!notice) return;
-  notice.hidden = count === 0;
+  notice.hidden = true;
   setText("questNotice", count);
 }
 

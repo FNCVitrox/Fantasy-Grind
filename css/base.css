@@ -190,6 +190,23 @@ h2 {
   transform: translateY(0);
 }
 
+.book-button.has-new-quests {
+  border-color: rgba(242, 193, 78, 0.95);
+  background:
+    linear-gradient(90deg, rgba(242, 193, 78, 0.28), transparent 64%),
+    #10201f;
+  box-shadow:
+    0 0 0 1px rgba(242, 193, 78, 0.18),
+    0 0 24px rgba(242, 193, 78, 0.32),
+    inset 0 0 0 1px rgba(242, 193, 78, 0.16);
+  animation: quest-button-glow 1.8s ease-in-out infinite;
+}
+
+.book-button.has-new-quests::before {
+  background: linear-gradient(180deg, #f2c14e, #54f0c1);
+  opacity: 1;
+}
+
 .book-button span {
   position: relative;
   z-index: 1;
@@ -222,6 +239,21 @@ h2 {
   font-style: normal;
   font-weight: 900;
   box-shadow: 0 0 18px rgba(242, 193, 78, 0.35);
+}
+
+@keyframes quest-button-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(242, 193, 78, 0.18),
+      0 0 18px rgba(242, 193, 78, 0.22),
+      inset 0 0 0 1px rgba(242, 193, 78, 0.14);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(242, 193, 78, 0.32),
+      0 0 34px rgba(242, 193, 78, 0.46),
+      inset 0 0 0 1px rgba(242, 193, 78, 0.22);
+  }
 }
 
 .camp-button::before {

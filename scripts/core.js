@@ -1270,6 +1270,7 @@ function refreshQuestBoard(force) {
       const quest = getQuestById(id);
       return quest && (isQuestActive(id) || questRelevantForCurrentZone(quest));
     });
+  const hadVisibleQuest = state.questBoard.length > 0;
 
   if (!force && state.winsSinceQuestRefresh < 4) return;
 
@@ -1284,7 +1285,7 @@ function refreshQuestBoard(force) {
     const index = random(0, candidates.length - 1);
     const [questId] = candidates.splice(index, 1);
     state.questBoard.push(questId);
-    if (!force) markQuestAsNew(questId);
+    if (!force || !hadVisibleQuest) markQuestAsNew(questId);
   }
 
   state.winsSinceQuestRefresh = 0;
