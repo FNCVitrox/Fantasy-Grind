@@ -1537,6 +1537,8 @@ button.drop-row span:last-child {
 .combat-log {
   display: grid;
   gap: 6px;
+  align-content: start;
+  grid-auto-rows: minmax(44px, auto);
   max-height: min(620px, calc(100vh - 190px));
   min-height: min(420px, calc(100vh - 240px));
   overflow: auto;
@@ -1545,6 +1547,9 @@ button.drop-row span:last-child {
 
 .combat-log-entry,
 .combat-log-empty {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   padding: 7px 9px;
   border: 1px solid rgba(67, 93, 116, 0.72);
   border-left-width: 4px;
