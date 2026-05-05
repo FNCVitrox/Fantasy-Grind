@@ -889,7 +889,7 @@ function renderBestiaryList() {
       const completion = lootCompletion(id);
       return `<button class="bestiary-card ${id === selectedBestiaryEnemy ? "active" : ""}" type="button" data-bestiary="${id}">
         <strong>${escapeHtml(enemy.name)}</strong>
-        <p>Loot: ${completion.found}/${completion.total} entdeckt</p>
+        <p>Sammlung: ${completion.found}/${completion.total} entdeckt</p>
         <div class="completion-bar" aria-label="Entdeckter Ausrüstungsfortschritt"><span style="width:${completion.percent}%"></span></div>
       </button>`;
     }).join("")}

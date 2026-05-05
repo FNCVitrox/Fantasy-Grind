@@ -156,6 +156,6 @@ assert(vm.runInContext("state = defaultState(); state.completedQuests = ['wolves
 assert(vm.runInContext("rareQuestDropChance(enemies.wolf) > 0 && rareQuestDropChance(enemies.ratguard) > rareQuestDropChance(enemies.wolf)", context), "rare quest drop chances should be explicit and scale by enemy type");
 assert(vm.runInContext("state = defaultState(); render = () => {}; createLootChoices(enemies.wolf, 'wolf'); const before = Object.keys(state.discoveredLoot.wolf || {}).length; chooseLoot(0, false); before === 0 && Object.keys(state.discoveredLoot.wolf || {}).length === 1", context), "bestiary loot should register only after a loot item is chosen");
 assert(vm.runInContext("state = defaultState(); renderBestiaryList().includes('completion-bar')", context), "bestiary cards should keep the visual loot progress bar");
-assert(vm.runInContext("state = defaultState(); const html = renderBestiaryList(); html.includes('Loot: 0/') && !html.includes('Level 1') && !html.includes('44 Leben')", context), "bestiary cards should show compact loot progress instead of level and hp");
+assert(vm.runInContext("state = defaultState(); const html = renderBestiaryList(); html.includes('Sammlung: 0/') && !html.includes('Level 1') && !html.includes('44 Leben')", context), "bestiary cards should show compact collection progress instead of level and hp");
 
 console.log("Smoke test passed");
