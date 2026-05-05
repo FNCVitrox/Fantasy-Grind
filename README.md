@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.34
+Alpha v0.8.35
 
 ## Was Bereits Spielbar Ist
 
@@ -21,6 +21,7 @@ Alpha v0.8.34
 - Automatische Kämpfe mit Animationen, Schadenstexten, HP-Balken und Kampfprotokoll
 - Kampffeld setzt Sieg- und Todeszustände nach dem Kampf sauber zurück
 - Kampfende zeigt jetzt eine klare Sieg- oder Niederlage-Anzeige vor dem nächsten Ablauf
+- Beim Überspringen bleibt die Sieg- oder Niederlage-Anzeige ebenfalls kurz sichtbar
 - Breitere und kompaktere Haupt-UI mit mehr Platz für Kampf, Ausrüstung und Gegnerauswahl
 - Ruhigere normale Menübuttons in der oberen Leiste
 - Gegner haben eigene Fähigkeiten

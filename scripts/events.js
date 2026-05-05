@@ -474,6 +474,10 @@ function waitCombat(ms) {
   });
 }
 
+function waitResult(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) {
   const stage = $("battleStage");
   const playerMaxHp = combatHealth.playerMaxHp || state.maxHp;
@@ -515,7 +519,7 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
   stage.className = "battle-stage";
   stage.classList.add(playerWon ? "victory" : "defeat");
   showBattleResult(playerWon, enemy.name);
-  await waitCombat(skipCombat ? 650 : 1350);
+  await waitResult(skipCombat ? 850 : 1350);
   hideBattleResult();
 }
 
