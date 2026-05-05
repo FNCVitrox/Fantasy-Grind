@@ -95,7 +95,6 @@ function lootChoicesSignature() {
       item.set || "",
       item.sourceType || "",
       item.discoveryNew ? 1 : 0,
-      item.discoveryCount || 0,
     ].join(":");
   }).join("|");
 }
@@ -103,9 +102,8 @@ function lootChoicesSignature() {
 function lootDiscoveryStatus(item) {
   if (item.sourceType === "quest") return { text: "Questbelohnung", className: "quest" };
   if (!item.sourceEnemy) return null;
-  if (item.discoveryNew === true) return { text: "Neu entdeckt", className: "new" };
-  const count = item.discoveryCount || 1;
-  return { text: `Schon gefunden · ${count}x`, className: "known" };
+  if (item.discoveryNew === true) return { text: "Neu", className: "new" };
+  return { text: "Bekannt", className: "known" };
 }
 
 function compareLoot(item, current) {

@@ -890,8 +890,7 @@ function renderBestiaryList() {
       return `<button class="bestiary-card ${id === selectedBestiaryEnemy ? "active" : ""}" type="button" data-bestiary="${id}">
         <strong>${escapeHtml(enemy.name)}</strong>
         <p>Level ${enemy.level}${enemy.boss ? " · Boss" : enemy.elite ? " · Elite" : ""} · ${enemy.hp} Leben</p>
-        <p>Loot entdeckt: ${completion.found}/${completion.total} · ${completion.percent}%</p>
-        <div class="completion-bar"><span style="width:${completion.percent}%"></span></div>
+        <p>Loot-Status: ${completion.found ? "Bekannt" : "Unbekannt"}</p>
       </button>`;
     }).join("")}
   </div>`;
@@ -921,7 +920,7 @@ function renderBestiaryDetail() {
         <h2>${escapeHtml(detailEnemy.name)}</h2>
       </div>
     </div>
-    <p>Level ${detailEnemy.level}${detailEnemy.boss ? " · Boss" : detailEnemy.elite ? " · Elite" : ""} · ${detailEnemy.hp} Leben · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} Schaden · ${detailEnemy.defense} Rüstung · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)}</p>
+    <p>Level ${detailEnemy.level}${detailEnemy.boss ? " · Boss" : detailEnemy.elite ? " · Elite" : ""} · ${detailEnemy.hp} Leben · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} Schaden · ${detailEnemy.defense} Rüstung · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)} · Quest-Schriftrolle ${formatChance(rareQuestDropChance(detailEnemy))}</p>
     ${renderEnemyAbilities(detailEnemy)}
     <h3>Sammlung</h3>
     <div class="bestiary-category-grid">
@@ -1014,14 +1013,15 @@ function renderAllBestiaryRows(enemyId, enemy, discovered = groupedBestiaryLoot(
   });
   const discoveredRows = discovered
     .slice()
-    .sort((a, b) => bestiaryRowRank(b) - bestiaryRowRank(a) || b.count - a.count || a.name.localeCompare(b.name))
+    .sort((a, b) => bestiaryRowRank(b) - bestiaryRowRank(a) || a.name.localeCompare(b.name))
     .map((item) => {
       const quality = itemQuality(item);
       const slot = itemSlot(item);
-      const key = bestiaryItemKey(item);
+        const key = bestiaryItemKey(item);
+      const status = (item.count || 0) <= 1 ? "Neu" : "Bekannt";
       return `<button class="drop-row discovered-drop bestiary-item-row item-hover-row" type="button" data-bestiary-item="${escapeAttr(key)}" data-tooltip-key="${cacheTooltipItem(item)}">
         <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)}</small></span>
-        <span>x${item.count}</span>
+        <span>${status}</span>
       </button>`;
     });
   const materialRows = (materialDrops[enemyId] || []).map((drop) => `<button class="drop-row bestiary-item-row material-hover-row" type="button" data-bestiary-material="${drop.id}" data-material-id="${drop.id}">
@@ -1082,7 +1082,7 @@ function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiar
     return `<div class="drop-row"><span>Noch nichts entdeckt</span><span>-</span></div>`;
   }
 
-  const sorted = filtered.sort((a, b) => bestiaryRowRank(b) - bestiaryRowRank(a) || b.count - a.count || a.name.localeCompare(b.name));
+  const sorted = filtered.sort((a, b) => bestiaryRowRank(b) - bestiaryRowRank(a) || a.name.localeCompare(b.name));
   const pageSize = 15;
   const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
   selectedBestiaryPage = Math.min(selectedBestiaryPage, pageCount - 1);
@@ -1092,9 +1092,10 @@ function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiar
     .map((item) => {
       const quality = itemQuality(item);
       const key = bestiaryItemKey(item);
+      const status = (item.count || 0) <= 1 ? "Neu" : "Bekannt";
       return `<button class="drop-row discovered-drop bestiary-item-row item-hover-row ${selectedBestiaryItemKey === key ? "active" : ""}" type="button" data-bestiary-item="${escapeAttr(key)}" data-tooltip-key="${cacheTooltipItem(item)}">
         <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>${labelFor(qualityLabel, quality)}</small></span>
-        <span>${labelFor(qualityLabel, quality)} · x${item.count}</span>
+        <span>${status}</span>
       </button>`;
     })
     .join("");

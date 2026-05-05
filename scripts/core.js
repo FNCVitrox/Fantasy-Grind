@@ -1232,7 +1232,7 @@ function updateQuestProgress(enemy) {
 }
 
 function maybeDropRareQuest(enemy) {
-  const chance = (enemy.elite ? 0.035 : enemy.tags.dungeon ? 0.022 : 0.012) + renownRareQuestBonus();
+  const chance = rareQuestDropChance(enemy);
   if (Math.random() > chance) return;
 
   const template = pickRareQuestTemplate(enemy);
@@ -1250,6 +1250,10 @@ function maybeDropRareQuest(enemy) {
   state.questBoard = uniqueQuestIds(state.questBoard).slice(0, state.renown >= 40 ? 6 : 5);
   markQuestAsNew(id);
   log(`Seltene Quest-Schriftrolle gefunden: ${quest.name}. Sie liegt auf der Quest-Tafel.`, "drop");
+}
+
+function rareQuestDropChance(enemy) {
+  return (enemy.elite ? 0.035 : enemy.tags.dungeon ? 0.022 : 0.012) + renownRareQuestBonus();
 }
 
 function pickRareQuestTemplate(enemy) {
@@ -1364,7 +1368,6 @@ function createLootChoices(enemy, enemyId) {
 
   markLootDiscovery(enemyId, choices);
   queueLootBatch(choices);
-  recordDiscoveredLoot(enemyId, choices);
 }
 
 function queueLootBatch(items) {
@@ -1542,8 +1545,12 @@ function rollQuality(enemy) {
 function chooseLoot(index, equipNow = false) {
   if (!state.pendingLoot[index]) return;
   const item = state.pendingLoot[index];
+  const sourceEnemy = item.sourceEnemy;
   if (!item.fixed) {
     state.customItems[item.id] = item;
+  }
+  if (sourceEnemy) {
+    recordDiscoveredLoot(sourceEnemy, [item]);
   }
   setItemDurability(item.id, item.durability ?? 100);
   if (equipNow) {
