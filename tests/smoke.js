@@ -164,5 +164,7 @@ assert(vm.runInContext("rareQuestDropChance(enemies.wolf) > 0 && rareQuestDropCh
 assert(vm.runInContext("state = defaultState(); render = () => {}; createLootChoices(enemies.wolf, 'wolf'); const before = Object.keys(state.discoveredLoot.wolf || {}).length; chooseLoot(0, false); before === 0 && Object.keys(state.discoveredLoot.wolf || {}).length === 1", context), "bestiary loot should register only after a loot item is chosen");
 assert(vm.runInContext("state = defaultState(); renderBestiaryList().includes('completion-bar')", context), "bestiary cards should keep the visual loot progress bar");
 assert(vm.runInContext("state = defaultState(); const html = renderBestiaryList(); html.includes('Sammlung: 0/') && !html.includes('Level 1') && !html.includes('44 Leben')", context), "bestiary cards should show compact collection progress instead of level and hp");
+assert(vm.runInContext("state = defaultState(); const rows = renderAllBestiaryRows('wolf', enemies.wolf); rows.includes('Unbekannt') && rows.includes('Chance') && rows.includes('Ring des Rudels')", context), "bestiary should reveal drop names and chances while locking undiscovered details");
+assert(!vm.runInContext("state = defaultState(); renderAllBestiaryRows('wolf', enemies.wolf).includes('1x')", context), "bestiary rows should not show found counts");
 
 console.log("Smoke test passed");

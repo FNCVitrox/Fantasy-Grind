@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.52
+Alpha v0.8.53
 
 ## Tests Starten
 
@@ -67,6 +67,8 @@ Wenn alles passt, steht am Ende `Smoke test passed` und `ALLE TESTS BESTANDEN`.
 - Bestiarium mit Gegnerwerten, Fähigkeiten, Drops, Materialien und entdecktem Loot
 - Bestiarium registriert Loot erst nach aktiver Auswahl und zeigt Items als Neu oder Bekannt
 - Bestiarium-Liste zeigt die Sammlung kompakt als Anzahl und Fortschrittsbalken
+- Bestiarium zeigt Drop-Chancen für feste und mögliche Ausrüstungsdrops
+- Unentdeckte Bestiarium-Items zeigen Basisdaten, Details werden erst nach Fund freigeschaltet
 - Render-Optimierungen für flüssigere Schmied-, Quest-, Loot- und Bestiarium-Ansichten
 - Loot-Pools pro Gegner sind begrenzt, damit das Bestiarium übersichtlich bleibt
 - Ausrüstungsslots: Waffe, zweite Hand, Brustpanzer, Hose, Stiefel, Halskette und Ring

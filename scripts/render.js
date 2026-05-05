@@ -1022,7 +1022,7 @@ function renderBestiaryDetail() {
 
 function bestiaryDetailSignature(enemyId, enemy, discovered) {
   const discoveredSignature = discovered
-    .map((item) => `${bestiaryItemKey(item)}:${item.count || 0}:${item.damage}:${item.defense}:${item.critChance || 0}:${item.critDamage || 0}:${item.set || ""}`)
+    .map((item) => `${bestiaryItemKey(item)}:${item.damage}:${item.defense}:${item.critChance || 0}:${item.critDamage || 0}:${item.set || ""}`)
     .join("|");
   return [
     enemyId,
@@ -1053,9 +1053,10 @@ function renderEnemyAbilities(enemy) {
 }
 
 function bestiaryCategories(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
-  const countGroup = (group) => discovered.filter((item) => bestiaryItemGroup(item) === group).length;
+  const generated = generatedBestiaryTemplates(enemy);
+  const countGroup = (group) => generated.filter((item) => bestiaryItemGroup(item) === group).length;
   return [
-    { id: "overview", label: "Übersicht", count: discovered.length + enemy.drops.length },
+    { id: "overview", label: "Übersicht", count: generated.length + enemy.drops.length },
     { id: "weapon", label: "Waffen", count: countGroup("weapon") },
     { id: "armor", label: "Rüstung", count: countGroup("armor") },
     { id: "jewelry", label: "Schmuck", count: countGroup("jewelry") },
@@ -1070,7 +1071,7 @@ function renderBestiaryCategoryRows(enemyId, enemy, discovered = groupedBestiary
     return renderBestiaryOverview(enemyId, enemy, discovered);
   }
   if (selectedBestiaryCategory === "fixed") {
-    return renderFixedDropRows(enemy);
+    return renderFixedDropRows(enemyId, enemy);
   }
   if (selectedBestiaryCategory === "materials") {
     return renderMaterialDropRows(enemyId);
@@ -1083,50 +1084,36 @@ function renderBestiaryOverview(enemyId, enemy, discovered = groupedBestiaryLoot
 }
 
 function renderAllBestiaryRows(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
-  const fixedRows = enemy.drops.map((drop) => {
-    const item = getItem(drop.id);
-    const quality = itemQuality(item);
-    const slot = itemSlot(item);
-    const key = `fixed:${drop.id}`;
-    return `<button class="drop-row bestiary-item-row item-hover-row" type="button" data-bestiary-item="${escapeAttr(key)}" data-tooltip-key="${cacheTooltipItem(item)}">
-      <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>Fester Drop · ${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)}</small></span>
-      <span>${formatChance(drop.chance)}</span>
-    </button>`;
-  });
-  const discoveredRows = discovered
-    .slice()
+  const fixedRows = enemy.drops.map((drop) => renderFixedDropRow(enemyId, drop));
+  const generatedRows = generatedBestiaryTemplates(enemy)
     .sort((a, b) => bestiaryRowRank(b) - bestiaryRowRank(a) || a.name.localeCompare(b.name))
-    .map((item) => {
-      const quality = itemQuality(item);
-      const slot = itemSlot(item);
-        const key = bestiaryItemKey(item);
-      const status = (item.count || 0) <= 1 ? "Neu" : "Bekannt";
-      return `<button class="drop-row discovered-drop bestiary-item-row item-hover-row" type="button" data-bestiary-item="${escapeAttr(key)}" data-tooltip-key="${cacheTooltipItem(item)}">
-        <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)}</small></span>
-        <span>${status}</span>
-      </button>`;
-    });
+    .map((template) => renderGeneratedDropRow(template, discovered));
   const materialRows = (materialDrops[enemyId] || []).map((drop) => `<button class="drop-row bestiary-item-row material-hover-row" type="button" data-bestiary-material="${drop.id}" data-material-id="${drop.id}">
     <span><b>${labelFor(materialLabel, drop.id)}</b><small>Material fürs Schmieden</small></span>
     <span>${drop.min}-${drop.max}</span>
   </button>`);
-  const rows = [...fixedRows, ...discoveredRows, ...materialRows];
+  const rows = [...fixedRows, ...generatedRows, ...materialRows];
   return rows.length ? rows.join("") : `<div class="drop-row"><span>Noch nichts entdeckt</span><span>-</span></div>`;
 }
 
-function renderFixedDropRows(enemy) {
+function renderFixedDropRows(enemyId, enemy) {
   return enemy.drops.length
-    ? enemy.drops.map((drop) => {
-        const item = getItem(drop.id);
-        const quality = itemQuality(item);
-        const slot = itemSlot(item);
-        const key = `fixed:${drop.id}`;
-        return `<button class="drop-row bestiary-item-row item-hover-row" type="button" data-bestiary-item="${escapeAttr(key)}" data-tooltip-key="${cacheTooltipItem(item)}">
-          <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)}</small></span>
-          <span>${formatChance(drop.chance)}</span>
-        </button>`;
-      }).join("")
+    ? enemy.drops.map((drop) => renderFixedDropRow(enemyId, drop)).join("")
     : `<div class="drop-row"><span>Keine festen seltenen Drops</span><span>-</span></div>`;
+}
+
+function renderFixedDropRow(enemyId, drop) {
+  const item = getItem(drop.id);
+  const quality = itemQuality(item);
+  const slot = itemSlot(item);
+  const key = `fixed:${drop.id}`;
+  const discovered = state.discoveredLoot[enemyId]?.[key];
+  const known = Boolean(discovered);
+  const status = known ? ((discovered.count || 0) <= 1 ? "Neu" : "Bekannt") : "Unbekannt";
+  return `<button class="drop-row bestiary-item-row ${known ? "item-hover-row" : "locked-drop"}" type="button" data-bestiary-item="${escapeAttr(key)}" ${known ? `data-tooltip-key="${cacheTooltipItem(item)}"` : ""}>
+    <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>Fester Drop · ${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · Chance ${formatChance(drop.chance)}</small></span>
+    <span>${status}</span>
+  </button>`;
 }
 
 function renderMaterialDropRows(enemyId) {
@@ -1155,10 +1142,11 @@ function lootCompletion(enemyId) {
 }
 
 function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiaryLoot(enemyId)) {
-  const filtered = filterBestiaryLoot(discovered.filter((item) => {
-    if (category === "sets") return item.set;
-    return bestiaryItemGroup(item) === category;
-  }));
+  const enemy = enemies[enemyId];
+  const possible = category === "sets"
+    ? discovered.filter((item) => item.set)
+    : generatedBestiaryTemplates(enemy).filter((item) => bestiaryItemGroup(item) === category);
+  const filtered = filterBestiaryLoot(possible);
 
   if (!filtered.length) {
     return `<div class="drop-row"><span>Noch nichts entdeckt</span><span>-</span></div>`;
@@ -1171,15 +1159,7 @@ function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiar
   const start = selectedBestiaryPage * pageSize;
   const visible = sorted.slice(start, start + pageSize);
   const rows = visible
-    .map((item) => {
-      const quality = itemQuality(item);
-      const key = bestiaryItemKey(item);
-      const status = (item.count || 0) <= 1 ? "Neu" : "Bekannt";
-      return `<button class="drop-row discovered-drop bestiary-item-row item-hover-row ${selectedBestiaryItemKey === key ? "active" : ""}" type="button" data-bestiary-item="${escapeAttr(key)}" data-tooltip-key="${cacheTooltipItem(item)}">
-        <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>${labelFor(qualityLabel, quality)}</small></span>
-        <span>${status}</span>
-      </button>`;
-    })
+    .map((template) => renderGeneratedDropRow(template, discovered))
     .join("");
 
   if (pageCount <= 1) return rows;
@@ -1190,6 +1170,67 @@ function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiar
       <span>Seite ${selectedBestiaryPage + 1}/${pageCount}</span>
       <button type="button" data-bestiary-page="next" ${selectedBestiaryPage >= pageCount - 1 ? "disabled" : ""}>Weiter</button>
     </div>`;
+}
+
+function renderGeneratedDropRow(template, discovered) {
+  const found = discovered.find((item) => bestiaryItemKey(item) === bestiaryItemKey(template));
+  const item = found || template;
+  const quality = itemQuality(item);
+  const slot = itemSlot(item);
+  const key = found ? bestiaryItemKey(found) : `unknown:${bestiaryItemKey(template)}`;
+  const status = found ? ((found.count || 0) <= 1 ? "Neu" : "Bekannt") : "Unbekannt";
+  const hoverClass = found ? "item-hover-row" : "locked-drop";
+  return `<button class="drop-row discovered-drop bestiary-item-row ${hoverClass} ${selectedBestiaryItemKey === key ? "active" : ""}" type="button" data-bestiary-item="${escapeAttr(key)}" ${found ? `data-tooltip-key="${cacheTooltipItem(found)}"` : ""}>
+    <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · Chance ${formatChance(template.dropChance)}</small></span>
+    <span>${status}</span>
+  </button>`;
+}
+
+function generatedBestiaryTemplates(enemy) {
+  const profile = enemy.generatedLoot || {};
+  const slots = (profile.slots || lootSlots).filter((slot) => lootSlots.includes(slot));
+  const qualities = (profile.qualities || Object.keys(qualityPower)).filter((quality) => qualityPower[quality]);
+  const allowedSlots = slots.length ? slots : lootSlots;
+  const allowedQualities = qualities.length ? qualities : Object.keys(qualityPower);
+  return allowedSlots.flatMap((slot) => allowedQualities.flatMap((quality) => {
+    const namePool = lootNames[slot][quality] || lootNames[slot].common;
+    return namePool.slice(0, 3).map((name) => ({
+      name,
+      slot,
+      quality,
+      damage: 0,
+      defense: 0,
+      critChance: 0,
+      critDamage: 0,
+      fixed: false,
+      unknown: true,
+      dropChance: generatedTemplateDropChance(enemy, slot, quality, namePool.slice(0, 3).length, allowedSlots, allowedQualities),
+    }));
+  }));
+}
+
+function generatedTemplateDropChance(enemy, slot, quality, nameCount, slots, qualities) {
+  const slotChance = 1 / Math.max(1, slots.length);
+  const qualityChance = effectiveQualityChance(enemy, quality, qualities);
+  const nameChance = 1 / Math.max(1, nameCount);
+  const singleChoice = slotChance * qualityChance * nameChance;
+  return 1 - Math.pow(1 - singleChoice, 3);
+}
+
+function effectiveQualityChance(enemy, quality, allowedQualities) {
+  return Object.entries(baseQualityChances(enemy)).reduce((sum, [rolled, chance]) => {
+    return nearestAllowedQuality(rolled, allowedQualities) === quality ? sum + chance : sum;
+  }, 0);
+}
+
+function baseQualityChances(enemy) {
+  const bonus = (enemy.elite ? 0.025 : 0) + (enemy.tags?.dungeon ? 0.015 : 0) + Math.min(0.025, enemy.level * 0.0013);
+  return {
+    common: Math.max(0, 0.82 - bonus),
+    rare: 0.145,
+    epic: 0.031,
+    legendary: Math.min(1, 0.004 + bonus),
+  };
 }
 
 function groupedBestiaryLoot(enemyId) {
@@ -1270,10 +1311,10 @@ function escapeHtml(value) {
 }
 
 function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
-  if (selectedBestiaryCategory === "overview") {
+  if (selectedBestiaryCategory === "overview" && !selectedBestiaryItemKey) {
     return `<aside class="bestiary-selected-detail">
       <strong>Details</strong>
-      <p>Wähle eine Kategorie und klicke ein Item an.</p>
+      <p>Klicke einen Fund an, um Details zu sehen.</p>
     </aside>`;
   }
 
@@ -1285,9 +1326,35 @@ function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLo
     </aside>`;
   }
 
-  const item = selectedBestiaryItemKey.startsWith("fixed:")
-    ? getItem(selectedBestiaryItemKey.replace("fixed:", ""))
-    : discovered.find((entry) => bestiaryItemKey(entry) === selectedBestiaryItemKey);
+  if (selectedBestiaryItemKey.startsWith("unknown:")) {
+    const key = selectedBestiaryItemKey.replace("unknown:", "");
+    const template = generatedBestiaryTemplates(enemy).find((entry) => bestiaryItemKey(entry) === key);
+    return `<aside class="bestiary-selected-detail">
+      <strong>Unbekannter Fund</strong>
+      ${template ? `<p>${escapeHtml(template.name)}</p><p>${labelFor(qualityLabel, template.quality)} · ${labelFor(slotLabel, template.slot)}</p><p>Drop-Chance: ${formatChance(template.dropChance)}</p><p>Stats werden nach dem ersten Fund freigeschaltet.</p>` : "<p>Klicke ein Item für Details.</p>"}
+    </aside>`;
+  }
+
+  if (selectedBestiaryItemKey.startsWith("fixed:")) {
+    const itemId = selectedBestiaryItemKey.replace("fixed:", "");
+    const drop = enemy.drops.find((entry) => entry.id === itemId);
+    const item = getItem(itemId);
+    const known = Boolean(state.discoveredLoot[enemyId]?.[selectedBestiaryItemKey]);
+    if (!known) {
+      return `<aside class="bestiary-selected-detail">
+        <strong>Fester Drop</strong>
+        <p>${escapeHtml(item.name)}</p>
+        <p>${labelFor(qualityLabel, itemQuality(item))} · ${labelFor(slotLabel, itemSlot(item))}</p>
+        <p>Drop-Chance: ${drop ? formatChance(drop.chance) : "Unbekannt"}</p>
+        <p>Stats werden nach dem ersten Fund freigeschaltet.</p>
+      </aside>`;
+    }
+    return `<aside class="bestiary-selected-detail">
+      ${renderItemTooltip({ ...item, fixed: true })}
+    </aside>`;
+  }
+
+  const item = discovered.find((entry) => bestiaryItemKey(entry) === selectedBestiaryItemKey);
 
   if (!item) {
     return `<aside class="bestiary-selected-detail">
@@ -1297,7 +1364,7 @@ function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLo
   }
 
   return `<aside class="bestiary-selected-detail">
-    ${renderItemTooltip({ ...item, fixed: selectedBestiaryItemKey.startsWith("fixed:") })}
+    ${renderItemTooltip(item)}
   </aside>`;
 }
 
