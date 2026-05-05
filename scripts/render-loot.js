@@ -58,21 +58,25 @@ function renderLootCard(item, index) {
 }
 
 function renderLootStatGrid(item) {
-  return `<div class="loot-stat-grid" aria-label="Itemwerte">
-    <span><em>Angriff</em><strong>${item.damage}</strong></span>
-    <span><em>Verteidigung</em><strong>${item.defense}</strong></span>
-    <span><em>Crit-Chance</em><strong>${formatPercent(item.critChance || 0)}</strong></span>
-    <span><em>Crit-Schaden</em><strong>${formatPercent(item.critDamage || 0)}</strong></span>
-  </div>`;
+  const stats = itemStatEntries(item, {
+    damage: "Angriff",
+    defense: "Verteidigung",
+    critChance: "Crit-Chance",
+    critDamage: "Crit-Schaden",
+  });
+  const content = stats.length
+    ? stats.map((stat) => `<span><em>${stat.label}</em><strong>${stat.value}</strong></span>`).join("")
+    : `<span><em>Werte</em><strong>Keine</strong></span>`;
+  return `<div class="loot-stat-grid" aria-label="Itemwerte">${content}</div>`;
 }
 
 function renderLootCompare(compare) {
-  return `<div class="loot-compare">
-    <span class="${compare.damageClass}">${compare.damageText}</span>
-    <span class="${compare.defenseClass}">${compare.defenseText}</span>
-    <span class="${compare.critChanceClass}">${compare.critChanceText}</span>
-    <span class="${compare.critDamageClass}">${compare.critDamageText}</span>
-  </div>`;
+  return `<div class="loot-compare">${renderCompareSpans(compare)}</div>`;
+}
+
+function renderCompareSpans(compare, limit = 0) {
+  const entries = limit ? compare.entries.slice(0, limit) : compare.entries;
+  return entries.map((entry) => `<span class="${entry.className}">${entry.text}</span>`).join("");
 }
 
 function lootChoicesSignature() {
@@ -111,6 +115,15 @@ function compareLoot(item, current) {
   const defenseDiff = item.defense - current.defense;
   const critChanceDiff = (item.critChance || 0) - (current.critChance || 0);
   const critDamageDiff = (item.critDamage || 0) - (current.critDamage || 0);
+  const entries = [
+    compareEntry("Angriff", damageDiff, ""),
+    compareEntry("Verteidigung", defenseDiff, ""),
+    comparePercentEntry("Crit-Chance", critChanceDiff),
+    comparePercentEntry("Crit-Schaden", critDamageDiff),
+  ].filter((entry) => entry.diff !== 0);
+  if (!entries.length) {
+    entries.push({ text: "Keine Stat-Änderung", className: "compare-even", diff: 0 });
+  }
 
   return {
     powerText: compareText("Gesamt", powerDiff, " Kraft"),
@@ -123,6 +136,23 @@ function compareLoot(item, current) {
     critChanceClass: compareClass(critChanceDiff),
     critDamageText: comparePercentText("Crit-Schaden", critDamageDiff),
     critDamageClass: compareClass(critDamageDiff),
+    entries,
+  };
+}
+
+function compareEntry(label, diff, suffix) {
+  return {
+    text: compareText(label, diff, suffix),
+    className: compareClass(diff),
+    diff,
+  };
+}
+
+function comparePercentEntry(label, diff) {
+  return {
+    text: comparePercentText(label, diff),
+    className: compareClass(diff),
+    diff,
   };
 }
 

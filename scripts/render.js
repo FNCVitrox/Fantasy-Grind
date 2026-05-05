@@ -222,6 +222,21 @@ function itemCritText(item) {
   ].filter(Boolean).join(" · ");
 }
 
+function itemStatEntries(item, labels = {}) {
+  return [
+    item.damage ? { key: "damage", label: labels.damage || "Schaden", value: item.damage } : null,
+    item.defense ? { key: "defense", label: labels.defense || "Verteidigung", value: item.defense } : null,
+    item.critChance ? { key: "critChance", label: labels.critChance || "Crit", value: formatPercent(item.critChance) } : null,
+    item.critDamage ? { key: "critDamage", label: labels.critDamage || "Crit-Schaden", value: `+${formatPercent(item.critDamage)}` } : null,
+  ].filter(Boolean);
+}
+
+function itemStatText(item, labels = {}) {
+  return itemStatEntries(item, labels)
+    .map((entry) => typeof entry.value === "number" ? `${entry.label} +${entry.value}` : `${entry.label} ${entry.value}`)
+    .join(" · ");
+}
+
 function renderEnemies(stats = totalStats()) {
   const signature = [
     selectedZone,
@@ -373,6 +388,7 @@ function renderEquipment() {
     const repairCost = repairCostForSlot(slot);
     const quality = itemQuality(item);
     const setName = item.set ? setBonuses[item.set]?.name || item.set : "";
+    const statText = itemStatText(item);
     return `<button class="equipment-chip rarity-card rarity-${quality}" type="button" data-open-equipment>
       <strong>${labelFor(slotLabel, slot)}</strong>
       <span class="quality-${quality}">${escapeHtml(item.name)}</span>
@@ -381,8 +397,7 @@ function renderEquipment() {
       <span class="equipment-hover-detail" aria-hidden="true">
         <b class="quality-${quality}">${escapeHtml(item.name)}</b>
         <em>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</em>
-        <em>Schaden: ${item.damage || 0} · Verteidigung: ${item.defense || 0}</em>
-        ${itemCritText(item) ? `<em>${itemCritText(item)}</em>` : ""}
+        ${statText ? `<em>${statText}</em>` : ""}
         <em>Haltbarkeit: ${durability}%</em>
         <em>Reparatur: ${repairCost} Gold</em>
         ${setName ? `<em>Set: ${escapeHtml(setName)}</em>` : ""}
@@ -405,12 +420,12 @@ function renderEquipmentDetails() {
     const setKey = item.set ? cacheSetTooltip(item.set) : "";
     const slotRepairCost = repairCostForSlot(slot);
     const quality = itemQuality(item);
+    const statText = itemStatText(item);
     return `<div class="slot rarity-card rarity-${quality}">
       <strong>${labelFor(slotLabel, slot)}</strong>
       <p class="quality-${quality}">${escapeHtml(item.name)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</p>
       ${item.set ? `<p class="set-line set-hover-row"><span>${escapeHtml(setBonuses[item.set]?.name || item.set)}</span><span class="tooltip-source" data-set-tooltip-key="${setKey}"></span></p>` : ""}
-      <p>+${item.damage} Schaden · +${item.defense} Verteidigung</p>
-      ${itemCritText(item) ? `<p>${itemCritText(item)}</p>` : ""}
+      ${statText ? `<p>${statText}</p>` : ""}
       <p class="${itemDurability(id) <= 25 ? "durability-low" : ""}">Haltbarkeit: ${itemDurability(id)}%</p>
       ${slotRepairCost ? `<p>Reparatur: ${slotRepairCost} Gold</p>` : ""}
     </div>`;
@@ -635,6 +650,12 @@ function renderSmithUpgrade() {
     const defenseGain = preview.defense - item.defense;
     const critChanceGain = (preview.critChance || 0) - (item.critChance || 0);
     const critDamageGain = (preview.critDamage || 0) - (item.critDamage || 0);
+    const statText = itemStatText(item, { damage: "Dmg", defense: "Def" });
+    const previewStatText = itemStatText(preview, { damage: "Dmg", defense: "Def" });
+    const critGainText = [
+      critChanceGain ? `Crit <b>+${formatPercent(critChanceGain)}</b>` : "",
+      critDamageGain ? `Crit-Schaden <b>+${formatPercent(critDamageGain)}</b>` : "",
+    ].filter(Boolean).join(" · ");
     const materialText = Object.entries(cost.materials)
       .filter(([, amount]) => amount > 0)
       .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)
@@ -645,12 +666,16 @@ function renderSmithUpgrade() {
     return `<div class="smith-card rarity-card rarity-${quality}">
       <div class="smith-item-main">
         <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
-        <p>+${item.upgrade || 0}/4 · Dmg ${item.damage} · Def ${item.defense} · ${itemCritText(item) || "Kein Crit"} · Haltbarkeit ${itemDurability(itemId)}%</p>
+        <p>+${item.upgrade || 0}/4${statText ? ` · ${statText}` : ""} · Haltbarkeit ${itemDurability(itemId)}%</p>
       </div>
       <button class="upgrade-preview" type="button" data-upgrade="${slot}" ${disabled ? "disabled" : ""}>
         <span>${maxed ? "Maximal" : "Nach Upgrade"}</span>
-        <strong>+${preview.upgrade}/4 · Dmg ${preview.damage}${damageGain ? ` <b>+${damageGain}</b>` : ""} · Def ${preview.defense}${defenseGain ? ` <b>+${defenseGain}</b>` : ""}</strong>
-        <em>${itemCritText(preview) || "Kein Crit"}${critChanceGain ? ` <b>+${formatPercent(critChanceGain)}</b>` : ""}${critDamageGain ? ` <b>+${formatPercent(critDamageGain)}</b>` : ""}</em>
+        <strong>+${preview.upgrade}/4${previewStatText ? ` · ${previewStatText}` : ""}</strong>
+        <em>${[
+          damageGain ? `Dmg <b>+${damageGain}</b>` : "",
+          defenseGain ? `Def <b>+${defenseGain}</b>` : "",
+          critGainText,
+        ].filter(Boolean).join(" · ")}</em>
       </button>
       <div class="smith-cost-block">
         <p>${cost.gold} Gold${discountText}</p>
@@ -694,17 +719,15 @@ function renderInventory() {
     const slot = itemSlot(item);
     const current = getItem(state.equipment[slot]);
     const compare = compareLoot(item, current);
+    const statText = itemStatText(item);
     return `<div class="inventory-item rarity-card rarity-${quality}">
       <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
       <p>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · Wert ${sellValue(item)} Gold</p>
       ${item.set ? `<p class="set-line">${escapeHtml(setBonuses[item.set]?.name || item.set)}</p>` : ""}
-      <p>+${item.damage} Schaden · +${item.defense} Verteidigung</p>
-      ${itemCritText(item) ? `<p>${itemCritText(item)}</p>` : ""}
+      ${statText ? `<p>${statText}</p>` : ""}
       <p>Haltbarkeit: ${itemDurability(itemId)}%</p>
       <div class="loot-compare compact">
-        <span class="${compare.powerClass}">${compare.powerText}</span>
-        <span class="${compare.damageClass}">${compare.damageText}</span>
-        <span class="${compare.defenseClass}">${compare.defenseText}</span>
+        ${renderCompareSpans(compare, 3)}
       </div>
       <div class="inventory-actions">
         <button type="button" data-equip="${index}">Ausrüsten</button>
@@ -1203,19 +1226,17 @@ function renderItemTooltip(item) {
   const durabilityLine = isEquipped ? `<span>Haltbarkeit: ${itemDurability(equippedId)}%</span>` : "";
   const repairLine = isEquipped ? `<span>Reparatur: ${repairCostForSlot(slot)} Gold</span>` : "";
   const upgradeLine = item.upgrade ? `<span>Verbesserung: +${item.upgrade}</span>` : "";
+  const statText = itemStatText(item);
   return `<div class="item-tooltip">
     <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
     <span>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)}</span>
     ${item.set ? `<span>Set: ${escapeHtml(setBonuses[item.set]?.name || item.set)}</span>` : ""}
     ${upgradeLine}
-    <span>Schaden: ${item.damage} · Verteidigung: ${item.defense}</span>
-    ${itemCritText(item) ? `<span>${itemCritText(item)}</span>` : ""}
+    ${statText ? `<span>${statText}</span>` : ""}
     ${durabilityLine}
     ${repairLine}
     <span>Aktuell: ${escapeHtml(current.name)}</span>
-    <span class="${compare.powerClass}">${compare.powerText}</span>
-    <span class="${compare.damageClass}">${compare.damageText}</span>
-    <span class="${compare.defenseClass}">${compare.defenseText}</span>
+    ${renderCompareSpans(compare, 3)}
   </div>`;
 }
 

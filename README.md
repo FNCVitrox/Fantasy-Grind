@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.35
+Alpha v0.8.36
 
 ## Was Bereits Spielbar Ist
 
@@ -54,6 +54,7 @@ Alpha v0.8.35
 - Dezente Sicherungs-Tipps nach Level-Up, sehr gutem Loot oder Dungeon-Boss
 - Größere Protokoll-Vorschau ohne Neustart-Button im Kampfverlauf
 - Loot-Auswahlkarten zeigen Angriff, Verteidigung, Crit-Chance und Crit-Schaden direkt und vergleichen diese Werte einzeln
+- Item- und Lootkarten blenden 0-Werte aus, damit nur echte Ausrüstungsboni sichtbar sind
 - Loot-Auswahl-Rendering ist als eigenes Modul getrennt, damit der UI-Code leichter wartbar bleibt
 - Sicherungs- und Ladefunktion für Spielstände über eine JSON-Datei
 - Empfehlung: Spielstand regelmäßig herunterladen, damit Fortschritt sicher erhalten bleibt

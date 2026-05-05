@@ -94,6 +94,13 @@ assert(vm.runInContext("Object.values(items).every((item) => { const copy = norm
 assert(vm.runInContext("lootSlots.every((slot) => { const stats = normalizeRolledItemStats(slot, 'legendary', rollSlotStats(slot, 20, qualityPower.legendary)); const rules = itemSlotRules(slot); return (!rules.damage ? stats.damage === 0 : true) && (!rules.defense ? stats.defense === 0 : true); })", context), "generated item stats should follow slot roles");
 assert(vm.runInContext("(() => { const wholePercent = (value) => Math.abs((value || 0) * 100 - Math.round((value || 0) * 100)) < 0.000001; return Object.values(items).every((item) => { const normalized = normalizeItemStatsForSlot({ ...item }); return wholePercent(normalized.critChance) && wholePercent(normalized.critDamage); }); })()", context), "fixed item crit values should use whole percentage steps");
 assert(vm.runInContext("(() => { const wholePercent = (value) => Math.abs((value || 0) * 100 - Math.round((value || 0) * 100)) < 0.000001; return lootSlots.every((slot) => { const crit = rollCritStats(slot, 'legendary'); return wholePercent(crit.critChance) && wholePercent(crit.critDamage); }); })()", context), "generated crit values should use whole percentage steps");
+assert.strictEqual(
+  vm.runInContext("itemStatText({ damage: 0, defense: 5, critChance: 0, critDamage: 0 })", context),
+  "Verteidigung +5",
+);
+assert(!vm.runInContext("renderLootStatGrid({ damage: 0, defense: 5, critChance: 0, critDamage: 0 }).includes('Angriff')", context), "loot stat cards should hide zero item stats");
+assert(!vm.runInContext("renderLootCompare(compareLoot({ damage: 0, defense: 5, critChance: 0, critDamage: 0 }, { damage: 0, defense: 0, critChance: 0, critDamage: 0 })).includes('Angriff')", context), "loot comparison should hide unchanged zero stats");
+assert(vm.runInContext("renderLootCompare(compareLoot({ damage: 0, defense: 0, critChance: 0, critDamage: 0 }, { damage: 0, defense: 0, critChance: 0, critDamage: 0 })).includes('Keine Stat-')", context), "loot comparison should show a neutral fallback when nothing changes");
 assert(vm.runInContext("Object.values(enemies).every((enemy) => (enemy.abilities || []).every((id) => enemyAbilityCatalog[id]) && (enemy.passives || []).every((id) => enemyAbilityCatalog[id]))", context), "enemy abilities and passives need catalog entries");
 assert(vm.runInContext("Object.values(enemies).every((enemy) => enemyAbilityIds(enemy).length >= (enemy.boss ? 3 : enemy.elite ? 2 : 1))", context), "normal, elite and boss enemies need enough abilities");
 assert(vm.runInContext("Object.values(enemies).filter((enemy) => enemy.boss).every((enemy) => enemyPassiveIds(enemy).length >= 1)", context), "dungeon bosses need passives");
