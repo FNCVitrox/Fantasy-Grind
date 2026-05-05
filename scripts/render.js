@@ -1349,7 +1349,7 @@ function renderCombatLog() {
   const signature = entries.map((entry) => `${entry.type}:${entry.text}`).join("\n") || "empty";
   if (renderCache.combatLog === signature) return;
   renderCache.combatLog = signature;
-  setText("combatLogSummary", entries.length ? `${entries.length} Einträge` : "Noch kein Kampf.");
+  setText("combatLogSummary", entries.length ? `${entries.length} Einträge` : "Noch leer");
   $("combatLog").innerHTML = entries.length
     ? entries.map((entry) => `<div class="combat-log-entry ${escapeToken(entry.type, ["hero", "enemy", "heal", "effect", "critical", "good", "bad"], "effect")}">${escapeHtml(entry.text)}</div>`).join("")
     : `<div class="combat-log-empty">Starte einen Kampf, dann erscheinen hier Schaden, Heilung und Effekte.</div>`;

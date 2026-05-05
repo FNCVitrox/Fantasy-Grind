@@ -688,6 +688,47 @@ button.drop-row span:last-child {
   filter: blur(8px);
 }
 
+.battle-log-tab {
+  position: absolute;
+  z-index: 3;
+  top: 10px;
+  left: 10px;
+  display: grid;
+  gap: 1px;
+  min-width: 76px;
+  min-height: 44px;
+  padding: 7px 10px;
+  text-align: left;
+  border: 1px solid rgba(242, 193, 78, 0.6);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(242, 193, 78, 0.16), rgba(52, 213, 216, 0.07)),
+    rgba(7, 17, 27, 0.86);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+}
+
+.battle-log-tab span {
+  color: var(--gold);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.battle-log-tab small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.15;
+}
+
+.battle-log-tab:hover,
+.battle-log-tab:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--gold);
+  background:
+    linear-gradient(135deg, rgba(242, 193, 78, 0.24), rgba(52, 213, 216, 0.12)),
+    rgba(9, 26, 38, 0.92);
+}
+
 .combatant {
   position: relative;
   z-index: 1;
@@ -1464,32 +1505,8 @@ button.drop-row span:last-child {
   border-radius: 8px;
 }
 
-.combat-log-panel {
-  display: grid;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background:
-    linear-gradient(90deg, rgba(242, 193, 78, 0.07), transparent 42%),
-    rgba(7, 17, 27, 0.78);
-}
-
-.combat-log-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  gap: 12px;
-}
-
-.combat-log-head h2 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.combat-log-head span {
-  color: var(--muted);
-  font-size: 13px;
+.combat-log-window {
+  width: min(760px, 100%);
 }
 
 .combat-log {

@@ -301,6 +301,14 @@ $("closeLogBtn").addEventListener("click", closeLog);
 $("logModal").addEventListener("click", (event) => {
   if (event.target.id === "logModal") closeLog();
 });
+$("openCombatLogBtn").addEventListener("click", () => {
+  renderCombatLog();
+  openModal("combatLogModal");
+});
+$("closeCombatLogBtn").addEventListener("click", closeCombatLog);
+$("combatLogModal").addEventListener("click", (event) => {
+  if (event.target.id === "combatLogModal") closeCombatLog();
+});
 $("repairList").addEventListener("click", (event) => {
   const button = event.target.closest("[data-repair-slot]");
   if (button) repairSlot(button.dataset.repairSlot);
@@ -358,6 +366,10 @@ function closeSmith() {
 
 function closeLog() {
   closeModal("logModal");
+}
+
+function closeCombatLog() {
+  closeModal("combatLogModal");
 }
 
 function closeRepair() {

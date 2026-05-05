@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=0.8.38" />
-    <link rel="stylesheet" href="./css/modals.css?v=0.8.38" />
-    <link rel="stylesheet" href="./css/responsive.css?v=0.8.38" />
+    <link rel="stylesheet" href="./css/base.css?v=0.8.39" />
+    <link rel="stylesheet" href="./css/modals.css?v=0.8.39" />
+    <link rel="stylesheet" href="./css/responsive.css?v=0.8.39" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.38</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.39</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
@@ -87,6 +87,10 @@
             <div class="equipment" id="equipment"></div>
           </section>
           <div class="battle-stage" id="battleStage" aria-label="Kampfanimation">
+            <button class="battle-log-tab" id="openCombatLogBtn" type="button" aria-haspopup="dialog">
+              <span>Log</span>
+              <small id="combatLogSummary">Noch leer</small>
+            </button>
             <div class="combatant hero-sprite" id="heroSprite">
               <div class="sprite-shadow"></div>
               <div class="hero-body">
@@ -123,18 +127,6 @@
               </div>
             </div>
           </div>
-          <section class="combat-log-panel" aria-label="Kampf-Log">
-            <div class="combat-log-head">
-              <div>
-                <p class="eyebrow">Kampf-Log</p>
-                <h2>Letzter Kampf</h2>
-              </div>
-              <span id="combatLogSummary">Noch kein Kampf.</span>
-            </div>
-            <div class="combat-log" id="combatLog">
-              <div class="combat-log-empty">Starte einen Kampf, dann erscheinen hier Schaden, Heilung und Effekte.</div>
-            </div>
-          </section>
           <div class="enemy-list" id="enemyList"></div>
           <div class="combat-card">
             <div>
@@ -280,6 +272,20 @@
         <div id="log" class="log"></div>
       </div>
     </div>
+    <div class="modal-overlay" id="combatLogModal" aria-hidden="true">
+      <div class="modal-window combat-log-window" role="dialog" aria-modal="true" aria-labelledby="combatLogTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow">Kampf-Log</p>
+            <h2 id="combatLogTitle">Letzter Kampf</h2>
+          </div>
+          <button class="modal-close" id="closeCombatLogBtn" type="button" aria-label="Kampf-Log schließen">Schließen</button>
+        </div>
+        <div class="combat-log" id="combatLog">
+          <div class="combat-log-empty">Starte einen Kampf, dann erscheinen hier Schaden, Heilung und Effekte.</div>
+        </div>
+      </div>
+    </div>
     <div class="modal-overlay" id="saveModal" aria-hidden="true">
       <div class="modal-window save-window" role="dialog" aria-modal="true" aria-labelledby="saveTitle">
         <div class="modal-window-head">
@@ -341,12 +347,12 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=0.8.38"></script>
-    <script src="./scripts/save-system.js?v=0.8.38"></script>
-    <script src="./scripts/core.js?v=0.8.38"></script>
-    <script src="./scripts/render.js?v=0.8.38"></script>
-    <script src="./scripts/render-loot.js?v=0.8.38"></script>
-    <script src="./scripts/events.js?v=0.8.38"></script>
+    <script src="./scripts/data.js?v=0.8.39"></script>
+    <script src="./scripts/save-system.js?v=0.8.39"></script>
+    <script src="./scripts/core.js?v=0.8.39"></script>
+    <script src="./scripts/render.js?v=0.8.39"></script>
+    <script src="./scripts/render-loot.js?v=0.8.39"></script>
+    <script src="./scripts/events.js?v=0.8.39"></script>
   </body>
 </html>
 
