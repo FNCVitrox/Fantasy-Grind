@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.36
+Alpha v0.8.37
 
 ## Was Bereits Spielbar Ist
 
@@ -19,6 +19,7 @@ Alpha v0.8.36
 - Crit Chance und Crit Damage als eigene Spieler- und Item-Werte
 - Benutzte Spielerfähigkeiten leuchten während des Kampfes kurz in der linken Fähigkeitsliste auf
 - Automatische Kämpfe mit Animationen, Schadenstexten, HP-Balken und Kampfprotokoll
+- Eigenes Kampf-Log nach jedem Kampf mit Schaden, Heilung und Effekten beider Seiten
 - Kampffeld setzt Sieg- und Todeszustände nach dem Kampf sauber zurück
 - Kampfende zeigt jetzt eine klare Sieg- oder Niederlage-Anzeige vor dem nächsten Ablauf
 - Beim Überspringen bleibt die Sieg- oder Niederlage-Anzeige ebenfalls kurz sichtbar

@@ -1459,6 +1459,86 @@ button.drop-row span:last-child {
   border-radius: 8px;
 }
 
+.combat-log-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(242, 193, 78, 0.07), transparent 42%),
+    rgba(7, 17, 27, 0.78);
+}
+
+.combat-log-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 12px;
+}
+
+.combat-log-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.combat-log-head span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.combat-log {
+  display: grid;
+  gap: 6px;
+  max-height: 172px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.combat-log-entry,
+.combat-log-empty {
+  padding: 7px 9px;
+  border: 1px solid rgba(67, 93, 116, 0.72);
+  border-left-width: 4px;
+  border-radius: 7px;
+  background: rgba(7, 17, 27, 0.82);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.combat-log-empty {
+  border-style: dashed;
+}
+
+.combat-log-entry.hero,
+.combat-log-entry.good {
+  border-left-color: var(--green);
+  color: #d9fbff;
+}
+
+.combat-log-entry.enemy,
+.combat-log-entry.bad {
+  border-left-color: var(--red);
+  color: #f2c2bc;
+}
+
+.combat-log-entry.heal {
+  border-left-color: #65e4a8;
+  color: #c8ffe1;
+}
+
+.combat-log-entry.effect {
+  border-left-color: var(--gold);
+  color: #f6df9b;
+}
+
+.combat-log-entry.critical {
+  border-left-color: #ff514d;
+  color: #ffb0aa;
+  font-weight: 800;
+}
+
 .primary {
   min-width: 160px;
   min-height: 40px;
