@@ -90,6 +90,8 @@ assert.strictEqual(vm.runInContext("abilityDamage(10, 1.75)", context), 17);
 assert.strictEqual(vm.runInContext("enemyCriticalStats(enemies.wolf).critChance", context), 0.03);
 assert.strictEqual(vm.runInContext("enemyCriticalStats(createEliteEnemy(enemies.wolf, 'wolf')).critDamage", context), 1.6);
 assert(vm.runInContext("enemyCriticalStats(enemies.ratguard).critChance >= 0.09", context), "bosses should have stronger crit chance");
+assert(vm.runInContext("Object.values(items).every((item) => { const copy = normalizeItemStatsForSlot({ ...item }); const rules = itemSlotRules(copy.slot); return (!rules.damage ? copy.damage === 0 : true) && (!rules.defense ? copy.defense === 0 : true) && (!rules.critChance ? (copy.critChance || 0) === 0 : true) && (!rules.critDamage ? (copy.critDamage || 0) === 0 : true); })", context), "fixed items should follow slot stat rules");
+assert(vm.runInContext("lootSlots.every((slot) => { const stats = normalizeRolledItemStats(slot, 'legendary', rollSlotStats(slot, 20, qualityPower.legendary)); const rules = itemSlotRules(slot); return (!rules.damage ? stats.damage === 0 : true) && (!rules.defense ? stats.defense === 0 : true); })", context), "generated item stats should follow slot roles");
 assert(vm.runInContext("Object.values(enemies).every((enemy) => (enemy.abilities || []).every((id) => enemyAbilityCatalog[id]) && (enemy.passives || []).every((id) => enemyAbilityCatalog[id]))", context), "enemy abilities and passives need catalog entries");
 assert(vm.runInContext("Object.values(enemies).every((enemy) => enemyAbilityIds(enemy).length >= (enemy.boss ? 3 : enemy.elite ? 2 : 1))", context), "normal, elite and boss enemies need enough abilities");
 assert(vm.runInContext("Object.values(enemies).filter((enemy) => enemy.boss).every((enemy) => enemyPassiveIds(enemy).length >= 1)", context), "dungeon bosses need passives");
@@ -106,6 +108,8 @@ assert.strictEqual(vm.runInContext("state.renown = 20; renownUpgradeDiscount()",
 assert(vm.runInContext("state.renown = 15; renownSalvageBonusChance({ quality: 'rare' }) > 0", context));
 assert.strictEqual(vm.runInContext("previewUpgradedItem({ slot: 'weapon', quality: 'common', name: 'Testklinge', damage: 10, defense: 0, upgrade: 0 }).damage", context), 12);
 assert(vm.runInContext("previewUpgradedItem({ slot: 'weapon', quality: 'common', name: 'Testklinge', damage: 10, defense: 0, critChance: 0.01, upgrade: 0 }).critChance > 0.01", context));
+assert.strictEqual(vm.runInContext("previewUpgradedItem({ slot: 'ring', quality: 'common', name: 'Testring', damage: 1, defense: 5, upgrade: 0 }).defense", context), 0);
+assert.strictEqual(vm.runInContext("previewUpgradedItem({ slot: 'chest', quality: 'rare', name: 'Testpanzer', damage: 3, defense: 10, critChance: 0.1, upgrade: 0 }).damage", context), 0);
 assert.strictEqual(
   vm.runInContext("normalizeRolledItemStats('weapon', 'common', { damage: 999, defense: 0 }).damage", context),
   vm.runInContext("itemStatCap('weapon', 'common').damage", context),

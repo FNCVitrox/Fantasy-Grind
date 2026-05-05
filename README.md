@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.32
+Alpha v0.8.33
 
 ## Was Bereits Spielbar Ist
 
@@ -39,6 +39,7 @@ Alpha v0.8.32
 - Loot-Pools pro Gegner sind begrenzt, damit das Bestiarium übersichtlich bleibt
 - Ausrüstungsslots: Waffe, zweite Hand, Brustpanzer, Hose, Stiefel, Halskette und Ring
 - Item-Qualitäten: Gewöhnlich, Selten, Episch und Legendär
+- Item-Stats folgen klaren Slot-Rollen: Waffen offensiv, Rüstung defensiv, Schmuck offensiv/spezial
 - Set-Boni für besondere Ausrüstung
 - Inventar mit Ausrüsten, Verkaufen und Zerlegen
 - Schmied zum Verbessern, Zerlegen und Reparieren von Ausrüstung

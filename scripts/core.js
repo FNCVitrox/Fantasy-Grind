@@ -28,7 +28,7 @@ const $ = (id) => {
   return elementCache.get(id);
 };
 const random = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-const balanceVersion = 3;
+const balanceVersion = 4;
 const eliteEncounterChance = 0.06;
 const maxBestiaryLootPerEnemy = 20;
 const generatedLootPoolSize = maxBestiaryLootPerEnemy;
@@ -85,7 +85,7 @@ function defaultState() {
       selectedBestiaryZone: "meadow",
       selectedBestiaryEnemy: "wolf",
     },
-    balanceVersion: 3,
+    balanceVersion: 4,
     log: ["Du erreichst das Lager Grauwacht. Der Grind beginnt langsam."],
   };
 }
@@ -102,7 +102,7 @@ function applyBalanceMigration(loaded) {
   Object.values(loaded.discoveredLoot || {}).forEach((drops) => Object.values(drops || {}).forEach(rebalanceSavedItem));
   loaded.balanceVersion = balanceVersion;
   loaded.log = [
-    "Balance überarbeitet: Item-Qualitäten sind klarer getrennt, Elite-Gegner seltener und Reparaturen günstiger.",
+    "Balance überarbeitet: Item-Stats folgen klareren Rollen pro Ausrüstungsslot.",
     ...(loaded.log || []),
   ].slice(0, 40);
 }
@@ -139,6 +139,29 @@ function rebalanceSavedItem(item) {
   item.defense = stats.defense;
   item.critChance = item.critChance || 0;
   item.critDamage = item.critDamage || 0;
+  normalizeItemStatsForSlot(item);
+  return item;
+}
+
+function itemSlotRules(slot) {
+  return {
+    weapon: { damage: true, defense: false, critChance: true, critDamage: true },
+    offhand: { damage: true, defense: true, critChance: false, critDamage: false },
+    chest: { damage: false, defense: true, critChance: false, critDamage: false },
+    pants: { damage: false, defense: true, critChance: false, critDamage: false },
+    boots: { damage: false, defense: true, critChance: false, critDamage: false },
+    necklace: { damage: true, defense: false, critChance: true, critDamage: true },
+    ring: { damage: true, defense: false, critChance: true, critDamage: true },
+  }[slot] || { damage: true, defense: false, critChance: true, critDamage: true };
+}
+
+function normalizeItemStatsForSlot(item) {
+  if (!item) return item;
+  const rules = itemSlotRules(item.slot);
+  item.damage = rules.damage ? Math.max(0, Math.floor(item.damage || 0)) : 0;
+  item.defense = rules.defense ? Math.max(0, Math.floor(item.defense || 0)) : 0;
+  item.critChance = rules.critChance ? Math.max(0, item.critChance || 0) : 0;
+  item.critDamage = rules.critDamage ? Math.max(0, item.critDamage || 0) : 0;
   return item;
 }
 
@@ -166,16 +189,17 @@ function itemStatCap(slot, quality, upgrade = 0) {
   const caps = {
     weapon: { damage: [8, 16, 29, 46], defense: [0, 0, 0, 0] },
     offhand: { damage: [4, 8, 14, 22], defense: [7, 17, 31, 47] },
-    chest: { damage: [0, 0, 2, 3], defense: [11, 26, 50, 76] },
-    pants: { damage: [1, 3, 6, 10], defense: [8, 18, 35, 53] },
-    boots: { damage: [2, 4, 8, 12], defense: [6, 15, 28, 42] },
-    necklace: { damage: [4, 9, 17, 26], defense: [3, 8, 16, 24] },
-    ring: { damage: [3, 8, 15, 24], defense: [4, 10, 18, 28] },
+    chest: { damage: [0, 0, 0, 0], defense: [11, 26, 50, 76] },
+    pants: { damage: [0, 0, 0, 0], defense: [8, 18, 35, 53] },
+    boots: { damage: [0, 0, 0, 0], defense: [7, 16, 30, 45] },
+    necklace: { damage: [5, 11, 20, 30], defense: [0, 0, 0, 0] },
+    ring: { damage: [4, 10, 18, 28], defense: [0, 0, 0, 0] },
   };
   const slotCaps = caps[slot] || caps.ring;
+  const rules = itemSlotRules(slot);
   return {
-    damage: slotCaps.damage[qualityIndex] + upgrade * (slot === "weapon" ? 3 : 2),
-    defense: slotCaps.defense[qualityIndex] + upgrade * (["chest", "pants", "boots", "offhand"].includes(slot) ? 4 : 2),
+    damage: rules.damage ? slotCaps.damage[qualityIndex] + upgrade * (slot === "weapon" ? 3 : 2) : 0,
+    defense: rules.defense ? slotCaps.defense[qualityIndex] + upgrade * (["chest", "pants", "boots", "offhand"].includes(slot) ? 4 : 0) : 0,
   };
 }
 
@@ -204,6 +228,7 @@ function normalizeItemSlot(item) {
   if (item?.slot === "armor") item.slot = "chest";
   if (item?.slot && !equipmentSlots.includes(item.slot)) item.slot = "ring";
   normalizeItemQuality(item);
+  normalizeItemStatsForSlot(item);
   return item;
 }
 
@@ -1364,10 +1389,10 @@ function rollSlotStats(slot, base, power) {
     weapon: [1.35, 0],
     offhand: [0.4, 0.85],
     chest: [0, 1.45],
-    pants: [0.1, 0.98],
-    boots: [0.18, 0.72],
-    necklace: [0.6, 0.35],
-    ring: [0.42, 0.5],
+    pants: [0, 0.98],
+    boots: [0, 0.78],
+    necklace: [0.78, 0],
+    ring: [0.62, 0],
   };
   const [damageScale, defenseScale] = profiles[slot] || profiles.ring;
   return {
@@ -1582,12 +1607,12 @@ function rollCritStats(slot, quality) {
   const damageBase = [0.02, 0.06, 0.12, 0.2][qualityIndex];
   const [chanceScale, damageScale] = {
     weapon: [1.25, 1],
-    offhand: [0.55, 0.35],
+    offhand: [0, 0],
     chest: [0, 0],
     pants: [0, 0],
-    boots: [0.35, 0],
-    necklace: [0.45, 1.15],
-    ring: [1, 0.7],
+    boots: [0, 0],
+    necklace: [0.55, 1.15],
+    ring: [1, 0.75],
   }[slot] || [0, 0];
   const critChance = Math.round((chanceBase * chanceScale + random(0, qualityIndex) * 0.002) * 1000) / 1000;
   const critDamage = Math.round((damageBase * damageScale + random(0, qualityIndex) * 0.01) * 100) / 100;
@@ -1635,10 +1660,10 @@ function previewUpgradedItem(item) {
   if (item.slot === "pants" || item.slot === "boots") upgraded.defense += 2;
   if (item.slot === "necklace" || item.slot === "ring") {
     upgraded.damage += 1;
-    upgraded.defense += 1;
   }
   if (item.slot === "weapon" || item.slot === "ring") upgraded.critChance = (upgraded.critChance || 0) + 0.005;
   if (item.slot === "weapon" || item.slot === "necklace") upgraded.critDamage = (upgraded.critDamage || 0) + 0.03;
+  normalizeItemStatsForSlot(upgraded);
   upgraded.name = item.name.replace(/\s\+\d+$/, "") + ` +${upgraded.upgrade}`;
   return upgraded;
 }
