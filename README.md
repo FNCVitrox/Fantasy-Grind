@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.51
+Alpha v0.8.52
 
 ## Tests Starten
 
@@ -35,6 +35,7 @@ Wenn alles passt, steht am Ende `Smoke test passed` und `ALLE TESTS BESTANDEN`.
 - Borin Glutbart als Zwergenmeister der Grauwacht mit eigenen Schmied-Dialogen
 - Schmied-Meisterschaft mit globalen Upgrade-Limits +5, +10, +15 und +20
 - Drei Meisteraufträge: Glut des Ambosses, Stahl unter Druck und Meisterzeichen der Grauwacht
+- Erster Meisterauftrag bleibt verborgen, bis ein ausgerüstetes Item wirklich am aktuellen Limit ist
 - Frühe Gegner können seltene Schmiedematerialien für den ersten Meisterauftrag fallen lassen
 - Crit Chance und Crit Damage als eigene Spieler- und Item-Werte
 - Benutzte Spielerfähigkeiten leuchten während des Kampfes kurz in der linken Fähigkeitsliste auf

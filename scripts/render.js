@@ -667,8 +667,23 @@ function renderSmithHome() {
 
 function renderSmithMasteryPanel() {
   const limit = currentSmithMasteryLimit();
+  const discovered = smithMasteryDiscovered();
   const active = smithMasteryRankById(state.smithMastery.active);
   const next = active || nextSmithMasteryRank();
+  if (!discovered && next?.id === "emberAnvil") {
+    $("smithMastery").innerHTML = `
+      <div class="smith-mastery-head">
+        <div>
+          <span>Schmied-Meisterschaft</span>
+          <strong>Der Amboss schweigt</strong>
+        </div>
+        <b>Verborgene Arbeit</b>
+      </div>
+      <p>"Dein Stahl hat noch Luft. Bring mir erst ein Stück, das keinen einfachen Schlag mehr annimmt."</p>
+      <div class="smith-mastery-reward">Borin verrät dir mehr, sobald deine Ausrüstung wirklich an ihre Grenze stößt.</div>
+    `;
+    return;
+  }
   if (!next) {
     $("smithMastery").innerHTML = `
       <div class="smith-mastery-head">

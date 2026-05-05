@@ -137,7 +137,7 @@ function defaultState() {
     completedQuests: [],
     rareQuests: {},
     combatStats: { eliteKills: 0, bossKills: 0 },
-    smithMastery: { limit: 5, active: null, completed: [], progress: {} },
+    smithMastery: { limit: 5, active: null, completed: [], progress: {}, discovered: false },
     winsSinceQuestRefresh: 0,
     lastSaveExportAt: "",
     combatLog: [],
@@ -197,7 +197,7 @@ function normalizeCombatStats(stats = {}) {
   };
 }
 
-function normalizeSmithMastery(mastery = {}) {
+function normalizeSmithMastery(mastery = {}, sourceState = state) {
   const savedLimit = Math.max(5, Math.min(20, mastery.limit || 5));
   const completed = Array.isArray(mastery.completed)
     ? mastery.completed.filter((id) => smithMasteryRanks.some((rank) => rank.id === id))
@@ -217,6 +217,7 @@ function normalizeSmithMastery(mastery = {}) {
     active,
     completed: [...new Set(completed)],
     progress: normalizeSmithMasteryProgress(mastery.progress),
+    discovered: Boolean(mastery.discovered || active || completed.length || hasSavedItemAtSmithLimit(mastery.limit || 5, sourceState)),
   };
 }
 
@@ -229,6 +230,14 @@ function normalizeSmithMasteryProgress(progress = {}) {
     };
     return result;
   }, {});
+}
+
+function hasSavedItemAtSmithLimit(limit = 5, sourceState = state) {
+  return equipmentSlots.some((slot) => {
+    const itemId = sourceState?.equipment?.[slot];
+    const item = sourceState?.customItems?.[itemId] || items[itemId];
+    return item && (item.upgrade || 0) >= limit;
+  });
 }
 
 function rebalanceSavedItem(item) {
@@ -1759,6 +1768,15 @@ function currentSmithMasteryLimit() {
   return Math.max(5, Math.min(20, state.smithMastery?.limit || 5));
 }
 
+function smithMasteryDiscovered() {
+  return Boolean(
+    state.smithMastery?.discovered
+    || state.smithMastery?.active
+    || state.smithMastery?.completed?.length
+    || hasEquippedItemAtLimit(),
+  );
+}
+
 function nextSmithMasteryRank() {
   return smithMasteryRanks.find((rank) => !state.smithMastery.completed.includes(rank.id)) || null;
 }
@@ -1802,6 +1820,7 @@ function startSmithMasteryMission(rankId) {
     log("Borin Glutbart schüttelt den Kopf. Für diesen Meisterauftrag fehlt dir noch etwas.", "bad");
     return;
   }
+  state.smithMastery.discovered = true;
   state.smithMastery.active = rank.id;
   state.smithMastery.progress[rank.id] = { eliteKills: 0, bossKills: 0 };
   log(`Meisterauftrag begonnen: ${rank.name}.`, "drop");
@@ -1851,6 +1870,7 @@ function completeSmithMasteryMission(rankId) {
   });
   if (rank.sacrificeQuality) removeSmithSacrificeItem();
   state.smithMastery.limit = rank.limit;
+  state.smithMastery.discovered = true;
   state.smithMastery.active = null;
   state.smithMastery.completed = [...new Set([...state.smithMastery.completed, rank.id])];
   state.renown += rank.rewardRenown;
@@ -2005,6 +2025,9 @@ function upgradeEquipped(slot) {
   });
   const upgraded = previewUpgradedItem(item);
   state.customItems[upgraded.id] = upgraded;
+  if (upgraded.upgrade >= currentSmithMasteryLimit()) {
+    state.smithMastery.discovered = true;
+  }
   log(`${upgraded.name} beim Schmied verbessert.`, "drop");
   save();
   render();

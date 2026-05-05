@@ -122,7 +122,7 @@ function parseSavedState(raw) {
     loaded.itemDurability = loaded.itemDurability || {};
     loaded.combatLog = Array.isArray(loaded.combatLog) ? loaded.combatLog : [];
     loaded.combatStats = normalizeCombatStats(loaded.combatStats);
-    loaded.smithMastery = normalizeSmithMastery(loaded.smithMastery);
+    loaded.smithMastery = normalizeSmithMastery(loaded.smithMastery, loaded);
     loaded.materials = normalizeMaterials(loaded.materials);
     loaded.ui = normalizeSavedUi(loaded.ui);
     applyBalanceMigration(loaded);
