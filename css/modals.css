@@ -655,6 +655,11 @@ button.drop-row span:last-child {
   color: #9be7ff;
 }
 
+.risk.deadly {
+  background: #3a1717;
+  color: #ff8b7f;
+}
+
 .battle-stage {
   position: relative;
   min-height: 208px;

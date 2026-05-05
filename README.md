@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.37
+Alpha v0.8.38
 
 ## Was Bereits Spielbar Ist
 
@@ -36,6 +36,7 @@ Alpha v0.8.37
 - Quests erscheinen nur, wenn die passenden Gegner schon erreichbar sind
 - Quest-Tafel filtert Aufträge nach dem aktuell gewählten Gebiet und zeigt passende Levelbereiche
 - Standardquests sind wiederholbar, damit die Quest-Tafel nach Abschlüssen weiter nutzbar bleibt
+- Gegner-Risiko nutzt eine Kampfschätzung mit Schaden, Leben, Crits, Fähigkeiten, Effekten und Haltbarkeit
 - Bestiarium mit Gegnerwerten, Fähigkeiten, Drops, Materialien und entdecktem Loot
 - Render-Optimierungen für flüssigere Schmied-, Quest-, Loot- und Bestiarium-Ansichten
 - Loot-Pools pro Gegner sind begrenzt, damit das Bestiarium übersichtlich bleibt

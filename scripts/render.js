@@ -254,14 +254,19 @@ function renderEnemies(stats = totalStats()) {
   $("enemyList").innerHTML = zones[selectedZone].enemies.map((id) => {
     const enemy = getPreparedEncounter(id);
     const risk = riskFor(enemy, stats);
-    const ok = risk === "Machbar";
     const rarity = enemyRarity(enemy);
     const safeRarity = escapeToken(rarity, ["common", "rare", "epic", "legendary"], "common");
     return `<button class="enemy rarity-card rarity-${safeRarity} ${id === selectedEnemy ? "active" : ""}" type="button" data-enemy="${id}">
       <span><strong>${escapeHtml(enemy.name)}</strong><p><span class="quality-${safeRarity}">${labelFor(rarityLabel, safeRarity)}</span> · Level ${enemy.level}${enemy.boss ? " · Boss" : enemy.elite ? " · Elite" : ""} · ${enemy.xp} XP</p></span>
-      <em class="risk ${ok ? "ok" : ""}">${risk}</em>
+      <em class="risk ${riskLabelClass(risk)}">${risk}</em>
     </button>`;
   }).join("");
+}
+
+function riskLabelClass(risk) {
+  if (risk === "Einfach" || risk === "Machbar") return "ok";
+  if (risk === "Sehr gefährlich") return "deadly";
+  return "";
 }
 
 function renderZoneOptions() {
