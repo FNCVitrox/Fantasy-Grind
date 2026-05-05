@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
 const html = read("index.html");
-const scripts = ["scripts/data.js", "scripts/core.js", "scripts/render.js"].map(read);
+const scripts = ["scripts/data.js", "scripts/core.js", "scripts/render.js", "scripts/render-loot.js"].map(read);
 
 assert(!/[Ã�]/.test(html), "index.html still contains likely mojibake characters");
 
@@ -26,6 +26,7 @@ assert.deepStrictEqual(scriptOrder, [
   "scripts/data.js",
   "scripts/core.js",
   "scripts/render.js",
+  "scripts/render-loot.js",
   "scripts/events.js",
 ]);
 
