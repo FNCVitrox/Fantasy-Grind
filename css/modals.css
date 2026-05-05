@@ -1531,13 +1531,14 @@ button.drop-row span:last-child {
 }
 
 .combat-log-window {
-  width: min(760px, 100%);
+  width: min(820px, 100%);
 }
 
 .combat-log {
   display: grid;
   gap: 6px;
-  max-height: 172px;
+  max-height: min(620px, calc(100vh - 190px));
+  min-height: min(420px, calc(100vh - 240px));
   overflow: auto;
   padding-right: 4px;
 }
