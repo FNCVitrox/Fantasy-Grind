@@ -303,6 +303,8 @@ function resetBattleStageState() {
   const stage = $("battleStage");
   if (stage.className !== "battle-stage") stage.className = "battle-stage";
   stage.querySelectorAll(".damage-number").forEach((number) => number.remove());
+  const result = $("battleResult");
+  if (result) result.className = "battle-result";
 }
 
 function setBattleEnemyVisual(enemy) {

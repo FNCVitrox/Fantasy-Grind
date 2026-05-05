@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=0.8.31" />
-    <link rel="stylesheet" href="./css/modals.css?v=0.8.31" />
-    <link rel="stylesheet" href="./css/responsive.css?v=0.8.31" />
+    <link rel="stylesheet" href="./css/base.css?v=0.8.32" />
+    <link rel="stylesheet" href="./css/modals.css?v=0.8.32" />
+    <link rel="stylesheet" href="./css/responsive.css?v=0.8.32" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.31</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.32</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
@@ -104,6 +104,10 @@
               <span class="slash" id="slashFx"></span>
               <span class="impact" id="impactFx"></span>
               <strong id="battleText">Bereit</strong>
+              <div class="battle-result" id="battleResult" aria-live="polite">
+                <span id="battleResultTitle"></span>
+                <small id="battleResultText"></small>
+              </div>
             </div>
             <div class="combatant enemy-sprite enemy-wolf" id="enemySprite">
               <div class="sprite-shadow"></div>
@@ -325,12 +329,12 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=0.8.31"></script>
-    <script src="./scripts/save-system.js?v=0.8.31"></script>
-    <script src="./scripts/core.js?v=0.8.31"></script>
-    <script src="./scripts/render.js?v=0.8.31"></script>
-    <script src="./scripts/render-loot.js?v=0.8.31"></script>
-    <script src="./scripts/events.js?v=0.8.31"></script>
+    <script src="./scripts/data.js?v=0.8.32"></script>
+    <script src="./scripts/save-system.js?v=0.8.32"></script>
+    <script src="./scripts/core.js?v=0.8.32"></script>
+    <script src="./scripts/render.js?v=0.8.32"></script>
+    <script src="./scripts/render-loot.js?v=0.8.32"></script>
+    <script src="./scripts/events.js?v=0.8.32"></script>
   </body>
 </html>
 

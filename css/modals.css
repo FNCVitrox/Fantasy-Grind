@@ -1439,6 +1439,13 @@ button.drop-row span:last-child {
   100% { transform: translateY(16px) rotate(-8deg); }
 }
 
+@keyframes battle-result-pop {
+  0% { opacity: 0; transform: translate(-50%, -42%) scale(0.88); }
+  18% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
+  55% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
 .combat-card {
   display: flex;
   justify-content: space-between;
@@ -1857,5 +1864,62 @@ button.drop-row span:last-child {
 
 .player-stat-sources strong {
   color: var(--gold);
+}
+
+.battle-result {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  min-width: 190px;
+  padding: 12px 18px;
+  border: 1px solid rgba(242, 193, 78, 0.52);
+  border-radius: 8px;
+  background: rgba(7, 17, 27, 0.94);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.4), 0 0 28px rgba(242, 193, 78, 0.14);
+  color: var(--text);
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -46%) scale(0.92);
+}
+
+.battle-result.show {
+  opacity: 1;
+  animation: battle-result-pop 950ms ease-out both;
+}
+
+.battle-result span,
+.battle-result small {
+  display: block;
+}
+
+.battle-result span {
+  color: var(--gold);
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.battle-result small {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.battle-result.win {
+  border-color: rgba(92, 237, 193, 0.52);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.42), 0 0 32px rgba(92, 237, 193, 0.18);
+}
+
+.battle-result.win span {
+  color: #5cedc1;
+}
+
+.battle-result.loss {
+  border-color: rgba(255, 116, 103, 0.58);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.42), 0 0 32px rgba(255, 116, 103, 0.18);
+}
+
+.battle-result.loss span {
+  color: #ff7467;
 }
 

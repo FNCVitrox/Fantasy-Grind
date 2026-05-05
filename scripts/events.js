@@ -479,6 +479,7 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
   const playerMaxHp = combatHealth.playerMaxHp || state.maxHp;
   const enemyMaxHp = combatHealth.enemyMaxHp || enemy.hp;
   const startPlayerHp = combatHealth.playerStartHp ?? state.hp;
+  hideBattleResult();
   updateBattleHealth(startPlayerHp, playerMaxHp, enemyMaxHp, enemyMaxHp);
   $("battleText").textContent = `${enemy.name} tritt vor.`;
   stage.classList.remove("victory", "defeat", "hero-attacks", "enemy-attacks", "hero-hit", "enemy-hit");
@@ -513,8 +514,24 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
 
   stage.className = "battle-stage";
   stage.classList.add(playerWon ? "victory" : "defeat");
+  showBattleResult(playerWon, enemy.name);
+  await waitCombat(skipCombat ? 650 : 1350);
+  hideBattleResult();
+}
+
+function showBattleResult(playerWon, enemyName) {
   $("battleText").textContent = playerWon ? "Sieg" : "Niederlage";
-  await waitCombat(skipCombat ? 180 : 780);
+  $("battleResultTitle").textContent = playerWon ? "Sieg" : "Niederlage";
+  $("battleResultText").textContent = playerWon
+    ? `${enemyName} ist besiegt. Beute wird gesichert.`
+    : "Du kehrst angeschlagen ins Lager zurück.";
+  $("battleResult").className = `battle-result show ${playerWon ? "win" : "loss"}`;
+}
+
+function hideBattleResult() {
+  const result = $("battleResult");
+  if (!result) return;
+  result.className = "battle-result";
 }
 
 function highlightAbilityUse(abilityId) {
