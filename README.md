@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.30
+Alpha v0.8.31
 
 ## Was Bereits Spielbar Ist
 
@@ -31,6 +31,7 @@ Alpha v0.8.30
 - Freischaltungen über Level und Ruhm
 - Quest-Tafel mit normalen und seltenen Quests
 - Quests erscheinen nur, wenn die passenden Gegner schon erreichbar sind
+- Quest-Tafel filtert Aufträge nach dem aktuell gewählten Gebiet und zeigt passende Levelbereiche
 - Standardquests sind wiederholbar, damit die Quest-Tafel nach Abschlüssen weiter nutzbar bleibt
 - Bestiarium mit Gegnerwerten, Fähigkeiten, Drops, Materialien und entdecktem Loot
 - Render-Optimierungen für flüssigere Schmied-, Quest-, Loot- und Bestiarium-Ansichten

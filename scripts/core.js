@@ -567,7 +567,34 @@ function questTargetAvailable(target) {
 }
 
 function questAvailable(quest) {
-  return Boolean(quest && questTargetAvailable(quest.target));
+  return Boolean(quest && questTargetAvailable(quest.target) && questRelevantForCurrentZone(quest));
+}
+
+function questRelevantForCurrentZone(quest) {
+  if (!quest) return false;
+  return questEnemyIdsForZone(quest, selectedZone).length > 0;
+}
+
+function questEnemyIdsForZone(quest, zoneId) {
+  const zone = zones[zoneId];
+  if (!zone) return [];
+  return zone.enemies.filter((enemyId) => {
+    const enemy = enemies[enemyId];
+    if (!enemy) return false;
+    if (quest.target === "elite") return enemy.elite || !enemy.boss;
+    if (quest.target === "dungeon") return zone.type === "dungeon" || Boolean(enemy.tags?.dungeon);
+    return Boolean(enemy.tags?.[quest.target]);
+  });
+}
+
+function questLevelRange(quest, zoneId = selectedZone) {
+  const matchingLevels = questEnemyIdsForZone(quest, zoneId)
+    .map((enemyId) => enemies[enemyId]?.level)
+    .filter((level) => Number.isFinite(level));
+  if (!matchingLevels.length) return "";
+  const min = Math.min(...matchingLevels);
+  const max = Math.max(...matchingLevels);
+  return min === max ? `Level ${min}` : `Level ${min}-${max}`;
 }
 
 function isQuestCompletedPermanent(questId) {
@@ -1172,7 +1199,7 @@ function refreshQuestBoard(force) {
     .filter((id) => !isQuestCompletedPermanent(id))
     .filter((id) => {
       const quest = getQuestById(id);
-      return quest && (isQuestActive(id) || questAvailable(quest));
+      return quest && (isQuestActive(id) || questRelevantForCurrentZone(quest));
     });
 
   if (!force && state.winsSinceQuestRefresh < 4) return;
@@ -1182,7 +1209,7 @@ function refreshQuestBoard(force) {
     .filter((id) => !state.questBoard.includes(id))
     .filter((id) => !isQuestCompletedPermanent(id))
     .filter((id) => !state.activeQuests.includes(id))
-    .filter((id) => questAvailable(getQuestById(id)));
+    .filter((id) => questRelevantForCurrentZone(getQuestById(id)));
 
   while (state.questBoard.length < renownQuestBoardSize() && candidates.length) {
     const index = random(0, candidates.length - 1);

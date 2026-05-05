@@ -741,7 +741,7 @@ function renderQuestBoard() {
     .filter((id) => !isQuestCompletedPermanent(id))
     .filter((id) => {
       const quest = getQuestById(id);
-      return quest && (isQuestActive(id) || questAvailable(quest));
+      return quest && (isQuestActive(id) || questRelevantForCurrentZone(quest));
     });
   if (state.questBoard.length < renownQuestBoardSize()) {
     refreshQuestBoard(true);
@@ -763,6 +763,7 @@ function renderQuestBoard() {
     const active = isQuestActive(quest.id);
     const value = Math.floor(state.quests[quest.id] || 0);
     const progress = active ? `${value}/${quest.needed}` : "Noch nicht angenommen";
+    const levelRange = questLevelRange(quest);
     const button = active
         ? `<button type="button" disabled>Angenommen</button>`
         : `<button type="button" data-accept-quest="${quest.id}">Quest annehmen</button>`;
@@ -775,6 +776,7 @@ function renderQuestBoard() {
         <p>Status: ${progress}</p>
       </div>
       <div class="reward-list">
+        <span>${levelRange || "Aktuelles Gebiet"}</span>
         <span>Belohnung: ${quest.rewardXp} XP</span>
         <span>Gold: ${quest.rewardGold}</span>
         <span>Ruhm: ${questRenownReward(quest)}</span>
