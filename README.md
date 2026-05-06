@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.55
+Alpha v0.8.56
 
 ## Tests Starten
 
@@ -62,6 +62,7 @@ Wenn alles passt, steht am Ende `Smoke test passed` und `ALLE TESTS BESTANDEN`.
 - Freischaltungen über Level und Ruhm
 - Quest-Tafel mit normalen und seltenen Quests
 - Neue Quests lassen den Quest-Tafel-Button leuchten und tragen ein Neu-Badge in der Tafel
+- Angenommene Quests verschwinden direkt von der Quest-Tafel und stehen nur noch bei den aktiven Quests
 - Quests erscheinen nur, wenn die passenden Gegner schon erreichbar sind
 - Quest-Tafel filtert Aufträge nach dem aktuell gewählten Gebiet und zeigt passende Levelbereiche
 - Quest-Schriftrollen zeigen ihre Drop-Chance im Bestiarium

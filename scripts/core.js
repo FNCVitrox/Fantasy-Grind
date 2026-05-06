@@ -1514,9 +1514,10 @@ function refreshQuestBoard(force) {
   }
   state.questBoard = uniqueQuestIds(state.questBoard)
     .filter((id) => !isQuestCompletedPermanent(id))
+    .filter((id) => !isQuestActive(id))
     .filter((id) => {
       const quest = getQuestById(id);
-      return quest && (isQuestActive(id) || questRelevantForCurrentZone(quest));
+      return quest && questRelevantForCurrentZone(quest);
     });
   const hadVisibleQuest = state.questBoard.length > 0;
 

@@ -886,9 +886,10 @@ function renderQuests() {
 function renderQuestBoard() {
   state.questBoard = uniqueQuestIds(state.questBoard)
     .filter((id) => !isQuestCompletedPermanent(id))
+    .filter((id) => !isQuestActive(id))
     .filter((id) => {
       const quest = getQuestById(id);
-      return quest && (isQuestActive(id) || questRelevantForCurrentZone(quest));
+      return quest && questRelevantForCurrentZone(quest);
     });
   if (state.questBoard.length < renownQuestBoardSize()) {
     refreshQuestBoard(true);
@@ -945,6 +946,7 @@ function acceptQuest(questId) {
     return;
   }
   state.activeQuests.push(questId);
+  state.questBoard = state.questBoard.filter((id) => id !== questId);
   forgetNewQuest(questId);
   state.quests[questId] = state.quests[questId] || 0;
   log(`Quest angenommen: ${quest.name}.`, "drop");
