@@ -70,10 +70,13 @@
 
   body {
     font-size: 16px;
+    overflow-x: hidden;
   }
 
   .shell {
     width: min(100vw - 14px, 1720px);
+    max-width: 100%;
+    overflow-x: hidden;
     padding: max(8px, env(safe-area-inset-top)) 0 calc(92px + env(safe-area-inset-bottom));
   }
 
@@ -93,6 +96,8 @@
     border-radius: 10px;
     background: rgba(10, 20, 31, 0.96);
     backdrop-filter: blur(14px);
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .topbar > div:first-child {
@@ -106,7 +111,7 @@
   }
 
   .topbar h1 {
-    font-size: clamp(34px, 13vw, 50px);
+    font-size: clamp(32px, 12vw, 44px);
     line-height: 0.95;
   }
 
@@ -144,6 +149,10 @@
     flex-direction: column;
     gap: 10px;
     margin-top: 10px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
   }
 
   .world-panel {
@@ -158,9 +167,23 @@
     order: 3;
   }
 
+  .character-panel,
+  .side-panel,
+  .world-panel {
+    align-self: stretch;
+    justify-self: stretch;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
   .panel {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     padding: 10px;
     border-radius: 10px;
+    overflow-x: hidden;
   }
 
   .character-panel,
@@ -179,9 +202,13 @@
   }
 
   .equipment-belt {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
     gap: 12px;
-    padding: 12px;
+    padding: 10px;
     border-radius: 10px;
+    overflow: hidden;
   }
 
   .equipment-belt h2 {
@@ -190,44 +217,51 @@
 
   .equipment-belt .equipment {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    gap: 7px;
+    min-width: 0;
   }
 
   .equipment-chip {
-    min-height: 82px;
-    padding: 9px;
+    min-width: 0;
+    min-height: 74px;
+    padding: 8px;
+    overflow: hidden;
   }
 
   .equipment-chip strong {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .equipment-chip span,
   .equipment-chip small {
-    font-size: 12px;
-    line-height: 1.35;
+    font-size: 11px;
+    line-height: 1.28;
   }
 
   .battle-stage {
-    grid-template-columns: minmax(112px, 1fr) minmax(74px, 0.52fr) minmax(112px, 1fr);
-    gap: 8px;
-    min-height: 230px;
-    padding: 36px 10px 12px;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(58px, 0.46fr) minmax(0, 1fr);
+    gap: 4px;
+    min-height: 198px;
+    padding: 34px 8px 10px;
     border-radius: 10px;
   }
 
   .combatant {
     min-width: 0;
+    gap: 4px;
   }
 
   .combatant b {
-    font-size: 17px;
+    font-size: 15px;
   }
 
   .combat-health {
     width: 100%;
-    max-width: 170px;
-    padding: 7px;
+    max-width: 132px;
+    padding: 6px;
   }
 
   .combat-health-label {
@@ -242,13 +276,13 @@
   .battle-log-tab {
     top: 8px;
     left: 8px;
-    min-width: 82px;
-    min-height: 42px;
-    padding: 6px 10px;
+    min-width: 70px;
+    min-height: 38px;
+    padding: 5px 8px;
   }
 
   .battle-log-tab span {
-    font-size: 15px;
+    font-size: 13px;
   }
 
   .battle-log-tab small {
@@ -261,19 +295,23 @@
   }
 
   .enemy {
+    grid-template-columns: minmax(0, 1fr) auto;
     min-height: 58px;
     padding: 9px 10px;
     border-radius: 10px;
   }
 
   .enemy strong {
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .enemy p {
     margin-top: 2px;
     font-size: 14px;
     line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .risk {
@@ -283,6 +321,9 @@
   }
 
   .combat-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     align-items: stretch;
     flex-direction: column;
     gap: 12px;
@@ -293,8 +334,9 @@
   }
 
   .target-command h2 {
-    font-size: 34px;
+    font-size: 30px;
     line-height: 1;
+    overflow-wrap: anywhere;
   }
 
   .primary {
