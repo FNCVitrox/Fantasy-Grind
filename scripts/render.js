@@ -223,6 +223,20 @@ function itemCritText(item) {
   ].filter(Boolean).join(" · ");
 }
 
+function itemEffectName(item) {
+  return itemEffectCatalog[item?.effect]?.name || "";
+}
+
+function itemEffectText(item) {
+  return itemEffectCatalog[item?.effect]?.text || "";
+}
+
+function renderItemEffectLine(item) {
+  const name = itemEffectName(item);
+  if (!name) return "";
+  return `<span>Effekt: ${escapeHtml(name)} - ${escapeHtml(itemEffectText(item))}</span>`;
+}
+
 function itemStatEntries(item, labels = {}) {
   return [
     item.damage ? { key: "damage", label: labels.damage || "Schaden", value: item.damage } : null,
@@ -1022,7 +1036,7 @@ function renderBestiaryDetail() {
 
 function bestiaryDetailSignature(enemyId, enemy, discovered) {
   const discoveredSignature = discovered
-    .map((item) => `${bestiaryItemKey(item)}:${item.damage}:${item.defense}:${item.critChance || 0}:${item.critDamage || 0}:${item.set || ""}`)
+    .map((item) => `${bestiaryItemKey(item)}:${item.damage}:${item.defense}:${item.critChance || 0}:${item.critDamage || 0}:${item.effect || ""}:${item.set || ""}`)
     .join("|");
   return [
     enemyId,
@@ -1369,7 +1383,7 @@ function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLo
 }
 
 function cacheTooltipItem(item) {
-  const key = item.fixed ? `fixed:${item.id}` : `${item.name}|${item.slot}|${item.quality}|${item.damage}|${item.defense}|${item.critChance || 0}|${item.critDamage || 0}`;
+  const key = item.fixed ? `fixed:${item.id}` : `${item.name}|${item.slot}|${item.quality}|${item.damage}|${item.defense}|${item.critChance || 0}|${item.critDamage || 0}|${item.effect || ""}`;
   tooltipItemCache.set(key, item);
   return escapeAttr(key);
 }
@@ -1410,6 +1424,7 @@ function renderItemTooltip(item) {
     ${item.set ? `<span>Set: ${escapeHtml(setBonuses[item.set]?.name || item.set)}</span>` : ""}
     ${upgradeLine}
     ${statText ? `<span>${statText}</span>` : ""}
+    ${renderItemEffectLine(item)}
     ${durabilityLine}
     ${repairLine}
     <span>Aktuell: ${escapeHtml(current.name)}</span>

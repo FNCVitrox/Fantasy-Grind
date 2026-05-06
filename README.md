@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.53
+Alpha v0.8.54
 
 ## Tests Starten
 
@@ -38,6 +38,8 @@ Wenn alles passt, steht am Ende `Smoke test passed` und `ALLE TESTS BESTANDEN`.
 - Erster Meisterauftrag bleibt verborgen, bis ein ausgerüstetes Item wirklich am aktuellen Limit ist
 - Frühe Gegner können seltene Schmiedematerialien für den ersten Meisterauftrag fallen lassen
 - Crit Chance und Crit Damage als eigene Spieler- und Item-Werte
+- Item-Effekte V1 mit Blutkante, Wachblock, Zäher Schritt, Elitenjäger, Nachhall und Boss-Effekten
+- Item-Effekte erscheinen in Lootkarten, Tooltips, Bestiarium und Kampf-Log
 - Benutzte Spielerfähigkeiten leuchten während des Kampfes kurz in der linken Fähigkeitsliste auf
 - Automatische Kämpfe mit Animationen, Schadenstexten, HP-Balken und Kampfprotokoll
 - Eigenes Kampf-Log nach jedem Kampf mit Schaden, Heilung und Effekten beider Seiten

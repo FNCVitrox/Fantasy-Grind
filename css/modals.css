@@ -51,7 +51,7 @@
 .loot-window .loot-card {
   min-height: 390px;
   height: 100%;
-  grid-template-rows: 42px 32px 24px 22px minmax(102px, auto) 22px 24px minmax(126px, auto) 50px;
+  grid-template-rows: 42px 32px 24px 22px minmax(36px, auto) minmax(102px, auto) 22px 24px minmax(126px, auto) 50px;
   align-content: stretch;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
@@ -70,6 +70,7 @@
 .loot-card-badge,
 .loot-card-meta,
 .loot-card-set,
+.loot-card-effect,
 .loot-stat-grid,
 .loot-card-value {
   min-width: 0;
@@ -88,6 +89,12 @@
   text-overflow: ellipsis;
   font-size: 14px;
   line-height: 1.22;
+}
+
+.loot-card-effect {
+  color: #5cf0c7;
+  font-size: 13px;
+  line-height: 1.25;
 }
 
 .loot-card-set.empty {
