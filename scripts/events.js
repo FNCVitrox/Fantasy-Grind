@@ -312,7 +312,7 @@ $("openSmithBtn").addEventListener("click", () => {
   openModal("smithModal");
 });
 $("openEnchantBtn").addEventListener("click", () => {
-  smithView = enchantmentsUnlocked() ? "enchant" : "home";
+  smithView = "enchant";
   renderSmith();
   openModal("smithModal");
 });

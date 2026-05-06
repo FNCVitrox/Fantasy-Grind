@@ -16,7 +16,6 @@
     : `<span class="button-main">Lagerplatz</span><span class="button-price">${restPrice}</span>`;
   renderCachedHtml("restBtn", `${state.hp >= state.maxHp ? "full" : restPrice}`, () => restLabel);
   setDisabled("restBtn", state.hp >= state.maxHp);
-  setDisabled("openEnchantBtn", !enchantmentsUnlocked());
 
   renderMap();
   renderEnemies(stats);
@@ -473,7 +472,11 @@ function renderSmith() {
   setText("smithEyebrow", smithView === "enchant" ? "Arkanistin der Grauwacht" : "Zwergenmeister der Grauwacht");
   setText("smithTitle", smithView === "enchant" ? "Mira Nachtfaden" : "Borin Glutbart");
   renderSmithMaterials();
-  renderSmithRenown();
+  if (smithView === "enchant") {
+    renderEnchantStatus();
+  } else {
+    renderSmithRenown();
+  }
   $("smithHome").hidden = smithView !== "home";
   $("smithUpgradeSection").hidden = smithView !== "upgrade";
   $("smithSalvageSection").hidden = smithView !== "salvage";
@@ -670,6 +673,21 @@ function renderSmithRenown() {
   `;
 }
 
+function renderEnchantStatus() {
+  const unlocked = enchantmentsUnlocked();
+  const nextSlotLevel = state.level < 14 ? 14 : state.level < 20 ? 20 : null;
+  $("smithRenown").innerHTML = `
+    <div>
+      <span>Arkane Prüfung</span>
+      <strong>${unlocked ? "Zugang geöffnet" : "Noch verschlossen"}</strong>
+    </div>
+    <p>${unlocked ? `Aktuelle Bindung: ${maxEnchantSlotsForLevel()} Runen-Slot${maxEnchantSlotsForLevel() === 1 ? "" : "s"} pro Item` : "Mira lässt dich zwar herein, aber ihre Runen hören noch nicht auf dich."}</p>
+    <small>${unlocked
+      ? nextSlotLevel ? `Nächste Runenbindung ab Level ${nextSlotLevel}.` : "Alle aktuellen Runenbindungen freigeschaltet."
+      : `Freischaltung bei Level 8. Aktuell: Level ${state.level}.`}</small>
+  `;
+}
+
 function renderSmithHome() {
   $("smithHome").innerHTML = `
     <div class="smith-greeting" id="smithGreeting">
@@ -686,9 +704,9 @@ function renderSmithHome() {
         <strong>Zerlegen</strong>
         <span>Alte Items in Schmiedematerialien zerlegen.</span>
       </button>
-      <button type="button" data-smith-view="enchant" ${enchantmentsUnlocked() ? "" : "disabled"}>
+      <button type="button" data-smith-view="enchant">
         <strong>Verzaubern</strong>
-        <span>${enchantmentsUnlocked() ? "Mira Nachtfaden bindet Runen an deine Ausrüstung." : "Wird ab Level 8 freigeschaltet."}</span>
+        <span>${enchantmentsUnlocked() ? "Mira Nachtfaden bindet Runen an deine Ausrüstung." : "Mira prüft dich. Ob sie dich ernst nimmt, ist eine andere Frage."}</span>
       </button>
       <button type="button" data-open-repair>
         <strong>Reparieren</strong>
@@ -828,6 +846,24 @@ function renderSmithUpgrade() {
 }
 
 function renderSmithEnchant() {
+  if (!enchantmentsUnlocked()) {
+    $("enchantGrid").innerHTML = `
+      <div class="enchant-locked">
+        <div>
+          <span>Arkaner Laden</span>
+          <strong>Mira hebt nur eine Augenbraue.</strong>
+        </div>
+        <p>"Süß. Du willst Magie an Stahl binden, aber deine Seele stolpert noch über Kieselsteine. Komm wieder, wenn du nicht mehr nach Tutorial riechst."</p>
+        <div class="enchant-lock-requirements">
+          <span class="${state.level >= 8 ? "done" : "missing"}">${state.level >= 8 ? "✓" : "•"} Level 8 erreichen</span>
+          <span class="missing">• Danach einfache Runen freischalten</span>
+          <span class="missing">• Verzauberungen bleiben bis dahin gesperrt</span>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
   const cost = enchantCost();
   const costText = `${cost.gold} Gold · ${Object.entries(cost.materials)
     .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)

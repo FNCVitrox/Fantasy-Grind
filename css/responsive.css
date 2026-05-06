@@ -541,6 +541,22 @@
     font-size: 14px;
   }
 
+  .enchant-lock-requirements {
+    grid-template-columns: 1fr;
+  }
+
+  .enchant-locked {
+    padding: 12px;
+  }
+
+  .enchant-locked strong {
+    font-size: 20px;
+  }
+
+  .enchant-locked p {
+    font-size: 15px;
+  }
+
   .bestiary-window .bestiary {
     overflow: auto;
   }

@@ -1077,6 +1077,62 @@ h2 {
   color: var(--muted);
 }
 
+.enchant-locked {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(166, 120, 194, 0.65);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(166, 120, 194, 0.17), rgba(52, 213, 216, 0.07)),
+    #07111b;
+}
+
+.enchant-locked span {
+  color: #d6b2ed;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.enchant-locked strong {
+  margin-top: 3px;
+  color: var(--text);
+  font-size: 24px;
+}
+
+.enchant-locked p {
+  max-width: 850px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.42;
+}
+
+.enchant-lock-requirements {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.enchant-lock-requirements span {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 9px 11px;
+  border: 1px solid rgba(166, 120, 194, 0.32);
+  border-radius: 8px;
+  background: rgba(7, 17, 27, 0.74);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.25;
+  text-transform: none;
+}
+
+.enchant-lock-requirements .done {
+  border-color: rgba(92, 237, 193, 0.46);
+  color: #90f0ce;
+}
+
 .enchant-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
