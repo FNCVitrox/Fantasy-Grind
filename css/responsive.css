@@ -349,8 +349,30 @@
   }
 
   .modal-window {
+    width: min(100%, calc(100vw - 18px));
     max-height: calc(100vh - 28px);
+    padding: 12px;
     overflow: auto;
+  }
+
+  .modal-window-head {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .modal-window-head h2 {
+    font-size: 26px;
+    line-height: 1;
+  }
+
+  .modal-window-head .eyebrow {
+    font-size: 12px;
+  }
+
+  .modal-close {
+    min-height: 42px;
+    padding: 8px 14px;
+    font-size: 16px;
   }
 
   .modal-head-actions {
@@ -394,6 +416,127 @@
   .smith-greeting,
   .salvage-row {
     grid-template-columns: 1fr;
+  }
+
+  .quest-board-window,
+  .loot-window {
+    width: min(100%, calc(100vw - 18px));
+  }
+
+  .quest-board {
+    gap: 8px;
+  }
+
+  .quest-offer {
+    grid-template-rows: auto auto auto auto;
+    gap: 8px;
+    min-height: 0;
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .quest-offer-title {
+    min-height: 0;
+    font-size: 17px;
+    line-height: 1.15;
+  }
+
+  .quest-offer-title em {
+    margin-left: 5px;
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+
+  .quest-offer-body {
+    gap: 5px;
+    min-height: 0;
+  }
+
+  .quest-offer-body p {
+    font-size: 14px;
+    line-height: 1.28;
+  }
+
+  .reward-list {
+    min-height: 0;
+    gap: 2px;
+    padding: 8px 10px;
+    font-size: 14px;
+    line-height: 1.25;
+  }
+
+  .quest-offer-action button {
+    min-height: 44px;
+    font-size: 15px;
+  }
+
+  .loot-window .loot-choices {
+    gap: 8px;
+  }
+
+  .loot-window .loot-card {
+    min-height: 0;
+    grid-template-rows: auto auto auto auto auto auto auto auto auto auto;
+    gap: 6px;
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .loot-card-title {
+    min-height: 0;
+    font-size: 18px;
+    line-height: 1.1;
+    -webkit-line-clamp: 2;
+  }
+
+  .loot-card-badge {
+    min-height: 0;
+    font-size: 12px;
+  }
+
+  .loot-card-meta,
+  .loot-card-set,
+  .loot-card-value,
+  .loot-card-effect {
+    font-size: 13px;
+    line-height: 1.18;
+    white-space: normal;
+  }
+
+  .loot-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .loot-stat-grid span {
+    padding: 6px 7px;
+  }
+
+  .loot-stat-grid em {
+    font-size: 10px;
+  }
+
+  .loot-stat-grid strong {
+    font-size: 13px;
+  }
+
+  .loot-window .loot-compare {
+    min-height: 0;
+    padding: 7px;
+  }
+
+  .loot-window .loot-compare span {
+    font-size: 12px;
+    line-height: 1.18;
+  }
+
+  .loot-actions {
+    gap: 7px;
+  }
+
+  .loot-card button {
+    min-height: 42px;
+    font-size: 14px;
   }
 
   .bestiary-window .bestiary {
