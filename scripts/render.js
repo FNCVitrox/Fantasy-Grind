@@ -704,10 +704,6 @@ function renderSmithHome() {
         <strong>Zerlegen</strong>
         <span>Alte Items in Schmiedematerialien zerlegen.</span>
       </button>
-      <button type="button" data-smith-view="enchant">
-        <strong>Verzaubern</strong>
-        <span>${enchantmentsUnlocked() ? "Mira Nachtfaden bindet Runen an deine Ausrüstung." : "Mira prüft dich. Ob sie dich ernst nimmt, ist eine andere Frage."}</span>
-      </button>
       <button type="button" data-open-repair>
         <strong>Reparieren</strong>
         <span>Ausrüstung beim Schmied für Gold instand setzen.</span>
