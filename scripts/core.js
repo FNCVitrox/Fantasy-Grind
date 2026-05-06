@@ -141,6 +141,7 @@ function defaultState() {
     winsSinceQuestRefresh: 0,
     lastSaveExportAt: "",
     combatLog: [],
+    enchanting: { unlockedSeen: false },
     ui: {
       selectedZone: "meadow",
       selectedEnemy: "wolf",
@@ -341,11 +342,26 @@ function migrateEquipmentSlots(loaded) {
   }
 
 function normalizeItemSlot(item) {
+  if (!item) return item;
   if (item?.slot === "armor") item.slot = "chest";
   if (item?.slot && !equipmentSlots.includes(item.slot)) item.slot = "ring";
   normalizeItemQuality(item);
   normalizeItemStatsForSlot(item);
+  item.enchantments = normalizeItemEnchantments(item);
   return item;
+}
+
+function normalizeItemEnchantments(item) {
+  if (!item || !Array.isArray(item.enchantments)) return [];
+  const seenGroups = new Set();
+  return item.enchantments
+    .filter((id) => {
+      const enchantment = enchantmentCatalog[id];
+      if (!enchantment || !enchantment.slots.includes(item.slot) || seenGroups.has(enchantment.group)) return false;
+      seenGroups.add(enchantment.group);
+      return true;
+    })
+    .slice(0, 3);
 }
 
 function normalizeItemQuality(item) {
@@ -423,18 +439,68 @@ function totalStats() {
     itemCritChance += item.critChance || 0;
     itemCritDamage += item.critDamage || 0;
   });
+  const enchantStats = equippedEnchantmentSummary();
   const setStats = activeSetBonusStats();
   const build = activeBuild();
-  const baseDamage = 7 + state.level * 2.25 + itemDamage + setStats.damage;
-  const baseDefense = 2 + state.level * 1.45 + itemDefense + setStats.defense;
-  const baseHp = 90 + state.level * 6.5 + setStats.maxHp;
+  const baseDamage = 7 + state.level * 2.25 + itemDamage + setStats.damage + enchantStats.damage;
+  const baseDefense = 2 + state.level * 1.45 + itemDefense + setStats.defense + enchantStats.defense;
+  const baseHp = 90 + state.level * 6.5 + setStats.maxHp + enchantStats.maxHp;
   return {
     damage: Math.floor(baseDamage * (build.damageMultiplier || 1)),
     defense: Math.floor(baseDefense * (build.defenseMultiplier || 1)),
     maxHp: Math.floor(baseHp * (build.maxHpMultiplier || 1)),
-    critChance: Math.min(0.65, 0.05 + itemCritChance + (build.critChanceBonus || 0)),
-    critDamage: Math.min(3.2, 1.5 + itemCritDamage + (build.critDamageBonus || 0)),
+    critChance: Math.min(0.65, 0.05 + itemCritChance + enchantStats.critChance + (build.critChanceBonus || 0)),
+    critDamage: Math.min(3.2, 1.5 + itemCritDamage + enchantStats.critDamage + (build.critDamageBonus || 0)),
   };
+}
+
+function enchantmentsUnlocked() {
+  return state.level >= 8;
+}
+
+function maxEnchantSlotsForLevel(level = state.level) {
+  if (level >= 20) return 3;
+  if (level >= 14) return 2;
+  if (level >= 8) return 1;
+  return 0;
+}
+
+function activeItemEnchantments(item) {
+  if (!item?.enchantments?.length) return [];
+  return item.enchantments
+    .map((id) => enchantmentCatalog[id])
+    .filter((enchantment) => enchantment && enchantment.slots.includes(item.slot));
+}
+
+function equippedEnchantmentSummary() {
+  return equipmentSlots
+    .map((slot) => getItem(state.equipment[slot]))
+    .flatMap(activeItemEnchantments)
+    .reduce((summary, enchantment) => addEnchantmentStats(summary, enchantment.stats), emptyEnchantmentSummary());
+}
+
+function emptyEnchantmentSummary() {
+  return {
+    damage: 0,
+    defense: 0,
+    maxHp: 0,
+    critChance: 0,
+    critDamage: 0,
+    bossDamage: 0,
+    damageReduction: 0,
+    lowHpShield: 0,
+    goldBonus: 0,
+    xpBonus: 0,
+    lootBonus: 0,
+    durabilityReduction: 0,
+  };
+}
+
+function addEnchantmentStats(summary, stats = {}) {
+  Object.keys(summary).forEach((key) => {
+    summary[key] += stats[key] || 0;
+  });
+  return summary;
 }
 
 function itemEffect(item) {
@@ -597,7 +663,7 @@ function repairSlotMultiplier(slot) {
 
 function damageEquippedItems(enemy, extraLoss = 0) {
   const broken = [];
-  const wearReduction = itemEffectSummary().durabilityReduction;
+  const wearReduction = Math.min(0.55, itemEffectSummary().durabilityReduction + equippedEnchantmentSummary().durabilityReduction);
   equipmentSlots.forEach((slot) => {
     const itemId = state.equipment[slot];
     const item = getItem(itemId);
@@ -1017,6 +1083,7 @@ async function fight() {
   let enemyHp = enemy.hp;
   const stats = totalStats();
   const effectSummary = itemEffectSummary();
+  const enchantStats = equippedEnchantmentSummary();
   const combatStats = combatStatsWithItemEffects(stats, enemy, effectSummary);
   let rounds = 0;
   const events = [];
@@ -1094,6 +1161,7 @@ async function fight() {
     const effectiveDefense = Math.max(0, enemy.defense - armorIgnore - effectArmorIgnore);
     const basePlayerHit = Math.max(1, random(combatStats.damage - 4, combatStats.damage + 3) - Math.floor(effectiveDefense * 1.08));
     let playerHit = basePlayerHit;
+    if (enemy.elite || enemy.boss) playerHit = Math.max(1, Math.floor(playerHit * (1 + enchantStats.bossDamage)));
     let playerText = `Du triffst für ${playerHit}.`;
     let playerAbilityId = "";
 
@@ -1214,6 +1282,7 @@ async function fight() {
     const abilityMultiplier = enemyAbility?.damageMultiplier || 1;
     const passiveEnemyMultiplier = enemyDamagePassiveMultiplier(enemy, enemyHp);
     let enemyHit = Math.max(1, Math.floor(enemyBaseHit * enemyDamageMultiplier * abilityMultiplier * passiveEnemyMultiplier));
+    enemyHit = Math.max(1, Math.floor(enemyHit * (1 - Math.min(0.35, enchantStats.damageReduction))));
     let guardBlocked = false;
     if (!fightState.guardBlockUsed && effectSummary.firstHitReduction > 0) {
       enemyHit = Math.max(1, Math.floor(enemyHit * (1 - effectSummary.firstHitReduction)));
@@ -1318,9 +1387,11 @@ async function fight() {
 
     if (playerHp > 0) {
       state.hp = Math.max(1, playerHp);
-      const gold = random(enemy.gold[0], enemy.gold[1]);
+      const enchantStats = equippedEnchantmentSummary();
+      const gold = Math.max(1, Math.floor(random(enemy.gold[0], enemy.gold[1]) * (1 + enchantStats.goldBonus)));
+      const xp = Math.max(1, Math.floor(enemy.xp * (1 + enchantStats.xpBonus)));
       state.gold += gold;
-      gainXp(enemy.xp);
+      gainXp(xp);
       grantMaterials(enemy.baseId || selectedEnemy, enemy.eliteVariant);
       createLootChoices(enemy, enemy.baseId || selectedEnemy);
       recordSmithMasteryBattle(enemy);
@@ -1328,7 +1399,7 @@ async function fight() {
       maybeGrantBattleRenown(enemy);
       maybeDropRareQuest(enemy);
       refreshQuestBoard(false);
-      log(`Sieg gegen ${enemy.name} nach ${rounds} Runden. +${enemy.xp} XP, +${gold} Gold.`, "good");
+      log(`Sieg gegen ${enemy.name} nach ${rounds} Runden. +${xp} XP, +${gold} Gold.`, "good");
       if (enemy.boss) remindSaveBackup("du hast einen Dungeon-Boss besiegt.");
     } else {
       const xpLoss = Math.min(state.xp, Math.ceil(xpForLevel(state.level) * 0.1));
@@ -1595,7 +1666,25 @@ function itemScore(item) {
     + item.defense
     + (item.critChance || 0) * 90
     + (item.critDamage || 0) * 28
-    + itemEffectScore(item);
+    + itemEffectScore(item)
+    + itemEnchantmentScore(item);
+}
+
+function itemEnchantmentScore(item) {
+  return activeItemEnchantments(item).reduce((score, enchantment) => {
+    const stats = enchantment.stats || {};
+    return score
+      + (stats.damage || 0) * 1.5
+      + (stats.defense || 0)
+      + (stats.maxHp || 0) * 0.12
+      + (stats.critChance || 0) * 90
+      + (stats.critDamage || 0) * 28
+      + (stats.bossDamage || 0) * 45
+      + (stats.damageReduction || 0) * 70
+      + (stats.lootBonus || 0) * 42
+      + (stats.goldBonus || 0) * 20
+      + (stats.xpBonus || 0) * 18;
+  }, 0);
 }
 
 function itemEffectScore(item) {
@@ -1817,7 +1906,8 @@ function rollQuality(enemy) {
   const roll = Math.random();
   const eliteBonus = enemy.elite ? 0.025 : 0;
   const dungeonBonus = enemy.tags.dungeon ? 0.015 : 0;
-  const bonus = eliteBonus + dungeonBonus + Math.min(0.025, enemy.level * 0.0013);
+  const enchantBonus = Math.min(0.08, equippedEnchantmentSummary().lootBonus || 0);
+  const bonus = eliteBonus + dungeonBonus + Math.min(0.025, enemy.level * 0.0013) + enchantBonus;
 
   if (roll > 0.996 - bonus) return "legendary";
   if (roll > 0.965 - bonus) return "epic";
@@ -2152,6 +2242,88 @@ function canPayUpgradeCost(cost) {
   return state.gold >= cost.gold && Object.entries(cost.materials).every(([id, amount]) => (state.materials[id] || 0) >= amount);
 }
 
+function enchantCost() {
+  const slotLimit = maxEnchantSlotsForLevel();
+  return {
+    gold: 65 + slotLimit * 25,
+    materials: { shard: 2 + slotLimit, moonDust: 1 },
+  };
+}
+
+function canPayCost(cost) {
+  return state.gold >= cost.gold && Object.entries(cost.materials || {}).every(([id, amount]) => (state.materials[id] || 0) >= amount);
+}
+
+function spendCost(cost) {
+  state.gold -= cost.gold || 0;
+  Object.entries(cost.materials || {}).forEach(([id, amount]) => {
+    state.materials[id] -= amount;
+  });
+}
+
+function enchantmentPool(slot, category, item = null) {
+  const level = state.level;
+  const allowedRarities = level >= 14 ? ["common", "rare", "epic"] : ["common", "rare"];
+  const usedGroups = new Set(activeItemEnchantments(item).map((enchantment) => enchantment.group));
+  return Object.entries(enchantmentCatalog)
+    .filter(([, enchantment]) => enchantment.category === category)
+    .filter(([, enchantment]) => enchantment.slots.includes(slot))
+    .filter(([, enchantment]) => allowedRarities.includes(enchantment.rarity))
+    .filter(([, enchantment]) => !usedGroups.has(enchantment.group))
+    .map(([id]) => id);
+}
+
+function rollEnchantment(slot, category, item) {
+  const pool = enchantmentPool(slot, category, item);
+  if (!pool.length) return null;
+  const weighted = pool.flatMap((id) => {
+    const rarity = enchantmentCatalog[id].rarity;
+    const weight = rarity === "epic" ? 1 : rarity === "rare" ? 3 : 6;
+    return Array.from({ length: weight }, () => id);
+  });
+  return weighted[random(0, weighted.length - 1)];
+}
+
+function ensureCustomEquippedItem(slot) {
+  const itemId = state.equipment[slot];
+  const item = getItem(itemId);
+  if (!item) return null;
+  if (state.customItems[itemId]) return state.customItems[itemId];
+  const custom = { ...item, id: itemId, enchantments: [...(item.enchantments || [])] };
+  state.customItems[itemId] = custom;
+  return custom;
+}
+
+function enchantEquipped(slot, category) {
+  if (!enchantmentsUnlocked()) {
+    log("Mira Nachtfaden erscheint erst, wenn du erfahren genug bist.", "bad");
+    return;
+  }
+  const item = ensureCustomEquippedItem(slot);
+  if (!item) return;
+  const limit = maxEnchantSlotsForLevel();
+  if ((item.enchantments || []).length >= limit) {
+    log(`${item.name} hat aktuell keinen freien Verzauberungs-Slot.`, "bad");
+    return;
+  }
+  const cost = enchantCost();
+  if (!canPayCost(cost)) {
+    log("Mira Nachtfaden braucht mehr Gold, Runensplitter oder Mondstaub.", "bad");
+    return;
+  }
+  const enchantmentId = rollEnchantment(item.slot, category, item);
+  const enchantment = enchantmentCatalog[enchantmentId];
+  if (!enchantment) {
+    log("Für dieses Item passt in dieser Kategorie keine freie Verzauberung.", "bad");
+    return;
+  }
+  spendCost(cost);
+  item.enchantments = [...(item.enchantments || []), enchantmentId];
+  log(`${item.name} verzaubert: ${enchantment.name}.`, "drop");
+  save();
+  render();
+}
+
 function previewUpgradedItem(item) {
   const upgraded = { ...item, upgrade: (item.upgrade || 0) + 1 };
   if (item.slot === "weapon") upgraded.damage += 2;
@@ -2187,6 +2359,7 @@ function upgradeEquipped(slot) {
     state.materials[id] -= amount;
   });
   const upgraded = previewUpgradedItem(item);
+  upgraded.id = upgraded.id || state.equipment[slot];
   state.customItems[upgraded.id] = upgraded;
   if (upgraded.upgrade >= currentSmithMasteryLimit()) {
     state.smithMastery.discovered = true;
@@ -2391,9 +2564,11 @@ function combatRiskEstimate(enemy, stats = totalStats()) {
 }
 
 function expectedPlayerDamagePerRound(enemy, stats, effectSummary = itemEffectSummary()) {
+  const enchantStats = equippedEnchantmentSummary();
   const critMultiplier = 1 + (stats.critChance || 0) * ((stats.critDamage || 1.5) - 1);
   const effectArmorIgnore = (enemy.elite || enemy.boss) ? enemy.defense * effectSummary.eliteArmorIgnore : 0;
   let baseHit = Math.max(1, stats.damage - Math.max(0, enemy.defense - effectArmorIgnore) * 1.08) * critMultiplier;
+  if (enemy.elite || enemy.boss) baseHit *= 1 + enchantStats.bossDamage;
   baseHit *= playerAbilityDamageMultiplier(enemy);
   baseHit *= enemyAverageDamageTakenMultiplier(enemy, baseHit);
   baseHit *= enemyPlayerDamageDebuffMultiplier(enemy);
@@ -2451,6 +2626,7 @@ function expectedEnemyEffectiveHp(enemy, playerDamagePerRound) {
 }
 
 function expectedEnemyDamagePerRound(enemy, stats, effectSummary = itemEffectSummary()) {
+  const enchantStats = equippedEnchantmentSummary();
   const averageHit = (enemy.damage[0] + enemy.damage[1]) / 2;
   const critStats = enemyCriticalStats(enemy);
   const critMultiplier = 1 + critStats.critChance * (critStats.critDamage - 1);
@@ -2459,6 +2635,7 @@ function expectedEnemyDamagePerRound(enemy, stats, effectSummary = itemEffectSum
   hit *= enemyDamagePassiveMultiplier(enemy, enemy.hp * 0.45);
   hit += enemyDotDamagePerRound(enemy);
   hit *= playerDefensiveAbilityMultiplier(stats);
+  hit *= 1 - Math.min(0.35, enchantStats.damageReduction);
   hit *= 1 - Math.min(0.08, effectSummary.firstHitReduction / 8);
   hit *= effectSummary.firstHitWeaken < 1 ? 0.985 : 1;
   return Math.max(1, hit);
@@ -2527,12 +2704,14 @@ function playerDefensiveAbilityMultiplier(stats) {
 }
 
 function expectedPlayerEffectiveHp(enemy, stats, effectSummary = itemEffectSummary()) {
+  const enchantStats = equippedEnchantmentSummary();
   let hp = Math.max(1, state.hp || stats.maxHp);
   if (hasBuildAbility("battleRush")) hp += stats.maxHp * 0.18;
   if (hasBuildAbility("lastStand")) hp += stats.maxHp * 0.14;
   if (hasBuildAbility("shieldWall")) hp += stats.maxHp * 0.08;
   if (effectSummary.firstHitReduction > 0) hp += stats.maxHp * 0.04;
   if (effectSummary.postCombatHeal > 0) hp += stats.maxHp * Math.min(0.12, effectSummary.postCombatHeal);
+  if (enchantStats.lowHpShield > 0) hp += stats.maxHp * Math.min(0.18, enchantStats.lowHpShield);
   if (enemyAbilityIds(enemy).some((id) => ["judgementStrike", "executionOrder"].includes(id))) hp *= 0.94;
   return hp;
 }

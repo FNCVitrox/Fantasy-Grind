@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=0.8.58" />
-    <link rel="stylesheet" href="./css/modals.css?v=0.8.58" />
-    <link rel="stylesheet" href="./css/responsive.css?v=0.8.58" />
+    <link rel="stylesheet" href="./css/base.css?v=0.8.59" />
+    <link rel="stylesheet" href="./css/modals.css?v=0.8.59" />
+    <link rel="stylesheet" href="./css/responsive.css?v=0.8.59" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.58</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.59</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
@@ -31,6 +31,9 @@
         </button>
         <button class="book-button smith-button" id="openSmithBtn" type="button" aria-label="Schmied öffnen">
           <span>Schmied</span>
+        </button>
+        <button class="book-button enchant-button" id="openEnchantBtn" type="button" aria-label="Arkanistin öffnen">
+          <span>Arkanistin</span>
         </button>
         <button class="book-button save-menu-button" id="openSaveMenuBtn" type="button" aria-label="Spielstand öffnen">
           <span>Spielstand</span>
@@ -235,7 +238,7 @@
       <div class="modal-window smith-window" role="dialog" aria-modal="true" aria-labelledby="smithTitle">
         <div class="modal-window-head">
           <div>
-            <p class="eyebrow">Zwergenmeister der Grauwacht</p>
+            <p class="eyebrow" id="smithEyebrow">Zwergenmeister der Grauwacht</p>
             <h2 id="smithTitle">Borin Glutbart</h2>
           </div>
           <button class="modal-close" id="closeSmithBtn" type="button" aria-label="Schmied schließen">Schließen</button>
@@ -259,6 +262,17 @@
             </div>
           </div>
           <div class="salvage-list" id="salvageList"></div>
+        </section>
+        <section class="smith-section enchant-section" id="smithEnchantSection" hidden>
+          <div class="section-title">
+            <h3>Verzaubern</h3>
+            <button class="bulk-action" type="button" data-smith-view="home">Zurück</button>
+          </div>
+          <div class="enchant-intro">
+            <strong>Mira Nachtfaden</strong>
+            <p>"Runen sind keine Farbe auf Stahl. Sie sind ein Versprechen, das beißt."</p>
+          </div>
+          <div class="enchant-grid" id="enchantGrid"></div>
         </section>
       </div>
     </div>
@@ -349,12 +363,12 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=0.8.58"></script>
-    <script src="./scripts/save-system.js?v=0.8.58"></script>
-    <script src="./scripts/core.js?v=0.8.58"></script>
-    <script src="./scripts/render.js?v=0.8.58"></script>
-    <script src="./scripts/render-loot.js?v=0.8.58"></script>
-    <script src="./scripts/events.js?v=0.8.58"></script>
+    <script src="./scripts/data.js?v=0.8.59"></script>
+    <script src="./scripts/save-system.js?v=0.8.59"></script>
+    <script src="./scripts/core.js?v=0.8.59"></script>
+    <script src="./scripts/render.js?v=0.8.59"></script>
+    <script src="./scripts/render-loot.js?v=0.8.59"></script>
+    <script src="./scripts/events.js?v=0.8.59"></script>
   </body>
 </html>
 

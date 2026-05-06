@@ -1034,6 +1034,68 @@ h2 {
   line-height: 1.35;
 }
 
+.enchant-intro,
+.enchant-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(166, 120, 194, 0.14), transparent),
+    #07111b;
+}
+
+.enchant-intro {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 10px;
+  padding: 12px;
+}
+
+.enchant-intro strong {
+  color: #d6b2ed;
+  font-size: 18px;
+}
+
+.enchant-intro p {
+  color: var(--muted);
+}
+
+.enchant-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.enchant-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(360px, 1.2fr) minmax(160px, 0.5fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+}
+
+.enchant-card p,
+.enchant-card small {
+  color: var(--muted);
+}
+
+.enchant-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.enchant-actions button {
+  display: grid;
+  gap: 2px;
+  min-height: 54px;
+  align-content: center;
+  text-align: left;
+}
+
+.enchant-actions span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .material {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

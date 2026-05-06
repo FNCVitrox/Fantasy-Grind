@@ -230,6 +230,18 @@ $("smithSalvageSection").addEventListener("click", (event) => {
   renderSmith();
 });
 
+$("smithEnchantSection").addEventListener("click", (event) => {
+  const enchant = event.target.closest("[data-enchant-slot]");
+  if (enchant) {
+    enchantEquipped(enchant.dataset.enchantSlot, enchant.dataset.enchantCategory);
+    return;
+  }
+  const button = event.target.closest("[data-smith-view]");
+  if (!button) return;
+  smithView = button.dataset.smithView;
+  renderSmith();
+});
+
 $("salvageList").addEventListener("click", (event) => {
   const button = event.target.closest("[data-salvage]");
   if (button) salvageInventoryItem(Number(button.dataset.salvage));
@@ -296,6 +308,11 @@ $("inventoryModal").addEventListener("click", (event) => {
 });
 $("openSmithBtn").addEventListener("click", () => {
   smithView = "home";
+  renderSmith();
+  openModal("smithModal");
+});
+$("openEnchantBtn").addEventListener("click", () => {
+  smithView = enchantmentsUnlocked() ? "enchant" : "home";
   renderSmith();
   openModal("smithModal");
 });
@@ -474,6 +491,7 @@ function setControlsDisabled(disabled) {
     if (button.id === "openInventoryBtn") return;
     if (button.id === "closeInventoryBtn") return;
     if (button.id === "openSmithBtn") return;
+    if (button.id === "openEnchantBtn") return;
     if (button.id === "closeSmithBtn") return;
     if (button.dataset.loot !== undefined) return;
     if (button.dataset.equipLoot !== undefined) return;

@@ -47,6 +47,7 @@ function renderLootCard(item, index) {
     <p class="loot-card-meta">${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)}</p>
     <p class="loot-card-set ${item.set ? "set-line" : "empty"}">${item.set ? escapeHtml(setBonuses[item.set]?.name || item.set) : "&nbsp;"}</p>
     ${item.effect ? `<p class="loot-card-effect">${escapeHtml(itemEffectName(item))}: ${escapeHtml(itemEffectText(item))}</p>` : ""}
+    ${renderItemEnchantmentLine(item)}
     ${renderLootStatGrid(item)}
     <p class="loot-card-value">Haltbarkeit: ${item.durability ?? 100}%</p>
     <p class="loot-card-value">Wert: ${sellValue(item)} Gold</p>
@@ -93,6 +94,7 @@ function lootChoicesSignature() {
       item.critChance || 0,
       item.critDamage || 0,
       item.effect || "",
+      (item.enchantments || []).join(","),
       item.durability ?? 100,
       item.set || "",
       item.sourceType || "",

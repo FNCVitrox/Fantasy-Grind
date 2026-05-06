@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.58
+Alpha v0.8.59
 
 ## Tests Starten
 
@@ -36,6 +36,9 @@ Wenn alles passt, steht am Ende `Smoke test passed` und `ALLE TESTS BESTANDEN`.
 - Schmied-Meisterschaft mit globalen Upgrade-Limits +5, +10, +15 und +20
 - Drei Meisteraufträge: Glut des Ambosses, Stahl unter Druck und Meisterzeichen der Grauwacht
 - Erster Meisterauftrag bleibt verborgen, bis ein ausgerüstetes Item wirklich am aktuellen Limit ist
+- Mira Nachtfaden als Arkanistin der Grauwacht für erste Item-Verzauberungen ab Level 8
+- Verzauberungs-Slots werden über Level 8, 14 und 20 freigeschaltet
+- Offensiv-, Defensiv- und Utility-Verzauberungen wirken auf Schaden, Leben, Crit, Gold, XP, Loot und Haltbarkeit
 - Frühe Gegner können seltene Schmiedematerialien für den ersten Meisterauftrag fallen lassen
 - Crit Chance und Crit Damage als eigene Spieler- und Item-Werte
 - Item-Effekte V1 mit Blutkante, Wachblock, Zäher Schritt, Elitenjäger, Nachhall und Boss-Effekten
@@ -82,6 +85,7 @@ Wenn alles passt, steht am Ende `Smoke test passed` und `ALLE TESTS BESTANDEN`.
 - Set-Boni für besondere Ausrüstung
 - Inventar mit Ausrüsten, Verkaufen und Zerlegen
 - Schmied zum Verbessern, Zerlegen und Reparieren von Ausrüstung
+- Arkanistin zum Verzaubern ausgerüsteter Items mit Runensplittern, Mondstaub und Gold
 - Materialsystem mit Eisenstücken, Lederresten, Runensplittern, Set-Materialien und seltenen Komponenten
 - Schmied-Dialoge ändern sich je nach Ruhm-Rang und Beziehung zum Spieler
 - Ein gemeinsamer Spielstand-Button bündelt Herunterladen und Laden von Sicherungen
@@ -208,7 +212,7 @@ Mittelfristig:
 - Drei passende Fähigkeiten pro Build
 - Manuelles und automatisches Kampfsystem mit Wechselmöglichkeit
 - Lernsystem für Fähigkeiten, z.B. Schule, Schriftrollen oder Zauberin
-- Verzauberungssystem über eine Hexe oder Zauberin
+- Meisteraufträge für spätere Verzauberungsstufen und arkane Endgame-Verzauberungen
 - Achievements
 - Item-Bilder statt nur Textdarstellung
 

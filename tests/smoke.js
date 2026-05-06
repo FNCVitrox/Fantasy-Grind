@@ -174,5 +174,11 @@ assert(vm.runInContext("state = defaultState(); renderBestiaryList().includes('c
 assert(vm.runInContext("state = defaultState(); const html = renderBestiaryList(); html.includes('Sammlung: 0/') && !html.includes('Level 1') && !html.includes('44 Leben')", context), "bestiary cards should show compact collection progress instead of level and hp");
 assert(vm.runInContext("state = defaultState(); const rows = renderAllBestiaryRows('wolf', enemies.wolf); rows.includes('Unbekannt') && rows.includes('Chance') && rows.includes('Ring des Rudels')", context), "bestiary should reveal drop names and chances while locking undiscovered details");
 assert(!vm.runInContext("state = defaultState(); renderAllBestiaryRows('wolf', enemies.wolf).includes('1x')", context), "bestiary rows should not show found counts");
+assert.strictEqual(vm.runInContext("state = defaultState(); maxEnchantSlotsForLevel()", context), 0);
+assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 8; maxEnchantSlotsForLevel()", context), 1);
+assert.strictEqual(vm.runInContext("maxEnchantSlotsForLevel(14)", context), 2);
+assert(vm.runInContext("Object.values(enchantmentCatalog).every((enchantment) => enchantment.slots.every((slot) => equipmentSlots.includes(slot)))", context), "enchantments should only target valid equipment slots");
+assert(vm.runInContext("state = defaultState(); state.level = 8; state.customItems.trainingSword = { ...items.trainingSword, id: 'trainingSword', enchantments: ['keenEdge'] }; totalStats().critChance > 0.06", context), "equipped enchantments should affect player stats");
+assert(vm.runInContext("state = defaultState(); state.level = 8; state.gold = 999; state.materials.shard = 9; state.materials.moonDust = 9; render = () => {}; renderLog = () => {}; enchantEquipped('weapon', 'offense'); getItem(state.equipment.weapon).enchantments.length === 1", context), "enchanting should add a valid enchantment to equipped gear");
 
 console.log("Smoke test passed");

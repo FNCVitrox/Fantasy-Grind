@@ -16,6 +16,7 @@
     : `<span class="button-main">Lagerplatz</span><span class="button-price">${restPrice}</span>`;
   renderCachedHtml("restBtn", `${state.hp >= state.maxHp ? "full" : restPrice}`, () => restLabel);
   setDisabled("restBtn", state.hp >= state.maxHp);
+  setDisabled("openEnchantBtn", !enchantmentsUnlocked());
 
   renderMap();
   renderEnemies(stats);
@@ -237,6 +238,17 @@ function renderItemEffectLine(item) {
   return `<span>Effekt: ${escapeHtml(name)} - ${escapeHtml(itemEffectText(item))}</span>`;
 }
 
+function itemEnchantmentsText(item) {
+  const enchantments = activeItemEnchantments(item);
+  if (!enchantments.length) return "";
+  return `Verzauberung: ${enchantments.map((enchantment) => `${enchantment.name} (${enchantment.text})`).join(" · ")}`;
+}
+
+function renderItemEnchantmentLine(item) {
+  const text = itemEnchantmentsText(item);
+  return text ? `<span>${escapeHtml(text)}</span>` : "";
+}
+
 function itemStatEntries(item, labels = {}) {
   return [
     item.damage ? { key: "damage", label: labels.damage || "Schaden", value: item.damage } : null,
@@ -384,7 +396,7 @@ function equipmentSignature() {
     .map((slot) => {
       const id = state.equipment[slot] || "";
       const item = getItem(id);
-      return `${slot}:${id}:${item?.damage ?? ""}:${item?.defense ?? ""}:${item?.critChance ?? 0}:${item?.critDamage ?? 0}:${item?.upgrade ?? 0}:${state.itemDurability[id] ?? ""}`;
+      return `${slot}:${id}:${item?.damage ?? ""}:${item?.defense ?? ""}:${item?.critChance ?? 0}:${item?.critDamage ?? 0}:${item?.upgrade ?? 0}:${(item?.enchantments || []).join(",")}:${state.itemDurability[id] ?? ""}`;
     })
     .join("|");
 }
@@ -410,6 +422,7 @@ function renderEquipment() {
     const quality = itemQuality(item);
     const setName = item.set ? setBonuses[item.set]?.name || item.set : "";
     const statText = itemStatText(item);
+    const enchantText = itemEnchantmentsText(item);
     return `<button class="equipment-chip rarity-card rarity-${quality}" type="button" data-open-equipment>
       <strong>${labelFor(slotLabel, slot)}</strong>
       <span class="quality-${quality}">${escapeHtml(item.name)}</span>
@@ -419,6 +432,7 @@ function renderEquipment() {
         <b class="quality-${quality}">${escapeHtml(item.name)}</b>
         <em>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</em>
         ${statText ? `<em>${statText}</em>` : ""}
+        ${enchantText ? `<em>${enchantText}</em>` : ""}
         <em>Haltbarkeit: ${durability}%</em>
         <em>Reparatur: ${repairCost} Gold</em>
         ${setName ? `<em>Set: ${escapeHtml(setName)}</em>` : ""}
@@ -442,11 +456,13 @@ function renderEquipmentDetails() {
     const slotRepairCost = repairCostForSlot(slot);
     const quality = itemQuality(item);
     const statText = itemStatText(item);
+    const enchantText = itemEnchantmentsText(item);
     return `<div class="slot rarity-card rarity-${quality}">
       <strong>${labelFor(slotLabel, slot)}</strong>
       <p class="quality-${quality}">${escapeHtml(item.name)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</p>
       ${item.set ? `<p class="set-line set-hover-row"><span>${escapeHtml(setBonuses[item.set]?.name || item.set)}</span><span class="tooltip-source" data-set-tooltip-key="${setKey}"></span></p>` : ""}
       ${statText ? `<p>${statText}</p>` : ""}
+      ${enchantText ? `<p>${enchantText}</p>` : ""}
       <p class="${itemDurability(id) <= 25 ? "durability-low" : ""}">Haltbarkeit: ${itemDurability(id)}%</p>
       ${slotRepairCost ? `<p>Reparatur: ${slotRepairCost} Gold</p>` : ""}
     </div>`;
@@ -454,15 +470,19 @@ function renderEquipmentDetails() {
 }
 
 function renderSmith() {
+  setText("smithEyebrow", smithView === "enchant" ? "Arkanistin der Grauwacht" : "Zwergenmeister der Grauwacht");
+  setText("smithTitle", smithView === "enchant" ? "Mira Nachtfaden" : "Borin Glutbart");
   renderSmithMaterials();
   renderSmithRenown();
   $("smithHome").hidden = smithView !== "home";
   $("smithUpgradeSection").hidden = smithView !== "upgrade";
   $("smithSalvageSection").hidden = smithView !== "salvage";
+  $("smithEnchantSection").hidden = smithView !== "enchant";
 
   if (smithView === "home") renderSmithHome();
   if (smithView === "upgrade") renderSmithUpgrade();
   if (smithView === "salvage") renderSmithSalvage();
+  if (smithView === "enchant") renderSmithEnchant();
 }
 
 function formatSaveDate(value) {
@@ -651,8 +671,7 @@ function renderSmithRenown() {
 }
 
 function renderSmithHome() {
-  if ($("smithHome").dataset.rendered !== "true") {
-    $("smithHome").innerHTML = `
+  $("smithHome").innerHTML = `
     <div class="smith-greeting" id="smithGreeting">
       <div class="smith-avatar" aria-hidden="true"></div>
       <div id="smithGreetingText"></div>
@@ -667,14 +686,16 @@ function renderSmithHome() {
         <strong>Zerlegen</strong>
         <span>Alte Items in Schmiedematerialien zerlegen.</span>
       </button>
+      <button type="button" data-smith-view="enchant" ${enchantmentsUnlocked() ? "" : "disabled"}>
+        <strong>Verzaubern</strong>
+        <span>${enchantmentsUnlocked() ? "Mira Nachtfaden bindet Runen an deine Ausrüstung." : "Wird ab Level 8 freigeschaltet."}</span>
+      </button>
       <button type="button" data-open-repair>
         <strong>Reparieren</strong>
         <span>Ausrüstung beim Schmied für Gold instand setzen.</span>
       </button>
     </div>
   `;
-    $("smithHome").dataset.rendered = "true";
-  }
   renderSmithGreeting();
   renderSmithMasteryPanel();
 }
@@ -806,6 +827,42 @@ function renderSmithUpgrade() {
   }).join("");
 }
 
+function renderSmithEnchant() {
+  const cost = enchantCost();
+  const costText = `${cost.gold} Gold · ${Object.entries(cost.materials)
+    .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)
+    .join(" · ")}`;
+  const slotLimit = maxEnchantSlotsForLevel();
+  $("enchantGrid").innerHTML = equipmentSlots.map((slot) => {
+    const itemId = state.equipment[slot];
+    const item = getItem(itemId);
+    if (!item) return "";
+    const quality = itemQuality(item);
+    const enchantments = activeItemEnchantments(item);
+    const freeSlots = Math.max(0, slotLimit - enchantments.length);
+    const full = freeSlots <= 0;
+    const cannotPay = !canPayCost(cost);
+    return `<div class="enchant-card rarity-card rarity-${quality}">
+      <div>
+        <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
+        <p>${labelFor(qualityLabel, quality)} · Slots ${enchantments.length}/${slotLimit}</p>
+        <p>${enchantments.length ? enchantments.map((enchantment) => `${escapeHtml(enchantment.name)}: ${escapeHtml(enchantment.text)}`).join("<br>") : "Noch nicht verzaubert."}</p>
+      </div>
+      <div class="enchant-actions">
+        ${Object.entries(enchantmentCategoryLabel).map(([category, label]) => {
+          const hasPool = enchantmentPool(slot, category, item).length > 0;
+          const disabled = full || cannotPay || !hasPool;
+          return `<button type="button" data-enchant-slot="${slot}" data-enchant-category="${category}" ${disabled ? "disabled" : ""}>
+            <strong>${escapeHtml(label)}</strong>
+            <span>${hasPool ? "Rune wirken" : "Keine passende Rune"}</span>
+          </button>`;
+        }).join("")}
+      </div>
+      <small>${full ? "Alle aktuellen Slots belegt." : `Ritualkosten: ${costText}`}</small>
+    </div>`;
+  }).join("");
+}
+
 function renderSmithSalvage() {
   $("salvageAllBtn").disabled = !state.inventory.length;
   $("salvageList").innerHTML = state.inventory.length
@@ -841,11 +898,13 @@ function renderInventory() {
     const current = getItem(state.equipment[slot]);
     const compare = compareLoot(item, current);
     const statText = itemStatText(item);
+    const enchantText = itemEnchantmentsText(item);
     return `<div class="inventory-item rarity-card rarity-${quality}">
       <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
       <p>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · Wert ${sellValue(item)} Gold</p>
       ${item.set ? `<p class="set-line">${escapeHtml(setBonuses[item.set]?.name || item.set)}</p>` : ""}
       ${statText ? `<p>${statText}</p>` : ""}
+      ${enchantText ? `<p>${enchantText}</p>` : ""}
       <p>Haltbarkeit: ${itemDurability(itemId)}%</p>
       <div class="loot-compare compact">
         ${renderCompareSpans(compare, 3)}
@@ -1385,7 +1444,7 @@ function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLo
 }
 
 function cacheTooltipItem(item) {
-  const key = item.fixed ? `fixed:${item.id}` : `${item.name}|${item.slot}|${item.quality}|${item.damage}|${item.defense}|${item.critChance || 0}|${item.critDamage || 0}|${item.effect || ""}`;
+  const key = item.fixed ? `fixed:${item.id}` : `${item.name}|${item.slot}|${item.quality}|${item.damage}|${item.defense}|${item.critChance || 0}|${item.critDamage || 0}|${item.effect || ""}|${(item.enchantments || []).join(",")}`;
   tooltipItemCache.set(key, item);
   return escapeAttr(key);
 }
@@ -1420,12 +1479,14 @@ function renderItemTooltip(item) {
   const repairLine = isEquipped ? `<span>Reparatur: ${repairCostForSlot(slot)} Gold</span>` : "";
   const upgradeLine = item.upgrade ? `<span>Verbesserung: +${item.upgrade}</span>` : "";
   const statText = itemStatText(item);
+  const enchantText = itemEnchantmentsText(item);
   return `<div class="item-tooltip">
     <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
     <span>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)}</span>
     ${item.set ? `<span>Set: ${escapeHtml(setBonuses[item.set]?.name || item.set)}</span>` : ""}
     ${upgradeLine}
     ${statText ? `<span>${statText}</span>` : ""}
+    ${enchantText ? `<span>${escapeHtml(enchantText)}</span>` : ""}
     ${renderItemEffectLine(item)}
     ${durabilityLine}
     ${repairLine}

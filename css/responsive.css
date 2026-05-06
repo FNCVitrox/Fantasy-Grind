@@ -384,6 +384,7 @@
   .repair-summary,
   .repair-row,
   .smith-card,
+  .enchant-card,
   .equipment-detail-grid,
   .player-stats-hero,
   .player-progress-grid,
@@ -412,6 +413,7 @@
   .materials,
   .smith-grid,
   .smith-choice-grid,
+  .enchant-actions,
   .smith-renown,
   .smith-greeting,
   .salvage-row {
