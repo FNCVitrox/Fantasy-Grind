@@ -602,20 +602,32 @@ function equippedItemEffects() {
 function itemEffectSummary(effects = equippedItemEffects()) {
   return effects.reduce((summary, effect) => {
     summary.bleedChance += effect.bleedChance || 0;
+    summary.poisonChance += effect.poisonChance || 0;
     summary.firstHitReduction = Math.max(summary.firstHitReduction, effect.firstHitReduction || 0);
+    summary.thornsRatio = Math.min(0.18, summary.thornsRatio + (effect.thornsRatio || 0));
     summary.durabilityReduction = Math.min(0.45, summary.durabilityReduction + (effect.durabilityReduction || 0));
+    summary.goldBonus = Math.min(0.25, summary.goldBonus + (effect.goldBonus || 0));
     summary.eliteCritChance += effect.eliteCritChance || 0;
+    summary.eliteDamageBonus = Math.min(0.25, summary.eliteDamageBonus + (effect.eliteDamageBonus || 0));
     summary.postCombatHeal += effect.postCombatHeal || 0;
+    summary.critHealRatio = Math.min(0.08, summary.critHealRatio + (effect.critHealRatio || 0));
+    summary.enemyCritReduction = Math.min(0.08, summary.enemyCritReduction + (effect.enemyCritReduction || 0));
     summary.eliteArmorIgnore = Math.max(summary.eliteArmorIgnore, effect.eliteArmorIgnore || 0);
     summary.firstHitWeaken = Math.min(summary.firstHitWeaken, effect.firstHitWeaken || 1);
     summary.critBurn = summary.critBurn || Boolean(effect.critBurn);
     return summary;
   }, {
     bleedChance: 0,
+    poisonChance: 0,
     firstHitReduction: 0,
+    thornsRatio: 0,
     durabilityReduction: 0,
+    goldBonus: 0,
     eliteCritChance: 0,
+    eliteDamageBonus: 0,
     postCombatHeal: 0,
+    critHealRatio: 0,
+    enemyCritReduction: 0,
     eliteArmorIgnore: 0,
     firstHitWeaken: 1,
     critBurn: false,
@@ -1000,9 +1012,10 @@ function enemyCriticalStats(enemy) {
   return { critChance: 0.03, critDamage: 1.5 };
 }
 
-function rollEnemyCritical(hit, enemy) {
+function rollEnemyCritical(hit, enemy, effectSummary = itemEffectSummary()) {
   const stats = enemyCriticalStats(enemy);
-  if (hit <= 0 || Math.random() >= stats.critChance) {
+  const critChance = Math.max(0, stats.critChance - Math.min(0.08, effectSummary.enemyCritReduction || 0));
+  if (hit <= 0 || Math.random() >= critChance) {
     return { damage: hit, critical: false };
   }
   return {
@@ -1244,6 +1257,7 @@ async function fight() {
     const basePlayerHit = Math.max(1, random(combatStats.damage - 4, combatStats.damage + 3) - Math.floor(effectiveDefense * 1.08));
     let playerHit = basePlayerHit;
     if (enemy.elite || enemy.boss) playerHit = Math.max(1, Math.floor(playerHit * (1 + enchantStats.bossDamage)));
+    if (enemy.elite || enemy.boss) playerHit = Math.max(1, Math.floor(playerHit * (1 + effectSummary.eliteDamageBonus)));
     let playerText = `Du triffst für ${playerHit}.`;
     let playerAbilityId = "";
 
@@ -1309,6 +1323,21 @@ async function fight() {
       text: playerText,
     });
 
+    if (playerHp > 0 && playerCrit.critical && effectSummary.critHealRatio > 0) {
+      const heal = Math.min(combatStats.maxHp - playerHp, Math.max(1, Math.floor(combatStats.maxHp * effectSummary.critHealRatio)));
+      if (heal > 0) {
+        playerHp += heal;
+        events.push({
+          round: rounds,
+          actor: "hero",
+          damage: 0,
+          enemyHp: Math.max(0, enemyHp),
+          playerHp: Math.max(0, playerHp),
+          text: `Lebenssog heilt ${heal} Leben.`,
+        });
+      }
+    }
+
     if (enemyHp > 0 && effectSummary.bleedChance > 0 && Math.random() < Math.min(0.32, effectSummary.bleedChance)) {
       const bleedDamage = Math.max(1, Math.ceil(combatStats.damage * 0.16));
       fightState.enemyDots.push({ name: "Blutung", damage: bleedDamage, turns: 2 });
@@ -1319,6 +1348,19 @@ async function fight() {
         enemyHp: Math.max(0, enemyHp),
         playerHp: Math.max(0, playerHp),
         text: `Blutkante öffnet eine Wunde. Blutung hält an.`,
+      });
+    }
+
+    if (enemyHp > 0 && effectSummary.poisonChance > 0 && Math.random() < Math.min(0.3, effectSummary.poisonChance)) {
+      const poisonDamage = Math.max(1, Math.ceil(combatStats.damage * 0.1));
+      fightState.enemyDots.push({ name: "Gift", damage: poisonDamage, turns: 3 });
+      events.push({
+        round: rounds,
+        actor: "hero",
+        damage: 0,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: `Giftkante legt Gift in die Wunde.`,
       });
     }
 
@@ -1371,7 +1413,7 @@ async function fight() {
       fightState.guardBlockUsed = true;
       guardBlocked = true;
     }
-    const enemyCrit = rollEnemyCritical(enemyHit, enemy);
+    const enemyCrit = rollEnemyCritical(enemyHit, enemy, effectSummary);
     enemyHit = enemyCrit.damage;
     fightState.nextEnemyDamageMultiplier = 1;
     playerHp -= enemyHit;
@@ -1408,6 +1450,19 @@ async function fight() {
       playerHp: Math.max(0, playerHp),
       text: enemyText,
     });
+
+    if (playerHp > 0 && enemyHp > 0 && effectSummary.thornsRatio > 0) {
+      const thornsDamage = Math.max(1, Math.floor(enemyHit * effectSummary.thornsRatio));
+      enemyHp -= thornsDamage;
+      events.push({
+        round: rounds,
+        actor: "hero",
+        damage: thornsDamage,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: `Dornenwache wirft ${thornsDamage} Schaden zurück.`,
+      });
+    }
 
     if (
       playerHp > 0
@@ -1470,7 +1525,8 @@ async function fight() {
     if (playerHp > 0) {
       state.hp = Math.max(1, playerHp);
       const enchantStats = equippedEnchantmentSummary();
-      const gold = Math.max(1, Math.floor(random(enemy.gold[0], enemy.gold[1]) * (1 + enchantStats.goldBonus)));
+      const goldBonus = enchantStats.goldBonus + effectSummary.goldBonus;
+      const gold = Math.max(1, Math.floor(random(enemy.gold[0], enemy.gold[1]) * (1 + goldBonus)));
       const xp = Math.max(1, Math.floor(enemy.xp * (1 + enchantStats.xpBonus)));
       state.gold += gold;
       gainXp(xp);
@@ -1773,8 +1829,8 @@ function itemEnchantmentScore(item) {
 function itemEffectScore(item) {
   const effect = itemEffect(item);
   if (!effect) return 0;
-  if (effect.critBurn || effect.eliteArmorIgnore) return 12;
-  if (effect.eliteCritChance || effect.postCombatHeal || effect.firstHitReduction) return 8;
+  if (effect.critBurn || effect.eliteArmorIgnore || effect.eliteDamageBonus || effect.critHealRatio) return 12;
+  if (effect.eliteCritChance || effect.postCombatHeal || effect.firstHitReduction || effect.enemyCritReduction || effect.thornsRatio) return 8;
   return 5;
 }
 
@@ -1863,10 +1919,16 @@ function rollItemEffect(slot, quality, enemy = null) {
 
 function itemEffectPool(slot, quality, enemy = null) {
   const pool = [];
-  if (slot === "weapon") pool.push("bleedEdge");
-  if (["offhand", "chest"].includes(slot)) pool.push("guardBlock");
+  if (slot === "weapon") pool.push("bleedEdge", "venomEdge");
+  if (["offhand", "chest"].includes(slot)) pool.push("guardBlock", "thornGuard", "steadfastWard");
+  if (slot === "pants") pool.push("thornGuard", "steadfastWard");
   if (["pants", "boots"].includes(slot)) pool.push("steadyStep");
+  if (["boots", "ring", "necklace"].includes(slot)) pool.push("luckyPouch");
   if (["ring", "necklace"].includes(slot)) pool.push("eliteHunter", "echoHeal");
+
+  if (quality === "epic" || quality === "legendary") {
+    if (["weapon", "ring", "necklace"].includes(slot)) pool.push("duelistMark", "lifeSiphon");
+  }
 
   if (enemy?.boss || quality === "legendary") {
     if (["weapon", "ring", "necklace"].includes(slot)) pool.push("crownBurn");
@@ -2771,10 +2833,13 @@ function expectedPlayerDamagePerRound(enemy, stats, effectSummary = itemEffectSu
   const effectArmorIgnore = (enemy.elite || enemy.boss) ? enemy.defense * effectSummary.eliteArmorIgnore : 0;
   let baseHit = Math.max(1, stats.damage - Math.max(0, enemy.defense - effectArmorIgnore) * 1.08) * critMultiplier;
   if (enemy.elite || enemy.boss) baseHit *= 1 + enchantStats.bossDamage;
+  if (enemy.elite || enemy.boss) baseHit *= 1 + effectSummary.eliteDamageBonus;
   baseHit *= playerAbilityDamageMultiplier(enemy);
   baseHit *= enemyAverageDamageTakenMultiplier(enemy, baseHit);
   baseHit *= enemyPlayerDamageDebuffMultiplier(enemy);
   baseHit += stats.damage * Math.min(0.08, effectSummary.bleedChance * 0.22);
+  baseHit += stats.damage * Math.min(0.07, effectSummary.poisonChance * 0.2);
+  baseHit += stats.damage * Math.min(0.08, effectSummary.thornsRatio * 0.35);
   if (effectSummary.critBurn) baseHit += stats.damage * (stats.critChance || 0) * 0.14;
   return Math.max(1, baseHit);
 }
@@ -2831,7 +2896,8 @@ function expectedEnemyDamagePerRound(enemy, stats, effectSummary = itemEffectSum
   const enchantStats = equippedEnchantmentSummary();
   const averageHit = (enemy.damage[0] + enemy.damage[1]) / 2;
   const critStats = enemyCriticalStats(enemy);
-  const critMultiplier = 1 + critStats.critChance * (critStats.critDamage - 1);
+  const enemyCritChance = Math.max(0, critStats.critChance - Math.min(0.08, effectSummary.enemyCritReduction || 0));
+  const critMultiplier = 1 + enemyCritChance * (critStats.critDamage - 1);
   let hit = Math.max(1, averageHit - stats.defense * 0.42) * critMultiplier;
   hit *= enemyAbilityDamageMultiplier(enemy);
   hit *= enemyDamagePassiveMultiplier(enemy, enemy.hp * 0.45);
@@ -2840,6 +2906,7 @@ function expectedEnemyDamagePerRound(enemy, stats, effectSummary = itemEffectSum
   hit *= 1 - Math.min(0.35, enchantStats.damageReduction);
   hit *= 1 - Math.min(0.08, effectSummary.firstHitReduction / 8);
   hit *= effectSummary.firstHitWeaken < 1 ? 0.985 : 1;
+  hit *= 1 - Math.min(0.04, effectSummary.critHealRatio * 0.3);
   return Math.max(1, hit);
 }
 
