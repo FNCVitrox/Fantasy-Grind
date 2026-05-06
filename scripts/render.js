@@ -910,8 +910,10 @@ function renderSmithUpgrade() {
 }
 
 function renderSmithEnchant() {
+  const mastery = $("enchantMastery");
   if (!enchantmentsUnlocked()) {
-    $("enchantMastery").innerHTML = "";
+    mastery.hidden = true;
+    mastery.innerHTML = "";
     $("enchantGrid").innerHTML = `
       <div class="enchant-locked">
         <div>
@@ -929,7 +931,8 @@ function renderSmithEnchant() {
     return;
   }
 
-  $("enchantMastery").innerHTML = renderEnchantMasteryMarkup();
+  mastery.hidden = false;
+  mastery.innerHTML = renderEnchantMasteryMarkup();
   const cost = enchantCost();
   const costText = `${cost.gold} Gold · ${Object.entries(cost.materials)
     .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)
