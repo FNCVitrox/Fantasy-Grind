@@ -1,14 +1,24 @@
 # Fantasy Grind
 
-Fantasy Grind ist ein browserbasiertes Fantasy-Grind-RPG rund um Ausrüstung, Risiko, Loot und langsame Progression. Du spielst einen Krieger der Grauwacht, kämpfst dich durch normale Gebiete und separate Dungeons, sammelst Gold, Materialien und Ausrüstung, erledigst Quests und verbesserst deine Items beim Schmied.
+Fantasy Grind ist ein browserbasiertes Fantasy-Grind-RPG rund um Kampf, Loot, Ausruestung, Quests und langsame Progression. Du spielst einen Krieger der Grauwacht, kaempfst in normalen Gebieten und separaten Dungeons, sammelst Materialien und baust deine Ausruestung Schritt fuer Schritt aus.
 
-Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht bereits: Gegner wählen, Kampf starten, Belohnung bekommen, Ausrüstung prüfen, reparieren oder verbessern und den nächsten Schritt wagen.
+Aktueller Stand: spielbarer Alpha-Prototyp.
 
-## Aktuelle Version
+## Version
 
-Alpha v0.8.59
+Alpha v0.8.60
 
-## Tests Starten
+## Spielen
+
+Fantasy Grind ist eine statische Browser-App.
+
+1. Repository herunterladen oder klonen.
+2. `index.html` im Browser oeffnen.
+3. Spielen.
+
+Es ist kein Server und keine Installation noetig.
+
+## Tests
 
 Im VS-Code-Terminal:
 
@@ -24,165 +34,81 @@ test-starten.bat
 
 Wenn alles passt, steht am Ende `Smoke test passed` und `ALLE TESTS BESTANDEN`.
 
-## Was Bereits Spielbar Ist
+## Wichtig: Spielstand sichern
 
-- Spielbarer Krieger mit Level, XP, Leben, Gold, Ruhm, Schaden, Verteidigung und Haltbarkeit
-- Drei Krieger-Builds: Tank, Schaden und Bruiser
-- Jeder Build hat drei automatische Fähigkeiten
-- Jeder Build hat eine eigene kleine Charakteroptik im Kampffeld
-- Klickbares Charakterporträt mit eigenem Spielerwerte-Fenster
-- Lagerplatz in der oberen Leiste zum Heilen
-- Borin Glutbart als Zwergenmeister der Grauwacht mit eigenen Schmied-Dialogen
-- Schmied-Meisterschaft mit globalen Upgrade-Limits +5, +10, +15 und +20
-- Drei Meisteraufträge: Glut des Ambosses, Stahl unter Druck und Meisterzeichen der Grauwacht
-- Erster Meisterauftrag bleibt verborgen, bis ein ausgerüstetes Item wirklich am aktuellen Limit ist
-- Mira Nachtfaden als Arkanistin der Grauwacht für erste Item-Verzauberungen ab Level 8
-- Verzauberungs-Slots werden über Level 8, 14 und 20 freigeschaltet
-- Offensiv-, Defensiv- und Utility-Verzauberungen wirken auf Schaden, Leben, Crit, Gold, XP, Loot und Haltbarkeit
-- Frühe Gegner können seltene Schmiedematerialien für den ersten Meisterauftrag fallen lassen
-- Crit Chance und Crit Damage als eigene Spieler- und Item-Werte
-- Item-Effekte V1 mit Blutkante, Wachblock, Zäher Schritt, Elitenjäger, Nachhall und Boss-Effekten
-- Item-Effekte erscheinen in Lootkarten, Tooltips, Bestiarium und Kampf-Log
-- Benutzte Spielerfähigkeiten leuchten während des Kampfes kurz in der linken Fähigkeitsliste auf
-- Automatische Kämpfe mit Animationen, Schadenstexten, HP-Balken und Kampfprotokoll
-- Eigenes Kampf-Log nach jedem Kampf mit Schaden, Heilung und Effekten beider Seiten
-- Kompakter Log-Button im Kampffeld öffnet das Kampf-Log ohne zusätzlichen Platz in der UI
-- Größeres Kampf-Log-Fenster zeigt deutlich mehr Einträge ohne sofortiges Scrollen
-- Kampf-Log-Einträge bleiben kompakt gleich hoch und wachsen nur bei längeren Texten
-- Kompakte Kampfstart-Leiste zeigt nur noch das gewählte Ziel und vermeidet doppelte Bestiarium-Infos
-- Kampffeld setzt Sieg- und Todeszustände nach dem Kampf sauber zurück
-- Kampfende zeigt jetzt eine klare Sieg- oder Niederlage-Anzeige vor dem nächsten Ablauf
-- Beim Überspringen bleibt die Sieg- oder Niederlage-Anzeige ebenfalls kurz sichtbar
-- Breitere und kompaktere Haupt-UI mit mehr Platz für Kampf, Ausrüstung und Gegnerauswahl
-- Smartphone-Layout mit kompakter Topbar, priorisiertem Kampfbereich und größeren Touch-Flächen
-- Ruhigere normale Menübuttons in der oberen Leiste
-- Gegner haben eigene Fähigkeiten
-- Normale Gegner haben einfache Fähigkeiten
-- Elite-Gegner haben mehrere Fähigkeiten
-- Dungeon-Bosse haben aktive Fähigkeiten und passive Effekte
-- Normale Gebiete zum Farmen
+Der sicherste Weg ist die Sicherungsdatei:
+
+1. Im Spiel auf `Spielstand` klicken.
+2. `Spielstand herunterladen` auswaehlen.
+3. Die JSON-Datei behalten.
+4. Spaeter ueber `Spielstand laden` wieder importieren.
+
+Der Browser versucht den Fortschritt zusaetzlich lokal zu speichern. Das ist bequem, aber nicht garantiert. Besonders GitHub-Preview-Links, private Browserfenster, geloeschte Website-Daten oder ein anderer Browser koennen den lokalen Speicher leer wirken lassen.
+
+## Was aktuell spielbar ist
+
+- Krieger mit Level, XP, Leben, Gold, Ruhm, Schaden, Verteidigung, Crit-Werten und Haltbarkeit
+- Drei Builds: Tank, Schaden und Bruiser
+- Drei automatische Faehigkeiten pro Build
+- Eigene Build-Optik im Kampffeld
+- Klickbares Charakterportraet mit Detailwerten
+- Lagerplatz zum Heilen
+- Normale Gebiete zum Farmen und Questen
 - Separate Dungeons mit Boss-Reihen
-- Freischaltungen über Level und Ruhm
-- Quest-Tafel mit normalen und seltenen Quests
-- Neue Quests lassen den Quest-Tafel-Button leuchten und tragen ein Neu-Badge in der Tafel
-- Angenommene Quests verschwinden direkt von der Quest-Tafel und stehen nur noch bei den aktiven Quests
-- Quests erscheinen nur, wenn die passenden Gegner schon erreichbar sind
-- Quest-Tafel filtert Aufträge nach dem aktuell gewählten Gebiet und zeigt passende Levelbereiche
-- Quest-Schriftrollen zeigen ihre Drop-Chance im Bestiarium
-- Standardquests sind wiederholbar, damit die Quest-Tafel nach Abschlüssen weiter nutzbar bleibt
-- Gegner-Risiko nutzt eine Kampfschätzung mit Schaden, Leben, Crits, Fähigkeiten, Effekten und Haltbarkeit
-- Bestiarium mit Gegnerwerten, Fähigkeiten, Drops, Materialien und entdecktem Loot
-- Bestiarium registriert Loot erst nach aktiver Auswahl und zeigt Items als Neu oder Bekannt
-- Bestiarium-Liste zeigt die Sammlung kompakt als Anzahl und Fortschrittsbalken
-- Bestiarium zeigt Drop-Chancen für feste und mögliche Ausrüstungsdrops
-- Unentdeckte Bestiarium-Items zeigen Basisdaten, Details werden erst nach Fund freigeschaltet
-- Render-Optimierungen für flüssigere Schmied-, Quest-, Loot- und Bestiarium-Ansichten
-- Loot-Pools pro Gegner sind begrenzt, damit das Bestiarium übersichtlich bleibt
-- Ausrüstungsslots: Waffe, zweite Hand, Brustpanzer, Hose, Stiefel, Halskette und Ring
-- Item-Qualitäten: Gewöhnlich, Selten, Episch und Legendär
-- Item-Stats folgen klaren Slot-Rollen: Waffen offensiv, Rüstung defensiv, Schmuck offensiv/spezial
-- Crit-Werte nutzen saubere 1%-Schritte statt Mini-Kommawerte
-- Set-Boni für besondere Ausrüstung
-- Inventar mit Ausrüsten, Verkaufen und Zerlegen
-- Schmied zum Verbessern, Zerlegen und Reparieren von Ausrüstung
-- Arkanistin zum Verzaubern ausgerüsteter Items mit Runensplittern, Mondstaub und Gold
-- Materialsystem mit Eisenstücken, Lederresten, Runensplittern, Set-Materialien und seltenen Komponenten
-- Schmied-Dialoge ändern sich je nach Ruhm-Rang und Beziehung zum Spieler
-- Ein gemeinsamer Spielstand-Button bündelt Herunterladen und Laden von Sicherungen
-- Speichern, Laden, Import und Export sind als eigenes Save-System-Modul getrennt
-- Spielstand-Fenster zeigt Level, Gold, Ruhm, Gebiet, letzte Sicherung und Dateiname
-- Save-Dateien enthalten einen klaren Metadata-Block mit Zeitstempel, Fortschritt, Gebiet und Ausrüstung
-- Schönerer Sicherungs-Dateiname mit Level, Ruhm, Gebiet und Datum
-- Dezente Sicherungs-Tipps nach Level-Up, sehr gutem Loot oder Dungeon-Boss
-- Größere Protokoll-Vorschau ohne Neustart-Button im Kampfverlauf
-- Loot-Auswahlkarten zeigen Angriff, Verteidigung, Crit-Chance und Crit-Schaden direkt und vergleichen diese Werte einzeln
-- Item- und Lootkarten blenden 0-Werte aus, damit nur echte Ausrüstungsboni sichtbar sind
-- Loot-Auswahl-Rendering ist als eigenes Modul getrennt, damit der UI-Code leichter wartbar bleibt
-- Sicherungs- und Ladefunktion für Spielstände über eine JSON-Datei
-- Empfehlung: Spielstand regelmäßig herunterladen, damit Fortschritt sicher erhalten bleibt
-- Browser-Speicher wird genutzt, ist aber je nach Browser, GitHub-Preview-Link oder gelöschten Website-Daten nicht garantiert
+- Gegner mit eigenen Faehigkeiten, Elite-Versionen und Boss-Passiven
+- Kampfanimationen mit HP-Balken, Schadenstexten, Sieg/Niederlage-Anzeige und Kampf-Log
+- Gegner-Risiko mit Einschaetzung aus Leben, Schaden, Crits, Faehigkeiten, Effekten und Haltbarkeit
+- Quest-Tafel mit passenden Quests pro Gebiet
+- Neue Quests lassen den Quest-Button leuchten
+- Angenommene Quests verschwinden aus der Quest-Tafel und stehen nur noch bei den aktiven Quests
+- Bestiarium mit Gegnerwerten, Faehigkeiten, Drops, Materialien, Drop-Chancen und Sammlungsfortschritt
+- Loot-Auswahl mit genauem Vergleich fuer Angriff, Verteidigung, Crit-Chance und Crit-Schaden
+- Item-Stats folgen klaren Slot-Rollen
+- 0-Werte werden auf Itemkarten ausgeblendet
+- Inventar mit Ausruesten, Verkaufen und Zerlegen
+- Set-Boni und besondere Item-Effekte
+- Smartphone-Layout mit groesseren Touch-Flaechen und kompakterer Navigation
+
+## Schmied und Arkanistin
+
+Borin Glutbart ist der Zwergenmeister der Grauwacht. Bei ihm kannst du:
+
+- Ausruestung verbessern
+- Ausruestung reparieren
+- Items zerlegen
+- Materialien und Gold direkt sehen
+- Schmied-Meisterauftraege freischalten
+
+Die Schmied-Meisterschaft erhoeht globale Upgrade-Limits fuer alle Ausruestungsteile:
+
+- Start: +5
+- Meisterauftrag 1: +10
+- Meisterauftrag 2: +15
+- Meisterauftrag 3: +20
+
+Mira Nachtfaden ist die Elfen-Arkanistin der Grauwacht. Sie ist eine eigene Station und nicht Teil von Borins Schmiede. Bei ihr kannst du ab Level 8 Ausruestung verzaubern.
+
+Miras Progression:
+
+- Level 8: Arkanistin betrittbar, einfache Runen, 1 Runen-Slot
+- Auftrag `Instabile Magie`: 2 Runen-Slots und seltene Verzauberungen
+- Auftrag `Die verbotene Bibliothek`: 3 Runen-Slots und epische Verzauberungen
+- Auftrag `Das Ritual der Leere`: Arkane Meisterschaft und sehr seltene arkane Verzauberungen
 
 ## Spielidee
 
-Fantasy Grind soll sich wie ein stetiger Aufstieg anfühlen. Fortschritt soll verdient sein: ein gutes Item, ein geschaffter Elite-Gegner, ein neues Gebiet oder ein abgeschlossener Dungeon soll wirklich etwas bedeuten.
+Fantasy Grind soll sich wie ein stetiger Aufstieg anfuehlen. Fortschritt soll verdient sein: ein gutes Item, ein geschaffter Elite-Gegner, ein neues Gebiet oder ein abgeschlossener Dungeon soll wirklich etwas bedeuten.
 
-Die wichtigste Entscheidung ist Vorbereitung:
+Die wichtigsten Entscheidungen:
 
 - Ist mein Leben hoch genug?
-- Ist meine Ausrüstung noch haltbar?
+- Ist meine Ausruestung noch haltbar?
 - Welcher Build passt zum Gegner?
-- Lohnt sich der stärkere Gegner?
+- Lohnt sich der staerkere Gegner?
 - Spare ich Gold oder verbessere ich ein Item?
 - Repariere ich jetzt oder riskiere ich noch einen Kampf?
 
 Tod ist kein kompletter Reset, aber er kostet Fortschritt. Dadurch bleiben Risiko, Haltbarkeit und Gold wichtig.
-
-## Builds Und Fähigkeiten
-
-Der Krieger hat aktuell drei Builds:
-
-- Tank: mehr Leben und Verteidigung, defensive Fähigkeiten und Schadensdämpfung
-- Schaden: mehr Angriffskraft, stärkere Treffer und Hinrichten bei schwachen Gegnern
-- Bruiser: ausgewogener Build mit Heilung, Kontern und Rüstungsbruch
-
-Die Fähigkeiten laufen im Auto-Kampf automatisch. Der Spieler muss also nicht jede Runde manuell klicken, aber die Build-Wahl verändert deutlich, wie sich Kämpfe anfühlen.
-
-## Gegner Und Bosse
-
-Gegner sind nicht nur Werteblöcke. Viele haben eigene Kampfmechaniken:
-
-- Blutung, Gift und Brennen
-- Starke Angriffe in bestimmten Runden
-- Heilung
-- Schadensreduktion
-- Schwächung des nächsten Spielerangriffs
-- Boss-Passiven wie zweite Phase, Standhaftigkeit oder stärkere Heilung
-
-Normale Gegner bleiben einfacher. Elite-Gegner und Dungeon-Bosse sind gefährlicher und sollen Vorbereitung belohnen.
-
-## Gebiete Und Dungeons
-
-Das Spiel trennt normale Gebiete und Dungeons:
-
-- Normale Gebiete sind zum Farmen, Leveln, Questen und Looten gedacht.
-- Dungeons sind separate Herausforderungen mit Boss-Gegnern.
-- Neue Ziele werden über Level und Ruhm freigeschaltet.
-
-Das Ziel ist, dass sich jedes neue Gebiet wie ein sinnvoller Schritt nach vorne anfühlt.
-
-## Schmied, Materialien Und Loot
-
-Der Schmied ist ein wichtiger Teil der Progression:
-
-- Items verbessern
-- Ausrüstung reparieren
-- Items zerlegen
-- Materialien sammeln und ausgeben
-- Gold und Materialien direkt im Schmied sehen
-
-Items sollen nicht nur stärker werden, sondern auch Entscheidungen erzeugen: behalten, verkaufen, zerlegen oder verbessern.
-
-## Spielstand
-
-Der sichere Weg ist die Sicherungsdatei:
-
-1. Im Spiel auf `Sichern` klicken.
-2. Die heruntergeladene JSON-Datei behalten.
-3. Später im Spiel auf `Laden` klicken und diese Datei auswählen.
-
-Der Browser versucht den Fortschritt zusätzlich lokal zu speichern. Das ist bequem, aber nicht zuverlässig genug, um sich darauf zu verlassen. Besonders GitHub-Preview- oder Action-Links, private Browserfenster, gelöschte Website-Daten oder ein anderer Browser können dazu führen, dass der lokale Speicher leer ist.
-
-Deshalb gilt: Wer seinen Fortschritt behalten möchte, sollte regelmäßig den Spielstand herunterladen.
-
-## Spielen
-
-Fantasy Grind ist eine statische Browser-App.
-
-1. Repository herunterladen oder klonen.
-2. `index.html` im Browser öffnen.
-3. Spielen.
-
-Es ist kein Server und keine Installation nötig.
 
 ## Technik
 
@@ -191,41 +117,32 @@ Das Projekt ist bewusst einfach gehalten:
 - HTML
 - CSS
 - JavaScript
-- `localStorage` für Spielstände
+- JSON-Save-Dateien
+- Browser-Speicher als Komfortfunktion
 - Keine externen Frameworks
 
-Dadurch lässt sich das Spiel direkt im Browser starten und leicht weiterentwickeln.
+Der Code ist zunehmend in Bereiche getrennt, damit das Projekt wartbarer bleibt:
+
+- `scripts/data.js`: Spiel- und Balancing-Daten
+- `scripts/core.js`: Spiellogik
+- `scripts/render.js`: Haupt-Rendering
+- `scripts/render-loot.js`: Lootkarten und Vergleiche
+- `scripts/save-system.js`: Speichern, Laden und Export
+- `scripts/events.js`: UI-Events
 
 ## Roadmap
 
-Kurzfristig:
+Naechste sinnvolle Schritte:
 
-- Gegnerfähigkeiten weiter balancieren
-- Bosskämpfe klarer voneinander unterscheiden
-- Bestiarium weiter verbessern
-- Mehr Übersicht bei Loot, Materialien und Ausrüstungsvergleichen
-- UI weiter glätten
-
-Mittelfristig:
-
-- Weitere Klassen wie Magier, Schurke und Bogenschütze
-- Drei passende Fähigkeiten pro Build
-- Manuelles und automatisches Kampfsystem mit Wechselmöglichkeit
-- Lernsystem für Fähigkeiten, z.B. Schule, Schriftrollen oder Zauberin
-- Meisteraufträge für spätere Verzauberungsstufen und arkane Endgame-Verzauberungen
-- Achievements
-- Item-Bilder statt nur Textdarstellung
-
-Langfristig:
-
-- Größere Welt mit mehr Gegnergruppen
-- Mehr Dungeons mit eigenen Boss-Mechaniken
-- Zufällige Ereignisse vor Kämpfen
-- Ereignisse wie Lagerheilung, Artefakte, verfluchte Items, mehrere Gegner oder ein Shop
-- Schutz gegen zu starkes Gold-Farming
-- Mögliche Einschränkung, dass zu schwache Gegner vor sehr starken Spielern fliehen
-- Spezialitems, mit denen alte Low-Level-Gegner trotzdem bekämpft werden können
+- Mira-Verzauberungen weiter balancieren
+- Mehr Boss-Mechaniken und Dungeon-Identitaet
+- Weitere Klassen: Magier, Schurke und Bogenschuetze
+- Manuelles Kampfsystem als Alternative zum Auto-Kampf
+- Item-Bilder statt reiner Textkarten
+- Achievements fuer Bosse, Drops, Ruhm und Dungeons
+- Mehr Endgame-Loot, Set-Items und besondere Effekte
+- Anti-Farming-Regeln fuer zu schwache Gegner
 
 ## Status
 
-Fantasy Grind ist noch in Entwicklung. Viele Systeme sind bereits spielbar, aber Balance, Inhalte und Komfort werden weiter ausgebaut.
+Fantasy Grind ist noch in Entwicklung. Viele Systeme sind bereits spielbar, aber Balance, Inhalte und Komfort werden laufend verbessert.
