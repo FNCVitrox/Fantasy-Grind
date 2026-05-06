@@ -478,7 +478,6 @@
 
   .loot-window .loot-card {
     min-height: 0;
-    grid-template-rows: auto auto auto auto auto auto auto auto auto auto;
     gap: 6px;
     padding: 10px;
     border-radius: 10px;
@@ -524,6 +523,7 @@
 
   .loot-window .loot-compare {
     min-height: 0;
+    margin-top: 0;
     padding: 7px;
   }
 

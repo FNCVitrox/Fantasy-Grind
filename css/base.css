@@ -1424,6 +1424,7 @@ h2 {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   align-self: end;
+  width: 100%;
 }
 
 .loot-empty {
