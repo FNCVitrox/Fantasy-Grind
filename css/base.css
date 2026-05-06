@@ -1045,9 +1045,47 @@ h2 {
 
 .enchant-intro {
   display: grid;
-  gap: 4px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
   margin-bottom: 10px;
   padding: 12px;
+}
+
+.enchant-avatar {
+  position: relative;
+  width: 76px;
+  height: 86px;
+  border: 2px solid rgba(166, 120, 194, 0.72);
+  border-radius: 48% 48% 44% 44%;
+  background:
+    radial-gradient(circle at 36% 40%, #eaf6ee 0 5%, transparent 6%),
+    radial-gradient(circle at 64% 40%, #eaf6ee 0 5%, transparent 6%),
+    linear-gradient(120deg, transparent 0 43%, rgba(103, 220, 206, 0.6) 44% 49%, transparent 50%),
+    linear-gradient(180deg, #d9e4d7 0 18%, #5f7986 19% 56%, #293045 57% 100%);
+  box-shadow: 0 12px 28px rgba(166, 120, 194, 0.18);
+}
+
+.enchant-avatar::before,
+.enchant-avatar::after {
+  content: "";
+  position: absolute;
+  top: 22px;
+  width: 24px;
+  height: 36px;
+  border: 2px solid rgba(216, 178, 237, 0.74);
+  background: linear-gradient(135deg, #d9e4d7, #6c8290);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.enchant-avatar::before {
+  left: -16px;
+  transform: rotate(-34deg);
+}
+
+.enchant-avatar::after {
+  right: -16px;
+  transform: rotate(34deg);
 }
 
 .enchant-intro strong {
@@ -1056,7 +1094,21 @@ h2 {
 }
 
 .enchant-intro p {
+  margin: 0;
   color: var(--muted);
+}
+
+.enchant-mastery {
+  margin-bottom: 10px;
+  border-color: rgba(166, 120, 194, 0.58);
+  background:
+    linear-gradient(135deg, rgba(166, 120, 194, 0.14), rgba(52, 213, 216, 0.06)),
+    #08131f;
+}
+
+.enchant-mastery .smith-mastery-head span,
+.enchant-mastery .smith-mastery-head b {
+  color: #d6b2ed;
 }
 
 .enchant-grid {

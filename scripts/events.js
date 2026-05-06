@@ -231,6 +231,16 @@ $("smithSalvageSection").addEventListener("click", (event) => {
 });
 
 $("smithEnchantSection").addEventListener("click", (event) => {
+  const startMission = event.target.closest("[data-start-enchant-mission]");
+  if (startMission) {
+    startEnchantMasteryMission(startMission.dataset.startEnchantMission);
+    return;
+  }
+  const completeMission = event.target.closest("[data-complete-enchant-mission]");
+  if (completeMission) {
+    completeEnchantMasteryMission(completeMission.dataset.completeEnchantMission);
+    return;
+  }
   const enchant = event.target.closest("[data-enchant-slot]");
   if (enchant) {
     enchantEquipped(enchant.dataset.enchantSlot, enchant.dataset.enchantCategory);

@@ -176,7 +176,12 @@ assert(vm.runInContext("state = defaultState(); const rows = renderAllBestiaryRo
 assert(!vm.runInContext("state = defaultState(); renderAllBestiaryRows('wolf', enemies.wolf).includes('1x')", context), "bestiary rows should not show found counts");
 assert.strictEqual(vm.runInContext("state = defaultState(); maxEnchantSlotsForLevel()", context), 0);
 assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 8; maxEnchantSlotsForLevel()", context), 1);
-assert.strictEqual(vm.runInContext("maxEnchantSlotsForLevel(14)", context), 2);
+assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 14; maxEnchantSlotsForLevel()", context), 1);
+assert.strictEqual(vm.runInContext("state.enchanting.completed = ['unstableRunes']; maxEnchantSlotsForLevel()", context), 2);
+assert.strictEqual(vm.runInContext("state.enchanting.completed = ['unstableRunes', 'forbiddenLibrary']; maxEnchantSlotsForLevel()", context), 3);
+assert(vm.runInContext("state = defaultState(); state.level = 12; state.renown = 10; state.customItems.trainingSword = { ...items.trainingSword, id: 'trainingSword', enchantments: ['keenEdge'] }; canStartEnchantMasteryMission(enchantMasteryRanks[0])", context), "Mira's first mastery mission should require level, renown and an enchanted equipped item");
+assert(!vm.runInContext("state = defaultState(); state.level = 20; allowedEnchantRarities().includes('arcane')", context), "arcane enchantments should stay locked before Mira's final mastery");
+assert(vm.runInContext("state = defaultState(); state.level = 20; state.enchanting.completed = ['unstableRunes', 'forbiddenLibrary', 'voidRitual']; allowedEnchantRarities().includes('arcane')", context), "Mira's final mastery should unlock arcane enchantments");
 assert(vm.runInContext("Object.values(enchantmentCatalog).every((enchantment) => enchantment.slots.every((slot) => equipmentSlots.includes(slot)))", context), "enchantments should only target valid equipment slots");
 assert(vm.runInContext("state = defaultState(); state.level = 8; state.customItems.trainingSword = { ...items.trainingSword, id: 'trainingSword', enchantments: ['keenEdge'] }; totalStats().critChance > 0.06", context), "equipped enchantments should affect player stats");
 assert(vm.runInContext("state = defaultState(); state.level = 8; state.gold = 999; state.materials.shard = 9; state.materials.moonDust = 9; render = () => {}; renderLog = () => {}; enchantEquipped('weapon', 'offense'); getItem(state.equipment.weapon).enchantments.length === 1", context), "enchanting should add a valid enchantment to equipped gear");

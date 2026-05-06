@@ -77,6 +77,44 @@ const smithMasteryRanks = [
     reward: "Ausrüstung kann bis +20 verbessert werden. Reparaturen dauerhaft zusätzlich -10%.",
   },
 ];
+const enchantMasteryRanks = [
+  {
+    id: "unstableRunes",
+    name: "Instabile Magie",
+    slotLimit: 2,
+    requirement: { level: 12, renown: 10, enchantedItem: true },
+    progress: { eliteKills: 2 },
+    materials: { shard: 10, moonDust: 5 },
+    gold: 500,
+    rewardRenown: 2,
+    reward: "Mira öffnet den zweiten Runen-Slot und seltene Verzauberungen.",
+  },
+  {
+    id: "forbiddenLibrary",
+    name: "Die verbotene Bibliothek",
+    slotLimit: 3,
+    requirement: { level: 17, renown: 25, bossKills: 1 },
+    progress: { bossKills: 1 },
+    materials: { shard: 12, moonDust: 8, shadowResin: 4 },
+    gold: 1200,
+    sacrificeQuality: "epic",
+    rewardRenown: 4,
+    reward: "Mira öffnet den dritten Runen-Slot und epische Verzauberungen.",
+  },
+  {
+    id: "voidRitual",
+    name: "Das Ritual der Leere",
+    slotLimit: 3,
+    arcaneMastery: true,
+    requirement: { level: 20, renown: 40, bossKills: 2 },
+    progress: { eliteKills: 5, bossKills: 2 },
+    materials: { crownAsh: 5, graveSeal: 4, emberCore: 6 },
+    gold: 2500,
+    sacrificeQuality: "legendary",
+    rewardRenown: 8,
+    reward: "Arkane Meisterschaft freigeschaltet: extrem seltene instabile Verzauberungen können erscheinen.",
+  },
+];
 const upgradeCostSteps = {
   1: { gold: 28, basis: 3 },
   2: { gold: 42, basis: 4 },
@@ -141,7 +179,7 @@ function defaultState() {
     winsSinceQuestRefresh: 0,
     lastSaveExportAt: "",
     combatLog: [],
-    enchanting: { unlockedSeen: false },
+    enchanting: { unlockedSeen: false, active: null, completed: [], progress: {}, discovered: false },
     ui: {
       selectedZone: "meadow",
       selectedEnemy: "wolf",
@@ -220,6 +258,33 @@ function normalizeSmithMastery(mastery = {}, sourceState = state) {
     progress: normalizeSmithMasteryProgress(mastery.progress),
     discovered: Boolean(mastery.discovered || active || completed.length || hasSavedItemAtSmithLimit(mastery.limit || 5, sourceState)),
   };
+}
+
+function normalizeEnchanting(enchanting = {}) {
+  const completed = Array.isArray(enchanting.completed)
+    ? enchanting.completed.filter((id) => enchantMasteryRanks.some((rank) => rank.id === id))
+    : [];
+  const active = enchantMasteryRanks.some((rank) => rank.id === enchanting.active) && !completed.includes(enchanting.active)
+    ? enchanting.active
+    : null;
+  return {
+    unlockedSeen: Boolean(enchanting.unlockedSeen),
+    active,
+    completed: [...new Set(completed)],
+    progress: normalizeEnchantMasteryProgress(enchanting.progress),
+    discovered: Boolean(enchanting.discovered || active || completed.length),
+  };
+}
+
+function normalizeEnchantMasteryProgress(progress = {}) {
+  return enchantMasteryRanks.reduce((result, rank) => {
+    const source = progress[rank.id] || {};
+    result[rank.id] = {
+      eliteKills: Math.max(0, Math.floor(source.eliteKills || 0)),
+      bossKills: Math.max(0, Math.floor(source.bossKills || 0)),
+    };
+    return result;
+  }, {});
 }
 
 function normalizeSmithMasteryProgress(progress = {}) {
@@ -459,10 +524,27 @@ function enchantmentsUnlocked() {
 }
 
 function maxEnchantSlotsForLevel(level = state.level) {
-  if (level >= 20) return 3;
-  if (level >= 14) return 2;
-  if (level >= 8) return 1;
-  return 0;
+  if (level < 8) return 0;
+  return currentEnchantSlotLimit();
+}
+
+function currentEnchantSlotLimit() {
+  if (!enchantmentsUnlocked()) return 0;
+  const completed = state.enchanting?.completed || [];
+  if (completed.includes("forbiddenLibrary")) return 3;
+  if (completed.includes("unstableRunes")) return 2;
+  return 1;
+}
+
+function arcaneMasteryUnlocked() {
+  return Boolean(state.enchanting?.completed?.includes("voidRitual"));
+}
+
+function allowedEnchantRarities() {
+  if (arcaneMasteryUnlocked()) return ["common", "rare", "epic", "arcane"];
+  if (state.enchanting?.completed?.includes("forbiddenLibrary")) return ["common", "rare", "epic"];
+  if (state.enchanting?.completed?.includes("unstableRunes")) return ["common", "rare"];
+  return ["common"];
 }
 
 function activeItemEnchantments(item) {
@@ -1395,6 +1477,7 @@ async function fight() {
       grantMaterials(enemy.baseId || selectedEnemy, enemy.eliteVariant);
       createLootChoices(enemy, enemy.baseId || selectedEnemy);
       recordSmithMasteryBattle(enemy);
+      recordEnchantMasteryBattle(enemy);
       updateQuestProgress(enemy);
       maybeGrantBattleRenown(enemy);
       maybeDropRareQuest(enemy);
@@ -2146,6 +2229,110 @@ function recordSmithMasteryBattle(enemy) {
   state.smithMastery.progress[active.id] = progress;
 }
 
+function nextEnchantMasteryRank() {
+  return enchantMasteryRanks.find((rank) => !state.enchanting.completed.includes(rank.id)) || null;
+}
+
+function enchantMasteryRankById(id) {
+  return enchantMasteryRanks.find((rank) => rank.id === id);
+}
+
+function hasEnchantedEquippedItem() {
+  return equipmentSlots.some((slot) => activeItemEnchantments(getItem(state.equipment[slot])).length > 0);
+}
+
+function enchantMasteryRequirementStatus(rank) {
+  const requirement = rank.requirement || {};
+  return [
+    { label: `Level ${requirement.level}`, done: state.level >= (requirement.level || 1) },
+    { label: `${requirement.renown} Ruhm`, done: state.renown >= (requirement.renown || 0) },
+    ...(requirement.enchantedItem ? [{ label: "ein verzaubertes ausgerüstetes Item", done: hasEnchantedEquippedItem() }] : []),
+    ...(requirement.bossKills ? [{ label: `${requirement.bossKills} Dungeon-Boss besiegt`, done: (state.combatStats?.bossKills || 0) >= requirement.bossKills }] : []),
+  ];
+}
+
+function canStartEnchantMasteryMission(rank) {
+  return Boolean(rank)
+    && enchantmentsUnlocked()
+    && !state.enchanting.active
+    && !state.enchanting.completed.includes(rank.id)
+    && enchantMasteryRequirementStatus(rank).every((entry) => entry.done);
+}
+
+function startEnchantMasteryMission(rankId) {
+  const rank = enchantMasteryRankById(rankId);
+  if (!canStartEnchantMasteryMission(rank)) {
+    log("Mira Nachtfaden lächelt spitz: Erst die Prüfung, dann das Ritual.", "bad");
+    return;
+  }
+  state.enchanting.discovered = true;
+  state.enchanting.active = rank.id;
+  state.enchanting.progress[rank.id] = { eliteKills: 0, bossKills: 0 };
+  log(`Arkaner Auftrag begonnen: ${rank.name}.`, "drop");
+  save();
+  render();
+}
+
+function enchantMasteryProgress(rank) {
+  return state.enchanting.progress[rank.id] || { eliteKills: 0, bossKills: 0 };
+}
+
+function enchantMasteryObjectiveStatus(rank) {
+  const progress = enchantMasteryProgress(rank);
+  const objectives = [];
+  if (rank.progress?.eliteKills) {
+    objectives.push({ label: "Elite-Gegner", value: progress.eliteKills || 0, needed: rank.progress.eliteKills });
+  }
+  if (rank.progress?.bossKills) {
+    objectives.push({ label: "Dungeon-Bosse", value: progress.bossKills || 0, needed: rank.progress.bossKills });
+  }
+  Object.entries(rank.materials || {}).forEach(([id, needed]) => {
+    objectives.push({ label: labelFor(materialLabel, id), value: state.materials[id] || 0, needed });
+  });
+  objectives.push({ label: "Gold", value: state.gold, needed: rank.gold });
+  if (rank.sacrificeQuality) {
+    objectives.push({ label: `${labelFor(qualityLabel, rank.sacrificeQuality)}es Opferstück`, value: findEnchantSacrificeItemId(rank.sacrificeQuality) ? 1 : 0, needed: 1 });
+  }
+  return objectives;
+}
+
+function canCompleteEnchantMasteryMission(rank) {
+  return Boolean(rank)
+    && state.enchanting.active === rank.id
+    && enchantMasteryObjectiveStatus(rank).every((entry) => entry.value >= entry.needed);
+}
+
+function completeEnchantMasteryMission(rankId) {
+  const rank = enchantMasteryRankById(rankId);
+  if (!canCompleteEnchantMasteryMission(rank)) {
+    log("Mira Nachtfaden tippt auf den Runenkreis. Er bleibt kalt.", "bad");
+    return;
+  }
+
+  state.gold -= rank.gold;
+  Object.entries(rank.materials || {}).forEach(([id, amount]) => {
+    state.materials[id] -= amount;
+  });
+  if (rank.sacrificeQuality) removeEnchantSacrificeItem(rank.sacrificeQuality);
+  state.enchanting.discovered = true;
+  state.enchanting.active = null;
+  state.enchanting.completed = [...new Set([...state.enchanting.completed, rank.id])];
+  state.renown += rank.rewardRenown;
+  log(`Mira vollendet "${rank.name}". ${rank.reward} +${rank.rewardRenown} Ruhm.`, "drop");
+  remindSaveBackup("Mira hat deine Runenbindung erweitert.");
+  save();
+  render();
+}
+
+function recordEnchantMasteryBattle(enemy) {
+  const active = enchantMasteryRankById(state.enchanting?.active);
+  if (!active) return;
+  const progress = enchantMasteryProgress(active);
+  if (enemy.elite) progress.eliteKills = Math.min(active.progress?.eliteKills || 0, (progress.eliteKills || 0) + 1);
+  if (enemy.boss) progress.bossKills = Math.min(active.progress?.bossKills || 0, (progress.bossKills || 0) + 1);
+  state.enchanting.progress[active.id] = progress;
+}
+
 function findSmithSacrificeItemId() {
   return state.inventory.find((itemId) => {
     const item = getItem(itemId);
@@ -2155,6 +2342,22 @@ function findSmithSacrificeItemId() {
 
 function removeSmithSacrificeItem() {
   const itemId = findSmithSacrificeItemId();
+  if (!itemId) return;
+  state.inventory = state.inventory.filter((id) => id !== itemId);
+  delete state.customItems[itemId];
+  delete state.itemDurability[itemId];
+}
+
+function findEnchantSacrificeItemId(quality) {
+  const neededPower = qualityPower[quality] || 0;
+  return state.inventory.find((itemId) => {
+    const item = getItem(itemId);
+    return item && (qualityPower[item.quality] || 0) >= neededPower;
+  });
+}
+
+function removeEnchantSacrificeItem(quality) {
+  const itemId = findEnchantSacrificeItemId(quality);
   if (!itemId) return;
   state.inventory = state.inventory.filter((id) => id !== itemId);
   delete state.customItems[itemId];
@@ -2262,8 +2465,7 @@ function spendCost(cost) {
 }
 
 function enchantmentPool(slot, category, item = null) {
-  const level = state.level;
-  const allowedRarities = level >= 14 ? ["common", "rare", "epic"] : ["common", "rare"];
+  const allowedRarities = allowedEnchantRarities();
   const usedGroups = new Set(activeItemEnchantments(item).map((enchantment) => enchantment.group));
   return Object.entries(enchantmentCatalog)
     .filter(([, enchantment]) => enchantment.category === category)
@@ -2278,7 +2480,7 @@ function rollEnchantment(slot, category, item) {
   if (!pool.length) return null;
   const weighted = pool.flatMap((id) => {
     const rarity = enchantmentCatalog[id].rarity;
-    const weight = rarity === "epic" ? 1 : rarity === "rare" ? 3 : 6;
+    const weight = rarity === "arcane" ? 1 : rarity === "epic" ? 2 : rarity === "rare" ? 4 : 7;
     return Array.from({ length: weight }, () => id);
   });
   return weighted[random(0, weighted.length - 1)];

@@ -723,6 +723,33 @@ const enchantmentCatalog = {
     stats: { lootBonus: 0.09, goldBonus: 0.08 },
     text: "+9% bessere Beute und +8% Gold",
   },
+  voidEdge: {
+    name: "Leerenkante",
+    category: "offense",
+    rarity: "arcane",
+    group: "arcaneDamage",
+    slots: ["weapon", "ring", "necklace"],
+    stats: { damage: 10, critChance: 0.04, defense: -3 },
+    text: "+10 Angriff, +4% Crit-Chance, aber -3 Verteidigung",
+  },
+  starBulwark: {
+    name: "Sternenbann",
+    category: "defense",
+    rarity: "arcane",
+    group: "arcaneShield",
+    slots: ["offhand", "chest", "pants"],
+    stats: { maxHp: 80, damageReduction: 0.07, critDamage: -0.08 },
+    text: "+80 Leben und -7% erlittener Schaden, aber -8% Crit-Schaden",
+  },
+  fateThread: {
+    name: "Schicksalsfaden",
+    category: "utility",
+    rarity: "arcane",
+    group: "arcaneFortune",
+    slots: ["boots", "necklace", "ring"],
+    stats: { lootBonus: 0.12, xpBonus: 0.12, goldBonus: 0.12, maxHp: -25 },
+    text: "+12% Beute, XP und Gold, aber -25 Leben",
+  },
 };
 
 const enchantmentCategoryLabel = {

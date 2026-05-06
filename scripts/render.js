@@ -676,15 +676,25 @@ function renderSmithRenown() {
 
 function renderEnchantStatus() {
   const unlocked = enchantmentsUnlocked();
-  const nextSlotLevel = state.level < 14 ? 14 : state.level < 20 ? 20 : null;
+  const slotLimit = currentEnchantSlotLimit();
+  const next = state.enchanting?.active
+    ? enchantMasteryRankById(state.enchanting.active)
+    : nextEnchantMasteryRank();
+  const nextText = next
+    ? state.enchanting?.active === next.id
+      ? `Aktiver Auftrag: ${next.name}`
+      : `Nächster Auftrag: ${next.name}`
+    : arcaneMasteryUnlocked()
+      ? "Arkane Meisterschaft vollständig gebunden."
+      : "Alle aktuellen Runenbindungen freigeschaltet.";
   $("smithRenown").innerHTML = `
     <div>
       <span>Arkane Prüfung</span>
       <strong>${unlocked ? "Zugang geöffnet" : "Noch verschlossen"}</strong>
     </div>
-    <p>${unlocked ? `Aktuelle Bindung: ${maxEnchantSlotsForLevel()} Runen-Slot${maxEnchantSlotsForLevel() === 1 ? "" : "s"} pro Item` : "Mira lässt dich zwar herein, aber ihre Runen hören noch nicht auf dich."}</p>
+    <p>${unlocked ? `Aktuelle Bindung: ${slotLimit} Runen-Slot${slotLimit === 1 ? "" : "s"} pro Item` : "Mira lässt dich zwar herein, aber ihre Runen hören noch nicht auf dich."}</p>
     <small>${unlocked
-      ? nextSlotLevel ? `Nächste Runenbindung ab Level ${nextSlotLevel}.` : "Alle aktuellen Runenbindungen freigeschaltet."
+      ? escapeHtml(nextText)
       : `Freischaltung bei Level 8. Aktuell: Level ${state.level}.`}</small>
   `;
 }
@@ -783,6 +793,70 @@ function renderSmithMasteryObjectives(objectives) {
   </div>`;
 }
 
+function renderEnchantMasteryMarkup() {
+  const active = enchantMasteryRankById(state.enchanting?.active);
+  const next = active || nextEnchantMasteryRank();
+
+  if (!next) {
+    return `
+      <div class="smith-mastery-head">
+        <div>
+          <span>Arkane Meisterschaft</span>
+          <strong>Miras Kreis ist vollständig</strong>
+        </div>
+        <b>Arkan</b>
+      </div>
+      <p>"Jetzt hörst du es auch, oder? Stahl flüstert, wenn die Rune richtig sitzt."</p>
+      <div class="smith-mastery-reward">Alle Runen-Slots und arkane Verzauberungen sind freigeschaltet.</div>
+    `;
+  }
+
+  const isActive = state.enchanting?.active === next.id;
+  const requirements = enchantMasteryRequirementStatus(next);
+  const objectives = enchantMasteryObjectiveStatus(next);
+  const readyToStart = canStartEnchantMasteryMission(next);
+  const readyToComplete = canCompleteEnchantMasteryMission(next);
+  const intro = {
+    unstableRunes: "Die erste Rune hält. Jetzt will ich sehen, ob sie auch unter Druck singt.",
+    forbiddenLibrary: "Drei Bindungen brauchen Wissen, das man nicht offen liegen lässt.",
+    voidRitual: "Die Leere beantwortet nur Fragen, die klug genug gestellt werden.",
+  }[next.id] || "Magie ist kein Schmuck. Sie ist ein Handel.";
+  const badge = next.arcaneMastery
+    ? "Arkane Meisterschaft"
+    : `Slots ${currentEnchantSlotLimit()} → ${next.slotLimit}`;
+
+  return `
+    <div class="smith-mastery-head">
+      <div>
+        <span>Miras Meisterauftrag</span>
+        <strong>${escapeHtml(isActive ? `Aktiv: ${next.name}` : `Nächster Auftrag: ${next.name}`)}</strong>
+      </div>
+      <b>${escapeHtml(badge)}</b>
+    </div>
+    <p>"${escapeHtml(intro)}"</p>
+    ${isActive ? renderEnchantMasteryObjectives(objectives) : renderEnchantMasteryRequirements(requirements)}
+    <div class="smith-mastery-reward">${escapeHtml(next.reward)}</div>
+    ${isActive
+      ? `<button type="button" data-complete-enchant-mission="${next.id}" ${readyToComplete ? "" : "disabled"}>Ritual vollenden</button>`
+      : `<button type="button" data-start-enchant-mission="${next.id}" ${readyToStart ? "" : "disabled"}>Arkanen Auftrag beginnen</button>`}
+  `;
+}
+
+function renderEnchantMasteryRequirements(requirements) {
+  return `<div class="smith-mastery-list">
+    ${requirements.map((entry) => `<span class="${entry.done ? "done" : "missing"}">${entry.done ? "✓" : "•"} ${escapeHtml(entry.label)}</span>`).join("")}
+  </div>`;
+}
+
+function renderEnchantMasteryObjectives(objectives) {
+  return `<div class="smith-mastery-list">
+    ${objectives.map((entry) => {
+      const done = entry.value >= entry.needed;
+      return `<span class="${done ? "done" : "missing"}">${done ? "✓" : "•"} ${escapeHtml(entry.label)} ${Math.min(entry.value, entry.needed)}/${entry.needed}</span>`;
+    }).join("")}
+  </div>`;
+}
+
 function renderSmithUpgrade() {
   $("smithGrid").innerHTML = equipmentSlots.map((slot) => {
     const itemId = state.equipment[slot];
@@ -837,11 +911,12 @@ function renderSmithUpgrade() {
 
 function renderSmithEnchant() {
   if (!enchantmentsUnlocked()) {
+    $("enchantMastery").innerHTML = "";
     $("enchantGrid").innerHTML = `
       <div class="enchant-locked">
         <div>
           <span>Arkaner Laden</span>
-          <strong>Mira hebt nur eine Augenbraue.</strong>
+          <strong>Mira Nachtfaden hebt nur eine Augenbraue.</strong>
         </div>
         <p>"Süß. Du willst Magie an Stahl binden, aber deine Seele stolpert noch über Kieselsteine. Komm wieder, wenn du nicht mehr nach Tutorial riechst."</p>
         <div class="enchant-lock-requirements">
@@ -854,11 +929,12 @@ function renderSmithEnchant() {
     return;
   }
 
+  $("enchantMastery").innerHTML = renderEnchantMasteryMarkup();
   const cost = enchantCost();
   const costText = `${cost.gold} Gold · ${Object.entries(cost.materials)
     .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)
     .join(" · ")}`;
-  const slotLimit = maxEnchantSlotsForLevel();
+  const slotLimit = currentEnchantSlotLimit();
   $("enchantGrid").innerHTML = equipmentSlots.map((slot) => {
     const itemId = state.equipment[slot];
     const item = getItem(itemId);
