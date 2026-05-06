@@ -64,55 +64,246 @@
 }
 
 @media (max-width: 620px) {
+  html {
+    scrollbar-gutter: auto;
+  }
+
+  body {
+    font-size: 16px;
+  }
+
   .shell {
-    width: min(100vw - 18px, 1720px);
-    padding-top: 9px;
+    width: min(100vw - 14px, 1720px);
+    padding: max(8px, env(safe-area-inset-top)) 0 calc(92px + env(safe-area-inset-bottom));
+  }
+
+  .version-badge {
+    display: none;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 6px;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 7px;
+    padding: 9px;
+    border-radius: 10px;
+    background: rgba(10, 20, 31, 0.96);
+    backdrop-filter: blur(14px);
+  }
+
+  .topbar > div:first-child {
+    grid-column: 1 / -1;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .topbar .eyebrow {
+    font-size: 11px;
+  }
+
+  .topbar h1 {
+    font-size: clamp(34px, 13vw, 50px);
+    line-height: 0.95;
+  }
+
+  .book-button {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 7px 8px 7px 11px;
+    justify-items: start;
+    font-size: 12px;
+    border-radius: 9px;
+  }
+
+  .book-button .button-price {
+    margin-top: 1px;
+    font-size: 10px;
+  }
+
+  .book-button::before {
+    top: 7px;
+    bottom: 7px;
+    width: 3px;
+  }
+
+  .quest-notice {
+    top: 3px;
+    right: 4px;
+    min-width: 17px;
+    height: 17px;
+    font-size: 10px;
+  }
+
+  .game-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .world-panel {
+    order: 1;
+  }
+
+  .side-panel {
+    order: 2;
+  }
+
+  .character-panel {
+    order: 3;
+  }
+
+  .panel {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .character-panel,
+  .side-panel,
+  .world-panel {
+    gap: 10px;
   }
 
   .zone-options {
     grid-template-columns: 1fr 1fr;
   }
 
-  .side-zone-map .zone-options {
-    grid-template-columns: 1fr;
-  }
-
+  .side-zone-map .zone-options,
   .zone-modal-options {
     grid-template-columns: 1fr;
   }
 
-  .combat-card {
-    align-items: stretch;
-    flex-direction: column;
+  .equipment-belt {
+    gap: 12px;
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .equipment-belt h2 {
+    font-size: 24px;
+  }
+
+  .equipment-belt .equipment {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .equipment-chip {
+    min-height: 82px;
+    padding: 9px;
+  }
+
+  .equipment-chip strong {
+    font-size: 14px;
+  }
+
+  .equipment-chip span,
+  .equipment-chip small {
+    font-size: 12px;
+    line-height: 1.35;
   }
 
   .battle-stage {
-    grid-template-columns: minmax(86px, 1fr) minmax(58px, 0.42fr) minmax(86px, 1fr);
-    gap: 6px;
-    min-height: 196px;
-    padding: 22px 8px 10px;
+    grid-template-columns: minmax(112px, 1fr) minmax(74px, 0.52fr) minmax(112px, 1fr);
+    gap: 8px;
+    min-height: 230px;
+    padding: 36px 10px 12px;
+    border-radius: 10px;
   }
 
   .combatant {
     min-width: 0;
   }
 
+  .combatant b {
+    font-size: 17px;
+  }
+
   .combat-health {
     width: 100%;
-    padding: 6px;
+    max-width: 170px;
+    padding: 7px;
   }
 
   .combat-health-label {
     gap: 4px;
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .combat-health-label strong {
-    font-size: 11px;
+    font-size: 12px;
+  }
+
+  .battle-log-tab {
+    top: 8px;
+    left: 8px;
+    min-width: 82px;
+    min-height: 42px;
+    padding: 6px 10px;
+  }
+
+  .battle-log-tab span {
+    font-size: 15px;
+  }
+
+  .battle-log-tab small {
+    max-width: 74px;
+    font-size: 10px;
+  }
+
+  .enemy-list {
+    gap: 7px;
+  }
+
+  .enemy {
+    min-height: 58px;
+    padding: 9px 10px;
+    border-radius: 10px;
+  }
+
+  .enemy strong {
+    font-size: 18px;
+  }
+
+  .enemy p {
+    margin-top: 2px;
+    font-size: 14px;
+    line-height: 1.25;
+  }
+
+  .risk {
+    min-width: 78px;
+    padding: 6px 9px;
+    text-align: center;
+  }
+
+  .combat-card {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    background:
+      linear-gradient(90deg, rgba(63, 214, 163, 0.12), transparent 34%),
+      #0c1723;
+  }
+
+  .target-command h2 {
+    font-size: 34px;
+    line-height: 1;
   }
 
   .primary {
     width: 100%;
+    min-height: 58px;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: 900;
+    box-shadow: 0 0 0 3px rgba(73, 182, 255, 0.12);
   }
 
   .modal-window {
@@ -127,7 +318,13 @@
   }
 
   .repair-summary,
-  .repair-row {
+  .repair-row,
+  .smith-card,
+  .equipment-detail-grid,
+  .player-stats-hero,
+  .player-progress-grid,
+  .player-stat-grid,
+  .player-stat-sources {
     grid-template-columns: 1fr;
   }
 
@@ -139,27 +336,30 @@
     width: 100%;
   }
 
-  .loot-window .loot-choices {
-    grid-template-columns: 1fr;
-  }
-
+  .loot-window .loot-choices,
   .save-profile,
   .save-grid,
-  .save-actions {
+  .save-actions,
+  .bestiary-window .bestiary,
+  .bestiary-filters,
+  .bestiary-content-grid,
+  .quest-board,
+  .inventory-window .inventory,
+  .materials,
+  .smith-grid,
+  .smith-choice-grid,
+  .smith-renown,
+  .smith-greeting,
+  .salvage-row {
     grid-template-columns: 1fr;
   }
 
   .bestiary-window .bestiary {
-    grid-template-columns: 1fr;
     overflow: auto;
   }
 
-  .bestiary-filters,
-  .bestiary-content-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .bestiary-selected-detail {
+  .bestiary-selected-detail,
+  .bestiary-detail {
     position: static;
   }
 
@@ -167,46 +367,8 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .bestiary-detail {
-    position: static;
-  }
-
-  .quest-board {
-    grid-template-columns: 1fr;
-  }
-
-  .inventory-window .inventory {
-    grid-template-columns: 1fr;
-  }
-
-  .materials,
-  .smith-grid,
-  .smith-choice-grid,
-  .smith-renown {
-    grid-template-columns: 1fr;
-  }
-
-  .smith-card {
-    grid-template-columns: 1fr;
-  }
-
-  .equipment-detail-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .player-stats-hero,
-  .player-progress-grid,
-  .player-stat-grid,
-  .player-stat-sources {
-    grid-template-columns: 1fr;
-  }
-
   .player-stat-currency {
     justify-content: stretch;
-  }
-
-  .equipment-belt .equipment {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .zone-map summary {
@@ -214,16 +376,85 @@
     flex-direction: column;
   }
 
-  .smith-greeting {
-    grid-template-columns: 1fr;
-  }
-
-  .salvage-row {
-    grid-template-columns: 1fr;
-  }
-
   .inventory-summary {
     flex-direction: column;
+  }
+
+  .portrait {
+    min-height: 134px;
+  }
+
+  .portrait svg {
+    width: min(42%, 128px);
+  }
+
+  .character-panel h2 {
+    font-size: 28px;
+  }
+
+  .character-status {
+    gap: 8px;
+  }
+
+  .character-status div {
+    min-height: 74px;
+    padding: 10px;
+  }
+
+  .character-status span {
+    font-size: 14px;
+  }
+
+  .character-status strong {
+    font-size: 24px;
+  }
+
+  .build-list {
+    grid-template-columns: 1fr;
+  }
+
+  .build-list button {
+    min-height: 66px;
+    padding: 10px 12px;
+  }
+
+  .build-list strong,
+  .ability-chip strong {
+    font-size: 16px;
+  }
+
+  .build-list span,
+  .ability-chip span {
+    font-size: 14px;
+  }
+
+  .class-card h3,
+  .side-panel h2 {
+    font-size: 22px;
+  }
+
+  .ability-list {
+    max-height: 260px;
+    overflow: auto;
+  }
+
+  .ability-chip {
+    padding: 10px 12px;
+  }
+
+  .side-zone-map > div strong {
+    font-size: 24px;
+  }
+
+  .side-zone-map > div small,
+  .side-zone-map > div em,
+  .quests,
+  .log-preview {
+    font-size: 15px;
+  }
+
+  .log-panel.compact {
+    min-height: 160px;
   }
 }
 

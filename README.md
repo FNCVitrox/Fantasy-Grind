@@ -6,7 +6,7 @@ Das Projekt ist aktuell ein spielbarer Alpha-Prototyp. Der Kern des Spiels steht
 
 ## Aktuelle Version
 
-Alpha v0.8.54
+Alpha v0.8.55
 
 ## Tests Starten
 
@@ -51,6 +51,7 @@ Wenn alles passt, steht am Ende `Smoke test passed` und `ALLE TESTS BESTANDEN`.
 - Kampfende zeigt jetzt eine klare Sieg- oder Niederlage-Anzeige vor dem nächsten Ablauf
 - Beim Überspringen bleibt die Sieg- oder Niederlage-Anzeige ebenfalls kurz sichtbar
 - Breitere und kompaktere Haupt-UI mit mehr Platz für Kampf, Ausrüstung und Gegnerauswahl
+- Smartphone-Layout mit kompakter Topbar, priorisiertem Kampfbereich und größeren Touch-Flächen
 - Ruhigere normale Menübuttons in der oberen Leiste
 - Gegner haben eigene Fähigkeiten
 - Normale Gegner haben einfache Fähigkeiten
