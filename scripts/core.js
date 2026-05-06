@@ -1830,7 +1830,7 @@ function itemEffectScore(item) {
   const effect = itemEffect(item);
   if (!effect) return 0;
   if (effect.critBurn || effect.eliteArmorIgnore || effect.eliteDamageBonus || effect.critHealRatio) return 12;
-  if (effect.eliteCritChance || effect.postCombatHeal || effect.firstHitReduction || effect.enemyCritReduction || effect.thornsRatio) return 8;
+  if (effect.eliteCritChance || effect.postCombatHeal || effect.firstHitReduction || effect.enemyCritReduction || effect.thornsRatio || effect.firstHitWeaken < 1) return 8;
   return 5;
 }
 
