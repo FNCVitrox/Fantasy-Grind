@@ -632,23 +632,24 @@ const smithDialogues = {
   ],
 };
 
-function smithDialogueForRank() {
+function smithDialogueForRank(previous = -1) {
   const rank = renownRank();
   const lines = smithDialogues[rank.threshold] || smithDialogues[0];
-  const greeting = $("smithGreeting");
-  const previous = Number(greeting?.dataset.dialogueIndex ?? -1);
   let index = random(0, lines.length - 1);
   if (lines.length > 1 && index === previous) index = (index + 1) % lines.length;
   return { ...lines[index], index };
 }
 
-function renderSmithGreeting() {
-  const dialogue = smithDialogueForRank();
-  $("smithGreetingText").innerHTML = `
-    <strong>${escapeHtml(dialogue.title)}</strong>
-    <p>"${escapeHtml(dialogue.text)}"</p>
-  `;
-  $("smithGreeting").dataset.dialogueIndex = String(dialogue.index);
+function renderSmithGreetingMarkup() {
+  const previous = Number($("smithGreeting")?.dataset.dialogueIndex ?? -1);
+  const dialogue = smithDialogueForRank(previous);
+  return `<div class="smith-greeting" id="smithGreeting" data-dialogue-index="${dialogue.index}">
+    <div class="smith-avatar" aria-hidden="true"></div>
+    <div>
+      <strong>${escapeHtml(dialogue.title)}</strong>
+      <p>"${escapeHtml(dialogue.text)}"</p>
+    </div>
+  </div>`;
 }
 
 function renderSmithMaterials() {
@@ -690,11 +691,8 @@ function renderEnchantStatus() {
 
 function renderSmithHome() {
   $("smithHome").innerHTML = `
-    <div class="smith-greeting" id="smithGreeting">
-      <div class="smith-avatar" aria-hidden="true"></div>
-      <div id="smithGreetingText"></div>
-    </div>
-    <div class="smith-mastery" id="smithMastery"></div>
+    ${renderSmithGreetingMarkup()}
+    <div class="smith-mastery" id="smithMastery">${renderSmithMasteryMarkup()}</div>
     <div class="smith-choice-grid">
       <button type="button" data-smith-view="upgrade">
         <strong>Verbessern</strong>
@@ -710,17 +708,15 @@ function renderSmithHome() {
       </button>
     </div>
   `;
-  renderSmithGreeting();
-  renderSmithMasteryPanel();
 }
 
-function renderSmithMasteryPanel() {
+function renderSmithMasteryMarkup() {
   const limit = currentSmithMasteryLimit();
   const discovered = smithMasteryDiscovered();
   const active = smithMasteryRankById(state.smithMastery.active);
   const next = active || nextSmithMasteryRank();
   if (!discovered && next?.id === "emberAnvil") {
-    $("smithMastery").innerHTML = `
+    return `
       <div class="smith-mastery-head">
         <div>
           <span>Schmied-Meisterschaft</span>
@@ -731,10 +727,9 @@ function renderSmithMasteryPanel() {
       <p>"Dein Stahl hat noch Luft. Bring mir erst ein Stück, das keinen einfachen Schlag mehr annimmt."</p>
       <div class="smith-mastery-reward">Borin verrät dir mehr, sobald deine Ausrüstung wirklich an ihre Grenze stößt.</div>
     `;
-    return;
   }
   if (!next) {
-    $("smithMastery").innerHTML = `
+    return `
       <div class="smith-mastery-head">
         <div>
           <span>Schmied-Meisterschaft</span>
@@ -744,7 +739,6 @@ function renderSmithMasteryPanel() {
       </div>
       <p>Deine Ausrüstung trägt Borins stärkste Bindung. Mehr gibt der Amboss nicht her.</p>
     `;
-    return;
   }
 
   const isActive = state.smithMastery.active === next.id;
@@ -757,7 +751,7 @@ function renderSmithMasteryPanel() {
     pressureSteel: "Du hast deinen Stahl weit gebracht. Jetzt braucht er Druck, nicht nur Feuer.",
     watchMastermark: "Jetzt reden wir nicht mehr über bessere Arbeit. Jetzt reden wir über einen Schwur im Metall.",
   }[next.id];
-  $("smithMastery").innerHTML = `
+  return `
     <div class="smith-mastery-head">
       <div>
         <span>Schmied-Meisterschaft</span>
