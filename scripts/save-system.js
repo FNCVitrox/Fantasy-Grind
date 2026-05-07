@@ -181,6 +181,9 @@ function normalizeLoadedQuests(loaded, parsed) {
 
 function normalizeLoadedCollections(loaded) {
   loaded.discoveredLoot = loaded.discoveredLoot || {};
+  loaded.defeatedBosses = Array.isArray(loaded.defeatedBosses)
+    ? [...new Set(loaded.defeatedBosses)].filter((id) => enemies[id]?.boss)
+    : [];
   loaded.lootQueue = Array.isArray(loaded.lootQueue) ? loaded.lootQueue : [];
   loaded.nextEncounters = loaded.nextEncounters || {};
   loaded.lastSaveExportAt = loaded.lastSaveExportAt || "";

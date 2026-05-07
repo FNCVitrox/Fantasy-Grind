@@ -6,7 +6,7 @@ Aktueller Stand: spielbarer Alpha-Prototyp.
 
 ## Version
 
-Alpha v0.8.68
+Alpha v0.8.69
 
 ## Spielen
 
@@ -56,6 +56,7 @@ Der Browser versucht den Fortschritt zusaetzlich lokal zu speichern. Das ist beq
 - Normale Gebiete zum Farmen und Questen
 - Separate Dungeons mit Boss-Reihen
 - Gegner mit eigenen Faehigkeiten, Elite-Versionen und Boss-Passiven
+- Dungeon-Bosse mit fester Bossbeute, sichtbaren Drop-Chancen und einmaligen Erstbesiegungs-Belohnungen
 - Kampfanimationen mit HP-Balken, Schadenstexten, Sieg/Niederlage-Anzeige und Kampf-Log
 - Gegner-Risiko mit Einschaetzung aus Leben, Schaden, Crits, Faehigkeiten, Effekten und Haltbarkeit
 - Quest-Tafel mit passenden Quests pro Gebiet
@@ -136,7 +137,7 @@ Der Code ist zunehmend in Bereiche getrennt, damit das Projekt wartbarer bleibt:
 Naechste sinnvolle Schritte:
 
 - Mira-Verzauberungen weiter balancieren
-- Mehr Boss-Mechaniken und Dungeon-Identitaet
+- Weitere Dungeon-Bosse, Phasen und klare Dungeon-Belohnungen
 - Weitere Klassen: Magier, Schurke und Bogenschuetze
 - Manuelles Kampfsystem als Alternative zum Auto-Kampf
 - Item-Bilder statt reiner Textkarten

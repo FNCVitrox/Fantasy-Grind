@@ -407,15 +407,36 @@ function enemyRarity(enemy) {
 }
 
 function renderSelectedEnemy() {
-  const signature = `${selectedEnemy}|${state.hp}|${state.maxHp}|${state.level}|${state.build}|${zoneEncounterSignature(selectedZone)}|${equipmentSignature()}`;
+  const bossRewardSignature = Array.isArray(state.defeatedBosses) ? state.defeatedBosses.join(",") : "";
+  const signature = `${selectedEnemy}|${state.hp}|${state.maxHp}|${state.level}|${state.build}|${zoneEncounterSignature(selectedZone)}|${equipmentSignature()}|${bossRewardSignature}`;
   if (renderCache.selectedEnemy === signature) return;
   renderCache.selectedEnemy = signature;
   const enemy = getPreparedEncounter(selectedEnemy);
   resetBattleStageState();
   setText("selectedEnemyName", enemy.name);
-  setText("selectedEnemyMeta", "");
+  const meta = $("selectedEnemyMeta");
+  const metaHtml = renderSelectedEnemyMeta(enemy, selectedEnemy);
+  if (meta) {
+    meta.hidden = !metaHtml;
+    meta.innerHTML = metaHtml;
+  }
   setBattleEnemyVisual(enemy);
   $("battleText").textContent = `${enemy.name} wartet.`;
+}
+
+function renderSelectedEnemyMeta(enemy, enemyId = selectedEnemy) {
+  if (!enemy?.boss) return "";
+  const drops = (enemy.drops || []).map((drop) => {
+    const item = getItem(drop.id);
+    const quality = itemQuality(item);
+    return `<span class="boss-meta-chip quality-${quality}">${escapeHtml(item.name)} ${formatChance(drop.chance)}</span>`;
+  }).join("");
+  const claimed = bossFirstClearClaimed(enemy.baseId || enemyId);
+  const reward = bossFirstClearRewardText(enemy);
+  return `
+    <span class="boss-meta-row"><b>Bossbeute</b>${drops || "<span>Keine feste Beute</span>"}</span>
+    <span class="boss-meta-row ${claimed ? "claimed" : ""}"><b>${claimed ? "Erster Sieg geholt" : "Erster Sieg"}</b>${escapeHtml(reward || "Keine Sonderbelohnung")}</span>
+  `;
 }
 
 function resetBattleStageState() {
@@ -1286,6 +1307,7 @@ function renderBestiaryDetail() {
       </div>
     </div>
     <p>Level ${detailEnemy.level}${detailEnemy.boss ? " · Boss" : detailEnemy.elite ? " · Elite" : ""} · ${detailEnemy.hp} Leben · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} Schaden · ${detailEnemy.defense} Rüstung · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)} · Quest-Schriftrolle ${formatChance(rareQuestDropChance(detailEnemy))}</p>
+    ${renderBossRewardPanel(selectedBestiaryEnemy, detailEnemy)}
     ${renderEnemyAbilities(detailEnemy)}
     <h3>Sammlung</h3>
     <div class="bestiary-category-grid">
@@ -1315,6 +1337,9 @@ function bestiaryDetailSignature(enemyId, enemy, discovered) {
     enemy.defense,
     enemyCriticalStats(enemy).critChance,
     enemyCriticalStats(enemy).critDamage,
+    Array.isArray(state.defeatedBosses) ? state.defeatedBosses.join(",") : "",
+    (enemy.drops || []).map((drop) => `${drop.id}:${drop.chance}`).join(","),
+    bossFirstClearRewardText(enemy),
     selectedBestiaryCategory,
     selectedBestiaryFilter,
     selectedBestiarySearch,
@@ -1322,6 +1347,31 @@ function bestiaryDetailSignature(enemyId, enemy, discovered) {
     selectedBestiaryItemKey,
     discoveredSignature,
   ].join("~");
+}
+
+function renderBossRewardPanel(enemyId, enemy) {
+  if (!enemy?.boss) return "";
+  const reward = bossFirstClearRewardText(enemy);
+  const claimed = bossFirstClearClaimed(enemyId);
+  const drops = (enemy.drops || []).map((drop) => {
+    const item = getItem(drop.id);
+    const quality = itemQuality(item);
+    return `<div class="boss-reward-drop">
+      <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
+      <span>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, itemSlot(item))} · ${formatChance(drop.chance)}</span>
+    </div>`;
+  }).join("");
+
+  return `<section class="boss-reward-panel">
+    <div>
+      <p class="eyebrow">Dungeon-Belohnung</p>
+      <strong>${claimed ? "Erster Sieg bereits geholt" : "Erster Sieg"}</strong>
+      <span>${escapeHtml(reward || "Keine Sonderbelohnung")}</span>
+    </div>
+    <div class="boss-reward-grid">
+      ${drops || "<span>Keine feste Bossbeute</span>"}
+    </div>
+  </section>`;
 }
 
 function renderEnemyAbilities(enemy) {

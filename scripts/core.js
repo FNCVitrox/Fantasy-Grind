@@ -175,6 +175,7 @@ function defaultState() {
     inventory: [],
     materials: emptyMaterials(),
     discoveredLoot: {},
+    defeatedBosses: [],
     quests: { wolves: 0, rust: 0, elites: 0 },
     questBoard: ["wolves", "rust", "boars"],
     unseenQuests: [],
@@ -959,6 +960,52 @@ function maybeGrantBattleRenown(enemy) {
   log(`Dein Ruf wächst: +1 Ruhm für den Sieg gegen ${enemy.name}.`, "drop");
 }
 
+function bossFirstClearClaimed(enemyId) {
+  return Array.isArray(state.defeatedBosses) && state.defeatedBosses.includes(enemyId);
+}
+
+function bossFirstClearReward(enemy) {
+  if (!enemy?.boss || !enemy.firstClear) return null;
+  return {
+    renown: Math.max(0, Math.floor(enemy.firstClear.renown || 0)),
+    gold: Math.max(0, Math.floor(enemy.firstClear.gold || 0)),
+    materials: { ...(enemy.firstClear.materials || {}) },
+  };
+}
+
+function rewardMaterialText(materials = {}) {
+  return Object.entries(materials)
+    .filter(([id, amount]) => materialLabel[id] && amount > 0)
+    .map(([id, amount]) => `${amount} ${materialLabel[id]}`)
+    .join(", ");
+}
+
+function bossFirstClearRewardText(enemy) {
+  const reward = bossFirstClearReward(enemy);
+  if (!reward) return "";
+  const parts = [];
+  if (reward.renown) parts.push(`${reward.renown} Ruhm`);
+  if (reward.gold) parts.push(`${reward.gold} Gold`);
+  const materials = rewardMaterialText(reward.materials);
+  if (materials) parts.push(materials);
+  return parts.join(" · ");
+}
+
+function grantBossFirstClear(enemy, enemyId = selectedEnemy) {
+  const bossId = enemy?.baseId || enemyId;
+  const reward = bossFirstClearReward(enemy);
+  if (!reward || bossFirstClearClaimed(bossId)) return null;
+
+  state.defeatedBosses = [...new Set([...(state.defeatedBosses || []), bossId])];
+  state.renown += reward.renown;
+  state.gold += reward.gold;
+  Object.entries(reward.materials).forEach(([id, amount]) => {
+    if (!materialLabel[id] || amount <= 0) return;
+    state.materials[id] = (state.materials[id] || 0) + amount;
+  });
+  return reward;
+}
+
 function zoneKindLabel(zone) {
   return zone?.type === "dungeon" ? "Dungeon" : "Gebiet";
 }
@@ -1108,15 +1155,24 @@ function eliteBonusAbilityFor(enemy) {
 }
 
 function enemyHealMultiplier(enemy, enemyHp) {
-  return enemyPassiveIds(enemy).includes("unholyRenewal") && enemyHp <= enemy.hp * 0.5 ? 1.45 : 1;
+  const passives = enemyPassiveIds(enemy);
+  let multiplier = 1;
+  if (passives.includes("unholyRenewal") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.45;
+  if (passives.includes("graveBargain") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.25;
+  if (passives.includes("emberChoir")) multiplier *= 1.18;
+  return multiplier;
 }
 
 function enemyDamagePassiveMultiplier(enemy, enemyHp) {
   const passives = enemyPassiveIds(enemy);
   let multiplier = 1;
   if (passives.includes("forgeFire") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.15;
+  if (passives.includes("oathHeat") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.18;
   if (passives.includes("noblePride") && enemyHp <= enemy.hp * 0.4) multiplier *= 1.25;
+  if (passives.includes("dukePride") && enemyHp <= enemy.hp * 0.45) multiplier *= 1.18;
+  if (passives.includes("crownFrenzy") && enemyHp <= enemy.hp * 0.55) multiplier *= 1.16;
   if (passives.includes("secondPhase") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.18;
+  if (passives.includes("hollowSecondWind") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.2;
   return multiplier;
 }
 
@@ -1164,6 +1220,14 @@ function enemyDamageTakenMultiplier(enemy, enemyHp, rounds, hit) {
     multiplier *= 0.75;
     defensive.push("Kerkerdisziplin");
   }
+  if (passives.includes("cellAuthority") && (rounds <= 2 || rounds % 5 === 0)) {
+    multiplier *= 0.86;
+    defensive.push("Kerkerautorität");
+  }
+  if (passives.includes("graveBargain") && enemyHp <= enemy.hp * 0.5) {
+    multiplier *= 0.92;
+    defensive.push("Grabpakt");
+  }
   if (passives.includes("lastGuard") && enemyHp <= enemy.hp * 0.3) {
     multiplier *= 0.8;
     defensive.push("Standhaft");
@@ -1172,12 +1236,33 @@ function enemyDamageTakenMultiplier(enemy, enemyHp, rounds, hit) {
     multiplier *= 0.8;
     defensive.push("Schwerer Körper");
   }
+  if (passives.includes("bruteBulk") && hit <= enemy.level * 2.6) {
+    multiplier *= 0.78;
+    defensive.push("Massiger Leib");
+  }
+  if (passives.includes("wardenPressure") && rounds % 4 === 0) {
+    multiplier *= 0.8;
+    defensive.push("Kettendruck");
+  }
+  if (passives.includes("oathHeat") && enemyHp <= enemy.hp * 0.5) {
+    multiplier *= 0.9;
+    defensive.push("Eidglut");
+  }
+  if (passives.includes("dukePride") && enemyHp <= enemy.hp * 0.45) {
+    multiplier *= 0.9;
+    defensive.push("Herzogsstolz");
+  }
   if (passives.includes("royalHide")) {
     multiplier *= 0.9;
   }
   if (passives.includes("secondPhase") && enemyHp <= enemy.hp * 0.5) {
     multiplier *= 0.82;
     defensive.push("Zweite Phase");
+  }
+
+  if (passives.includes("hollowSecondWind") && enemyHp <= enemy.hp * 0.5) {
+    multiplier *= 0.8;
+    defensive.push("Leere zweite Phase");
   }
 
   return { multiplier: Math.max(0.25, multiplier), defensive };
@@ -1211,6 +1296,15 @@ function triggeredEnemyAbility(enemy, rounds, playerHp, playerMaxHp, enemyHp) {
     if (id === "hollowGaze" && rounds % 4 === 0) return { id, damageMultiplier: 0.9, playerDamageMultiplier: 0.7 };
     if (id === "championLeap" && rounds % 5 === 0) return { id, damageMultiplier: 1.75 };
     if (id === "eliteFury" && rounds % 4 === 0) return { id, damageMultiplier: 1.25 };
+    if (id === "cellLockdown" && rounds % 5 === 0) return { id, damageMultiplier: 1.1, playerDamageMultiplier: 0.65 };
+    if (id === "graveTithe" && rounds % 5 === 0) return { id, damageMultiplier: 0.95, healFlatRatio: 0.1, dot: { name: "Grabfrost", damage: Math.max(1, Math.ceil(enemy.level * 0.65)), turns: 2 } };
+    if (id === "bruteRampage" && enemyHp <= enemy.hp * 0.55 && rounds % 3 === 0) return { id, damageMultiplier: 1.5 };
+    if (id === "wardenVerdict" && rounds % 5 === 0) return { id, damageMultiplier: 1.35, playerDamageMultiplier: 0.7 };
+    if (id === "anvilQuake" && rounds % 5 === 0) return { id, damageMultiplier: 1.55, dot: { name: "Brennen", damage: Math.max(1, Math.ceil(enemy.level * 0.8)), turns: 2 } };
+    if (id === "dukeDuel" && rounds % 5 === 0) return { id, damageMultiplier: 1.45 };
+    if (id === "emberHymn" && rounds % 5 === 0) return { id, damageMultiplier: 0.9, healFlatRatio: 0.1, dot: { name: "Aschebrand", damage: Math.max(1, Math.ceil(enemy.level * 0.85)), turns: 2 } };
+    if (id === "royalGore" && enemyHp <= enemy.hp * 0.6 && rounds % 3 === 0) return { id, damageMultiplier: 1.45 };
+    if (id === "hollowRift" && rounds % 5 === 0) return { id, damageMultiplier: 1.4, playerDamageMultiplier: 0.65 };
     return null;
   }).find(Boolean);
 }
@@ -1595,9 +1689,13 @@ async function fight() {
       recordEnchantMasteryBattle(enemy);
       updateQuestProgress(enemy);
       maybeGrantBattleRenown(enemy);
+      const firstClearReward = grantBossFirstClear(enemy, enemy.baseId || selectedEnemy);
       maybeDropRareQuest(enemy);
       refreshQuestBoard(false);
       log(`Sieg gegen ${enemy.name} nach ${rounds} Runden. +${xp} XP, +${gold} Gold.`, "good");
+      if (firstClearReward) {
+        log(`Erster Dungeon-Sieg: ${bossFirstClearRewardText(enemy)}.`, "drop");
+      }
       if (enemy.boss) remindSaveBackup("du hast einen Dungeon-Boss besiegt.");
       notifyReadyAchievements();
     } else {
@@ -3138,6 +3236,9 @@ function enemyPlayerDamageDebuffMultiplier(enemy) {
   if (ids.includes("boneCurse")) multiplier *= 0.92;
   if (ids.includes("emberChains")) multiplier *= 0.955;
   if (ids.includes("hollowGaze")) multiplier *= 0.925;
+  if (ids.includes("cellLockdown")) multiplier *= 0.93;
+  if (ids.includes("wardenVerdict")) multiplier *= 0.94;
+  if (ids.includes("hollowRift")) multiplier *= 0.93;
   return multiplier;
 }
 
@@ -3149,8 +3250,13 @@ function expectedEnemyEffectiveHp(enemy, playerDamagePerRound) {
     if (id === "lifeDrain") effectiveHp += Math.max(2, playerDamagePerRound * 0.45);
     if (id === "graveMend") effectiveHp += enemy.hp * 0.08;
     if (id === "emberPrayer") effectiveHp += enemy.hp * 0.07;
+    if (id === "graveTithe") effectiveHp += enemy.hp * 0.1;
+    if (id === "emberHymn") effectiveHp += enemy.hp * 0.1;
   });
   if (enemyPassiveIds(enemy).includes("unholyRenewal")) effectiveHp *= 1.08;
+  if (enemyPassiveIds(enemy).includes("graveBargain")) effectiveHp *= 1.06;
+  if (enemyPassiveIds(enemy).includes("emberChoir")) effectiveHp *= 1.07;
+  if (enemyPassiveIds(enemy).includes("hollowSecondWind")) effectiveHp *= 1.12;
   return effectiveHp;
 }
 
@@ -3208,6 +3314,15 @@ function enemyAbilityAverageMultiplier(id) {
     hollowGaze: 1 - 0.1 / 4,
     championLeap: 1 + 0.75 / 5,
     eliteFury: 1 + 0.25 / 4,
+    cellLockdown: 1 + 0.1 / 5,
+    graveTithe: 1 - 0.05 / 5,
+    bruteRampage: 1 + 0.5 / 6,
+    wardenVerdict: 1 + 0.35 / 5,
+    anvilQuake: 1 + 0.55 / 5,
+    dukeDuel: 1 + 0.45 / 5,
+    emberHymn: 1 - 0.1 / 5,
+    royalGore: 1 + 0.45 / 5,
+    hollowRift: 1 + 0.4 / 5,
   };
   return multipliers[id] || 1;
 }
@@ -3222,6 +3337,9 @@ function enemyDotDamagePerRound(enemy) {
   if (ids.includes("emberChains")) dot += Math.max(1, Math.ceil(enemy.level * 0.85)) * 0.45;
   if (ids.includes("ashNova")) dot += Math.max(1, Math.ceil(enemy.level * 0.9)) * 0.35;
   if (ids.includes("ashBlade")) dot += Math.max(1, Math.ceil(enemy.level * 0.95)) * 0.5;
+  if (ids.includes("graveTithe")) dot += Math.max(1, Math.ceil(enemy.level * 0.65)) * 0.35;
+  if (ids.includes("anvilQuake")) dot += Math.max(1, Math.ceil(enemy.level * 0.8)) * 0.35;
+  if (ids.includes("emberHymn")) dot += Math.max(1, Math.ceil(enemy.level * 0.85)) * 0.35;
   return dot;
 }
 

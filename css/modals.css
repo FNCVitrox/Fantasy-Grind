@@ -562,6 +562,47 @@
   line-height: 1.3;
 }
 
+.boss-reward-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.75fr) minmax(260px, 1fr);
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgba(216, 174, 75, 0.38);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(216, 174, 75, 0.12), transparent 42%),
+    rgba(12, 23, 35, 0.86);
+}
+
+.boss-reward-panel > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.boss-reward-panel strong {
+  color: var(--text);
+}
+
+.boss-reward-panel span {
+  color: var(--muted);
+}
+
+.boss-reward-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.boss-reward-drop {
+  display: grid;
+  gap: 2px;
+  min-height: 48px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #07111b;
+}
+
 .bestiary-category-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1689,6 +1730,44 @@ button.drop-row span:last-child {
 .target-command h2 {
   margin: 0;
   font-size: 24px;
+}
+
+.target-command #selectedEnemyMeta {
+  display: grid;
+  gap: 6px;
+  margin: 4px 0 0;
+}
+
+.target-command #selectedEnemyMeta[hidden] {
+  display: none;
+}
+
+.boss-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.boss-meta-row b {
+  color: var(--gold);
+}
+
+.boss-meta-row.claimed b {
+  color: var(--green);
+}
+
+.boss-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 8px;
+  border: 1px solid rgba(216, 174, 75, 0.32);
+  border-radius: 999px;
+  background: rgba(7, 17, 27, 0.78);
+  font-weight: 800;
 }
 
 .combat-log-window {
