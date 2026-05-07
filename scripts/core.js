@@ -1801,12 +1801,56 @@ function questSet(quest) {
 }
 
 function itemScore(item) {
-  return item.damage * 1.5
-    + item.defense
-    + (item.critChance || 0) * 90
-    + (item.critDamage || 0) * 28
+  return itemBasePowerScore(item)
     + itemEffectScore(item)
     + itemEnchantmentScore(item);
+}
+
+function itemBasePowerScore(item) {
+  const durabilityFactor = Math.max(0.65, Math.min(1, (item.durability ?? 100) / 100));
+  return (item.damage * 1.5
+    + item.defense
+    + (item.critChance || 0) * 90
+    + (item.critDamage || 0) * 28) * durabilityFactor;
+}
+
+function itemBalanceBudget(item) {
+  const qualityIndex = qualityRank(item.quality);
+  const caps = itemStatCap(item.slot, item.quality, item.upgrade || 0);
+  const critCaps = itemCritBudget(item.slot, qualityIndex);
+  return caps.damage * 1.5
+    + caps.defense
+    + critCaps.critChance * 90
+    + critCaps.critDamage * 28
+    + itemEffectBudget(item.quality);
+}
+
+function qualityRank(quality) {
+  return { common: 0, rare: 1, epic: 2, legendary: 3 }[quality] || 0;
+}
+
+function itemCritBudget(slot, qualityIndex) {
+  if (!itemSlotRules(slot).critChance && !itemSlotRules(slot).critDamage) {
+    return { critChance: 0, critDamage: 0 };
+  }
+  const chanceBudget = {
+    weapon: [0.02, 0.05, 0.08, 0.12],
+    necklace: [0.01, 0.03, 0.06, 0.09],
+    ring: [0.02, 0.04, 0.07, 0.1],
+  }[slot] || [0.01, 0.03, 0.06, 0.09];
+  const damageBudget = {
+    weapon: [0.04, 0.12, 0.2, 0.36],
+    necklace: [0.06, 0.14, 0.24, 0.36],
+    ring: [0.03, 0.1, 0.18, 0.28],
+  }[slot] || [0.03, 0.1, 0.18, 0.28];
+  return {
+    critChance: chanceBudget[qualityIndex] || 0,
+    critDamage: damageBudget[qualityIndex] || 0,
+  };
+}
+
+function itemEffectBudget(quality) {
+  return [0, 8, 16, 24][qualityRank(quality)] || 0;
 }
 
 function itemEnchantmentScore(item) {
