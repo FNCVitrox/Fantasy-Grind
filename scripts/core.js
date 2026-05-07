@@ -1,8 +1,8 @@
-﻿let state = load();
-let selectedZone = state.ui?.selectedZone || "meadow";
-let selectedEnemy = state.ui?.selectedEnemy || zones[selectedZone]?.enemies?.[0] || "wolf";
-let selectedBestiaryZone = state.ui?.selectedBestiaryZone || selectedZone;
-let selectedBestiaryEnemy = state.ui?.selectedBestiaryEnemy || selectedEnemy;
+let state;
+let selectedZone = "meadow";
+let selectedEnemy = zones[selectedZone]?.enemies?.[0] || "wolf";
+let selectedBestiaryZone = selectedZone;
+let selectedBestiaryEnemy = selectedEnemy;
 let isFighting = false;
 let skipCombat = false;
 let bestiaryListDirty = true;
@@ -138,6 +138,13 @@ const upgradeCostSteps = {
   20: { gold: 1250, basis: 15, boss: 4 },
 };
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+state = load();
+selectedZone = state.ui?.selectedZone || "meadow";
+selectedEnemy = state.ui?.selectedEnemy || zones[selectedZone]?.enemies?.[0] || "wolf";
+selectedBestiaryZone = state.ui?.selectedBestiaryZone || selectedZone;
+selectedBestiaryEnemy = state.ui?.selectedBestiaryEnemy || selectedEnemy;
+
 function defaultState() {
   return {
     level: 1,
