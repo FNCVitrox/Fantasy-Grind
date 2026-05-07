@@ -2,9 +2,13 @@ node_modules/
 dist/
 .vite/
 .cache/
+.vs/
 *.log
 Thumbs.db
 desktop.ini
 FantasyGrindProject.docx
 FantasyGrind_MVP_Konzept.md
 Fantasy-Grind-Testsave-*.json
+*Testsave*.json
+*Spielstand*.json
+*Save*.json
