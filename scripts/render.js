@@ -600,6 +600,37 @@ function renderSaveSummary() {
       <div><span>Letzte Sicherung</span><strong>${escapeHtml(formatSaveDate(state.lastSaveExportAt))}</strong></div>
       <div><span>Dateiname</span><strong>${escapeHtml(saveFileName())}</strong></div>
     </section>
+    ${renderStorageStatus()}
+  `;
+}
+
+function renderStorageStatus() {
+  const status = browserStorageStatus();
+  const storageWorks = status.localStorage.ok;
+  const fallbackWorks = status.sessionStorage.ok || status.windowName.ok;
+  const failedLoad = status.failedLoads[0];
+  const headline = storageWorks ? "Browser-Speicher aktiv" : "Browser-Speicher blockiert";
+  const detail = failedLoad
+    ? `${failedLoad.label} konnte nicht gelesen werden: ${failedLoad.error}`
+    : fallbackWorks
+      ? "Automatisches Speichern hat mindestens einen funktionierenden Speicherweg."
+      : "Bitte nutze regelmaessig Spielstand herunterladen.";
+  const loadedFrom = status.recoveredFrom
+    ? `Aus ${status.recoveredFrom} wiederhergestellt`
+    : status.loadedFrom;
+
+  return `
+    <section class="save-storage-card ${storageWorks ? "is-ok" : "is-warning"}">
+      <div>
+        <span>Speicherstatus</span>
+        <strong>${escapeHtml(headline)}</strong>
+      </div>
+      <div>
+        <span>Geladen</span>
+        <strong>${escapeHtml(loadedFrom)}</strong>
+      </div>
+      <p>${escapeHtml(detail)}</p>
+    </section>
   `;
 }
 

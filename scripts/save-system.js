@@ -1,19 +1,43 @@
+const saveDiagnostics = {
+  loadedFrom: "Noch nicht geladen",
+  recoveredFrom: "",
+  failedLoads: [],
+  lastParseError: "",
+  startedWithStoredSave: false,
+};
+
 function load() {
   const candidates = [
     { key: saveKey, label: "Hauptspielstand" },
     { key: saveBackupKey, label: "Backup" },
     { key: savePreviousKey, label: "vorheriges Backup" },
   ];
+  let foundStoredSave = false;
 
   for (const candidate of candidates) {
     const raw = storageGet(candidate.key);
     if (!raw) continue;
+    foundStoredSave = true;
     const loaded = parseSavedState(raw);
-    if (!loaded) continue;
-    if (candidate.key !== saveKey) restoreRecoveredSave(candidate.label, loaded);
+    if (!loaded) {
+      saveDiagnostics.failedLoads.push({
+        key: candidate.key,
+        label: candidate.label,
+        error: saveDiagnostics.lastParseError || "Unbekannter Ladefehler",
+      });
+      continue;
+    }
+    saveDiagnostics.loadedFrom = candidate.label;
+    saveDiagnostics.startedWithStoredSave = true;
+    if (candidate.key !== saveKey) {
+      saveDiagnostics.recoveredFrom = candidate.label;
+      restoreRecoveredSave(candidate.label, loaded);
+    }
     return loaded;
   }
 
+  saveDiagnostics.loadedFrom = foundStoredSave ? "Neuer Spielstand nach Ladefehler" : "Neuer Spielstand";
+  saveDiagnostics.startedWithStoredSave = foundStoredSave;
   return defaultState();
 }
 
@@ -128,8 +152,10 @@ function parseSavedState(raw) {
     loaded.materials = normalizeMaterials(loaded.materials);
     loaded.ui = normalizeSavedUi(loaded.ui);
     applyBalanceMigration(loaded);
+    saveDiagnostics.lastParseError = "";
     return loaded;
-  } catch {
+  } catch (error) {
+    saveDiagnostics.lastParseError = error?.message || "Unbekannter Ladefehler";
     return null;
   }
 }
@@ -249,6 +275,54 @@ function storageSet(key, value) {
   const windowStore = readWindowNameStore();
   windowStore[key] = value;
   writeWindowNameStore(windowStore);
+}
+
+function browserStorageStatus() {
+  return {
+    localStorage: testStorageStore("localStorage", typeof localStorage !== "undefined" ? localStorage : null),
+    sessionStorage: testStorageStore("sessionStorage", typeof sessionStorage !== "undefined" ? sessionStorage : null),
+    windowName: testWindowNameStore(),
+    loadedFrom: saveDiagnostics.loadedFrom,
+    recoveredFrom: saveDiagnostics.recoveredFrom,
+    failedLoads: saveDiagnostics.failedLoads,
+    hasStoredSave: Boolean(storageGet(saveKey)),
+  };
+}
+
+function testStorageStore(label, store) {
+  if (!store) {
+    return { label, ok: false, message: "nicht verfuegbar" };
+  }
+
+  const testKey = "__fantasy_grind_storage_test__";
+  try {
+    store.setItem(testKey, "ok");
+    const ok = store.getItem(testKey) === "ok";
+    if (typeof store.removeItem === "function") store.removeItem(testKey);
+    return { label, ok, message: ok ? "aktiv" : "Lesetest fehlgeschlagen" };
+  } catch (error) {
+    return { label, ok: false, message: error?.message || "blockiert" };
+  }
+}
+
+function testWindowNameStore() {
+  if (typeof window === "undefined") {
+    return { label: "window.name", ok: false, message: "nicht verfuegbar" };
+  }
+
+  const testKey = "__fantasy_grind_window_test__";
+  try {
+    const store = readWindowNameStore();
+    store[testKey] = "ok";
+    writeWindowNameStore(store);
+    const ok = readWindowNameStore()[testKey] === "ok";
+    const cleanedStore = readWindowNameStore();
+    delete cleanedStore[testKey];
+    writeWindowNameStore(cleanedStore);
+    return { label: "window.name", ok, message: ok ? "Fallback aktiv" : "Fallback blockiert" };
+  } catch (error) {
+    return { label: "window.name", ok: false, message: error?.message || "blockiert" };
+  }
 }
 
 function availableStorageStores() {

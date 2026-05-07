@@ -391,7 +391,6 @@ $("importSaveTopBtn").addEventListener("click", importSave);
 $("saveFileInput").addEventListener("change", importSaveFile);
 
 render();
-save();
 window.addEventListener("beforeunload", save);
 
 function closeBestiary() {
