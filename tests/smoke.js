@@ -72,7 +72,7 @@ for (const source of scripts) {
 assert.strictEqual(typeof context.defaultState, "function");
 assert.strictEqual(typeof context.renderBestiaryItemDetail, "function");
 assert.strictEqual(context.defaultState().level, 1);
-assert.strictEqual(context.defaultState().build, "bruiser");
+assert.strictEqual(context.defaultState().build, "damage");
 assert.strictEqual(vm.runInContext("enemies.wolf.name", context), "Waldwolf");
 assert.strictEqual(vm.runInContext("zones.meadow.enemies[0]", context), "wolf");
 assert(vm.runInContext("Object.values(zones).filter((zone) => zone.type === 'dungeon').every((zone) => zone.enemies.every((id) => enemies[id].boss))", context), "dungeons should contain boss enemies");
@@ -81,7 +81,7 @@ assert(vm.runInContext("state = defaultState(); questAvailable(getQuestById('wol
 assert(vm.runInContext("state.level = 9; state.renown = 8; selectedZone = 'fields'; questAvailable(getQuestById('fields'))", context), "field quests should unlock when the field zone is selected");
 assert.strictEqual(vm.runInContext("eliteEncounterChance", context), 0.06);
 assert.strictEqual(vm.runInContext("knownClassAbilities().length", context), 3);
-assert(vm.runInContext("state = defaultState(); const normal = totalStats().damage; state.build = 'damage'; totalStats().damage > normal", context), "damage build should increase damage");
+assert(vm.runInContext("state = defaultState(); state.build = 'tank'; const tankDamage = totalStats().damage; state.build = 'damage'; totalStats().damage > tankDamage", context), "damage build should deal more damage than tank");
 assert(vm.runInContext("state = defaultState(); state.build = 'damage'; totalStats().critChance > 0.1 && totalStats().critDamage > 1.7", context), "damage build should improve critical stats");
 assert.strictEqual(
   vm.runInContext("state = defaultState(); state.build = 'tank'; knownClassAbilities().map(([id]) => id).join(',')", context),

@@ -188,7 +188,7 @@ function normalizeLoadedCollections(loaded) {
 
 function normalizeLoadedCharacter(loaded) {
   loaded.characterClass = classCatalog[loaded.characterClass] ? loaded.characterClass : "warrior";
-  loaded.build = buildCatalog[loaded.build] ? loaded.build : "bruiser";
+  loaded.build = buildCatalog[loaded.build] ? loaded.build : "damage";
   loaded.knownAbilities = Array.isArray(loaded.knownAbilities)
     ? loaded.knownAbilities.filter((id) => abilityCatalog[id])
     : [];

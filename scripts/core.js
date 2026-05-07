@@ -148,7 +148,7 @@ function defaultState() {
     deaths: 0,
     renown: 0,
     characterClass: "warrior",
-    build: "bruiser",
+    build: "damage",
     knownAbilities: [],
     durability: 100,
     itemDurability: {},
@@ -697,7 +697,7 @@ function activeClass() {
 }
 
 function activeBuild() {
-  return buildCatalog[state.build] || buildCatalog.bruiser;
+  return buildCatalog[state.build] || buildCatalog.damage;
 }
 
 function knownClassAbilities() {
