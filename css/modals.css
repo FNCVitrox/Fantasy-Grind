@@ -240,6 +240,143 @@
   width: min(940px, 100%);
 }
 
+.achievements-window {
+  width: min(1180px, 100%);
+}
+
+.achievements {
+  display: grid;
+  gap: 14px;
+}
+
+.achievement-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.achievement-summary div,
+.achievement-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(176, 137, 255, 0.08), transparent),
+    #07111b;
+}
+
+.achievement-summary div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.achievement-summary span,
+.achievement-reward span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.achievement-summary strong {
+  color: var(--text);
+  font-size: 20px;
+}
+
+.achievement-category {
+  display: grid;
+  gap: 8px;
+}
+
+.achievement-category h3 {
+  margin: 0;
+  color: var(--gold);
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.achievement-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.achievement-card.ready {
+  border-color: var(--gold);
+  box-shadow: 0 0 22px rgba(242, 193, 78, 0.14);
+}
+
+.achievement-card.claimed {
+  border-color: rgba(63, 214, 163, 0.52);
+  background:
+    linear-gradient(180deg, rgba(63, 214, 163, 0.08), transparent),
+    #07111b;
+}
+
+.achievement-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.achievement-card-head strong {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.achievement-card-head p {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.28;
+}
+
+.achievement-card-head span {
+  flex: 0 0 auto;
+  align-self: start;
+  padding: 4px 8px;
+  border: 1px solid rgba(242, 193, 78, 0.4);
+  border-radius: 999px;
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.achievement-progress {
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #07111b;
+}
+
+.achievement-progress span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), var(--gold));
+}
+
+.achievement-reward {
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.achievement-reward strong {
+  font-size: 13px;
+}
+
+.achievement-card button {
+  width: 100%;
+  font-weight: 900;
+}
+
 .quest-board {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;

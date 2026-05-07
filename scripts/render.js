@@ -22,9 +22,11 @@
   renderEquipment();
   renderLootChoices();
   renderQuestNotice();
+  renderAchievementNotice();
   renderQuests();
   if (isModalOpen("inventoryModal")) renderInventory();
   if (isModalOpen("questBoardModal")) renderQuestBoard();
+  if (isModalOpen("achievementsModal")) renderAchievements();
   if (isModalOpen("smithModal")) renderSmith();
   if (isModalOpen("saveModal")) renderSaveSummary();
   if (isModalOpen("repairModal")) renderRepairModal();
@@ -297,6 +299,76 @@ function renderQuestNotice() {
   if (!notice) return;
   notice.hidden = true;
   setText("questNotice", count);
+}
+
+function renderAchievementNotice() {
+  const notice = $("achievementNotice");
+  const button = $("openAchievementsBtn");
+  const count = readyAchievementCount();
+  if (button) button.classList.toggle("has-new-achievements", count > 0);
+  if (!notice) return;
+  notice.hidden = count <= 0;
+  setText("achievementNotice", count);
+}
+
+function renderAchievements() {
+  const container = $("achievements");
+  if (!container) return;
+  const ready = readyAchievementCount();
+  const claimed = claimedAchievementCount();
+  const signature = `${claimed}|${ready}|${achievementCatalog.map((achievement) => `${achievement.id}:${achievementProgress(achievement).value}`).join(",")}|${state.gold}|${state.renown}|${materialsSignature()}`;
+  if (renderCache.achievements === signature) return;
+  renderCache.achievements = signature;
+
+  const categories = [...new Set(achievementCatalog.map((achievement) => achievement.category))];
+  container.innerHTML = `
+    <section class="achievement-summary">
+      <div><span>Erledigt</span><strong>${claimed}/${achievementCatalog.length}</strong></div>
+      <div><span>Bereit</span><strong>${ready}</strong></div>
+      <div><span>Belohnungen</span><strong>${ready ? "Abholen" : "Keine offen"}</strong></div>
+    </section>
+    ${categories.map((category) => renderAchievementCategory(category)).join("")}
+  `;
+}
+
+function renderAchievementCategory(category) {
+  const achievements = achievementCatalog.filter((achievement) => achievement.category === category);
+  return `<section class="achievement-category">
+    <h3>${escapeHtml(category)}</h3>
+    <div class="achievement-grid">
+      ${achievements.map(renderAchievementCard).join("")}
+    </div>
+  </section>`;
+}
+
+function renderAchievementCard(achievement) {
+  const progress = achievementProgress(achievement);
+  const claimed = isAchievementClaimed(achievement.id);
+  const ready = progress.ready && !claimed;
+  const stateClass = claimed ? "claimed" : ready ? "ready" : "";
+  return `<article class="achievement-card ${stateClass}">
+    <div class="achievement-card-head">
+      <div>
+        <strong>${escapeHtml(achievement.name)}</strong>
+        <p>${escapeHtml(achievement.text)}</p>
+      </div>
+      <span>${claimed ? "Erhalten" : ready ? "Bereit" : `${Math.min(progress.value, progress.target)}/${progress.target}`}</span>
+    </div>
+    <div class="achievement-progress" aria-label="Fortschritt ${Math.min(progress.value, progress.target)} von ${progress.target}">
+      <span style="width:${progress.percent}%"></span>
+    </div>
+    <div class="achievement-reward">
+      <span>Belohnung</span>
+      <strong>${escapeHtml(achievementRewardText(achievement.reward))}</strong>
+    </div>
+    <button type="button" data-claim-achievement="${achievement.id}" ${ready ? "" : "disabled"}>
+      ${claimed ? "Abgeholt" : ready ? "Belohnung abholen" : "Noch offen"}
+    </button>
+  </article>`;
+}
+
+function materialsSignature() {
+  return Object.keys(materialLabel).map((id) => `${id}:${state.materials[id] || 0}`).join(",");
 }
 
 function riskLabelClass(risk) {

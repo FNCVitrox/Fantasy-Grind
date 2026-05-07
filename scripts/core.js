@@ -174,7 +174,16 @@ function defaultState() {
     activeQuests: [],
     completedQuests: [],
     rareQuests: {},
-    combatStats: { eliteKills: 0, bossKills: 0 },
+    combatStats: {
+      eliteKills: 0,
+      bossKills: 0,
+      wins: 0,
+      itemsUpgraded: 0,
+      itemsSalvaged: 0,
+      itemsEnchanted: 0,
+      rareEnchantments: 0,
+    },
+    achievements: { claimed: [], notified: [] },
     smithMastery: { limit: 5, active: null, completed: [], progress: {}, discovered: false },
     winsSinceQuestRefresh: 0,
     lastSaveExportAt: "",
@@ -233,6 +242,25 @@ function normalizeCombatStats(stats = {}) {
   return {
     eliteKills: Math.max(0, Math.floor(stats.eliteKills || 0)),
     bossKills: Math.max(0, Math.floor(stats.bossKills || 0)),
+    wins: Math.max(0, Math.floor(stats.wins || 0)),
+    itemsUpgraded: Math.max(0, Math.floor(stats.itemsUpgraded || 0)),
+    itemsSalvaged: Math.max(0, Math.floor(stats.itemsSalvaged || 0)),
+    itemsEnchanted: Math.max(0, Math.floor(stats.itemsEnchanted || 0)),
+    rareEnchantments: Math.max(0, Math.floor(stats.rareEnchantments || 0)),
+  };
+}
+
+function normalizeAchievements(achievements = {}) {
+  const ids = new Set(achievementCatalog.map((achievement) => achievement.id));
+  const claimed = Array.isArray(achievements.claimed)
+    ? achievements.claimed.filter((id) => ids.has(id))
+    : [];
+  const notified = Array.isArray(achievements.notified)
+    ? achievements.notified.filter((id) => ids.has(id))
+    : [];
+  return {
+    claimed: [...new Set(claimed)],
+    notified: [...new Set(notified)],
   };
 }
 
@@ -1554,6 +1582,8 @@ async function fight() {
       gainXp(xp);
       grantMaterials(enemy.baseId || selectedEnemy, enemy.eliteVariant);
       createLootChoices(enemy, enemy.baseId || selectedEnemy);
+      state.combatStats = normalizeCombatStats(state.combatStats);
+      state.combatStats.wins += 1;
       recordSmithMasteryBattle(enemy);
       recordEnchantMasteryBattle(enemy);
       updateQuestProgress(enemy);
@@ -1562,6 +1592,7 @@ async function fight() {
       refreshQuestBoard(false);
       log(`Sieg gegen ${enemy.name} nach ${rounds} Runden. +${xp} XP, +${gold} Gold.`, "good");
       if (enemy.boss) remindSaveBackup("du hast einen Dungeon-Boss besiegt.");
+      notifyReadyAchievements();
     } else {
       const xpLoss = Math.min(state.xp, Math.ceil(xpForLevel(state.level) * 0.1));
       const goldLoss = Math.min(state.gold, Math.ceil(14 + state.level * 6));
@@ -2151,6 +2182,7 @@ function chooseLoot(index, equipNow = false) {
   if (["epic", "legendary"].includes(itemQuality(item))) {
     remindSaveBackup(`du hast ${qualityLabel[itemQuality(item)]}e Beute erhalten.`);
   }
+  notifyReadyAchievements();
   advanceLootQueue();
   save();
   render();
@@ -2340,6 +2372,7 @@ function completeSmithMasteryMission(rankId) {
   state.renown += rank.rewardRenown;
   log(`Borin Glutbart vollendet "${rank.name}". Neues Upgrade-Limit: +${rank.limit}. +${rank.rewardRenown} Ruhm.`, "drop");
   remindSaveBackup("Borin hat seine Werkstatt erweitert.");
+  notifyReadyAchievements();
   save();
   render();
 }
@@ -2448,6 +2481,7 @@ function completeEnchantMasteryMission(rankId) {
   state.renown += rank.rewardRenown;
   log(`Mira vollendet "${rank.name}". ${rank.reward} +${rank.rewardRenown} Ruhm.`, "drop");
   remindSaveBackup("Mira hat deine Runenbindung erweitert.");
+  notifyReadyAchievements();
   save();
   render();
 }
@@ -2459,6 +2493,131 @@ function recordEnchantMasteryBattle(enemy) {
   if (enemy.elite) progress.eliteKills = Math.min(active.progress?.eliteKills || 0, (progress.eliteKills || 0) + 1);
   if (enemy.boss) progress.bossKills = Math.min(active.progress?.bossKills || 0, (progress.bossKills || 0) + 1);
   state.enchanting.progress[active.id] = progress;
+}
+
+function achievementById(id) {
+  return achievementCatalog.find((achievement) => achievement.id === id);
+}
+
+function isAchievementClaimed(id) {
+  state.achievements = normalizeAchievements(state.achievements);
+  return state.achievements.claimed.includes(id);
+}
+
+function achievementProgress(achievement) {
+  const value = achievementProgressValue(achievement.metric);
+  const target = Math.max(1, achievement.target || 1);
+  return {
+    value,
+    target,
+    percent: Math.max(0, Math.min(100, (value / target) * 100)),
+    ready: value >= target,
+  };
+}
+
+function achievementProgressValue(metric) {
+  state.combatStats = normalizeCombatStats(state.combatStats);
+  if (metric === "eliteKills") return state.combatStats.eliteKills;
+  if (metric === "bossKills") return state.combatStats.bossKills;
+  if (metric === "wins") return state.combatStats.wins;
+  if (metric === "itemsUpgraded") return state.combatStats.itemsUpgraded;
+  if (metric === "itemsSalvaged") return state.combatStats.itemsSalvaged;
+  if (metric === "itemsEnchanted") return state.combatStats.itemsEnchanted;
+  if (metric === "rareEnchantments") return Math.max(state.combatStats.rareEnchantments, discoveredRareEnchantments());
+  if (metric === "discoveredItems") return discoveredItemCount();
+  if (metric === "legendaryItems") return hasDiscoveredItem((item) => itemQuality(item) === "legendary") ? 1 : 0;
+  if (metric === "fixedBossDrops") return hasDiscoveredItem((item, enemyId) => item.fixed && enemies[enemyId]?.boss) ? 1 : 0;
+  if (metric === "setItems") return hasDiscoveredItem((item) => Boolean(item.set)) ? 1 : 0;
+  if (metric === "itemAtLimit") return hasEquippedItemAtLimit() ? 1 : 0;
+  if (metric === "smithMasteries") return state.smithMastery?.completed?.length || 0;
+  if (metric === "enchantSlots") return currentEnchantSlotLimit();
+  if (metric === "enchantMasteries") return state.enchanting?.completed?.length || 0;
+  if (metric === "renown") return state.renown || 0;
+  return 0;
+}
+
+function discoveredItemCount() {
+  return Object.values(state.discoveredLoot || {}).reduce((sum, drops) => sum + Object.keys(drops || {}).length, 0);
+}
+
+function hasDiscoveredItem(predicate) {
+  return Object.entries(state.discoveredLoot || {}).some(([enemyId, drops]) =>
+    Object.values(drops || {}).some((item) => predicate(item, enemyId))
+  );
+}
+
+function discoveredRareEnchantments() {
+  return allSavedItems()
+    .flatMap((item) => activeItemEnchantments(item))
+    .filter((enchantment) => enchantRarityRank(enchantment.rarity) >= enchantRarityRank("rare"))
+    .length;
+}
+
+function allSavedItems() {
+  const ids = [...Object.values(state.equipment || {}), ...(state.inventory || [])].filter(Boolean);
+  const itemsById = ids.map(getItem).filter(Boolean);
+  return [...itemsById, ...Object.values(state.customItems || {})].filter(Boolean);
+}
+
+function readyAchievements() {
+  state.achievements = normalizeAchievements(state.achievements);
+  return achievementCatalog.filter((achievement) =>
+    !isAchievementClaimed(achievement.id) && achievementProgress(achievement).ready
+  );
+}
+
+function readyAchievementCount() {
+  return readyAchievements().length;
+}
+
+function claimedAchievementCount() {
+  state.achievements = normalizeAchievements(state.achievements);
+  return state.achievements.claimed.length;
+}
+
+function achievementRewardText(reward = {}) {
+  const parts = [];
+  if (reward.gold) parts.push(`${reward.gold} Gold`);
+  if (reward.renown) parts.push(`${reward.renown} Ruhm`);
+  Object.entries(reward.materials || {}).forEach(([id, amount]) => {
+    parts.push(`${amount} ${materialLabel[id] || id}`);
+  });
+  return parts.join(" · ") || "Keine Belohnung";
+}
+
+function claimAchievement(id) {
+  const achievement = achievementById(id);
+  if (!achievement || isAchievementClaimed(id) || !achievementProgress(achievement).ready) return false;
+  state.achievements.claimed.push(id);
+  grantAchievementReward(achievement.reward);
+  log(`Erfolg eingelöst: ${achievement.name}. Belohnung: ${achievementRewardText(achievement.reward)}.`, "drop");
+  notifyReadyAchievements();
+  save();
+  render();
+  return true;
+}
+
+function grantAchievementReward(reward = {}) {
+  state.gold += reward.gold || 0;
+  state.renown += reward.renown || 0;
+  Object.entries(reward.materials || {}).forEach(([id, amount]) => {
+    state.materials[id] = (state.materials[id] || 0) + amount;
+  });
+}
+
+function notifyReadyAchievements() {
+  state.achievements = normalizeAchievements(state.achievements);
+  const unseenReady = readyAchievements().filter((achievement) => !state.achievements.notified.includes(achievement.id));
+  if (!unseenReady.length) return;
+  state.achievements.notified = [...new Set([
+    ...state.achievements.notified,
+    ...unseenReady.map((achievement) => achievement.id),
+  ])];
+  const first = unseenReady[0];
+  log(unseenReady.length === 1
+    ? `Neuer Erfolg bereit: ${first.name}.`
+    : `${unseenReady.length} neue Erfolge sind bereit.`,
+  "drop");
 }
 
 function findSmithSacrificeItemId() {
@@ -2664,7 +2823,13 @@ function enchantEquipped(slot, category) {
   }
   spendCost(cost);
   item.enchantments = [...(item.enchantments || []), enchantmentId];
+  state.combatStats = normalizeCombatStats(state.combatStats);
+  state.combatStats.itemsEnchanted += 1;
+  if (enchantRarityRank(enchantment.rarity) >= enchantRarityRank("rare")) {
+    state.combatStats.rareEnchantments += 1;
+  }
   log(`${item.name} verzaubert: ${enchantment.name}.`, "drop");
+  notifyReadyAchievements();
   save();
   render();
 }
@@ -2709,7 +2874,10 @@ function upgradeEquipped(slot) {
   if (upgraded.upgrade >= currentSmithMasteryLimit()) {
     state.smithMastery.discovered = true;
   }
+  state.combatStats = normalizeCombatStats(state.combatStats);
+  state.combatStats.itemsUpgraded += 1;
   log(`${upgraded.name} beim Schmied verbessert.`, "drop");
+  notifyReadyAchievements();
   save();
   render();
 }
@@ -2789,9 +2957,12 @@ function salvageInventoryItem(index) {
   });
   state.inventory.splice(index, 1);
   delete state.itemDurability[itemId];
+  state.combatStats = normalizeCombatStats(state.combatStats);
+  state.combatStats.itemsSalvaged += 1;
   const text = Object.entries(materials).map(([id, amount]) => `${amount} ${materialLabel[id]}`).join(", ");
   log(`${item.name} zerlegt. Erhalten: ${text}.`, "drop");
   if (bonus) log(bonus.text, "drop");
+  notifyReadyAchievements();
   save();
   render();
 }
@@ -2816,9 +2987,12 @@ function salvageAllInventoryItems() {
 
   state.inventory.forEach((itemId) => delete state.itemDurability[itemId]);
   state.inventory = [];
+  state.combatStats = normalizeCombatStats(state.combatStats);
+  state.combatStats.itemsSalvaged += count;
   const text = Object.entries(gained).map(([id, amount]) => `${amount} ${materialLabel[id]}`).join(", ");
   log(`${count} Items zerlegt. Erhalten: ${text}.`, "drop");
   if (bonusCount) log(`${bonusCount} Items wurden sauber zerlegt und gaben Bonus-Material.`, "drop");
+  notifyReadyAchievements();
   save();
   render();
 }

@@ -6,7 +6,7 @@ Aktueller Stand: spielbarer Alpha-Prototyp.
 
 ## Version
 
-Alpha v0.8.64
+Alpha v0.8.65
 
 ## Spielen
 
@@ -67,6 +67,7 @@ Der Browser versucht den Fortschritt zusaetzlich lokal zu speichern. Das ist beq
 - 0-Werte werden auf Itemkarten ausgeblendet
 - Inventar mit Ausruesten, Verkaufen und Zerlegen
 - Set-Boni und besondere Item-Effekte
+- Erfolge mit Fortschritt, Belohnungen und leuchtendem Hinweis bei abholbaren Erfolgen
 - Smartphone-Layout mit groesseren Touch-Flaechen und kompakterer Navigation
 
 ## Schmied und Arkanistin
@@ -139,7 +140,7 @@ Naechste sinnvolle Schritte:
 - Weitere Klassen: Magier, Schurke und Bogenschuetze
 - Manuelles Kampfsystem als Alternative zum Auto-Kampf
 - Item-Bilder statt reiner Textkarten
-- Achievements fuer Bosse, Drops, Ruhm und Dungeons
+- Mehr Erfolge mit Titeln, Meilensteinen und Endgame-Zielen
 - Mehr Endgame-Loot, Set-Items und besondere Effekte
 - Anti-Farming-Regeln fuer zu schwache Gegner
 

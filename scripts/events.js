@@ -42,6 +42,11 @@ $("questBoard").addEventListener("click", (event) => {
   if (button) acceptQuest(button.dataset.acceptQuest);
 });
 
+$("achievements").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-claim-achievement]");
+  if (button) claimAchievement(button.dataset.claimAchievement);
+});
+
 $("bestiary").addEventListener("click", (event) => {
   const zone = event.target.closest("[data-bestiary-zone]");
   if (zone) {
@@ -308,6 +313,14 @@ $("closeQuestBoardBtn").addEventListener("click", closeQuestBoard);
 $("questBoardModal").addEventListener("click", (event) => {
   if (event.target.id === "questBoardModal") closeQuestBoard();
 });
+$("openAchievementsBtn").addEventListener("click", () => {
+  renderAchievements();
+  openModal("achievementsModal");
+});
+$("closeAchievementsBtn").addEventListener("click", closeAchievements);
+$("achievementsModal").addEventListener("click", (event) => {
+  if (event.target.id === "achievementsModal") closeAchievements();
+});
 $("openInventoryBtn").addEventListener("click", () => {
   renderInventory();
   openModal("inventoryModal");
@@ -391,6 +404,10 @@ function closeZone() {
 
 function closeQuestBoard() {
   closeModal("questBoardModal");
+}
+
+function closeAchievements() {
+  closeModal("achievementsModal");
 }
 
 function closeInventory() {
@@ -498,6 +515,8 @@ function setControlsDisabled(disabled) {
     if (button.id === "closeZoneBtn") return;
     if (button.id === "openQuestBoardBtn") return;
     if (button.id === "closeQuestBoardBtn") return;
+    if (button.id === "openAchievementsBtn") return;
+    if (button.id === "closeAchievementsBtn") return;
     if (button.id === "openInventoryBtn") return;
     if (button.id === "closeInventoryBtn") return;
     if (button.id === "openSmithBtn") return;
@@ -506,6 +525,7 @@ function setControlsDisabled(disabled) {
     if (button.dataset.loot !== undefined) return;
     if (button.dataset.equipLoot !== undefined) return;
     if (button.dataset.acceptQuest !== undefined) return;
+    if (button.dataset.claimAchievement !== undefined) return;
     button.disabled = disabled;
   });
 }
