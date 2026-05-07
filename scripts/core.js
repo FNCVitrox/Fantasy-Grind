@@ -555,10 +555,11 @@ function activeItemEnchantments(item) {
 }
 
 function equippedEnchantmentSummary() {
-  return equipmentSlots
+  const summary = equipmentSlots
     .map((slot) => getItem(state.equipment[slot]))
     .flatMap(activeItemEnchantments)
     .reduce((summary, enchantment) => addEnchantmentStats(summary, enchantment.stats), emptyEnchantmentSummary());
+  return clampEnchantmentSummary(summary);
 }
 
 function emptyEnchantmentSummary() {
@@ -581,6 +582,27 @@ function emptyEnchantmentSummary() {
 function addEnchantmentStats(summary, stats = {}) {
   Object.keys(summary).forEach((key) => {
     summary[key] += stats[key] || 0;
+  });
+  return summary;
+}
+
+function clampEnchantmentSummary(summary) {
+  const limits = {
+    damage: [-10, 35],
+    defense: [-12, 45],
+    maxHp: [-80, 260],
+    critChance: [0, 0.18],
+    critDamage: [-0.18, 0.45],
+    bossDamage: [0, 0.24],
+    damageReduction: [0, 0.24],
+    lowHpShield: [0, 0.25],
+    goldBonus: [0, 0.35],
+    xpBonus: [0, 0.35],
+    lootBonus: [0, 0.24],
+    durabilityReduction: [0, 0.35],
+  };
+  Object.entries(limits).forEach(([key, [min, max]]) => {
+    summary[key] = Math.max(min, Math.min(max, summary[key] || 0));
   });
   return summary;
 }
@@ -2553,10 +2575,25 @@ function canPayUpgradeCost(cost) {
 
 function enchantCost() {
   const slotLimit = maxEnchantSlotsForLevel();
-  return {
-    gold: 65 + slotLimit * 25,
-    materials: { shard: 2 + slotLimit, moonDust: 1 },
+  const rarityRank = currentEnchantRarityRank();
+  const materials = {
+    shard: 2 + slotLimit + rarityRank * 2,
+    moonDust: 1 + rarityRank,
   };
+  if (rarityRank >= 2) materials.emberCore = 1;
+  if (rarityRank >= 3) materials.crownAsh = 1;
+  return {
+    gold: [90, 180, 320, 560][rarityRank] + slotLimit * 25,
+    materials,
+  };
+}
+
+function currentEnchantRarityRank() {
+  return allowedEnchantRarities().reduce((highest, rarity) => Math.max(highest, enchantRarityRank(rarity)), 0);
+}
+
+function enchantRarityRank(rarity) {
+  return { common: 0, rare: 1, epic: 2, arcane: 3 }[rarity] || 0;
 }
 
 function canPayCost(cost) {
