@@ -6,7 +6,7 @@ Aktueller Stand: spielbarer Alpha-Prototyp.
 
 ## Version
 
-Alpha v0.8.71
+Alpha v0.8.72
 
 ## Spielen
 
@@ -126,15 +126,17 @@ Das Projekt ist bewusst einfach gehalten:
 
 Der Code ist zunehmend in Bereiche getrennt, damit das Projekt wartbarer bleibt:
 
-- `scripts/data.js`: gemeinsame Save-Keys und Levelkurve
+- `scripts/data.js`: gemeinsame Save-Keys, Version und Levelkurve
+- `scripts/data-loader.js`: laedt optionale Datenpakete erst bei Bedarf nach
 - `scripts/data-player.js`: Klassen, Builds und Spielerfaehigkeiten
 - `scripts/data-world.js`: Gebiete, Gegner und Gegnerfaehigkeiten
 - `scripts/data-items.js`: Items, Effekte, Verzauberungen und Sets
 - `scripts/data-quests.js`: Quest-Daten
 - `scripts/data-labels.js`: Anzeige-Labels fuer Seltenheiten und Materialien
-- `scripts/data-achievements.js`: Erfolge und Belohnungen
-- `scripts/data-drops.js`: Material-Drops
+- `scripts/data-achievements.js`: Erfolge und Belohnungen, lazy beim Oeffnen der Erfolge
+- `scripts/data-drops.js`: Material-Drops, lazy bei Bestiarium oder Kampfsieg
 - `scripts/i18n.js`: Sprachumschaltung und UI-Texte
+- `scripts/i18n-en.js`: englische Texte, die erst beim Wechsel auf Englisch geladen werden
 - `scripts/core.js`: Spiellogik
 - `scripts/render.js`: Haupt-Rendering
 - `scripts/render-loot.js`: Lootkarten und Vergleiche

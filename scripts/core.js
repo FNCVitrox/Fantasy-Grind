@@ -264,12 +264,13 @@ function normalizeCombatStats(stats = {}) {
 }
 
 function normalizeAchievements(achievements = {}) {
+  const catalogReady = Array.isArray(achievementCatalog) && achievementCatalog.length > 0;
   const ids = new Set(achievementCatalog.map((achievement) => achievement.id));
   const claimed = Array.isArray(achievements.claimed)
-    ? achievements.claimed.filter((id) => ids.has(id))
+    ? achievements.claimed.filter((id) => !catalogReady || ids.has(id))
     : [];
   const notified = Array.isArray(achievements.notified)
-    ? achievements.notified.filter((id) => ids.has(id))
+    ? achievements.notified.filter((id) => !catalogReady || ids.has(id))
     : [];
   return {
     claimed: [...new Set(claimed)],
@@ -384,12 +385,13 @@ function normalizeCombatStats(stats = {}) {
 }
 
 function normalizeAchievements(achievements = {}) {
+  const catalogReady = Array.isArray(achievementCatalog) && achievementCatalog.length > 0;
   const ids = new Set(achievementCatalog.map((achievement) => achievement.id));
   const claimed = Array.isArray(achievements.claimed)
-    ? achievements.claimed.filter((id) => ids.has(id))
+    ? achievements.claimed.filter((id) => !catalogReady || ids.has(id))
     : [];
   const notified = Array.isArray(achievements.notified)
-    ? achievements.notified.filter((id) => ids.has(id))
+    ? achievements.notified.filter((id) => !catalogReady || ids.has(id))
     : [];
   return {
     claimed: [...new Set(claimed)],
@@ -1810,6 +1812,7 @@ async function fight() {
       const xp = Math.max(1, Math.floor(enemy.xp * (1 + enchantStats.xpBonus)));
       state.gold += gold;
       gainXp(xp);
+      await loadOptionalDataPack("drops");
       grantMaterials(enemy.baseId || selectedEnemy, enemy.eliteVariant);
       createLootChoices(enemy, enemy.baseId || selectedEnemy);
       state.combatStats = normalizeCombatStats(state.combatStats);

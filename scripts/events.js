@@ -286,7 +286,8 @@ $("buildList").addEventListener("click", (event) => {
 });
 $("sellAllBtn").addEventListener("click", sellAllInventoryItems);
 $("salvageAllBtn").addEventListener("click", salvageAllInventoryItems);
-$("openBestiaryBtn").addEventListener("click", () => {
+$("openBestiaryBtn").addEventListener("click", async () => {
+  await loadOptionalDataPack("drops");
   renderBestiary();
   openModal("bestiaryModal");
 });
@@ -314,7 +315,9 @@ $("closeQuestBoardBtn").addEventListener("click", closeQuestBoard);
 $("questBoardModal").addEventListener("click", (event) => {
   if (event.target.id === "questBoardModal") closeQuestBoard();
 });
-$("openAchievementsBtn").addEventListener("click", () => {
+$("openAchievementsBtn").addEventListener("click", async () => {
+  await loadOptionalDataPack("achievements");
+  state.achievements = normalizeAchievements(state.achievements);
   renderAchievements();
   openModal("achievementsModal");
 });
@@ -391,8 +394,13 @@ $("exportSaveTopBtn").addEventListener("click", exportSave);
 $("importSaveTopBtn").addEventListener("click", importSave);
 $("saveFileInput").addEventListener("change", importSaveFile);
 
-render();
+void bootGame();
 window.addEventListener("beforeunload", save);
+
+async function bootGame() {
+  await ensureLanguagePack(currentLanguage());
+  render();
+}
 
 function closeBestiary() {
   closeModal("bestiaryModal");
