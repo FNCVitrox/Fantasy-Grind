@@ -956,21 +956,38 @@ function unlockedEnemyIds() {
 }
 
 function questTargetAvailable(target) {
-  return unlockedEnemyIds().some((enemyId) => {
-    const enemy = enemies[enemyId];
-    if (!enemy) return false;
-    if (target === "elite") return enemy.elite || !enemy.boss;
-    return Boolean(enemy.tags?.[target]);
-  });
+  return unlockedEnemyIds().some((enemyId) => questMatchesEnemy({ target }, enemyId));
 }
 
 function questAvailable(quest) {
-  return Boolean(quest && questTargetAvailable(quest.target) && questRelevantForCurrentZone(quest));
+  return Boolean(quest && questTargetAvailable(quest.target) && questRelevantForCurrentEnemy(quest));
 }
 
 function questRelevantForCurrentZone(quest) {
   if (!quest) return false;
   return questEnemyIdsForZone(quest, selectedZone).length > 0;
+}
+
+function currentQuestEnemyId() {
+  const zone = zones[selectedZone];
+  if (zone?.enemies?.includes(selectedEnemy)) return selectedEnemy;
+  return zone?.enemies?.[0] || selectedEnemy || "wolf";
+}
+
+function questRelevantForCurrentEnemy(quest) {
+  return questMatchesEnemy(quest, currentQuestEnemyId());
+}
+
+function questMatchesEnemy(quest, enemyId) {
+  const enemy = enemies[enemyId];
+  if (!quest || !enemy) return false;
+  const zone = zones[questZoneIdForEnemy(enemyId)] || zones[selectedZone];
+  if (quest.target === "dungeon") return zone?.type === "dungeon" || Boolean(enemy.tags?.dungeon);
+  return Boolean(enemy.tags?.[quest.target]);
+}
+
+function questZoneIdForEnemy(enemyId) {
+  return Object.entries(zones).find(([, zone]) => zone.enemies.includes(enemyId))?.[0] || selectedZone;
 }
 
 function questEnemyIdsForZone(quest, zoneId) {
@@ -995,9 +1012,836 @@ function questLevelRange(quest, zoneId = selectedZone) {
   return min === max ? `Level ${min}` : `Level ${min}-${max}`;
 }
 
+function questLevelForCurrentEnemy(quest) {
+  if (!questRelevantForCurrentEnemy(quest)) return questLevelRange(quest);
+  const enemy = enemies[currentQuestEnemyId()];
+  return enemy ? `Level ${enemy.level}` : questLevelRange(quest);
+}
+
 function isQuestCompletedPermanent(questId) {
   const quest = getQuestById(questId);
   return Boolean(quest && !quest.repeatable && state.completedQuests.includes(questId));
+}
+
+function abilityDamage(baseHit, multiplier) {
+  return Math.max(1, Math.floor(baseHit * multiplier));
+}
+
+function rollPlayerCritical(hit, stats) {
+  if (hit <= 0 || Math.random() >= (stats.critChance || 0)) {
+    return { damage: hit, critical: false };
+  }
+  return {
+    damage: Math.max(1, Math.floor(hit * (stats.critDamage || 1.5))),
+    critical: true,
+  };
+}
+
+function enemyCriticalStats(enemy) {
+  if (enemy.critChance || enemy.critDamage) {
+    return {
+      critChance: enemy.critChance ?? 0.03,
+      critDamage: enemy.critDamage ?? 1.5,
+    };
+  }
+  if (enemy.boss) return { critChance: 0.09, critDamage: 1.7 };
+  if (enemy.elite || enemy.eliteVariant) return { critChance: 0.06, critDamage: 1.6 };
+  return { critChance: 0.03, critDamage: 1.5 };
+}
+
+function rollEnemyCritical(hit, enemy, effectSummary = itemEffectSummary()) {
+  const stats = enemyCriticalStats(enemy);
+  const critChance = Math.max(0, stats.critChance - Math.min(0.08, effectSummary.enemyCritReduction || 0));
+  if (hit <= 0 || Math.random() >= critChance) {
+    return { damage: hit, critical: false };
+  }
+  return {
+    damage: Math.max(1, Math.floor(hit * stats.critDamage)),
+    critical: true,
+  };
+}
+
+function criticalText(text, damage) {
+  const replacement = `kritisch für ${damage}`;
+  return text.includes(" für ")
+    ? text.replace(/für \d+/, replacement)
+    : `${text} Kritischer Treffer für ${damage}.`;
+}
+
+function enemyAbilityIds(enemy) {
+  return [...new Set(enemy?.abilities || [])].filter((id) => enemyAbilityCatalog[id]);
+}
+
+function enemyPassiveIds(enemy) {
+  return [...new Set(enemy?.passives || [])].filter((id) => enemyAbilityCatalog[id]);
+}
+
+function enemyAbilityEntries(enemy) {
+  return [...enemyAbilityIds(enemy), ...enemyPassiveIds(enemy)]
+    .map((id) => [id, enemyAbilityCatalog[id]])
+    .filter(([, ability]) => ability);
+}
+
+function eliteBonusAbilityFor(enemy) {
+  if (enemy.tags?.beast || enemy.tags?.wolf) return "eliteFury";
+  return "eliteGuard";
+}
+
+function enemyHealMultiplier(enemy, enemyHp) {
+  const passives = enemyPassiveIds(enemy);
+  let multiplier = 1;
+  if (passives.includes("unholyRenewal") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.45;
+  if (passives.includes("graveBargain") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.25;
+  if (passives.includes("emberChoir")) multiplier *= 1.18;
+  return multiplier;
+}
+
+function enemyDamagePassiveMultiplier(enemy, enemyHp) {
+  const passives = enemyPassiveIds(enemy);
+  let multiplier = 1;
+  if (passives.includes("forgeFire") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.15;
+  if (passives.includes("oathHeat") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.18;
+  if (passives.includes("noblePride") && enemyHp <= enemy.hp * 0.4) multiplier *= 1.25;
+  if (passives.includes("dukePride") && enemyHp <= enemy.hp * 0.45) multiplier *= 1.18;
+  if (passives.includes("crownFrenzy") && enemyHp <= enemy.hp * 0.55) multiplier *= 1.16;
+  if (passives.includes("secondPhase") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.18;
+  if (passives.includes("hollowSecondWind") && enemyHp <= enemy.hp * 0.5) multiplier *= 1.2;
+  return multiplier;
+}
+
+function enemyDamageTakenMultiplier(enemy, enemyHp, rounds, hit) {
+  const passives = enemyPassiveIds(enemy);
+  let multiplier = 1;
+  const defensive = [];
+
+  enemyAbilityIds(enemy).forEach((id) => {
+    if (id === "mistForm" && rounds % 4 === 0) {
+      multiplier *= 0.55;
+      defensive.push("Nebelform");
+    }
+    if (id === "emberDodge" && rounds % 3 === 0) {
+      multiplier *= 0.7;
+      defensive.push("Glutausweichen");
+    }
+    if (id === "crownShield" && rounds % 4 === 0) {
+      multiplier *= 0.55;
+      defensive.push("Kronenschild");
+    }
+    if (id === "guardStance" && rounds % 4 === 0) {
+      multiplier *= 0.65;
+      defensive.push("Schildhaltung");
+    }
+    if (id === "boneArmor" && rounds % 4 === 0) {
+      multiplier *= 0.65;
+      defensive.push("Knochenpanzer");
+    }
+    if (id === "hardenArmor" && rounds % 4 === 0) {
+      multiplier *= 0.6;
+      defensive.push("Rüstung härten");
+    }
+    if (id === "ironWall" && rounds % 4 === 0) {
+      multiplier *= 0.55;
+      defensive.push("Eisenwand");
+    }
+    if (id === "eliteGuard" && rounds % 4 === 0) {
+      multiplier *= 0.75;
+      defensive.push("Elite-Deckung");
+    }
+  });
+
+  if (passives.includes("prisonDiscipline") && rounds % 5 === 0) {
+    multiplier *= 0.75;
+    defensive.push("Kerkerdisziplin");
+  }
+  if (passives.includes("cellAuthority") && (rounds <= 2 || rounds % 5 === 0)) {
+    multiplier *= 0.86;
+    defensive.push("Kerkerautorität");
+  }
+  if (passives.includes("graveBargain") && enemyHp <= enemy.hp * 0.5) {
+    multiplier *= 0.92;
+    defensive.push("Grabpakt");
+  }
+  if (passives.includes("lastGuard") && enemyHp <= enemy.hp * 0.3) {
+    multiplier *= 0.8;
+    defensive.push("Standhaft");
+  }
+  if (passives.includes("heavyBody") && hit <= enemy.level * 2) {
+    multiplier *= 0.8;
+    defensive.push("Schwerer Körper");
+  }
+  if (passives.includes("bruteBulk") && hit <= enemy.level * 2.6) {
+    multiplier *= 0.78;
+    defensive.push("Massiger Leib");
+  }
+  if (passives.includes("wardenPressure") && rounds % 4 === 0) {
+    multiplier *= 0.8;
+    defensive.push("Kettendruck");
+  }
+  if (passives.includes("oathHeat") && enemyHp <= enemy.hp * 0.5) {
+    multiplier *= 0.9;
+    defensive.push("Eidglut");
+  }
+  if (passives.includes("dukePride") && enemyHp <= enemy.hp * 0.45) {
+    multiplier *= 0.9;
+    defensive.push("Herzogsstolz");
+  }
+  if (passives.includes("royalHide")) {
+    multiplier *= 0.9;
+  }
+  if (passives.includes("secondPhase") && enemyHp <= enemy.hp * 0.5) {
+    multiplier *= 0.82;
+    defensive.push("Zweite Phase");
+  }
+
+  if (passives.includes("hollowSecondWind") && enemyHp <= enemy.hp * 0.5) {
+    multiplier *= 0.8;
+    defensive.push("Leere zweite Phase");
+  }
+
+  return { multiplier: Math.max(0.25, multiplier), defensive };
+}
+
+function triggeredEnemyAbility(enemy, rounds, playerHp, playerMaxHp, enemyHp) {
+  return enemyAbilityIds(enemy).map((id) => {
+    if (id === "ambush" && rounds === 1) return { id, damageMultiplier: 1.55 };
+    if (id === "bloodBite" && rounds % 3 === 0) return { id, damageMultiplier: 1.18, dot: { name: "Blutung", damage: Math.max(1, Math.ceil(enemy.level * 0.65)), turns: 2 } };
+    if (id === "ironBite" && rounds % 3 === 0) return { id, damageMultiplier: 1.22, playerDamageMultiplier: 0.9 };
+    if (id === "tuskCharge" && rounds % 4 === 0) return { id, damageMultiplier: 1.55 };
+    if (id === "shieldBash" && rounds % 3 === 0) return { id, damageMultiplier: 1.1, playerDamageMultiplier: 0.8 };
+    if (id === "guardBash" && rounds % 3 === 0) return { id, damageMultiplier: 1.25, playerDamageMultiplier: 0.88 };
+    if (id === "chainHook" && rounds % 4 === 0) return { id, damageMultiplier: 1.2, playerDamageMultiplier: 0.82 };
+    if (id === "poisonClaws" && rounds % 3 === 0) return { id, damageMultiplier: 1, dot: { name: "Gift", damage: Math.max(1, Math.ceil(enemy.level * 0.7)), turns: 3 } };
+    if (id === "lifeDrain" && rounds % 4 === 0) return { id, damageMultiplier: 1.05, healRatio: 0.45 };
+    if (id === "burningBlade" && rounds % 3 === 0) return { id, damageMultiplier: 1.25, dot: { name: "Brennen", damage: Math.max(1, Math.ceil(enemy.level * 0.75)), turns: 2 } };
+    if (id === "flameBite" && rounds % 4 === 0) return { id, damageMultiplier: 1.4, dot: { name: "Brennen", damage: Math.max(1, Math.ceil(enemy.level * 0.85)), turns: 2 } };
+    if (id === "judgementStrike" && playerHp <= playerMaxHp * 0.45 && rounds % 2 === 0) return { id, damageMultiplier: 1.45 };
+    if (id === "boneCurse" && rounds % 3 === 0) return { id, damageMultiplier: 0.95, playerDamageMultiplier: 0.75 };
+    if (id === "graveMend" && rounds % 4 === 0) return { id, damageMultiplier: 0.75, healFlatRatio: 0.08 };
+    if (id === "crushingBlow" && rounds % 4 === 0) return { id, damageMultiplier: 1.65 };
+    if (id === "forgeSmash" && rounds % 3 === 0) return { id, damageMultiplier: 1.45 };
+    if (id === "emberChains" && rounds % 4 === 0) return { id, damageMultiplier: 1.15, playerDamageMultiplier: 0.82, dot: { name: "Brennen", damage: Math.max(1, Math.ceil(enemy.level * 0.85)), turns: 2 } };
+    if (id === "dukeCommand" && rounds % 3 === 0) return { id, damageMultiplier: 1.35 };
+    if (id === "executionOrder" && playerHp <= playerMaxHp * 0.42 && rounds % 2 === 0) return { id, damageMultiplier: 1.7 };
+    if (id === "emberPrayer" && rounds % 4 === 0) return { id, damageMultiplier: 0.8, healFlatRatio: 0.07 };
+    if (id === "ashNova" && rounds % 5 === 0) return { id, damageMultiplier: 1.45, dot: { name: "Aschebrand", damage: Math.max(1, Math.ceil(enemy.level * 0.9)), turns: 2 } };
+    if (id === "crownMaul" && rounds % 4 === 0) return { id, damageMultiplier: 1.55 };
+    if (id === "ashBlade" && rounds % 3 === 0) return { id, damageMultiplier: 1.35, dot: { name: "Brennen", damage: Math.max(1, Math.ceil(enemy.level * 0.95)), turns: 2 } };
+    if (id === "hollowGaze" && rounds % 4 === 0) return { id, damageMultiplier: 0.9, playerDamageMultiplier: 0.7 };
+    if (id === "championLeap" && rounds % 5 === 0) return { id, damageMultiplier: 1.75 };
+    if (id === "eliteFury" && rounds % 4 === 0) return { id, damageMultiplier: 1.25 };
+    if (id === "cellLockdown" && rounds % 5 === 0) return { id, damageMultiplier: 1.1, playerDamageMultiplier: 0.65 };
+    if (id === "graveTithe" && rounds % 5 === 0) return { id, damageMultiplier: 0.95, healFlatRatio: 0.1, dot: { name: "Grabfrost", damage: Math.max(1, Math.ceil(enemy.level * 0.65)), turns: 2 } };
+    if (id === "bruteRampage" && enemyHp <= enemy.hp * 0.55 && rounds % 3 === 0) return { id, damageMultiplier: 1.5 };
+    if (id === "wardenVerdict" && rounds % 5 === 0) return { id, damageMultiplier: 1.35, playerDamageMultiplier: 0.7 };
+    if (id === "anvilQuake" && rounds % 5 === 0) return { id, damageMultiplier: 1.55, dot: { name: "Brennen", damage: Math.max(1, Math.ceil(enemy.level * 0.8)), turns: 2 } };
+    if (id === "dukeDuel" && rounds % 5 === 0) return { id, damageMultiplier: 1.45 };
+    if (id === "emberHymn" && rounds % 5 === 0) return { id, damageMultiplier: 0.9, healFlatRatio: 0.1, dot: { name: "Aschebrand", damage: Math.max(1, Math.ceil(enemy.level * 0.85)), turns: 2 } };
+    if (id === "royalGore" && enemyHp <= enemy.hp * 0.6 && rounds % 3 === 0) return { id, damageMultiplier: 1.45 };
+    if (id === "hollowRift" && rounds % 5 === 0) return { id, damageMultiplier: 1.4, playerDamageMultiplier: 0.65 };
+    return null;
+  }).find(Boolean);
+}
+
+async function fight() {
+  if (isFighting) return;
+  const enemy = getPreparedEncounter(selectedEnemy);
+  syncDerivedStats();
+
+  if (state.hp <= 0) {
+    log("Du bist kampfunfähig. Raste zuerst im Lager.", "bad");
+    return;
+  }
+
+  if (state.pendingLoot.length) {
+    log("Wähle zuerst deine Beute aus dem letzten Kampf.", "drop");
+    return;
+  }
+
+  resetCombatLog();
+  let playerHp = state.hp;
+  let enemyHp = enemy.hp;
+  const stats = totalStats();
+  const effectSummary = itemEffectSummary();
+  const enchantStats = equippedEnchantmentSummary();
+  const combatStats = combatStatsWithItemEffects(stats, enemy, effectSummary);
+  let rounds = 0;
+  const events = [];
+  const fightState = {
+    sustainUsed: false,
+    nextEnemyDamageMultiplier: 1,
+    playerDamageMultiplier: 1,
+    playerDots: [],
+    enemyDots: [],
+    guardBlockUsed: false,
+    graveCurseUsed: false,
+    lastCounterRound: -99,
+    lastExecuteRound: -99,
+  };
+
+  while (playerHp > 0 && enemyHp > 0 && rounds < 80) {
+    rounds += 1;
+
+    if (fightState.playerDots.length) {
+      const dotDamage = fightState.playerDots.reduce((sum, dot) => sum + dot.damage, 0);
+      playerHp -= dotDamage;
+      const dotNames = [...new Set(fightState.playerDots.map((dot) => dot.name))].join(", ");
+      fightState.playerDots = fightState.playerDots
+        .map((dot) => ({ ...dot, turns: dot.turns - 1 }))
+        .filter((dot) => dot.turns > 0);
+      events.push({
+        round: rounds,
+        actor: "enemy",
+        damage: dotDamage,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: `${dotNames} verursacht ${dotDamage} Schaden.`,
+      });
+      if (playerHp <= 0) break;
+    }
+
+    if (fightState.enemyDots.length) {
+      const dotDamage = fightState.enemyDots.reduce((sum, dot) => sum + dot.damage, 0);
+      enemyHp -= dotDamage;
+      const dotNames = [...new Set(fightState.enemyDots.map((dot) => dot.name))].join(", ");
+      fightState.enemyDots = fightState.enemyDots
+        .map((dot) => ({ ...dot, turns: dot.turns - 1 }))
+        .filter((dot) => dot.turns > 0);
+      events.push({
+        round: rounds,
+        actor: "hero",
+        damage: dotDamage,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: `${dotNames} verursacht ${dotDamage} Schaden.`,
+      });
+      if (enemyHp <= 0) break;
+    }
+
+    if (!fightState.sustainUsed && hasBuildAbility("lastStand") && playerHp <= combatStats.maxHp * 0.4) {
+      const heal = Math.min(combatStats.maxHp - playerHp, Math.max(8, Math.floor(combatStats.maxHp * 0.14)));
+      if (heal > 0) {
+        playerHp += heal;
+        fightState.sustainUsed = true;
+        fightState.nextEnemyDamageMultiplier = Math.min(fightState.nextEnemyDamageMultiplier, 0.85);
+        events.push({ round: rounds, actor: "hero", abilityId: "lastStand", damage: 0, text: `Letztes Aufbäumen heilt ${heal} Leben und festigt die Deckung.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
+      }
+    } else if (!fightState.sustainUsed && hasBuildAbility("battleRush") && playerHp <= combatStats.maxHp * 0.45) {
+      const heal = Math.min(combatStats.maxHp - playerHp, Math.max(8, Math.floor(combatStats.maxHp * 0.18)));
+      if (heal > 0) {
+        playerHp += heal;
+        fightState.sustainUsed = true;
+        events.push({ round: rounds, actor: "hero", abilityId: "battleRush", damage: 0, text: `Kampfrausch heilt ${heal} Leben.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
+      }
+    }
+
+    const shatter = hasBuildAbility("shatter") && rounds % 3 === 0;
+    const armorIgnore = shatter ? Math.floor(enemy.defense * 0.45) : 0;
+    const effectArmorIgnore = (enemy.elite || enemy.boss) ? Math.floor(enemy.defense * effectSummary.eliteArmorIgnore) : 0;
+    const effectiveDefense = Math.max(0, enemy.defense - armorIgnore - effectArmorIgnore);
+    const basePlayerHit = Math.max(1, random(combatStats.damage - 4, combatStats.damage + 3) - Math.floor(effectiveDefense * 1.08));
+    let playerHit = basePlayerHit;
+    if (enemy.elite || enemy.boss) playerHit = Math.max(1, Math.floor(playerHit * (1 + enchantStats.bossDamage)));
+    if (enemy.elite || enemy.boss) playerHit = Math.max(1, Math.floor(playerHit * (1 + effectSummary.eliteDamageBonus)));
+    let playerText = `Du triffst für ${playerHit}.`;
+    let playerAbilityId = "";
+
+    if (hasBuildAbility("execute") && enemyHp <= enemy.hp * 0.3 && rounds - fightState.lastExecuteRound >= 2) {
+      playerHit = abilityDamage(basePlayerHit, 1.5);
+      fightState.lastExecuteRound = rounds;
+      playerAbilityId = "execute";
+      playerText = `Hinrichten trifft für ${playerHit}.`;
+    } else if (hasBuildAbility("heavyStrike") && rounds % 3 === 0) {
+      playerHit = abilityDamage(basePlayerHit, 1.75);
+      playerAbilityId = "heavyStrike";
+      playerText = `Schwerer Hieb trifft für ${playerHit}.`;
+    } else if (shatter) {
+      playerHit = abilityDamage(basePlayerHit, 1.3);
+      playerAbilityId = "shatter";
+      playerText = `Zerschmettern bricht die Deckung und trifft für ${playerHit}.`;
+    } else if (hasBuildAbility("tauntingBlow") && rounds % 3 === 0) {
+      fightState.nextEnemyDamageMultiplier = Math.min(fightState.nextEnemyDamageMultiplier, 0.75);
+      playerAbilityId = "tauntingBlow";
+      playerText = `Spottender Schlag trifft für ${playerHit} und schwächt den Konter.`;
+    }
+
+    if (fightState.playerDamageMultiplier < 1) {
+      playerHit = abilityDamage(playerHit, fightState.playerDamageMultiplier);
+      playerText += " Dein Angriff ist geschwächt.";
+      fightState.playerDamageMultiplier = 1;
+    }
+
+    if (!fightState.graveCurseUsed && effectSummary.firstHitWeaken < 1) {
+      fightState.nextEnemyDamageMultiplier = Math.min(fightState.nextEnemyDamageMultiplier, effectSummary.firstHitWeaken);
+      fightState.graveCurseUsed = true;
+      playerText += " Grabfluch schwächt den Gegenschlag.";
+    }
+
+    const enemyDefense = enemyDamageTakenMultiplier(enemy, enemyHp, rounds, playerHit);
+    if (enemyDefense.multiplier < 1) {
+      playerHit = abilityDamage(playerHit, enemyDefense.multiplier);
+      if (enemyDefense.defensive.length) {
+        events.push({
+          round: rounds,
+          actor: "enemy",
+          damage: 0,
+          enemyHp: Math.max(0, enemyHp),
+          playerHp: Math.max(0, playerHp),
+          text: `${enemy.name} nutzt ${enemyDefense.defensive.join(" + ")}.`,
+        });
+      }
+    }
+
+    const playerCrit = rollPlayerCritical(playerHit, combatStats);
+    playerHit = playerCrit.damage;
+    if (playerCrit.critical) playerText = criticalText(playerText, playerHit);
+
+    enemyHp -= playerHit;
+    events.push({
+      round: rounds,
+      actor: "hero",
+      abilityId: playerAbilityId,
+      damage: playerHit,
+      critical: playerCrit.critical,
+      enemyHp: Math.max(0, enemyHp),
+      playerHp: Math.max(0, playerHp),
+      text: playerText,
+    });
+
+    if (playerHp > 0 && playerCrit.critical && effectSummary.critHealRatio > 0) {
+      const heal = Math.min(combatStats.maxHp - playerHp, Math.max(1, Math.floor(combatStats.maxHp * effectSummary.critHealRatio)));
+      if (heal > 0) {
+        playerHp += heal;
+        events.push({
+          round: rounds,
+          actor: "hero",
+          damage: 0,
+          enemyHp: Math.max(0, enemyHp),
+          playerHp: Math.max(0, playerHp),
+          text: `Lebenssog heilt ${heal} Leben.`,
+        });
+      }
+    }
+
+    if (enemyHp > 0 && effectSummary.bleedChance > 0 && Math.random() < Math.min(0.32, effectSummary.bleedChance)) {
+      const bleedDamage = Math.max(1, Math.ceil(combatStats.damage * 0.16));
+      fightState.enemyDots.push({ name: "Blutung", damage: bleedDamage, turns: 2 });
+      events.push({
+        round: rounds,
+        actor: "hero",
+        damage: 0,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: `Blutkante öffnet eine Wunde. Blutung hält an.`,
+      });
+    }
+
+    if (enemyHp > 0 && effectSummary.poisonChance > 0 && Math.random() < Math.min(0.3, effectSummary.poisonChance)) {
+      const poisonDamage = Math.max(1, Math.ceil(combatStats.damage * 0.1));
+      fightState.enemyDots.push({ name: "Gift", damage: poisonDamage, turns: 3 });
+      events.push({
+        round: rounds,
+        actor: "hero",
+        damage: 0,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: `Giftkante legt Gift in die Wunde.`,
+      });
+    }
+
+    if (enemyHp > 0 && effectSummary.critBurn && playerCrit.critical) {
+      const burnDamage = Math.max(1, Math.ceil(combatStats.damage * 0.18));
+      fightState.enemyDots.push({ name: "Kronenbrand", damage: burnDamage, turns: 2 });
+      events.push({
+        round: rounds,
+        actor: "hero",
+        damage: 0,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: `Kronenbrand entzündet den Treffer.`,
+      });
+    }
+
+    if (enemyHp > 0 && hasBuildAbility("bladeFlurry") && rounds % 4 === 0) {
+      const flurryCrit = rollPlayerCritical(abilityDamage(basePlayerHit, 0.45), combatStats);
+      const flurryHit = flurryCrit.damage;
+      enemyHp -= flurryHit;
+      events.push({
+        round: rounds,
+        actor: "hero",
+        abilityId: "bladeFlurry",
+        damage: flurryHit,
+        critical: flurryCrit.critical,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: flurryCrit.critical
+          ? `Klingenserie trifft zusätzlich kritisch für ${flurryHit}.`
+          : `Klingenserie trifft zusätzlich für ${flurryHit}.`,
+      });
+    }
+
+    if (enemyHp <= 0) break;
+
+    const shieldWall = hasBuildAbility("shieldWall") && rounds % 4 === 0;
+    const enemyBaseHit = Math.max(1, random(enemy.damage[0], enemy.damage[1]) - Math.floor(combatStats.defense * 0.42));
+    const enemyAbility = triggeredEnemyAbility(enemy, rounds, playerHp, combatStats.maxHp, enemyHp);
+    const enemyDamageMultiplier = shieldWall
+      ? Math.min(fightState.nextEnemyDamageMultiplier, 0.45)
+      : fightState.nextEnemyDamageMultiplier;
+    const abilityMultiplier = enemyAbility?.damageMultiplier || 1;
+    const passiveEnemyMultiplier = enemyDamagePassiveMultiplier(enemy, enemyHp);
+    let enemyHit = Math.max(1, Math.floor(enemyBaseHit * enemyDamageMultiplier * abilityMultiplier * passiveEnemyMultiplier));
+    enemyHit = Math.max(1, Math.floor(enemyHit * (1 - Math.min(0.35, enchantStats.damageReduction))));
+    let guardBlocked = false;
+    if (!fightState.guardBlockUsed && effectSummary.firstHitReduction > 0) {
+      enemyHit = Math.max(1, Math.floor(enemyHit * (1 - effectSummary.firstHitReduction)));
+      fightState.guardBlockUsed = true;
+      guardBlocked = true;
+    }
+    const enemyCrit = rollEnemyCritical(enemyHit, enemy, effectSummary);
+    enemyHit = enemyCrit.damage;
+    fightState.nextEnemyDamageMultiplier = 1;
+    playerHp -= enemyHit;
+    let enemyText = shieldWall ? `Schildwall dämpft den Treffer auf ${enemyHit}.` : `${enemy.name} trifft für ${enemyHit}.`;
+    if (enemyAbility) {
+      const ability = enemyAbilityCatalog[enemyAbility.id];
+      enemyText = `${enemy.name}: ${ability.name} trifft für ${enemyHit}.`;
+      if (enemyAbility.playerDamageMultiplier) {
+        fightState.playerDamageMultiplier = Math.min(fightState.playerDamageMultiplier, enemyAbility.playerDamageMultiplier);
+        enemyText += " Dein nächster Angriff wird schwächer.";
+      }
+      if (enemyAbility.dot) {
+        fightState.playerDots.push(enemyAbility.dot);
+        enemyText += ` ${enemyAbility.dot.name} hält an.`;
+      }
+      if (enemyAbility.healRatio || enemyAbility.healFlatRatio) {
+        const healBase = enemyAbility.healRatio ? enemyHit * enemyAbility.healRatio : enemy.hp * enemyAbility.healFlatRatio;
+        const heal = Math.min(enemy.hp - enemyHp, Math.max(1, Math.floor(healBase * enemyHealMultiplier(enemy, enemyHp))));
+        if (heal > 0) {
+          enemyHp += heal;
+          enemyText += ` Heilt ${heal}.`;
+        }
+      }
+    }
+    if (enemyCrit.critical) enemyText = criticalText(enemyText, enemyHit);
+    if (guardBlocked) enemyText += " Wachblock dämpft den Einschlag.";
+    events.push({
+      round: rounds,
+      actor: "enemy",
+      abilityId: shieldWall ? "shieldWall" : "",
+      damage: enemyHit,
+      critical: enemyCrit.critical,
+      enemyHp: Math.max(0, enemyHp),
+      playerHp: Math.max(0, playerHp),
+      text: enemyText,
+    });
+
+    if (playerHp > 0 && enemyHp > 0 && effectSummary.thornsRatio > 0) {
+      const thornsDamage = Math.max(1, Math.floor(enemyHit * effectSummary.thornsRatio));
+      enemyHp -= thornsDamage;
+      events.push({
+        round: rounds,
+        actor: "hero",
+        damage: thornsDamage,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: `Dornenwache wirft ${thornsDamage} Schaden zurück.`,
+      });
+    }
+
+    if (
+      playerHp > 0
+      && enemyHp > 0
+      && hasBuildAbility("counterBlow")
+      && (enemyCrit.critical || enemyBaseHit >= Math.max(10, combatStats.maxHp * 0.12))
+      && rounds - fightState.lastCounterRound >= 3
+    ) {
+      const counterCrit = rollPlayerCritical(abilityDamage(basePlayerHit, 0.5), combatStats);
+      const counterHit = counterCrit.damage;
+      fightState.lastCounterRound = rounds;
+      enemyHp -= counterHit;
+      events.push({
+        round: rounds,
+        actor: "hero",
+        abilityId: "counterBlow",
+        damage: counterHit,
+        critical: counterCrit.critical,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: counterCrit.critical
+          ? `Konterschlag antwortet kritisch für ${counterHit}.`
+          : `Konterschlag antwortet für ${counterHit}.`,
+      });
+    }
+  }
+
+  if (playerHp > 0 && effectSummary.postCombatHeal > 0) {
+    const heal = Math.min(combatStats.maxHp - playerHp, Math.max(1, Math.floor(combatStats.maxHp * Math.min(0.18, effectSummary.postCombatHeal))));
+    if (heal > 0) {
+      playerHp += heal;
+      events.push({
+        round: Math.max(1, rounds),
+        actor: "hero",
+        damage: 0,
+        enemyHp: Math.max(0, enemyHp),
+        playerHp: Math.max(0, playerHp),
+        text: `Nachhall heilt ${heal} Leben.`,
+      });
+    }
+  }
+
+  isFighting = true;
+  skipCombat = false;
+  setBattleEnemyVisual(enemy);
+  setControlsDisabled(true);
+  $("fightBtn").textContent = "Skip";
+  $("fightBtn").disabled = false;
+  armCombatWatchdog(25000);
+  try {
+    await playCombatAnimation(enemy, events, playerHp > 0, {
+      playerStartHp: state.hp,
+      playerMaxHp: stats.maxHp,
+      enemyMaxHp: enemy.hp,
+    });
+    setCombatLog(enemy, events, playerHp > 0, rounds);
+
+    damageEquippedItems(enemy);
+
+    if (playerHp > 0) {
+      state.hp = Math.max(1, playerHp);
+      const enchantStats = equippedEnchantmentSummary();
+      const goldBonus = enchantStats.goldBonus + effectSummary.goldBonus;
+      const gold = Math.max(1, Math.floor(random(enemy.gold[0], enemy.gold[1]) * (1 + goldBonus)));
+      const xp = Math.max(1, Math.floor(enemy.xp * (1 + enchantStats.xpBonus)));
+      state.gold += gold;
+      gainXp(xp);
+      await loadOptionalDataPack("drops");
+      grantMaterials(enemy.baseId || selectedEnemy, enemy.eliteVariant);
+      createLootChoices(enemy, enemy.baseId || selectedEnemy);
+      state.combatStats = normalizeCombatStats(state.combatStats);
+      state.combatStats.wins += 1;
+      recordSmithMasteryBattle(enemy);
+      recordEnchantMasteryBattle(enemy);
+      updateQuestProgress(enemy);
+      maybeGrantBattleRenown(enemy);
+      const firstClearReward = grantBossFirstClear(enemy, enemy.baseId || selectedEnemy);
+      maybeDropRareQuest(enemy);
+      refreshQuestBoard(false);
+      log(`Sieg gegen ${enemy.name} nach ${rounds} Runden. +${xp} XP, +${gold} Gold.`, "good");
+      if (firstClearReward) {
+        log(`Erster Dungeon-Sieg: ${bossFirstClearRewardText(enemy)}.`, "drop");
+      }
+      if (enemy.boss) remindSaveBackup("du hast einen Dungeon-Boss besiegt.");
+      notifyReadyAchievements();
+    } else {
+      const xpLoss = Math.min(state.xp, Math.ceil(xpForLevel(state.level) * 0.1));
+      const goldLoss = Math.min(state.gold, Math.ceil(14 + state.level * 6));
+      state.xp -= xpLoss;
+      state.gold -= goldLoss;
+      state.deaths += 1;
+      state.hp = Math.max(1, Math.floor(state.maxHp * 0.35));
+      damageEquippedItems(enemy, 2);
+      log(`Tod gegen ${enemy.name}. Du verlierst ${xpLoss} XP, ${goldLoss} Gold und kehrst angeschlagen ins Lager zurück.`, "bad");
+    }
+  } catch (error) {
+    console.error(error);
+    log("Der Kampfabschluss hatte einen Fehler, wurde aber sauber freigegeben.", "bad");
+  } finally {
+    clearCombatWatchdog();
+    isFighting = false;
+    skipCombat = false;
+    setControlsDisabled(false);
+    resetFightButton();
+    prepareNextEncounter(enemy.baseId || selectedEnemy);
+    save();
+    safeRender();
+  }
+}
+
+function armCombatWatchdog(ms) {
+  clearCombatWatchdog();
+  combatWatchdog = window.setTimeout(() => {
+    if (isFighting) {
+      forceUnlockCombat("Der Kampf wurde automatisch freigegeben.");
+    }
+  }, ms);
+}
+
+function clearCombatWatchdog() {
+  if (!combatWatchdog) return;
+  window.clearTimeout(combatWatchdog);
+  combatWatchdog = 0;
+}
+
+function forceUnlockCombat(message) {
+  clearCombatWatchdog();
+  isFighting = false;
+  skipCombat = false;
+  setControlsDisabled(false);
+  resetFightButton();
+  if (message) log(message, "bad");
+  save();
+  safeRender();
+}
+
+function resetFightButton() {
+  $("fightBtn").textContent = "Kampf starten";
+  $("fightBtn").disabled = state.pendingLoot.length > 0;
+}
+
+function safeRender() {
+  try {
+    render();
+  } catch (error) {
+    console.error(error);
+    resetFightButton();
+    $("battleText").textContent = "Bereit";
+  }
+}
+
+function getPreparedEncounter(enemyId) {
+  const base = enemies[enemyId];
+  if (state.nextEncounters[enemyId]?.elite && !base.elite) {
+    return createEliteEnemy(base, enemyId);
+  }
+
+  return { ...base, baseId: enemyId };
+}
+
+function prepareNextEncounter(enemyId) {
+  const base = enemies[enemyId];
+  if (!base || base.elite) {
+    state.nextEncounters[enemyId] = { elite: false };
+    return;
+  }
+
+  const elite = Math.random() <= eliteEncounterChance;
+  state.nextEncounters[enemyId] = { elite };
+  if (elite) {
+    log(`Der nächste ${base.name} ist eine Elite-Version.`, "bad");
+  }
+}
+
+function createEliteEnemy(base, enemyId) {
+  const bonusAbility = eliteBonusAbilityFor(base);
+  const abilities = [...new Set([...(base.abilities || []), bonusAbility])].filter((id) => enemyAbilityCatalog[id]);
+  return {
+    ...base,
+    baseId: enemyId,
+    name: `Elite-${base.name}`,
+    level: base.level + 2,
+    hp: Math.ceil(base.hp * 1.72),
+    damage: [Math.ceil(base.damage[0] * 1.42), Math.ceil(base.damage[1] * 1.5)],
+    defense: Math.ceil(base.defense * 1.65 + 3),
+    xp: Math.ceil(base.xp * 1.65),
+    gold: [Math.ceil(base.gold[0] * 1.35), Math.ceil(base.gold[1] * 1.65)],
+    drops: base.drops.map((drop) => ({ ...drop, chance: Math.min(0.12, drop.chance * 1.45) })),
+    abilities,
+    passives: [...new Set(base.passives || [])].filter((id) => enemyAbilityCatalog[id]),
+    critChance: 0.06,
+    critDamage: 1.6,
+    elite: true,
+    eliteVariant: true,
+    tags: { ...base.tags, elite: 1 },
+  };
+}
+
+function updateQuestProgress(enemy) {
+  state.activeQuests.map(getQuestById).filter(Boolean).forEach((quest) => {
+    if (!isQuestActive(quest.id)) return;
+    if (isQuestCompletedPermanent(quest.id)) return;
+    const current = state.quests[quest.id] || 0;
+    const gain = enemy.tags[quest.target] || 0;
+    if (!gain) return;
+    state.quests[quest.id] = Math.min(quest.needed, current + gain);
+    if (state.quests[quest.id] >= quest.needed) {
+      if (quest.repeatable) {
+        state.quests[quest.id] = 0;
+      } else {
+        state.completedQuests.push(quest.id);
+      }
+      state.activeQuests = state.activeQuests.filter((id) => id !== quest.id);
+      state.questBoard = state.questBoard.filter((id) => id !== quest.id);
+      forgetNewQuest(quest.id);
+      state.gold += quest.rewardGold;
+      gainXp(quest.rewardXp);
+      const renown = questRenownReward(quest);
+      state.renown += renown;
+      if (quest.rewardItem) {
+        const reward = createQuestRewardItem(quest);
+        state.customItems[reward.id] = reward;
+        queueLootBatch([reward]);
+        log(`Questbelohnung erhalten: ${reward.name} (${qualityLabel[reward.quality]}).`, "drop");
+      }
+      log(`Quest abgeschlossen: ${quest.name}. +${quest.rewardXp} XP, +${quest.rewardGold} Gold, +${renown} Ruhm.`, "drop");
+    }
+  });
+}
+
+function maybeDropRareQuest(enemy) {
+  const chance = rareQuestDropChance(enemy);
+  if (Math.random() > chance) return;
+
+  const template = pickRareQuestTemplate(enemy);
+  const id = `rare-${template.key}-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`;
+    const quest = {
+      ...template,
+      id,
+      rare: true,
+      rewardItem: true,
+    name: `${template.name}`,
+  };
+
+  state.rareQuests[id] = quest;
+  state.questBoard.unshift(id);
+  state.questBoard = uniqueQuestIds(state.questBoard).slice(0, state.renown >= 40 ? 6 : 5);
+  markQuestAsNew(id);
+  log(`Seltene Quest-Schriftrolle gefunden: ${quest.name}. Sie liegt auf der Quest-Tafel.`, "drop");
+}
+
+function rareQuestDropChance(enemy) {
+  return (enemy.elite ? 0.035 : enemy.tags.dungeon ? 0.022 : 0.012) + renownRareQuestBonus();
+}
+
+function pickRareQuestTemplate(enemy) {
+  if (enemy.tags.ash) return rareQuestTemplates.find((quest) => quest.key === "ash");
+  if (enemy.tags.elite) return rareQuestTemplates.find((quest) => quest.key === "elite");
+  if (enemy.tags.dungeon) return rareQuestTemplates.find((quest) => quest.key === "dungeon");
+  if (enemy.tags.bandit) return rareQuestTemplates.find((quest) => quest.key === "bandit");
+  return rareQuestTemplates.find((quest) => quest.key === "wolf");
+}
+
+function refreshQuestBoard(force) {
+  if (!force) {
+    state.winsSinceQuestRefresh += 1;
+  }
+  state.questBoard = uniqueQuestIds(state.questBoard)
+    .filter((id) => !isQuestCompletedPermanent(id))
+    .filter((id) => !isQuestActive(id))
+    .filter((id) => {
+      const quest = getQuestById(id);
+      return quest && questRelevantForCurrentEnemy(quest);
+    });
+  const hadVisibleQuest = state.questBoard.length > 0;
+
+  if (!force && state.winsSinceQuestRefresh < 4) return;
+
+  const candidates = [
+    ...questCatalog.map((quest) => quest.id),
+    ...Object.keys(state.rareQuests || {}),
+  ]
+    .filter((id) => !state.questBoard.includes(id))
+    .filter((id) => !isQuestCompletedPermanent(id))
+    .filter((id) => !state.activeQuests.includes(id))
+    .filter((id) => questRelevantForCurrentEnemy(getQuestById(id)));
+
+  while (state.questBoard.length < renownQuestBoardSize() && candidates.length) {
+    const index = random(0, candidates.length - 1);
+    const [questId] = candidates.splice(index, 1);
+    state.questBoard.push(questId);
+    if (!force || !hadVisibleQuest) markQuestAsNew(questId);
+  }
+
+  state.winsSinceQuestRefresh = 0;
 }
 
 function uniqueQuestIds(ids) {
@@ -1016,6 +1860,20 @@ function forgetNewQuest(questId) {
 function getQuestById(questId) {
   const rareQuests = typeof state !== "undefined" && state?.rareQuests ? state.rareQuests : {};
   return questCatalog.find((quest) => quest.id === questId) || rareQuests[questId];
+}
+
+function cancelQuest(questId) {
+  const quest = getQuestById(questId);
+  if (!quest || !isQuestActive(questId)) return;
+  state.activeQuests = state.activeQuests.filter((id) => id !== questId);
+  state.completedQuests = state.completedQuests.filter((id) => id !== questId);
+  delete state.quests[questId];
+  state.questBoard = state.questBoard.filter((id) => id !== questId);
+  forgetNewQuest(questId);
+  refreshQuestBoard(true);
+  log(t("quest.cancelLog", "Quest gelöscht: {quest}.", { quest: quest.name }), "bad");
+  save();
+  render();
 }
 
 function createQuestRewardItem(quest) {

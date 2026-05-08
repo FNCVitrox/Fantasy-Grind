@@ -504,6 +504,88 @@ function equipmentSignature() {
     .join("|");
 }
 
+function itemRenderSignature(item, id = "") {
+  if (!item) return id;
+  return [
+    id,
+    item.name,
+    item.slot,
+    item.quality,
+    item.damage || 0,
+    item.defense || 0,
+    item.critChance || 0,
+    item.critDamage || 0,
+    item.upgrade || 0,
+    item.effect || "",
+    item.set || "",
+    (item.enchantments || []).join(","),
+  ].join(":");
+}
+
+function inventorySignature() {
+  return (state.inventory || [])
+    .map((id, index) => `${index}:${itemRenderSignature(getItem(id), id)}:${state.itemDurability[id] ?? ""}`)
+    .join("|");
+}
+
+function combatProgressSignature() {
+  state.combatStats = normalizeCombatStats(state.combatStats);
+  return [
+    state.combatStats.eliteKills,
+    state.combatStats.bossKills,
+    state.combatStats.wins,
+    state.combatStats.itemsUpgraded,
+    state.combatStats.itemsSalvaged,
+    state.combatStats.itemsEnchanted,
+    state.combatStats.rareEnchantments,
+  ].join(",");
+}
+
+function masteryProgressSignature(mastery) {
+  return Object.entries(mastery?.progress || {})
+    .map(([id, progress]) => `${id}:${progress.eliteKills || 0}:${progress.bossKills || 0}`)
+    .sort()
+    .join(",");
+}
+
+function smithMasterySignature() {
+  return [
+    currentLanguage(),
+    state.level,
+    state.renown,
+    state.gold,
+    materialsSignature(),
+    equipmentSignature(),
+    inventorySignature(),
+    combatProgressSignature(),
+    currentSmithMasteryLimit(),
+    state.smithMastery?.active || "",
+    (state.smithMastery?.completed || []).join(","),
+    masteryProgressSignature(state.smithMastery),
+    state.smithMastery?.discovered ? 1 : 0,
+  ].join("|");
+}
+
+function enchantingSignature() {
+  return [
+    currentLanguage(),
+    state.level,
+    state.renown,
+    state.gold,
+    materialsSignature(),
+    equipmentSignature(),
+    inventorySignature(),
+    combatProgressSignature(),
+    currentEnchantSlotLimit(),
+    state.enchanting?.active || "",
+    (state.enchanting?.completed || []).join(","),
+    masteryProgressSignature(state.enchanting),
+    state.enchanting?.discovered ? 1 : 0,
+    enchantmentsUnlocked() ? 1 : 0,
+    arcaneMasteryUnlocked() ? 1 : 0,
+  ].join("|");
+}
+
 function renderEquipment() {
   const signature = `${currentLanguage()}|${equipmentSignature()}|${state.level}|${state.renown}`;
   if (renderCache.equipment === signature) {
@@ -785,18 +867,20 @@ function renderSmithGreetingMarkup() {
 }
 
 function renderSmithMaterials() {
-  $("materials").innerHTML = [
+  const signature = `${currentLanguage()}|${state.gold}|${materialsSignature()}`;
+  renderCachedHtml("materials", `smithMaterials:${signature}`, () => [
     `<div class="material gold-material"><span>${t("common.gold", "Gold")}</span><strong>${state.gold}</strong></div>`,
     ...Object.entries(materialLabel).map(([id, label]) =>
       `<div class="material"><span>${labelFor(materialLabel, id, label)}</span><strong>${state.materials[id] || 0}</strong></div>`
     ),
-  ].join("");
+  ].join(""));
 }
 
 function renderSmithRenown() {
   const rank = renownRank();
   const next = nextRenownRank();
-  $("smithRenown").innerHTML = `
+  const signature = `${currentLanguage()}|${state.renown}|${rank.threshold}|${next?.threshold || "max"}`;
+  renderCachedHtml("smithRenown", `smithRenown:${signature}`, () => `
     <div>
       <span>${t("smith.renownRank", "Ruhm {renown}", { renown: state.renown })}</span>
       <strong>${escapeHtml(rank.name)}</strong>
@@ -805,7 +889,7 @@ function renderSmithRenown() {
     <small>${next
       ? t("smith.nextRenown", "Nächster Rang bei {renown} Ruhm: {benefit}", { renown: next.threshold, benefit: next.benefit })
       : t("smith.allRenownUnlocked", "Alle Ruhm-Vorteile freigeschaltet.")}</small>
-  `;
+  `);
 }
 
 function renderEnchantStatus() {
@@ -821,7 +905,8 @@ function renderEnchantStatus() {
     : arcaneMasteryUnlocked()
       ? t("enchant.arcaneComplete", "Arkane Meisterschaft vollständig gebunden.")
       : t("enchant.allBindings", "Alle aktuellen Runenbindungen freigeschaltet.");
-  $("smithRenown").innerHTML = `
+  const signature = `${currentLanguage()}|${state.level}|${unlocked ? 1 : 0}|${slotLimit}|${state.enchanting?.active || ""}|${(state.enchanting?.completed || []).join(",")}|${arcaneMasteryUnlocked() ? 1 : 0}`;
+  renderCachedHtml("smithRenown", `enchantStatus:${signature}`, () => `
     <div>
       <span>${t("enchant.check", "Arkane Prüfung")}</span>
       <strong>${unlocked ? t("enchant.unlocked", "Zugang geöffnet") : t("enchant.locked", "Noch verschlossen")}</strong>
@@ -832,13 +917,13 @@ function renderEnchantStatus() {
     <small>${unlocked
       ? escapeHtml(nextText)
       : t("enchant.unlockAt", "Freischaltung bei Level {level}. Aktuell: Level {current}.", { level: 8, current: state.level })}</small>
-  `;
+  `);
 }
 
 function renderSmithHome() {
-  $("smithHome").innerHTML = `
+  const shellChanged = renderCachedHtml("smithHome", `smithHome:${currentLanguage()}|${renownRank().threshold}`, () => `
     ${renderSmithGreetingMarkup()}
-    <div class="smith-mastery" id="smithMastery">${renderSmithMasteryMarkup()}</div>
+    <div class="smith-mastery" id="smithMastery"></div>
     <div class="smith-choice-grid">
       <button type="button" data-smith-view="upgrade">
         <strong>${t("smith.upgrade", "Verbessern")}</strong>
@@ -853,7 +938,14 @@ function renderSmithHome() {
         <span>${t("smith.repairText", "Ausrüstung beim Schmied für Gold instand setzen.")}</span>
       </button>
     </div>
-  `;
+  `);
+  if (shellChanged) elementCache.delete("smithMastery");
+  renderSmithMastery();
+}
+
+function renderSmithMastery() {
+  if (!$("smithMastery")) return;
+  renderCachedHtml("smithMastery", `smithMastery:${smithMasterySignature()}`, renderSmithMasteryMarkup);
 }
 
 function renderSmithMasteryMarkup() {
@@ -998,6 +1090,17 @@ function renderEnchantMasteryObjectives(objectives) {
 }
 
 function renderSmithUpgrade() {
+  const signature = [
+    currentLanguage(),
+    state.gold,
+    state.renown,
+    materialsSignature(),
+    equipmentSignature(),
+    currentSmithMasteryLimit(),
+  ].join("|");
+  if (renderCache.smithUpgrade === signature) return;
+  renderCache.smithUpgrade = signature;
+
   $("smithGrid").innerHTML = equipmentSlots.map((slot) => {
     const itemId = state.equipment[slot];
     const item = getItem(itemId);
@@ -1053,8 +1156,10 @@ function renderSmithEnchant() {
   const mastery = $("enchantMastery");
   if (!enchantmentsUnlocked()) {
     mastery.hidden = true;
-    mastery.innerHTML = "";
-    $("enchantGrid").innerHTML = `
+    if (mastery.innerHTML) mastery.innerHTML = "";
+    renderCache["html:enchantMastery"] = "";
+    delete renderCache.enchantGrid;
+    renderCachedHtml("enchantGrid", `enchantLocked:${currentLanguage()}|${state.level}`, () => `
       <div class="enchant-locked">
         <div>
           <span>${t("enchant.shop", "Arkaner Laden")}</span>
@@ -1067,17 +1172,30 @@ function renderSmithEnchant() {
           <span class="missing">• ${t("enchant.lockedUntil", "Verzauberungen bleiben bis dahin gesperrt")}</span>
         </div>
       </div>
-    `;
+    `);
     return;
   }
 
   mastery.hidden = false;
-  mastery.innerHTML = renderEnchantMasteryMarkup();
+  renderCache["html:enchantGrid"] = "";
+  renderCachedHtml("enchantMastery", `enchantMastery:${enchantingSignature()}`, renderEnchantMasteryMarkup);
   const cost = enchantCost();
   const costText = `${cost.gold} Gold · ${Object.entries(cost.materials)
     .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)
     .join(" · ")}`;
   const slotLimit = currentEnchantSlotLimit();
+  const gridSignature = [
+    currentLanguage(),
+    state.gold,
+    materialsSignature(),
+    equipmentSignature(),
+    slotLimit,
+    allowedEnchantRarities().join(","),
+    arcaneMasteryUnlocked() ? 1 : 0,
+  ].join("|");
+  if (renderCache.enchantGrid === gridSignature) return;
+  renderCache.enchantGrid = gridSignature;
+
   $("enchantGrid").innerHTML = equipmentSlots.map((slot) => {
     const itemId = state.equipment[slot];
     const item = getItem(itemId);
@@ -1111,6 +1229,10 @@ function renderSmithEnchant() {
 
 function renderSmithSalvage() {
   $("salvageAllBtn").disabled = !state.inventory.length;
+  const signature = `${currentLanguage()}|${state.renown}|${inventorySignature()}`;
+  if (renderCache.smithSalvage === signature) return;
+  renderCache.smithSalvage = signature;
+
   $("salvageList").innerHTML = state.inventory.length
     ? state.inventory.map((itemId, index) => {
         const item = getItem(itemId);
@@ -1128,8 +1250,13 @@ function renderSmithSalvage() {
 }
 
 function renderInventory() {
-  $("inventorySummary").innerHTML = `<span>${t("common.items", "Items")}: <strong>${state.inventory.length}</strong></span><span>${t("common.gold", "Gold")}: <strong>${state.gold}</strong></span>`;
+  renderCachedHtml("inventorySummary", `${currentLanguage()}|${state.inventory.length}|${state.gold}`, () =>
+    `<span>${t("common.items", "Items")}: <strong>${state.inventory.length}</strong></span><span>${t("common.gold", "Gold")}: <strong>${state.gold}</strong></span>`
+  );
   $("sellAllBtn").disabled = !state.inventory.length;
+  const signature = `${currentLanguage()}|${inventorySignature()}|${equipmentSignature()}`;
+  if (renderCache.inventory === signature) return;
+  renderCache.inventory = signature;
 
   if (!state.inventory.length) {
     $("inventory").innerHTML = `<div class="inventory-empty">${t("inventory.emptyShort", "Noch keine Items im Inventar.")}</div>`;
@@ -1181,26 +1308,51 @@ function renderQuests() {
     const done = state.completedQuests.includes(quest.id);
     const rarity = escapeToken(quest.rarity || (quest.rare ? "legendary" : "common"), ["common", "rare", "epic", "legendary"], "common");
     return `<div class="quest rarity-card rarity-${rarity} ${done ? "done" : ""}">
-      <strong><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}</strong>
+      <div class="quest-head">
+        <strong><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}</strong>
+        <button class="quest-delete" type="button" data-cancel-quest="${quest.id}">${t("quest.delete", "Löschen")}</button>
+      </div>
       <p>${escapeHtml(quest.text)}</p>
       <p>${done ? t("quest.completed", "Abgeschlossen") : `${value}/${quest.needed}`} · ${t("common.reward", "Belohnung")}: ${quest.rewardXp} ${t("common.xp", "XP")}, ${quest.rewardGold} ${t("common.gold", "Gold")}, ${questRenownReward(quest)} ${t("common.renown", "Ruhm")}</p>
     </div>`;
   }).join("");
 }
 
-function renderQuestBoard() {
-  state.questBoard = uniqueQuestIds(state.questBoard)
+function questBoardSourceSignature() {
+  return [
+    currentQuestEnemyId(),
+    state.renown,
+    renownQuestBoardSize(),
+    (state.questBoard || []).join(","),
+    (state.activeQuests || []).join(","),
+    (state.completedQuests || []).join(","),
+    Object.keys(state.rareQuests || {}).sort().join(","),
+  ].join("|");
+}
+
+function syncQuestBoardForRender() {
+  const signature = questBoardSourceSignature();
+  if (renderCache.questBoardSource === signature) return;
+
+  state.questBoard = uniqueQuestIds(state.questBoard || [])
     .filter((id) => !isQuestCompletedPermanent(id))
     .filter((id) => !isQuestActive(id))
     .filter((id) => {
       const quest = getQuestById(id);
-      return quest && questRelevantForCurrentZone(quest);
+      return quest && questRelevantForCurrentEnemy(quest);
     });
+
   if (state.questBoard.length < renownQuestBoardSize()) {
     refreshQuestBoard(true);
   }
+
+  renderCache.questBoardSource = questBoardSourceSignature();
+}
+
+function renderQuestBoard() {
+  syncQuestBoardForRender();
   const boardQuests = state.questBoard.map(getQuestById).filter(Boolean);
-  const signature = `${currentLanguage()}|${boardQuests.map((quest) => {
+  const signature = `${currentLanguage()}|${currentQuestEnemyId()}|${(state.unseenQuests || []).join(",")}|${boardQuests.map((quest) => {
     const active = isQuestActive(quest.id);
     return `${quest.id}:${active ? 1 : 0}:${Math.floor(state.quests[quest.id] || 0)}:${isQuestCompletedPermanent(quest.id) ? 1 : 0}`;
   }).join("|") || "empty"}`;
@@ -1217,7 +1369,7 @@ function renderQuestBoard() {
     const isNew = (state.unseenQuests || []).includes(quest.id);
     const value = Math.floor(state.quests[quest.id] || 0);
     const progress = active ? `${value}/${quest.needed}` : t("quest.notAccepted", "Noch nicht angenommen");
-    const levelRange = questLevelRange(quest);
+    const levelRange = questLevelForCurrentEnemy(quest);
     const button = active
         ? `<button type="button" disabled>${t("quest.accepted", "Angenommen")}</button>`
         : `<button type="button" data-accept-quest="${quest.id}">${t("quest.accept", "Quest annehmen")}</button>`;

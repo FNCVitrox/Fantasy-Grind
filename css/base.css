@@ -888,6 +888,30 @@ h2 {
   display: block;
 }
 
+.quest-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.quest-delete {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 5px 9px;
+  border-color: rgba(240, 115, 104, 0.45);
+  color: #ffb7ae;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.quest-delete:hover,
+.quest-delete:focus-visible {
+  border-color: rgba(240, 115, 104, 0.9);
+  background: rgba(240, 115, 104, 0.13);
+  color: #ffe6e2;
+}
+
 .inventory {
   max-height: min(62vh, 620px);
   overflow: auto;

@@ -42,6 +42,11 @@ $("questBoard").addEventListener("click", (event) => {
   if (button) acceptQuest(button.dataset.acceptQuest);
 });
 
+$("quests").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-cancel-quest]");
+  if (button) cancelQuest(button.dataset.cancelQuest);
+});
+
 $("achievements").addEventListener("click", (event) => {
   const button = event.target.closest("[data-claim-achievement]");
   if (button) claimAchievement(button.dataset.claimAchievement);
