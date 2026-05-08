@@ -77,6 +77,10 @@ assert(
   vm.runInContext("state = undefined; const oldSave = defaultState(); delete oldSave.rareQuests; const loaded = parseSavedState(JSON.stringify(oldSave)); loaded && loaded.rareQuests && Array.isArray(loaded.questBoard)", context),
   "old saves without rare quests should load before global state exists",
 );
+assert(
+  vm.runInContext("(() => { state = undefined; const brokenSave = { level: 1, hp: 0, maxHp: 0, gold: 0, equipment: null, customItems: null, materials: null, inventory: null, rareQuests: null }; const loaded = parseSavedState(JSON.stringify(brokenSave)); state = loaded; syncDerivedStats(); return loaded && state.maxHp > 0 && state.hp > 0 && state.equipment.weapon === 'trainingSword' && Array.isArray(state.inventory); })()", context),
+  "partially corrupted saves should fall back to playable default runtime containers",
+);
 assert.strictEqual(vm.runInContext("enemies.wolf.name", context), "Waldwolf");
 assert.strictEqual(vm.runInContext("zones.meadow.enemies[0]", context), "wolf");
 assert(vm.runInContext("Object.values(zones).filter((zone) => zone.type === 'dungeon').every((zone) => zone.enemies.every((id) => enemies[id].boss))", context), "dungeons should contain boss enemies");

@@ -645,7 +645,7 @@ function normalizeSavedText(value) {
 }
 
 function getItem(itemId) {
-  const item = state.customItems[itemId] || items[itemId];
+  const item = (state.customItems || {})[itemId] || items[itemId];
   return normalizeItemSlot(item);
 }
 
@@ -655,7 +655,7 @@ function totalStats() {
   let itemCritChance = 0;
   let itemCritDamage = 0;
   equipmentSlots.forEach((slot) => {
-    const id = state.equipment[slot];
+    const id = state.equipment?.[slot];
     const item = getItem(id);
     if (!item) return;
     const durabilityFactor = itemDurabilityFactor(id);

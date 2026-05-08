@@ -157,6 +157,7 @@ function parseSavedState(raw) {
   try {
     const parsed = normalizeSavedText(JSON.parse(raw));
     const loaded = { ...defaultState(), ...parsed };
+    normalizeLoadedCoreStats(loaded);
     normalizeLoadedQuests(loaded, parsed);
     normalizeLoadedCollections(loaded);
     normalizeLoadedCharacter(loaded);
@@ -176,6 +177,30 @@ function parseSavedState(raw) {
     saveDiagnostics.lastParseError = error?.message || "Unbekannter Ladefehler";
     return null;
   }
+}
+
+function normalizeLoadedCoreStats(loaded) {
+  const defaults = defaultState();
+  const invalidMaxHp = !Number.isFinite(Number(loaded.maxHp)) || Number(loaded.maxHp) <= 0;
+  const invalidHp = !Number.isFinite(Number(loaded.hp)) || Number(loaded.hp) < 0;
+
+  loaded.level = boundedInteger(loaded.level, defaults.level, 1, 20);
+  loaded.xp = boundedInteger(loaded.xp, defaults.xp, 0, Number.MAX_SAFE_INTEGER);
+  loaded.gold = boundedInteger(loaded.gold, defaults.gold, 0, Number.MAX_SAFE_INTEGER);
+  loaded.renown = boundedInteger(loaded.renown, defaults.renown, 0, Number.MAX_SAFE_INTEGER);
+  loaded.deaths = boundedInteger(loaded.deaths, defaults.deaths, 0, Number.MAX_SAFE_INTEGER);
+  loaded.maxHp = invalidMaxHp ? defaults.maxHp : boundedInteger(loaded.maxHp, defaults.maxHp, 1, Number.MAX_SAFE_INTEGER);
+  loaded.hp = invalidHp ? defaults.hp : boundedInteger(loaded.hp, defaults.hp, 0, Number.MAX_SAFE_INTEGER);
+
+  if (invalidMaxHp && loaded.hp <= 0) {
+    loaded.hp = defaults.hp;
+  }
+}
+
+function boundedInteger(value, fallback, min, max) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(min, Math.min(max, Math.floor(number)));
 }
 
 function normalizeLoadedQuests(loaded, parsed) {
@@ -220,13 +245,22 @@ function isLoadedQuestCompletedPermanent(loaded, questId) {
 }
 
 function normalizeLoadedCollections(loaded) {
-  loaded.discoveredLoot = loaded.discoveredLoot || {};
+  loaded.customItems = plainObjectOrEmpty(loaded.customItems);
+  loaded.itemDurability = plainObjectOrEmpty(loaded.itemDurability);
+  loaded.discoveredLoot = plainObjectOrEmpty(loaded.discoveredLoot);
   loaded.defeatedBosses = Array.isArray(loaded.defeatedBosses)
     ? [...new Set(loaded.defeatedBosses)].filter((id) => enemies[id]?.boss)
     : [];
+  loaded.pendingLoot = Array.isArray(loaded.pendingLoot) ? loaded.pendingLoot : [];
   loaded.lootQueue = Array.isArray(loaded.lootQueue) ? loaded.lootQueue : [];
-  loaded.nextEncounters = loaded.nextEncounters || {};
+  loaded.nextEncounters = plainObjectOrEmpty(loaded.nextEncounters);
+  loaded.inventory = Array.isArray(loaded.inventory) ? loaded.inventory : [];
+  loaded.log = Array.isArray(loaded.log) ? loaded.log : defaultState().log;
   loaded.lastSaveExportAt = loaded.lastSaveExportAt || "";
+}
+
+function plainObjectOrEmpty(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
 }
 
 function normalizeLoadedCharacter(loaded) {
