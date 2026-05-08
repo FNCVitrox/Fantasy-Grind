@@ -179,8 +179,10 @@ function parseSavedState(raw) {
 }
 
 function normalizeLoadedQuests(loaded, parsed) {
+  loaded.quests = loaded.quests && typeof loaded.quests === "object" ? loaded.quests : {};
+  loaded.rareQuests = normalizeLoadedRareQuests(loaded.rareQuests);
   loaded.completedQuests = (loaded.completedQuests || []).filter((id) => {
-    const quest = getQuestById(id);
+    const quest = getLoadedQuestById(loaded, id);
     return quest && !quest.repeatable;
   });
   if (!Array.isArray(parsed.activeQuests)) {
@@ -188,13 +190,33 @@ function normalizeLoadedQuests(loaded, parsed) {
       .filter((quest) => (loaded.quests?.[quest.id] || 0) > 0 || loaded.completedQuests.includes(quest.id))
       .map((quest) => quest.id);
   }
-  loaded.activeQuests = loaded.activeQuests.filter((id) => !isQuestCompletedPermanent(id));
-  loaded.questBoard = Array.isArray(loaded.questBoard) ? loaded.questBoard : ["wolves", "rust", "boars"];
+  loaded.activeQuests = uniqueQuestIds(Array.isArray(loaded.activeQuests) ? loaded.activeQuests : [])
+    .filter((id) => getLoadedQuestById(loaded, id))
+    .filter((id) => !isLoadedQuestCompletedPermanent(loaded, id));
+  loaded.questBoard = Array.isArray(loaded.questBoard)
+    ? uniqueQuestIds(loaded.questBoard)
+        .filter((id) => getLoadedQuestById(loaded, id))
+        .filter((id) => !loaded.activeQuests.includes(id))
+        .filter((id) => !isLoadedQuestCompletedPermanent(loaded, id))
+    : ["wolves", "rust", "boars"];
   loaded.unseenQuests = Array.isArray(loaded.unseenQuests)
     ? uniqueQuestIds(loaded.unseenQuests).filter((id) => loaded.questBoard.includes(id))
     : [];
-  loaded.rareQuests = loaded.rareQuests || {};
   loaded.winsSinceQuestRefresh = loaded.winsSinceQuestRefresh || 0;
+}
+
+function normalizeLoadedRareQuests(rareQuests) {
+  if (!rareQuests || typeof rareQuests !== "object" || Array.isArray(rareQuests)) return {};
+  return rareQuests;
+}
+
+function getLoadedQuestById(loaded, questId) {
+  return questCatalog.find((quest) => quest.id === questId) || loaded.rareQuests?.[questId];
+}
+
+function isLoadedQuestCompletedPermanent(loaded, questId) {
+  const quest = getLoadedQuestById(loaded, questId);
+  return Boolean(quest && !quest.repeatable && loaded.completedQuests.includes(questId));
 }
 
 function normalizeLoadedCollections(loaded) {

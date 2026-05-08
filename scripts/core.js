@@ -318,6 +318,15 @@ function normalizeEnchanting(enchanting = {}) {
 
 function normalizeEnchantMasteryProgress(progress = {}) {
   return enchantMasteryRanks.reduce((result, rank) => {
+    const source = progress[rank.id] || {};
+    result[rank.id] = {
+      eliteKills: Math.max(0, Math.floor(source.eliteKills || 0)),
+      bossKills: Math.max(0, Math.floor(source.bossKills || 0)),
+    };
+    return result;
+  }, {});
+}
+
 selectedZone = state.ui?.selectedZone || "meadow";
 selectedEnemy = state.ui?.selectedEnemy || zones[selectedZone]?.enemies?.[0] || "wolf";
 selectedBestiaryZone = state.ui?.selectedBestiaryZone || selectedZone;
@@ -2037,7 +2046,8 @@ function forgetNewQuest(questId) {
 }
 
 function getQuestById(questId) {
-  return questCatalog.find((quest) => quest.id === questId) || state.rareQuests[questId];
+  const rareQuests = typeof state !== "undefined" && state?.rareQuests ? state.rareQuests : {};
+  return questCatalog.find((quest) => quest.id === questId) || rareQuests[questId];
 }
 
 function createQuestRewardItem(quest) {
@@ -3499,4 +3509,3 @@ function repairCostForSlot(slot) {
   const baseCost = missing * repairSlotMultiplier(slot) * qualityMultiplier * upgradeMultiplier * (0.42 + state.level * 0.025);
   return Math.ceil(baseCost * (1 - renownRepairDiscount()));
 }
-

@@ -1007,7 +1007,10 @@ const rareQuestTemplates = [
   { key: "ash", name: "Schwarzer Chor", rarity: "legendary", text: "Bezwinge 5 Aschengegner für eine versengte Reliquie.", target: "ash", needed: 5, rewardXp: 760, rewardGold: 190, slot: "necklace" },
 ];
 
-const allQuestIds = () => [...questCatalog.map((quest) => quest.id), ...Object.keys(state?.rareQuests || {})];
+const allQuestIds = () => [
+  ...questCatalog.map((quest) => quest.id),
+  ...Object.keys(typeof state !== "undefined" && state?.rareQuests ? state.rareQuests : {}),
+];
 
 const rarityLabel = {
   common: "Gewöhnlich",
@@ -1083,4 +1086,3 @@ const materialDrops = {
   crownBeast: [{ id: "sinew", min: 3, max: 5 }, { id: "crownAsh", min: 1, max: 2 }],
   hollowChampion: [{ id: "oathSteel", min: 2, max: 4 }, { id: "emberCore", min: 1, max: 2 }, { id: "crownAsh", min: 0, max: 1 }],
 };
-
