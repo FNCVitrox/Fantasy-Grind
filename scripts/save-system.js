@@ -36,6 +36,24 @@ function load() {
     return loaded;
   }
 
+  // Wenn eine gespeicherte Datei gefunden wurde, aber alle Versuche fehlschlugen,
+  // versuchen wir eine automatisierte Reparatur (z. B. abgeschnittene JSONs).
+  if (foundStoredSave) {
+    const recoveryKeys = [saveKey, saveBackupKey, savePreviousKey];
+    for (const key of recoveryKeys) {
+      const raw = storageGet(key);
+      if (!raw) continue;
+      const recovered = attemptRecoverSavedState(raw);
+      if (recovered) {
+        saveDiagnostics.loadedFrom = key === saveKey ? "Hauptspielstand (repariert)" : key === saveBackupKey ? "Backup (repariert)" : "Vorheriges Backup (repariert)";
+        saveDiagnostics.recoveredFrom = saveDiagnostics.loadedFrom;
+        saveDiagnostics.startedWithStoredSave = true;
+        restoreRecoveredSave(saveDiagnostics.loadedFrom, recovered);
+        return recovered;
+      }
+    }
+  }
+
   saveDiagnostics.loadedFrom = foundStoredSave ? "Neuer Spielstand nach Ladefehler" : "Neuer Spielstand";
   saveDiagnostics.startedWithStoredSave = foundStoredSave;
   return defaultState();
@@ -324,7 +342,7 @@ function testWindowNameStore() {
     writeWindowNameStore(cleanedStore);
     return { label: "window.name", ok, message: ok ? "Fallback aktiv" : "Fallback blockiert" };
   } catch (error) {
-    return { label: "window.name", ok: false, message: error?.message || "blockiert" };
+    return { label, ok: false, message: error?.message || "blockiert" };
   }
 }
 
@@ -333,4 +351,34 @@ function availableStorageStores() {
     typeof localStorage !== "undefined" ? localStorage : null,
     typeof sessionStorage !== "undefined" ? sessionStorage : null,
   ].filter(Boolean);
+}
+
+/**
+ * Versucht, einen abgeschnittenen JSON-String zu reparieren und zu parsen.
+ * Gibt das geladene State-Objekt zurück oder null.
+ */
+function attemptRecoverSavedState(raw) {
+  if (!raw || typeof raw !== "string") return null;
+
+  // 1) Direkter Parse Versuch (falls parseSavedState beim ersten Mal wegen anderer Gründe fehlschlug)
+  const direct = parseSavedState(raw);
+  if (direct) return direct;
+
+  // 2) Versuche, fallengelassenes Ende zu reparieren, indem wir das letzte '}' finden und schrittweise kürzen.
+  let idx = raw.lastIndexOf("}");
+  while (idx > 0) {
+    const candidate = raw.slice(0, idx + 1);
+    try {
+      // Testweise JSON.parse, um Syntaxfehler auszuschließen
+      JSON.parse(candidate);
+      const loaded = parseSavedState(candidate);
+      if (loaded) return loaded;
+    } catch {
+      // ignore und weiter kürzen
+    }
+    idx = raw.lastIndexOf("}", idx - 1);
+  }
+
+  // 3) Kein Recovery möglich
+  return null;
 }

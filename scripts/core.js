@@ -140,10 +140,14 @@ const upgradeCostSteps = {
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 state = load();
-selectedZone = state.ui?.selectedZone || "meadow";
-selectedEnemy = state.ui?.selectedEnemy || zones[selectedZone]?.enemies?.[0] || "wolf";
-selectedBestiaryZone = state.ui?.selectedBestiaryZone || selectedZone;
-selectedBestiaryEnemy = state.ui?.selectedBestiaryEnemy || selectedEnemy;
+// Sofort sensible Defaults setzen, damit spätere Zugriffe nicht auf undefined fallen.
+// Das verhindert, dass Zugriffe wie state.rareQuests[...] eine Exception werfen.
+state.rareQuests = state.rareQuests || {};
+state.activeQuests = Array.isArray(state.activeQuests) ? state.activeQuests : [];
+state.questBoard = Array.isArray(state.questBoard) ? state.questBoard : ["wolves", "rust", "boars"];
+state.discoveredLoot = state.discoveredLoot || {};
+state.inventory = Array.isArray(state.inventory) ? state.inventory : [];
+state.completedQuests = Array.isArray(state.completedQuests) ? state.completedQuests : [];
 
 function defaultState() {
   return {
@@ -207,6 +211,117 @@ function defaultState() {
     log: ["Du erreichst das Lager Grauwacht. Der Grind beginnt langsam."],
   };
 }
+
+function emptyMaterials() {
+  return Object.fromEntries(Object.keys(materialLabel).map((id) => [id, 0]));
+}
+
+function applyBalanceMigration(loaded) {
+  if ((loaded.balanceVersion || 1) >= balanceVersion) return;
+  Object.values(loaded.customItems || {}).forEach(rebalanceSavedItem);
+  (loaded.pendingLoot || []).forEach(rebalanceSavedItem);
+  (loaded.lootQueue || []).flat().forEach(rebalanceSavedItem);
+  Object.values(loaded.discoveredLoot || {}).forEach((drops) => Object.values(drops || {}).forEach(rebalanceSavedItem));
+  loaded.balanceVersion = balanceVersion;
+  loaded.log = [
+    "Balance überarbeitet: Item-Stats folgen klareren Rollen pro Ausrüstungsslot.",
+    ...(loaded.log || []),
+  ].slice(0, 40);
+}
+
+function normalizeMaterials(materials = {}) {
+  const next = { ...emptyMaterials(), ...materials };
+  const legacyMap = {
+    hide: "leather",
+    fang: "sinew",
+    iron: "scrap",
+  };
+
+  Object.entries(legacyMap).forEach(([oldId, newId]) => {
+    if (!next[oldId]) return;
+    next[newId] = (next[newId] || 0) + next[oldId];
+    delete next[oldId];
+  });
+
+  Object.keys(next).forEach((id) => {
+    if (!materialLabel[id]) delete next[id];
+  });
+
+  return { ...emptyMaterials(), ...next };
+}
+
+function normalizeCombatStats(stats = {}) {
+  return {
+    eliteKills: Math.max(0, Math.floor(stats.eliteKills || 0)),
+    bossKills: Math.max(0, Math.floor(stats.bossKills || 0)),
+    wins: Math.max(0, Math.floor(stats.wins || 0)),
+    itemsUpgraded: Math.max(0, Math.floor(stats.itemsUpgraded || 0)),
+    itemsSalvaged: Math.max(0, Math.floor(stats.itemsSalvaged || 0)),
+    itemsEnchanted: Math.max(0, Math.floor(stats.itemsEnchanted || 0)),
+    rareEnchantments: Math.max(0, Math.floor(stats.rareEnchantments || 0)),
+  };
+}
+
+function normalizeAchievements(achievements = {}) {
+  const ids = new Set(achievementCatalog.map((achievement) => achievement.id));
+  const claimed = Array.isArray(achievements.claimed)
+    ? achievements.claimed.filter((id) => ids.has(id))
+    : [];
+  const notified = Array.isArray(achievements.notified)
+    ? achievements.notified.filter((id) => ids.has(id))
+    : [];
+  return {
+    claimed: [...new Set(claimed)],
+    notified: [...new Set(notified)],
+  };
+}
+
+function normalizeSmithMastery(mastery = {}, sourceState = state) {
+  const savedLimit = Math.max(5, Math.min(20, mastery.limit || 5));
+  const completed = Array.isArray(mastery.completed)
+    ? mastery.completed.filter((id) => smithMasteryRanks.some((rank) => rank.id === id))
+    : [];
+  smithMasteryRanks
+    .filter((rank) => rank.limit <= savedLimit && savedLimit > 5)
+    .forEach((rank) => completed.push(rank.id));
+  const highestCompletedLimit = smithMasteryRanks
+    .filter((rank) => completed.includes(rank.id))
+    .reduce((limit, rank) => Math.max(limit, rank.limit), 5);
+  const limit = Math.max(savedLimit, highestCompletedLimit);
+  const active = smithMasteryRanks.some((rank) => rank.id === mastery.active) && !completed.includes(mastery.active)
+    ? mastery.active
+    : null;
+  return {
+    limit: Math.max(limit, highestCompletedLimit),
+    active,
+    completed: [...new Set(completed)],
+    progress: normalizeSmithMasteryProgress(mastery.progress),
+    discovered: Boolean(mastery.discovered || active || completed.length || hasSavedItemAtSmithLimit(mastery.limit || 5, sourceState)),
+  };
+}
+
+function normalizeEnchanting(enchanting = {}) {
+  const completed = Array.isArray(enchanting.completed)
+    ? enchanting.completed.filter((id) => enchantMasteryRanks.some((rank) => rank.id === id))
+    : [];
+  const active = enchantMasteryRanks.some((rank) => rank.id === enchanting.active) && !completed.includes(enchanting.active)
+    ? enchanting.active
+    : null;
+  return {
+    unlockedSeen: Boolean(enchanting.unlockedSeen),
+    active,
+    completed: [...new Set(completed)],
+    progress: normalizeEnchantMasteryProgress(enchanting.progress),
+    discovered: Boolean(enchanting.discovered || active || completed.length),
+  };
+}
+
+function normalizeEnchantMasteryProgress(progress = {}) {
+  return enchantMasteryRanks.reduce((result, rank) => {
+selectedZone = state.ui?.selectedZone || "meadow";
+selectedEnemy = state.ui?.selectedEnemy || zones[selectedZone]?.enemies?.[0] || "wolf";
+selectedBestiaryZone = state.ui?.selectedBestiaryZone || selectedZone;
+selectedBestiaryEnemy = state.ui?.selectedBestiaryEnemy || selectedEnemy;
 
 function emptyMaterials() {
   return Object.fromEntries(Object.keys(materialLabel).map((id) => [id, 0]));
