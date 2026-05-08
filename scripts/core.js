@@ -17,7 +17,9 @@ let smithView = "home";
 let combatWatchdog = 0;
 let bestiarySearchFrame = 0;
 const tooltipItemCache = new Map();
+const tooltipHtmlCache = new Map();
 const bestiaryLootCache = new Map();
+const bestiaryTemplateCache = new Map();
 const renderCache = {};
 
 const elementCache = new Map();

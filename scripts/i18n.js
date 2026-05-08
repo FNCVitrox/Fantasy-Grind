@@ -448,6 +448,7 @@ function clearRenderCache() {
     Object.keys(renderCache).forEach((key) => {
         delete renderCache[key];
     });
+    if (typeof tooltipHtmlCache !== "undefined") tooltipHtmlCache.clear();
 }
 
 function mapLabel(map, key, fallback = key) {

@@ -348,16 +348,16 @@ $("smithModal").addEventListener("click", (event) => {
   if (event.target.id === "smithModal") closeSmith();
 });
 $("toggleLogBtn").addEventListener("click", () => {
-  renderLog();
   openModal("logModal");
+  renderLog();
 });
 $("closeLogBtn").addEventListener("click", closeLog);
 $("logModal").addEventListener("click", (event) => {
   if (event.target.id === "logModal") closeLog();
 });
 $("openCombatLogBtn").addEventListener("click", () => {
-  renderCombatLog();
   openModal("combatLogModal");
+  renderCombatLog();
 });
 $("closeCombatLogBtn").addEventListener("click", closeCombatLog);
 $("combatLogModal").addEventListener("click", (event) => {

@@ -38,7 +38,8 @@
   if (isModalOpen("equipmentModal")) renderEquipmentDetails();
   if (isModalOpen("playerStatsModal")) renderPlayerStatsDetails(stats);
   renderSelectedEnemy();
-  renderCombatLog();
+  renderCombatLogSummary();
+  if (isModalOpen("combatLogModal")) renderCombatLog();
   renderLog();
   setText("fightBtn", isFighting ? (skipCombat ? t("combat.skipping", "Überspringe...") : t("combat.skip", "Skip")) : t("combat.start", "Kampf starten"));
   setDisabled("fightBtn", isFighting ? skipCombat : state.pendingLoot.length > 0);
@@ -545,6 +546,9 @@ function renderEquipment() {
 }
 
 function renderEquipmentDetails() {
+  const signature = `${currentLanguage()}|${equipmentSignature()}|${state.gold}`;
+  if (renderCache.equipmentDetails === signature) return;
+  renderCache.equipmentDetails = signature;
   $("equipmentDetails").innerHTML = equipmentSlots.map((slot) => {
     const id = state.equipment[slot];
     const item = getItem(id);
@@ -1432,9 +1436,10 @@ function renderBestiaryOverview(enemyId, enemy, discovered = groupedBestiaryLoot
 
 function renderAllBestiaryRows(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
   const fixedRows = enemy.drops.map((drop) => renderFixedDropRow(enemyId, drop));
-  const generatedRows = generatedBestiaryTemplates(enemy)
+  const discoveredLookup = discoveredLootLookup(discovered);
+  const generatedRows = [...generatedBestiaryTemplates(enemy)]
     .sort((a, b) => bestiaryRowRank(b) - bestiaryRowRank(a) || a.name.localeCompare(b.name))
-    .map((template) => renderGeneratedDropRow(template, discovered));
+    .map((template) => renderGeneratedDropRow(template, discoveredLookup));
   const materialRows = (materialDrops[enemyId] || []).map((drop) => `<button class="drop-row bestiary-item-row material-hover-row" type="button" data-bestiary-material="${drop.id}" data-material-id="${drop.id}">
     <span><b>${labelFor(materialLabel, drop.id)}</b><small>${t("bestiary.materialForSmith", "Material fürs Schmieden")}</small></span>
     <span>${drop.min}-${drop.max}</span>
@@ -1490,6 +1495,7 @@ function lootCompletion(enemyId) {
 
 function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiaryLoot(enemyId)) {
   const enemy = enemies[enemyId];
+  const discoveredLookup = discoveredLootLookup(discovered);
   const possible = category === "sets"
     ? discovered.filter((item) => item.set)
     : generatedBestiaryTemplates(enemy).filter((item) => bestiaryItemGroup(item) === category);
@@ -1506,7 +1512,7 @@ function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiar
   const start = selectedBestiaryPage * pageSize;
   const visible = sorted.slice(start, start + pageSize);
   const rows = visible
-    .map((template) => renderGeneratedDropRow(template, discovered))
+    .map((template) => renderGeneratedDropRow(template, discoveredLookup))
     .join("");
 
   if (pageCount <= 1) return rows;
@@ -1519,8 +1525,15 @@ function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiar
     </div>`;
 }
 
-function renderGeneratedDropRow(template, discovered) {
-  const found = discovered.find((item) => bestiaryItemKey(item) === bestiaryItemKey(template));
+function discoveredLootLookup(discovered) {
+  return discovered.reduce((lookup, item) => {
+    lookup.set(bestiaryItemKey(item), item);
+    return lookup;
+  }, new Map());
+}
+
+function renderGeneratedDropRow(template, discoveredLookup) {
+  const found = discoveredLookup.get(bestiaryItemKey(template));
   const item = found || template;
   const quality = itemQuality(item);
   const slot = itemSlot(item);
@@ -1534,12 +1547,15 @@ function renderGeneratedDropRow(template, discovered) {
 }
 
 function generatedBestiaryTemplates(enemy) {
+  const cacheKey = bestiaryTemplateCacheKey(enemy);
+  const cached = bestiaryTemplateCache.get(cacheKey);
+  if (cached) return cached;
   const profile = enemy.generatedLoot || {};
   const slots = (profile.slots || lootSlots).filter((slot) => lootSlots.includes(slot));
   const qualities = (profile.qualities || Object.keys(qualityPower)).filter((quality) => qualityPower[quality]);
   const allowedSlots = slots.length ? slots : lootSlots;
   const allowedQualities = qualities.length ? qualities : Object.keys(qualityPower);
-  return allowedSlots.flatMap((slot) => allowedQualities.flatMap((quality) => {
+  const templates = allowedSlots.flatMap((slot) => allowedQualities.flatMap((quality) => {
     const namePool = lootNames[slot][quality] || lootNames[slot].common;
     return namePool.slice(0, 3).map((name) => ({
       name,
@@ -1554,6 +1570,15 @@ function generatedBestiaryTemplates(enemy) {
       dropChance: generatedTemplateDropChance(enemy, slot, quality, namePool.slice(0, 3).length, allowedSlots, allowedQualities),
     }));
   }));
+  bestiaryTemplateCache.set(cacheKey, templates);
+  return templates;
+}
+
+function bestiaryTemplateCacheKey(enemy) {
+  const profile = enemy.generatedLoot || {};
+  const slots = (profile.slots || lootSlots).join(",");
+  const qualities = (profile.qualities || Object.keys(qualityPower)).join(",");
+  return `${enemy.name}|${enemy.level}|${enemy.elite ? 1 : 0}|${enemy.tags?.dungeon ? 1 : 0}|${slots}|${qualities}`;
 }
 
 function generatedTemplateDropChance(enemy, slot, quality, nameCount, slots, qualities) {
@@ -1781,7 +1806,7 @@ function showFloatingTooltip(row) {
   const materialId = row.dataset.materialId;
   if (materialId) {
     const tooltip = $("floatingTooltip");
-    tooltip.innerHTML = renderMaterialTooltip(materialId);
+    tooltip.innerHTML = cachedTooltipHtml(`material:${selectedBestiaryEnemy}:${materialId}`, () => renderMaterialTooltip(materialId));
     tooltip.classList.add("open");
     tooltip.setAttribute("aria-hidden", "false");
     return;
@@ -1790,9 +1815,22 @@ function showFloatingTooltip(row) {
   const item = tooltipItemCache.get(key);
   if (!item) return;
   const tooltip = $("floatingTooltip");
-  tooltip.innerHTML = item.tooltipType === "set" ? renderSetTooltip(item.setId) : renderItemTooltip(item);
+  const renderKey = tooltipCacheKey(key, item);
+  tooltip.innerHTML = cachedTooltipHtml(renderKey, () => item.tooltipType === "set" ? renderSetTooltip(item.setId) : renderItemTooltip(item));
   tooltip.classList.add("open");
   tooltip.setAttribute("aria-hidden", "false");
+}
+
+function cachedTooltipHtml(key, htmlFactory) {
+  if (tooltipHtmlCache.has(key)) return tooltipHtmlCache.get(key);
+  const html = htmlFactory();
+  tooltipHtmlCache.set(key, html);
+  return html;
+}
+
+function tooltipCacheKey(key, item) {
+  const itemDurabilityValue = item?.id ? itemDurability(item.id) : "";
+  return `${currentLanguage()}|${key}|${equipmentSignature()}|${itemDurabilityValue}|${state.gold}`;
 }
 
 function positionFloatingTooltip(event) {
@@ -1854,16 +1892,32 @@ function formatChance(chance) {
 }
 
 function renderLog() {
+  const previewSignature = `${currentLanguage()}|${state.log.slice(0, 5).join("\n") || "empty"}`;
+  if (renderCache.logPreview !== previewSignature) {
+    renderCache.logPreview = previewSignature;
+    $("logPreview").innerHTML = state.log.length
+      ? state.log.slice(0, 5).map(escapeHtml).join("<br>")
+      : t("log.empty", "Noch keine Einträge.");
+  }
+  if (!isModalOpen("logModal")) {
+    renderCache.log = "";
+    return;
+  }
   const signature = `${currentLanguage()}|${state.log.slice(0, 18).join("\n") || "empty"}`;
   if (renderCache.log === signature) return;
   renderCache.log = signature;
-  $("logPreview").innerHTML = state.log.length
-    ? state.log.slice(0, 5).map(escapeHtml).join("<br>")
-    : t("log.empty", "Noch keine Einträge.");
   $("log").innerHTML = state.log.slice(0, 18).map((entry, index) => {
     const type = entry.includes("Tod") ? "bad" : entry.includes("Seltener") || entry.includes("Quest") || entry.includes("ausgerüstet") ? "drop" : index === 0 ? "good" : "";
     return `<div class="${type}">${escapeHtml(entry)}</div>`;
   }).join("") || `<div>${t("log.empty", "Noch keine Einträge.")}</div>`;
+}
+
+function renderCombatLogSummary() {
+  const entries = Array.isArray(state.combatLog) ? state.combatLog : [];
+  const signature = `${currentLanguage()}|${entries.length}`;
+  if (renderCache.combatLogSummary === signature) return;
+  renderCache.combatLogSummary = signature;
+  setText("combatLogSummary", entries.length ? t("common.entries", "{count} Einträge", { count: entries.length }) : t("combat.logEmpty", "Noch leer"));
 }
 
 function renderCombatLog() {
@@ -1871,7 +1925,6 @@ function renderCombatLog() {
   const signature = `${currentLanguage()}|${entries.map((entry) => `${entry.type}:${entry.text}`).join("\n") || "empty"}`;
   if (renderCache.combatLog === signature) return;
   renderCache.combatLog = signature;
-  setText("combatLogSummary", entries.length ? t("common.entries", "{count} Einträge", { count: entries.length }) : t("combat.logEmpty", "Noch leer"));
   $("combatLog").innerHTML = entries.length
     ? entries.map((entry) => `<div class="combat-log-entry ${escapeToken(entry.type, ["hero", "enemy", "heal", "effect", "critical", "good", "bad"], "effect")}">${escapeHtml(entry.text)}</div>`).join("")
     : `<div class="combat-log-empty">${t("combat.logEmptyLong", "Starte einen Kampf, dann erscheinen hier Schaden, Heilung und Effekte.")}</div>`;
