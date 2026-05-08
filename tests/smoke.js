@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
 const html = read("index.html");
-const scripts = ["scripts/data.js", "scripts/save-system.js", "scripts/core.js", "scripts/render.js", "scripts/render-loot.js"].map(read);
+const scripts = ["scripts/data.js", "scripts/i18n.js", "scripts/save-system.js", "scripts/core.js", "scripts/render.js", "scripts/render-loot.js"].map(read);
 
 assert(!/[Ã�]/.test(html), "index.html still contains likely mojibake characters");
 
@@ -24,6 +24,7 @@ for (const id of referencedIds) {
 const scriptOrder = [...html.matchAll(/<script src="\.\/([^"?]+)[^"]*"><\/script>/g)].map((match) => match[1]);
 assert.deepStrictEqual(scriptOrder, [
   "scripts/data.js",
+  "scripts/i18n.js",
   "scripts/save-system.js",
   "scripts/core.js",
   "scripts/render.js",
@@ -73,6 +74,9 @@ assert.strictEqual(typeof context.defaultState, "function");
 assert.strictEqual(typeof context.renderBestiaryItemDetail, "function");
 assert.strictEqual(context.defaultState().level, 1);
 assert.strictEqual(context.defaultState().build, "damage");
+assert.strictEqual(vm.runInContext("state = defaultState(); state.language = 'en'; t('nav.smith')", context), "Smith");
+assert(vm.runInContext("state = defaultState(); state.language = 'en'; renderBestiaryList().includes('Collection: 0/')", context), "English mode should translate bestiary collection labels");
+assert(vm.runInContext("state = defaultState(); state.language = 'en'; itemStatText({ damage: 2, defense: 0, critChance: 0.01, critDamage: 0.02 }).includes('Attack +2')", context), "English mode should translate item stat labels");
 assert(
   vm.runInContext("state = undefined; const oldSave = defaultState(); delete oldSave.rareQuests; const loaded = parseSavedState(JSON.stringify(oldSave)); loaded && loaded.rareQuests && Array.isArray(loaded.questBoard)", context),
   "old saves without rare quests should load before global state exists",

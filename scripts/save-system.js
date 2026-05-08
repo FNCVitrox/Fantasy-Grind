@@ -1,5 +1,5 @@
 const saveDiagnostics = {
-  loadedFrom: "Noch nicht geladen",
+  loadedFrom: "",
   recoveredFrom: "",
   failedLoads: [],
   lastParseError: "",
@@ -23,7 +23,7 @@ function load() {
       saveDiagnostics.failedLoads.push({
         key: candidate.key,
         label: candidate.label,
-        error: saveDiagnostics.lastParseError || "Unbekannter Ladefehler",
+        error: saveDiagnostics.lastParseError || t("common.unknown", "Unbekannter Ladefehler"),
       });
       continue;
     }
@@ -54,7 +54,7 @@ function load() {
     }
   }
 
-  saveDiagnostics.loadedFrom = foundStoredSave ? "Neuer Spielstand nach Ladefehler" : "Neuer Spielstand";
+  saveDiagnostics.loadedFrom = foundStoredSave ? t("save.newAfterError", "Neuer Spielstand nach Ladefehler") : t("save.newGame", "Neuer Spielstand");
   saveDiagnostics.startedWithStoredSave = foundStoredSave;
   return defaultState();
 }
@@ -92,21 +92,21 @@ function exportSaveData() {
 }
 
 function buildSaveMetadata(exportedAt = state.lastSaveExportAt || new Date().toISOString()) {
-  const zone = zones[selectedZone]?.name || "Grauwacht";
-  const needed = state.level >= 20 ? "Max" : xpForLevel(state.level);
+  const zone = zoneDisplayName(selectedZone) || "Grauwacht";
+  const needed = state.level >= 20 ? t("common.max", "Max") : xpForLevel(state.level);
   return {
     exportedAt,
-    character: classCatalog[state.characterClass]?.name || "Krieger",
-    build: buildCatalog[state.build]?.name || "Bruiser",
+    character: entityName("class", state.characterClass, classCatalog[state.characterClass]?.name || "Krieger"),
+    build: entityName("build", state.build, buildCatalog[state.build]?.name || "Bruiser"),
     level: state.level,
-    xp: state.level >= 20 ? "Max" : `${state.xp}/${needed}`,
+    xp: state.level >= 20 ? t("common.max", "Max") : `${state.xp}/${needed}`,
     gold: state.gold,
     renown: state.renown,
     deaths: state.deaths || 0,
     smithLimit: currentSmithMasteryLimit(),
     zone,
     equipment: equipmentSlots.reduce((result, slot) => {
-      result[slot] = getItem(state.equipment[slot])?.name || "Leer";
+      result[slot] = getItem(state.equipment[slot])?.name || t("common.empty", "Leer");
       return result;
     }, {}),
     activeQuests: (state.activeQuests || []).length,
@@ -116,7 +116,7 @@ function buildSaveMetadata(exportedAt = state.lastSaveExportAt || new Date().toI
 }
 
 function saveFileName() {
-  const zone = zones[selectedZone]?.name || "Grauwacht";
+  const zone = zoneDisplayName(selectedZone) || "Grauwacht";
   const safeZone = zone
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -131,21 +131,21 @@ function importSaveData(raw) {
   try {
     parsed = JSON.parse(raw);
   } catch {
-    log("Import fehlgeschlagen: Der Text ist kein gültiges JSON.", "bad");
+    log(t("save.importInvalidJson", "Import fehlgeschlagen: Der Text ist kein gültiges JSON."), "bad");
     return false;
   }
 
   const rawSave = parsed?.save ? JSON.stringify(parsed.save) : JSON.stringify(parsed);
   const loaded = parseSavedState(rawSave);
   if (!loaded) {
-    log("Import fehlgeschlagen: Der Spielstand konnte nicht gelesen werden.", "bad");
+    log(t("save.importUnreadable", "Import fehlgeschlagen: Der Spielstand konnte nicht gelesen werden."), "bad");
     return false;
   }
 
   state = loaded;
   restoreUiSelection();
   state.log = [
-    "Spielstand erfolgreich importiert.",
+    t("save.imported", "Spielstand erfolgreich importiert."),
     ...(state.log || []),
   ].slice(0, 40);
   save();
@@ -264,6 +264,7 @@ function plainObjectOrEmpty(value) {
 }
 
 function normalizeLoadedCharacter(loaded) {
+  loaded.language = normalizeLanguage(loaded.language || defaultLanguage());
   loaded.characterClass = classCatalog[loaded.characterClass] ? loaded.characterClass : "warrior";
   loaded.build = buildCatalog[loaded.build] ? loaded.build : "damage";
   loaded.knownAbilities = Array.isArray(loaded.knownAbilities)

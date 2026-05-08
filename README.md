@@ -6,7 +6,7 @@ Aktueller Stand: spielbarer Alpha-Prototyp.
 
 ## Version
 
-Alpha v0.8.69
+Alpha v0.8.70
 
 ## Spielen
 
@@ -70,6 +70,7 @@ Der Browser versucht den Fortschritt zusaetzlich lokal zu speichern. Das ist beq
 - Set-Boni und besondere Item-Effekte
 - Erfolge mit Fortschritt, Belohnungen und leuchtendem Hinweis bei abholbaren Erfolgen
 - Smartphone-Layout mit groesseren Touch-Flaechen und kompakterer Navigation
+- Sprachumschalter fuer Deutsch und Englisch
 
 ## Schmied und Arkanistin
 
@@ -126,6 +127,7 @@ Das Projekt ist bewusst einfach gehalten:
 Der Code ist zunehmend in Bereiche getrennt, damit das Projekt wartbarer bleibt:
 
 - `scripts/data.js`: Spiel- und Balancing-Daten
+- `scripts/i18n.js`: Sprachumschaltung und UI-Texte
 - `scripts/core.js`: Spiellogik
 - `scripts/render.js`: Haupt-Rendering
 - `scripts/render-loot.js`: Lootkarten und Vergleiche

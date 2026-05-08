@@ -158,6 +158,7 @@ function defaultState() {
     gold: 20,
     deaths: 0,
     renown: 0,
+    language: defaultLanguage(),
     characterClass: "warrior",
     build: "damage",
     knownAbilities: [],
@@ -208,7 +209,7 @@ function defaultState() {
       selectedBestiaryEnemy: "wolf",
     },
     balanceVersion: 4,
-    log: ["Du erreichst das Lager Grauwacht. Der Grind beginnt langsam."],
+    log: [t("log.start", "Du erreichst das Lager Grauwacht. Der Grind beginnt langsam.")],
   };
 }
 
@@ -852,7 +853,7 @@ function setBuild(buildId) {
   state.build = buildId;
   syncDerivedStats();
   state.hp = Math.max(1, Math.min(state.maxHp, Math.round(state.maxHp * hpRatio)));
-  log(`Build gewechselt: ${buildCatalog[buildId].name}.`, "drop");
+  log(t("build.changed", "Build gewechselt: {build}.", { build: entityName("build", buildId, buildCatalog[buildId].name) }), "drop");
   save();
   render();
 }
@@ -981,9 +982,13 @@ function resetCombatLog() {
 }
 
 function setCombatLog(enemy, events, playerWon, rounds) {
-  const result = playerWon ? "Sieg" : "Niederlage";
+  const result = playerWon ? t("combat.victory", "Sieg") : t("combat.defeat", "Niederlage");
+  const resultKey = playerWon ? "combat.victoryAgainst" : "combat.defeatAgainst";
   const entries = [
-    { type: playerWon ? "good" : "bad", text: `${result} gegen ${enemy.name} nach ${rounds} Runden.` },
+    {
+      type: playerWon ? "good" : "bad",
+      text: t(resultKey, `${result} gegen ${enemy.name} nach ${rounds} Runden.`, { enemy: enemy.name, rounds }),
+    },
     ...events.map(combatLogEntry),
   ];
   state.combatLog = entries.slice(0, 80);
@@ -991,7 +996,7 @@ function setCombatLog(enemy, events, playerWon, rounds) {
 }
 
 function combatLogEntry(event) {
-  const actor = event.actor === "hero" ? "Du" : "Gegner";
+  const actor = event.actor === "hero" ? t("combat.you", "Du") : t("combat.enemy", "Gegner");
   let type = event.actor === "hero" ? "hero" : "enemy";
   if (event.critical) type = "critical";
   if (event.damage === 0) type = "effect";
@@ -999,7 +1004,7 @@ function combatLogEntry(event) {
   const roundText = event.round ? `R${event.round}` : "R?";
   return {
     type,
-    text: `${roundText} · ${actor}: ${event.text || "Aktion ausgeführt."}`,
+    text: `${roundText} · ${actor}: ${event.text || t("combat.attack", "Aktion ausgeführt.")}`,
   };
 }
 
@@ -1131,7 +1136,7 @@ function grantBossFirstClear(enemy, enemyId = selectedEnemy) {
 }
 
 function zoneKindLabel(zone) {
-  return zone?.type === "dungeon" ? "Dungeon" : "Gebiet";
+  return zone?.type === "dungeon" ? t("common.dungeon", "Dungeon") : t("common.zone", "Gebiet");
 }
 
 function isZoneUnlocked(zoneId) {

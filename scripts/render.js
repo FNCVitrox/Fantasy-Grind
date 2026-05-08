@@ -1,20 +1,25 @@
 ﻿function render() {
+  const language = currentLanguage();
+  if (renderCache.language && renderCache.language !== language) clearRenderCache();
+  renderCache.language = language;
+  applyStaticTranslations();
   syncDerivedStats();
   const stats = totalStats();
   setText("level", state.level);
   setText("gold", state.gold);
   setText("renown", state.renown);
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
-  setText("xpText", state.level >= 20 ? "Max" : `${state.xp}/${needed}`);
+  setText("xpText", state.level >= 20 ? t("common.max", "Max") : `${state.xp}/${needed}`);
   setBarWidth("xpBar", state.level >= 20 ? 100 : Math.max(2, (state.xp / needed) * 100));
   renderHeroBuildVisual();
   renderClassPanel();
   const currentRestCost = restCost();
-  const restPrice = state.gold >= currentRestCost ? `${currentRestCost} Gold` : "kostenlos";
+  const restPrice = state.gold >= currentRestCost ? `${currentRestCost} ${t("common.gold", "Gold")}` : t("common.free", "kostenlos");
+  const restName = t("nav.camp", "Lagerplatz");
   const restLabel = state.hp >= state.maxHp
-    ? `<span class="button-main">Lagerplatz</span>`
-    : `<span class="button-main">Lagerplatz</span><span class="button-price">${restPrice}</span>`;
-  renderCachedHtml("restBtn", `${state.hp >= state.maxHp ? "full" : restPrice}`, () => restLabel);
+    ? `<span class="button-main">${restName}</span>`
+    : `<span class="button-main">${restName}</span><span class="button-price">${restPrice}</span>`;
+  renderCachedHtml("restBtn", `${language}|${state.hp >= state.maxHp ? "full" : restPrice}`, () => restLabel);
   setDisabled("restBtn", state.hp >= state.maxHp);
 
   renderMap();
@@ -35,7 +40,7 @@
   renderSelectedEnemy();
   renderCombatLog();
   renderLog();
-  setText("fightBtn", isFighting ? (skipCombat ? "Überspringe..." : "Skip") : "Kampf starten");
+  setText("fightBtn", isFighting ? (skipCombat ? t("combat.skipping", "Überspringe...") : t("combat.skip", "Skip")) : t("combat.start", "Kampf starten"));
   setDisabled("fightBtn", isFighting ? skipCombat : state.pendingLoot.length > 0);
 }
 
@@ -78,8 +83,8 @@ function itemSlot(item) {
   return equipmentSlots.includes(item?.slot) ? item.slot : "ring";
 }
 
-function labelFor(map, key, fallback = "Unbekannt") {
-  return escapeHtml(map[key] || fallback);
+function labelFor(map, key, fallback = t("common.unknown", "Unbekannt")) {
+  return escapeHtml(mapLabel(map, key, map[key] || fallback));
 }
 
 function escapeToken(value, allowed, fallback) {
@@ -88,9 +93,9 @@ function escapeToken(value, allowed, fallback) {
 
 function renderMap() {
   const zoneData = zones[selectedZone] || zones.meadow;
-  setText("activeZoneName", zoneData.name);
-  setText("activeZoneRange", `${zoneKindLabel(zoneData)} · ${zoneData.range || "Unbekannt"}`);
-  const mapSignature = `${selectedZone}|${zoneUnlockSignature()}`;
+  setText("activeZoneName", zoneDisplayName(selectedZone));
+  setText("activeZoneRange", `${zoneKindLabel(zoneData)} · ${zoneRangeText(selectedZone) || zoneData.range || t("common.unknown", "Unbekannt")}`);
+  const mapSignature = `${currentLanguage()}|${selectedZone}|${zoneUnlockSignature()}`;
   if (renderCache.map === mapSignature) return;
   renderCache.map = mapSignature;
   document.querySelectorAll("[data-zone]").forEach((button) => {
@@ -101,20 +106,20 @@ function renderMap() {
 }
 
 function renderClassPanel() {
-  setText("className", activeClass().name);
-  const signature = `${state.characterClass}|${state.build}`;
+  setText("className", entityName("class", state.characterClass, activeClass().name));
+  const signature = `${currentLanguage()}|${state.characterClass}|${state.build}`;
   if (renderCache.classPanel === signature) return;
   renderCache.classPanel = signature;
   $("buildList").innerHTML = Object.entries(buildCatalog).map(([id, build]) => `
     <button class="${state.build === id ? "active" : ""}" type="button" data-build="${id}">
-      <strong>${escapeHtml(build.name)}</strong>
-      <span>${escapeHtml(build.description)}</span>
+      <strong>${escapeHtml(entityName("build", id, build.name))}</strong>
+      <span>${escapeHtml(entityText("build", id, build.description))}</span>
     </button>
   `).join("");
   $("abilityList").innerHTML = knownClassAbilities().map(([id, ability]) => `
     <div class="ability-chip" data-ability="${id}">
-      <strong>${escapeHtml(ability.name)}</strong>
-      <span>${escapeHtml(ability.text)}</span>
+      <strong>${escapeHtml(entityName("ability", id, ability.name))}</strong>
+      <span>${escapeHtml(entityText("ability", id, ability.text))}</span>
     </div>
   `).join("");
 }
@@ -125,6 +130,7 @@ function renderPlayerStatsDetails(stats = totalStats()) {
   const setStats = activeSetBonusStats();
   const build = activeBuild();
   const signature = [
+    currentLanguage(),
     state.level,
     state.xp,
     needed,
@@ -154,51 +160,53 @@ function renderPlayerStatsDetails(stats = totalStats()) {
   const buildHp = Math.round(((build.maxHpMultiplier || 1) - 1) * 100);
   const setLines = Object.values(activeSetCounts())
     .filter(({ count }) => count >= 2)
-    .map(({ id, count }) => `<span>${escapeHtml(setBonuses[id]?.name || id)} · ${count} Teile</span>`)
+    .map(({ id, count }) => `<span>${escapeHtml(setBonuses[id]?.name || id)} · ${count} ${t("common.pieces", "Teile")}</span>`)
     .join("");
+  const className = entityName("class", state.characterClass, activeClass().name);
+  const buildName = entityName("build", state.build, build.name);
 
   $("playerStatsDetails").innerHTML = `
     <section class="player-stats-hero">
       <div>
-        <p class="eyebrow">${escapeHtml(activeClass().name)} · ${escapeHtml(build.name)}</p>
-        <h3>Level ${state.level}</h3>
+        <p class="eyebrow">${escapeHtml(className)} · ${escapeHtml(buildName)}</p>
+        <h3>${t("common.level", "Level")} ${state.level}</h3>
       </div>
       <div class="player-stat-currency">
-        <span>Gold <strong>${state.gold}</strong></span>
-        <span>Ruhm <strong>${state.renown}</strong></span>
+        <span>${t("common.gold", "Gold")} <strong>${state.gold}</strong></span>
+        <span>${t("common.renown", "Ruhm")} <strong>${state.renown}</strong></span>
       </div>
     </section>
     <section class="player-progress-grid">
       <div class="player-progress-card">
-        <div class="bar-label"><span>Leben</span><b>${state.hp}/${state.maxHp}</b></div>
+        <div class="bar-label"><span>${t("main.life", "Leben")}</span><b>${state.hp}/${state.maxHp}</b></div>
         <div class="bar"><span style="width:${hpPercent}%"></span></div>
       </div>
       <div class="player-progress-card">
-        <div class="bar-label"><span>XP</span><b>${state.level >= 20 ? "Max" : `${state.xp}/${needed}`}</b></div>
+        <div class="bar-label"><span>${t("common.xp", "XP")}</span><b>${state.level >= 20 ? t("common.max", "Max") : `${state.xp}/${needed}`}</b></div>
         <div class="bar xp"><span style="width:${xpPercent}%"></span></div>
       </div>
     </section>
     <section class="player-stat-grid">
-      ${renderPlayerStat("Schaden", stats.damage)}
-      ${renderPlayerStat("Verteidigung", stats.defense)}
-      ${renderPlayerStat("Max. Leben", stats.maxHp)}
-      ${renderPlayerStat("Haltbarkeit", `${durabilityAverage}%`)}
-      ${renderPlayerStat("Crit Chance", formatPercent(stats.critChance))}
-      ${renderPlayerStat("Crit Damage", formatPercent(stats.critDamage))}
+      ${renderPlayerStat(t("main.damage", "Schaden"), stats.damage)}
+      ${renderPlayerStat(t("main.defense", "Verteidigung"), stats.defense)}
+      ${renderPlayerStat(t("stat.maxHp", "Max. Leben"), stats.maxHp)}
+      ${renderPlayerStat(t("main.durability", "Haltbarkeit"), `${durabilityAverage}%`)}
+      ${renderPlayerStat(t("stat.critChance", "Crit Chance"), formatPercent(stats.critChance))}
+      ${renderPlayerStat(t("stat.critDamage", "Crit Damage"), formatPercent(stats.critDamage))}
     </section>
     <section class="player-stat-sources">
       <div>
-        <strong>Build-Bonus</strong>
-        <span>Schaden ${formatSignedPercent(buildDamage)}</span>
-        <span>Verteidigung ${formatSignedPercent(buildDefense)}</span>
-        <span>Leben ${formatSignedPercent(buildHp)}</span>
-        <span>Crit ${formatSignedPercent(Math.round((build.critChanceBonus || 0) * 100))} Chance</span>
-        <span>Crit ${formatSignedPercent(Math.round((build.critDamageBonus || 0) * 100))} Schaden</span>
+        <strong>${t("main.buildBonus", "Build-Bonus")}</strong>
+        <span>${t("main.damage", "Schaden")} ${formatSignedPercent(buildDamage)}</span>
+        <span>${t("main.defense", "Verteidigung")} ${formatSignedPercent(buildDefense)}</span>
+        <span>${t("main.life", "Leben")} ${formatSignedPercent(buildHp)}</span>
+        <span>${t("stat.critChance", "Crit Chance")} ${formatSignedPercent(Math.round((build.critChanceBonus || 0) * 100))}</span>
+        <span>${t("stat.critDamage", "Crit Damage")} ${formatSignedPercent(Math.round((build.critDamageBonus || 0) * 100))}</span>
       </div>
       <div>
-        <strong>Set-Boni</strong>
-        ${setLines || "<span>Kein aktiver Set-Bonus</span>"}
-        <span>Gesamt: +${setStats.damage} Schaden · +${setStats.defense} Verteidigung · +${setStats.maxHp} Leben</span>
+        <strong>${t("main.setBonuses", "Set-Boni")}</strong>
+        ${setLines || `<span>${t("main.noSetBonus", "Kein aktiver Set-Bonus")}</span>`}
+        <span>${t("main.total", "Gesamt")}: +${setStats.damage} ${t("main.damage", "Schaden")} · +${setStats.defense} ${t("main.defense", "Verteidigung")} · +${setStats.maxHp} ${t("main.life", "Leben")}</span>
       </div>
     </section>
   `;
@@ -221,7 +229,7 @@ function formatPercent(value) {
 function itemCritText(item) {
   return [
     item.critChance ? `Crit ${formatPercent(item.critChance)}` : "",
-    item.critDamage ? `Crit-Schaden +${formatPercent(item.critDamage)}` : "",
+    item.critDamage ? `${t("stat.critDamage", "Crit-Schaden")} +${formatPercent(item.critDamage)}` : "",
   ].filter(Boolean).join(" · ");
 }
 
@@ -236,13 +244,13 @@ function itemEffectText(item) {
 function renderItemEffectLine(item) {
   const name = itemEffectName(item);
   if (!name) return "";
-  return `<span>Effekt: ${escapeHtml(name)} - ${escapeHtml(itemEffectText(item))}</span>`;
+  return `<span>${t("loot.effect", "Effekt")}: ${escapeHtml(name)} - ${escapeHtml(itemEffectText(item))}</span>`;
 }
 
 function itemEnchantmentsText(item) {
   const enchantments = activeItemEnchantments(item);
   if (!enchantments.length) return "";
-  return `Verzauberung: ${enchantments.map((enchantment) => `${enchantment.name} (${enchantment.text})`).join(" · ")}`;
+  return `${t("loot.enchantment", "Verzauberung")}: ${enchantments.map((enchantment) => `${enchantment.name} (${enchantment.text})`).join(" · ")}`;
 }
 
 function renderItemEnchantmentLine(item) {
@@ -252,10 +260,10 @@ function renderItemEnchantmentLine(item) {
 
 function itemStatEntries(item, labels = {}) {
   return [
-    item.damage ? { key: "damage", label: labels.damage || "Schaden", value: item.damage } : null,
-    item.defense ? { key: "defense", label: labels.defense || "Verteidigung", value: item.defense } : null,
-    item.critChance ? { key: "critChance", label: labels.critChance || "Crit", value: formatPercent(item.critChance) } : null,
-    item.critDamage ? { key: "critDamage", label: labels.critDamage || "Crit-Schaden", value: `+${formatPercent(item.critDamage)}` } : null,
+    item.damage ? { key: "damage", label: labels.damage || t("stat.damage", "Angriff"), value: item.damage } : null,
+    item.defense ? { key: "defense", label: labels.defense || t("stat.defense", "Verteidigung"), value: item.defense } : null,
+    item.critChance ? { key: "critChance", label: labels.critChance || t("stat.critChance", "Crit-Chance"), value: formatPercent(item.critChance) } : null,
+    item.critDamage ? { key: "critDamage", label: labels.critDamage || t("stat.critDamage", "Crit-Schaden"), value: `+${formatPercent(item.critDamage)}` } : null,
   ].filter(Boolean);
 }
 
@@ -267,6 +275,7 @@ function itemStatText(item, labels = {}) {
 
 function renderEnemies(stats = totalStats()) {
   const signature = [
+    currentLanguage(),
     selectedZone,
     selectedEnemy,
     state.hp,
@@ -284,9 +293,10 @@ function renderEnemies(stats = totalStats()) {
     const risk = riskFor(enemy, stats);
     const rarity = enemyRarity(enemy);
     const safeRarity = escapeToken(rarity, ["common", "rare", "epic", "legendary"], "common");
+    const enemyType = enemy.boss ? ` · ${t("common.boss", "Boss")}` : enemy.elite ? ` · ${t("common.elite", "Elite")}` : "";
     return `<button class="enemy rarity-card rarity-${safeRarity} ${id === selectedEnemy ? "active" : ""}" type="button" data-enemy="${id}">
-      <span><strong>${escapeHtml(enemy.name)}</strong><p><span class="quality-${safeRarity}">${labelFor(rarityLabel, safeRarity)}</span> · Level ${enemy.level}${enemy.boss ? " · Boss" : enemy.elite ? " · Elite" : ""} · ${enemy.xp} XP</p></span>
-      <em class="risk ${riskLabelClass(risk)}">${risk}</em>
+      <span><strong>${escapeHtml(enemy.name)}</strong><p><span class="quality-${safeRarity}">${labelFor(rarityLabel, safeRarity)}</span> · ${t("common.level", "Level")} ${enemy.level}${enemyType} · ${enemy.xp} ${t("common.xp", "XP")}</p></span>
+      <em class="risk ${riskLabelClass(risk)}">${riskLabel(risk)}</em>
     </button>`;
   }).join("");
 }
@@ -316,16 +326,16 @@ function renderAchievements() {
   if (!container) return;
   const ready = readyAchievementCount();
   const claimed = claimedAchievementCount();
-  const signature = `${claimed}|${ready}|${achievementCatalog.map((achievement) => `${achievement.id}:${achievementProgress(achievement).value}`).join(",")}|${state.gold}|${state.renown}|${materialsSignature()}`;
+  const signature = `${currentLanguage()}|${claimed}|${ready}|${achievementCatalog.map((achievement) => `${achievement.id}:${achievementProgress(achievement).value}`).join(",")}|${state.gold}|${state.renown}|${materialsSignature()}`;
   if (renderCache.achievements === signature) return;
   renderCache.achievements = signature;
 
   const categories = [...new Set(achievementCatalog.map((achievement) => achievement.category))];
   container.innerHTML = `
     <section class="achievement-summary">
-      <div><span>Erledigt</span><strong>${claimed}/${achievementCatalog.length}</strong></div>
-      <div><span>Bereit</span><strong>${ready}</strong></div>
-      <div><span>Belohnungen</span><strong>${ready ? "Abholen" : "Keine offen"}</strong></div>
+      <div><span>${t("common.completed", "Erledigt")}</span><strong>${claimed}/${achievementCatalog.length}</strong></div>
+      <div><span>${t("common.ready", "Bereit")}</span><strong>${ready}</strong></div>
+      <div><span>${t("achievements.readyRewards", "Belohnungen")}</span><strong>${ready ? t("common.claim", "Abholen") : t("common.noOpen", "Keine offen")}</strong></div>
     </section>
     ${categories.map((category) => renderAchievementCategory(category)).join("")}
   `;
@@ -352,17 +362,17 @@ function renderAchievementCard(achievement) {
         <strong>${escapeHtml(achievement.name)}</strong>
         <p>${escapeHtml(achievement.text)}</p>
       </div>
-      <span>${claimed ? "Erhalten" : ready ? "Bereit" : `${Math.min(progress.value, progress.target)}/${progress.target}`}</span>
+      <span>${claimed ? t("common.claimed", "Erhalten") : ready ? t("common.ready", "Bereit") : `${Math.min(progress.value, progress.target)}/${progress.target}`}</span>
     </div>
-    <div class="achievement-progress" aria-label="Fortschritt ${Math.min(progress.value, progress.target)} von ${progress.target}">
+    <div class="achievement-progress" aria-label="${t("common.progress", "Fortschritt")} ${Math.min(progress.value, progress.target)} / ${progress.target}">
       <span style="width:${progress.percent}%"></span>
     </div>
     <div class="achievement-reward">
-      <span>Belohnung</span>
+      <span>${t("common.reward", "Belohnung")}</span>
       <strong>${escapeHtml(achievementRewardText(achievement.reward))}</strong>
     </div>
     <button type="button" data-claim-achievement="${achievement.id}" ${ready ? "" : "disabled"}>
-      ${claimed ? "Abgeholt" : ready ? "Belohnung abholen" : "Noch offen"}
+      ${claimed ? t("achievements.claimed", "Abgeholt") : ready ? t("achievements.claimReward", "Belohnung abholen") : t("achievements.closed", "Noch offen")}
     </button>
   </article>`;
 }
@@ -388,15 +398,15 @@ function renderZoneOptions() {
         ${entries.map(([id, zone]) => {
           const locked = !isZoneUnlocked(id);
           return `<button class="zone ${id === selectedZone ? "active" : ""}" type="button" data-zone="${id}" ${locked ? "disabled" : ""}>
-            <span>${escapeHtml(zone.name)}</span>
-            <small>${escapeHtml(zone.range || "")}</small>
-            <em>${locked ? escapeHtml(zoneLockText(id)) : `${zone.enemies.length} ${type === "dungeon" ? "Bosse" : "Gegner"}`}</em>
+            <span>${escapeHtml(zoneDisplayName(id))}</span>
+            <small>${escapeHtml(zoneRangeText(id) || zone.range || "")}</small>
+            <em>${locked ? escapeHtml(zoneLockText(id)) : `${zone.enemies.length} ${type === "dungeon" ? t("common.bosses", "Bosse") : t("common.enemies", "Gegner")}`}</em>
           </button>`;
         }).join("")}
       </div>
     </section>`;
   };
-  container.innerHTML = `${section("zone", "Normale Gebiete")}${section("dungeon", "Dungeons")}`;
+  container.innerHTML = `${section("zone", t("zone.normalZones", "Normale Gebiete"))}${section("dungeon", t("zone.dungeons", "Dungeons"))}`;
 }
 
 function enemyRarity(enemy) {
@@ -421,7 +431,7 @@ function renderSelectedEnemy() {
     meta.innerHTML = metaHtml;
   }
   setBattleEnemyVisual(enemy);
-  $("battleText").textContent = `${enemy.name} wartet.`;
+  $("battleText").textContent = `${enemy.name} ${t("combat.waits", "wartet.")}`;
 }
 
 function renderSelectedEnemyMeta(enemy, enemyId = selectedEnemy) {
@@ -434,8 +444,8 @@ function renderSelectedEnemyMeta(enemy, enemyId = selectedEnemy) {
   const claimed = bossFirstClearClaimed(enemy.baseId || enemyId);
   const reward = bossFirstClearRewardText(enemy);
   return `
-    <span class="boss-meta-row"><b>Bossbeute</b>${drops || "<span>Keine feste Beute</span>"}</span>
-    <span class="boss-meta-row ${claimed ? "claimed" : ""}"><b>${claimed ? "Erster Sieg geholt" : "Erster Sieg"}</b>${escapeHtml(reward || "Keine Sonderbelohnung")}</span>
+    <span class="boss-meta-row"><b>${t("bestiary.bossLoot", "Bossbeute")}</b>${drops || `<span>${t("bestiary.noBossLoot", "Keine feste Bossbeute")}</span>`}</span>
+    <span class="boss-meta-row ${claimed ? "claimed" : ""}"><b>${claimed ? t("bestiary.firstWinClaimed", "Erster Sieg geholt") : t("bestiary.firstWin", "Erster Sieg")}</b>${escapeHtml(reward || t("bestiary.noSpecialReward", "Keine Sonderbelohnung"))}</span>
   `;
 }
 
@@ -494,7 +504,7 @@ function equipmentSignature() {
 }
 
 function renderEquipment() {
-  const signature = `${equipmentSignature()}|${state.level}|${state.renown}`;
+  const signature = `${currentLanguage()}|${equipmentSignature()}|${state.level}|${state.renown}`;
   if (renderCache.equipment === signature) {
     if (isModalOpen("equipmentModal")) renderEquipmentDetails();
     return;
@@ -505,8 +515,8 @@ function renderEquipment() {
     const item = getItem(id);
     if (!item) {
       return `<button class="equipment-chip empty-slot" type="button" data-open-equipment>
-        <strong>${slotLabel[slot]}</strong>
-        <span>Leer</span>
+        <strong>${labelFor(slotLabel, slot)}</strong>
+        <span>${t("common.empty", "Leer")}</span>
       </button>`;
     }
     const durability = itemDurability(id);
@@ -519,14 +529,14 @@ function renderEquipment() {
       <strong>${labelFor(slotLabel, slot)}</strong>
       <span class="quality-${quality}">${escapeHtml(item.name)}</span>
       <small>${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</small>
-      <small class="${durability <= 25 ? "durability-low" : ""}">${durability}% · ${repairCost} Gold</small>
+      <small class="${durability <= 25 ? "durability-low" : ""}">${durability}% · ${repairCost} ${t("common.gold", "Gold")}</small>
       <span class="equipment-hover-detail" aria-hidden="true">
         <b class="quality-${quality}">${escapeHtml(item.name)}</b>
         <em>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</em>
         ${statText ? `<em>${statText}</em>` : ""}
         ${enchantText ? `<em>${enchantText}</em>` : ""}
-        <em>Haltbarkeit: ${durability}%</em>
-        <em>Reparatur: ${repairCost} Gold</em>
+        <em>${t("main.durability", "Haltbarkeit")}: ${durability}%</em>
+        <em>${t("equipment.repair", "Reparatur")}: ${repairCost} ${t("common.gold", "Gold")}</em>
         ${setName ? `<em>Set: ${escapeHtml(setName)}</em>` : ""}
       </span>
     </button>`;
@@ -541,7 +551,7 @@ function renderEquipmentDetails() {
     if (!item) {
       return `<div class="slot empty-slot">
         <strong>${labelFor(slotLabel, slot)}</strong>
-        <p>Leer</p>
+        <p>${t("common.empty", "Leer")}</p>
       </div>`;
     }
     const setKey = item.set ? cacheSetTooltip(item.set) : "";
@@ -555,15 +565,15 @@ function renderEquipmentDetails() {
       ${item.set ? `<p class="set-line set-hover-row"><span>${escapeHtml(setBonuses[item.set]?.name || item.set)}</span><span class="tooltip-source" data-set-tooltip-key="${setKey}"></span></p>` : ""}
       ${statText ? `<p>${statText}</p>` : ""}
       ${enchantText ? `<p>${enchantText}</p>` : ""}
-      <p class="${itemDurability(id) <= 25 ? "durability-low" : ""}">Haltbarkeit: ${itemDurability(id)}%</p>
-      ${slotRepairCost ? `<p>Reparatur: ${slotRepairCost} Gold</p>` : ""}
+      <p class="${itemDurability(id) <= 25 ? "durability-low" : ""}">${t("main.durability", "Haltbarkeit")}: ${itemDurability(id)}%</p>
+      ${slotRepairCost ? `<p>${t("equipment.repair", "Reparatur")}: ${slotRepairCost} ${t("common.gold", "Gold")}</p>` : ""}
     </div>`;
   }).join("");
 }
 
 function renderSmith() {
-  setText("smithEyebrow", smithView === "enchant" ? "Arkanistin der Grauwacht" : "Zwergenmeister der Grauwacht");
-  setText("smithTitle", smithView === "enchant" ? "Mira Nachtfaden" : "Borin Glutbart");
+  setText("smithEyebrow", smithView === "enchant" ? t("enchant.eyebrow", "Arkanistin der Grauwacht") : t("smith.eyebrow", "Zwergenmeister der Grauwacht"));
+  setText("smithTitle", smithView === "enchant" ? t("enchant.title", "Mira Nachtfaden") : t("smith.title", "Borin Glutbart"));
   renderSmithMaterials();
   if (smithView === "enchant") {
     renderEnchantStatus();
@@ -582,44 +592,38 @@ function renderSmith() {
 }
 
 function formatSaveDate(value) {
-  if (!value) return "Noch nicht heruntergeladen";
+  if (!value) return t("save.notDownloaded", "Noch nicht heruntergeladen");
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Unbekannt";
-  return date.toLocaleString("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  if (Number.isNaN(date.getTime())) return t("common.unknown", "Unbekannt");
+  return formatLocalizedDate(date);
 }
 
 function renderSaveSummary() {
   const metadata = buildSaveMetadata(state.lastSaveExportAt || new Date().toISOString());
-  const activeQuestText = metadata.activeQuests === 1 ? "1 aktiv" : `${metadata.activeQuests} aktiv`;
-  const pendingLootText = metadata.pendingLoot ? `${metadata.pendingLoot} offen` : "keine";
+  const activeQuestText = t("common.activeCount", "{count} aktiv", { count: metadata.activeQuests });
+  const pendingLootText = metadata.pendingLoot ? t("common.openCount", "{count} offen", { count: metadata.pendingLoot }) : t("common.none", "keine");
   $("saveSummary").innerHTML = `
     <section class="save-profile">
       <div>
-        <span>Charakter</span>
+        <span>${t("common.character", "Charakter")}</span>
         <strong>${escapeHtml(metadata.character)} · ${escapeHtml(metadata.build)}</strong>
       </div>
       <div>
-        <span>Fortschritt</span>
-        <strong>Level ${metadata.level} · XP ${escapeHtml(metadata.xp)}</strong>
+        <span>${t("common.progress", "Fortschritt")}</span>
+        <strong>${t("common.level", "Level")} ${metadata.level} · ${t("common.xp", "XP")} ${escapeHtml(metadata.xp)}</strong>
       </div>
     </section>
     <section class="save-grid">
-      <div><span>Gold</span><strong>${metadata.gold}</strong></div>
-      <div><span>Ruhm</span><strong>${metadata.renown}</strong></div>
-      <div><span>Gebiet</span><strong>${escapeHtml(metadata.zone)}</strong></div>
-      <div><span>Quests</span><strong>${activeQuestText}</strong></div>
-      <div><span>Rucksack</span><strong>${metadata.inventoryItems} Items</strong></div>
-      <div><span>Beute</span><strong>${pendingLootText}</strong></div>
+      <div><span>${t("common.gold", "Gold")}</span><strong>${metadata.gold}</strong></div>
+      <div><span>${t("common.renown", "Ruhm")}</span><strong>${metadata.renown}</strong></div>
+      <div><span>${t("common.zone", "Gebiet")}</span><strong>${escapeHtml(metadata.zone)}</strong></div>
+      <div><span>${t("nav.quests", "Quests")}</span><strong>${activeQuestText}</strong></div>
+      <div><span>${t("nav.inventory", "Rucksack")}</span><strong>${metadata.inventoryItems} ${t("common.items", "Items")}</strong></div>
+      <div><span>${t("loot.eyebrow", "Beute")}</span><strong>${pendingLootText}</strong></div>
     </section>
     <section class="save-file-card">
-      <div><span>Letzte Sicherung</span><strong>${escapeHtml(formatSaveDate(state.lastSaveExportAt))}</strong></div>
-      <div><span>Dateiname</span><strong>${escapeHtml(saveFileName())}</strong></div>
+      <div><span>${t("save.last", "Letzte Sicherung")}</span><strong>${escapeHtml(formatSaveDate(state.lastSaveExportAt))}</strong></div>
+      <div><span>${t("save.fileName", "Dateiname")}</span><strong>${escapeHtml(saveFileName())}</strong></div>
     </section>
     ${renderStorageStatus()}
   `;
@@ -630,24 +634,24 @@ function renderStorageStatus() {
   const storageWorks = status.localStorage.ok;
   const fallbackWorks = status.sessionStorage.ok || status.windowName.ok;
   const failedLoad = status.failedLoads[0];
-  const headline = storageWorks ? "Browser-Speicher aktiv" : "Browser-Speicher blockiert";
+  const headline = storageWorks ? t("save.browserActive", "Browser-Speicher aktiv") : t("save.browserBlocked", "Browser-Speicher blockiert");
   const detail = failedLoad
-    ? `${failedLoad.label} konnte nicht gelesen werden: ${failedLoad.error}`
+    ? t("save.readFailed", "{label} konnte nicht gelesen werden: {error}", { label: failedLoad.label, error: failedLoad.error })
     : fallbackWorks
-      ? "Automatisches Speichern hat mindestens einen funktionierenden Speicherweg."
-      : "Bitte nutze regelmaessig Spielstand herunterladen.";
+      ? t("save.autoPathReady", "Automatisches Speichern hat mindestens einen funktionierenden Speicherweg.")
+      : t("save.useDownload", "Bitte nutze regelmaessig Spielstand herunterladen.");
   const loadedFrom = status.recoveredFrom
-    ? `Aus ${status.recoveredFrom} wiederhergestellt`
+    ? t("save.recoveredFrom", "Aus {label} wiederhergestellt", { label: status.recoveredFrom })
     : status.loadedFrom;
 
   return `
     <section class="save-storage-card ${storageWorks ? "is-ok" : "is-warning"}">
       <div>
-        <span>Speicherstatus</span>
+        <span>${t("save.storageStatus", "Speicherstatus")}</span>
         <strong>${escapeHtml(headline)}</strong>
       </div>
       <div>
-        <span>Geladen</span>
+        <span>${t("save.loaded", "Geladen")}</span>
         <strong>${escapeHtml(loadedFrom)}</strong>
       </div>
       <p>${escapeHtml(detail)}</p>
@@ -778,9 +782,9 @@ function renderSmithGreetingMarkup() {
 
 function renderSmithMaterials() {
   $("materials").innerHTML = [
-    `<div class="material gold-material"><span>Gold</span><strong>${state.gold}</strong></div>`,
+    `<div class="material gold-material"><span>${t("common.gold", "Gold")}</span><strong>${state.gold}</strong></div>`,
     ...Object.entries(materialLabel).map(([id, label]) =>
-      `<div class="material"><span>${label}</span><strong>${state.materials[id] || 0}</strong></div>`
+      `<div class="material"><span>${labelFor(materialLabel, id, label)}</span><strong>${state.materials[id] || 0}</strong></div>`
     ),
   ].join("");
 }
@@ -790,11 +794,13 @@ function renderSmithRenown() {
   const next = nextRenownRank();
   $("smithRenown").innerHTML = `
     <div>
-      <span>Ruhm ${state.renown}</span>
+      <span>${t("smith.renownRank", "Ruhm {renown}", { renown: state.renown })}</span>
       <strong>${escapeHtml(rank.name)}</strong>
     </div>
     <p>${escapeHtml(rank.benefit)}</p>
-    <small>${next ? `Nächster Rang bei ${next.threshold} Ruhm: ${escapeHtml(next.benefit)}` : "Alle Ruhm-Vorteile freigeschaltet."}</small>
+    <small>${next
+      ? t("smith.nextRenown", "Nächster Rang bei {renown} Ruhm: {benefit}", { renown: next.threshold, benefit: next.benefit })
+      : t("smith.allRenownUnlocked", "Alle Ruhm-Vorteile freigeschaltet.")}</small>
   `;
 }
 
@@ -806,20 +812,22 @@ function renderEnchantStatus() {
     : nextEnchantMasteryRank();
   const nextText = next
     ? state.enchanting?.active === next.id
-      ? `Aktiver Auftrag: ${next.name}`
-      : `Nächster Auftrag: ${next.name}`
+      ? t("enchant.activeMission", "Aktiver Auftrag: {name}", { name: next.name })
+      : t("enchant.nextMission", "Nächster Auftrag: {name}", { name: next.name })
     : arcaneMasteryUnlocked()
-      ? "Arkane Meisterschaft vollständig gebunden."
-      : "Alle aktuellen Runenbindungen freigeschaltet.";
+      ? t("enchant.arcaneComplete", "Arkane Meisterschaft vollständig gebunden.")
+      : t("enchant.allBindings", "Alle aktuellen Runenbindungen freigeschaltet.");
   $("smithRenown").innerHTML = `
     <div>
-      <span>Arkane Prüfung</span>
-      <strong>${unlocked ? "Zugang geöffnet" : "Noch verschlossen"}</strong>
+      <span>${t("enchant.check", "Arkane Prüfung")}</span>
+      <strong>${unlocked ? t("enchant.unlocked", "Zugang geöffnet") : t("enchant.locked", "Noch verschlossen")}</strong>
     </div>
-    <p>${unlocked ? `Aktuelle Bindung: ${slotLimit} Runen-Slot${slotLimit === 1 ? "" : "s"} pro Item` : "Mira lässt dich zwar herein, aber ihre Runen hören noch nicht auf dich."}</p>
+    <p>${unlocked
+      ? t("enchant.currentBinding", "Aktuelle Bindung: {slots} Runen-Slot{suffix} pro Item", { slots: slotLimit, suffix: slotLimit === 1 ? "" : "s" })
+      : t("enchant.lockedFlavor", "Mira lässt dich zwar herein, aber ihre Runen hören noch nicht auf dich.")}</p>
     <small>${unlocked
       ? escapeHtml(nextText)
-      : `Freischaltung bei Level 8. Aktuell: Level ${state.level}.`}</small>
+      : t("enchant.unlockAt", "Freischaltung bei Level {level}. Aktuell: Level {current}.", { level: 8, current: state.level })}</small>
   `;
 }
 
@@ -829,16 +837,16 @@ function renderSmithHome() {
     <div class="smith-mastery" id="smithMastery">${renderSmithMasteryMarkup()}</div>
     <div class="smith-choice-grid">
       <button type="button" data-smith-view="upgrade">
-        <strong>Verbessern</strong>
-        <span>Ausrüstung mit Gold und Materialien verstärken.</span>
+        <strong>${t("smith.upgrade", "Verbessern")}</strong>
+        <span>${t("smith.upgradeText", "Ausrüstung mit Gold und Materialien verstärken.")}</span>
       </button>
       <button type="button" data-smith-view="salvage">
-        <strong>Zerlegen</strong>
-        <span>Alte Items in Schmiedematerialien zerlegen.</span>
+        <strong>${t("smith.salvage", "Zerlegen")}</strong>
+        <span>${t("smith.salvageText", "Alte Items in Schmiedematerialien zerlegen.")}</span>
       </button>
       <button type="button" data-open-repair>
-        <strong>Reparieren</strong>
-        <span>Ausrüstung beim Schmied für Gold instand setzen.</span>
+        <strong>${t("smith.repair", "Reparieren")}</strong>
+        <span>${t("smith.repairText", "Ausrüstung beim Schmied für Gold instand setzen.")}</span>
       </button>
     </div>
   `;
@@ -853,25 +861,25 @@ function renderSmithMasteryMarkup() {
     return `
       <div class="smith-mastery-head">
         <div>
-          <span>Schmied-Meisterschaft</span>
-          <strong>Der Amboss schweigt</strong>
+          <span>${t("smith.mastery", "Schmied-Meisterschaft")}</span>
+          <strong>${t("smith.anvilSilent", "Der Amboss schweigt")}</strong>
         </div>
-        <b>Verborgene Arbeit</b>
+        <b>${t("smith.hiddenWork", "Verborgene Arbeit")}</b>
       </div>
-      <p>"Dein Stahl hat noch Luft. Bring mir erst ein Stück, das keinen einfachen Schlag mehr annimmt."</p>
-      <div class="smith-mastery-reward">Borin verrät dir mehr, sobald deine Ausrüstung wirklich an ihre Grenze stößt.</div>
+      <p>"${t("smith.hiddenIntro", "Dein Stahl hat noch Luft. Bring mir erst ein Stück, das keinen einfachen Schlag mehr annimmt.")}"</p>
+      <div class="smith-mastery-reward">${t("smith.hiddenReward", "Borin verrät dir mehr, sobald deine Ausrüstung wirklich an ihre Grenze stößt.")}</div>
     `;
   }
   if (!next) {
     return `
       <div class="smith-mastery-head">
         <div>
-          <span>Schmied-Meisterschaft</span>
-          <strong>Meisterzeichen der Grauwacht</strong>
+          <span>${t("smith.mastery", "Schmied-Meisterschaft")}</span>
+          <strong>${t("smith.masterMark", "Meisterzeichen der Grauwacht")}</strong>
         </div>
         <b>Limit +${limit}</b>
       </div>
-      <p>Deine Ausrüstung trägt Borins stärkste Bindung. Mehr gibt der Amboss nicht her.</p>
+      <p>${t("smith.masterDone", "Deine Ausrüstung trägt Borins stärkste Bindung. Mehr gibt der Amboss nicht her.")}</p>
     `;
   }
 
@@ -888,8 +896,10 @@ function renderSmithMasteryMarkup() {
   return `
     <div class="smith-mastery-head">
       <div>
-        <span>Schmied-Meisterschaft</span>
-        <strong>${escapeHtml(isActive ? `Aktiv: ${next.name}` : `Nächster Auftrag: ${next.name}`)}</strong>
+        <span>${t("smith.mastery", "Schmied-Meisterschaft")}</span>
+        <strong>${escapeHtml(isActive
+          ? t("smith.activeMission", "Aktiv: {name}", { name: next.name })
+          : t("smith.nextMission", "Nächster Auftrag: {name}", { name: next.name }))}</strong>
       </div>
       <b>Limit +${limit} → +${next.limit}</b>
     </div>
@@ -897,8 +907,8 @@ function renderSmithMasteryMarkup() {
     ${isActive ? renderSmithMasteryObjectives(objectives) : renderSmithMasteryRequirements(requirements)}
     <div class="smith-mastery-reward">${escapeHtml(next.reward)}</div>
     ${isActive
-      ? `<button type="button" data-complete-smith-mission="${next.id}" ${readyToComplete ? "" : "disabled"}>Meisterauftrag abschließen</button>`
-      : `<button type="button" data-start-smith-mission="${next.id}" ${readyToStart ? "" : "disabled"}>Meisterauftrag beginnen</button>`}
+      ? `<button type="button" data-complete-smith-mission="${next.id}" ${readyToComplete ? "" : "disabled"}>${t("smith.completeMission", "Meisterauftrag abschließen")}</button>`
+      : `<button type="button" data-start-smith-mission="${next.id}" ${readyToStart ? "" : "disabled"}>${t("smith.startMission", "Meisterauftrag beginnen")}</button>`}
   `;
 }
 
@@ -925,13 +935,13 @@ function renderEnchantMasteryMarkup() {
     return `
       <div class="smith-mastery-head">
         <div>
-          <span>Arkane Meisterschaft</span>
-          <strong>Miras Kreis ist vollständig</strong>
+          <span>${t("enchant.mastery", "Arkane Meisterschaft")}</span>
+          <strong>${t("enchant.circleComplete", "Miras Kreis ist vollständig")}</strong>
         </div>
-        <b>Arkan</b>
+        <b>${t("enchant.arcane", "Arkan")}</b>
       </div>
       <p>"Jetzt hörst du es auch, oder? Stahl flüstert, wenn die Rune richtig sitzt."</p>
-      <div class="smith-mastery-reward">Alle Runen-Slots und arkane Verzauberungen sind freigeschaltet.</div>
+      <div class="smith-mastery-reward">${t("enchant.masterDone", "Alle Runen-Slots und arkane Verzauberungen sind freigeschaltet.")}</div>
     `;
   }
 
@@ -946,14 +956,16 @@ function renderEnchantMasteryMarkup() {
     voidRitual: "Die Leere beantwortet nur Fragen, die klug genug gestellt werden.",
   }[next.id] || "Magie ist kein Schmuck. Sie ist ein Handel.";
   const badge = next.arcaneMastery
-    ? "Arkane Meisterschaft"
+    ? t("enchant.mastery", "Arkane Meisterschaft")
     : `Slots ${currentEnchantSlotLimit()} → ${next.slotLimit}`;
 
   return `
     <div class="smith-mastery-head">
       <div>
-        <span>Miras Meisterauftrag</span>
-        <strong>${escapeHtml(isActive ? `Aktiv: ${next.name}` : `Nächster Auftrag: ${next.name}`)}</strong>
+        <span>${t("enchant.masterMission", "Miras Meisterauftrag")}</span>
+        <strong>${escapeHtml(isActive
+          ? t("enchant.activeMission", "Aktiver Auftrag: {name}", { name: next.name })
+          : t("enchant.nextMission", "Nächster Auftrag: {name}", { name: next.name }))}</strong>
       </div>
       <b>${escapeHtml(badge)}</b>
     </div>
@@ -961,8 +973,8 @@ function renderEnchantMasteryMarkup() {
     ${isActive ? renderEnchantMasteryObjectives(objectives) : renderEnchantMasteryRequirements(requirements)}
     <div class="smith-mastery-reward">${escapeHtml(next.reward)}</div>
     ${isActive
-      ? `<button type="button" data-complete-enchant-mission="${next.id}" ${readyToComplete ? "" : "disabled"}>Ritual vollenden</button>`
-      : `<button type="button" data-start-enchant-mission="${next.id}" ${readyToStart ? "" : "disabled"}>Arkanen Auftrag beginnen</button>`}
+      ? `<button type="button" data-complete-enchant-mission="${next.id}" ${readyToComplete ? "" : "disabled"}>${t("enchant.completeMission", "Ritual vollenden")}</button>`
+      : `<button type="button" data-start-enchant-mission="${next.id}" ${readyToStart ? "" : "disabled"}>${t("enchant.startMission", "Arkanen Auftrag beginnen")}</button>`}
   `;
 }
 
@@ -997,30 +1009,30 @@ function renderSmithUpgrade() {
     const previewStatText = itemStatText(preview, { damage: "Dmg", defense: "Def" });
     const critGainText = [
       critChanceGain ? `Crit <b>+${formatPercent(critChanceGain)}</b>` : "",
-      critDamageGain ? `Crit-Schaden <b>+${formatPercent(critDamageGain)}</b>` : "",
+      critDamageGain ? `${t("stat.critDamage", "Crit-Schaden")} <b>+${formatPercent(critDamageGain)}</b>` : "",
     ].filter(Boolean).join(" · ");
     const materialText = Object.entries(cost.materials)
       .filter(([, amount]) => amount > 0)
       .map(([id, amount]) => `${labelFor(materialLabel, id)} ${state.materials[id] || 0}/${amount}`)
       .join(" · ");
-    const discountText = renownUpgradeDiscount() ? " · Ruhm-Rabatt aktiv" : "";
+    const discountText = renownUpgradeDiscount() ? ` · ${t("smith.renownDiscount", "Ruhm-Rabatt aktiv")}` : "";
     const limit = currentSmithMasteryLimit();
     const maxed = (item.upgrade || 0) >= limit;
     const hardMaxed = (item.upgrade || 0) >= 20;
     const disabled = maxed || !canPayUpgradeCost(cost);
     const costHtml = maxed
-      ? `<p>${hardMaxed ? "Meisterarbeit vollendet" : "Meisterauftrag nötig"}</p><p class="smith-material-cost">${hardMaxed ? "Borin kann dieses Stück nicht weiter binden." : "Schalte das nächste globale Limit frei."}</p>`
-      : `<p>${cost.gold} Gold${discountText}</p><p class="smith-material-cost">${materialText}</p>`;
+      ? `<p>${hardMaxed ? t("smith.masterworkDone", "Meisterarbeit vollendet") : t("smith.missionNeeded", "Meisterauftrag nötig")}</p><p class="smith-material-cost">${hardMaxed ? t("smith.noFurtherBinding", "Borin kann dieses Stück nicht weiter binden.") : t("smith.unlockNextLimit", "Schalte das nächste globale Limit frei.")}</p>`
+      : `<p>${cost.gold} ${t("common.gold", "Gold")}${discountText}</p><p class="smith-material-cost">${materialText}</p>`;
     return `<div class="smith-card rarity-card rarity-${quality}">
       <div class="smith-item-main">
         <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
-        <p>+${item.upgrade || 0}/${limit}${statText ? ` · ${statText}` : ""} · Haltbarkeit ${itemDurability(itemId)}%</p>
+        <p>+${item.upgrade || 0}/${limit}${statText ? ` · ${statText}` : ""} · ${t("main.durability", "Haltbarkeit")} ${itemDurability(itemId)}%</p>
       </div>
       <button class="upgrade-preview" type="button" data-upgrade="${slot}" ${disabled ? "disabled" : ""}>
-        <span>${hardMaxed ? "Meisterarbeit vollendet" : maxed ? "Limit erreicht" : "Nach Upgrade"}</span>
+        <span>${hardMaxed ? t("smith.masterworkDone", "Meisterarbeit vollendet") : maxed ? t("smith.limitReached", "Limit erreicht") : t("smith.afterUpgrade", "Nach Upgrade")}</span>
         <strong>${maxed ? `+${item.upgrade || 0}/${limit}` : `+${preview.upgrade}/${limit}${previewStatText ? ` · ${previewStatText}` : ""}`}</strong>
         <em>${[
-          maxed && !hardMaxed ? "Meisterauftrag bei Borin nötig" : "",
+          maxed && !hardMaxed ? t("smith.missionNeededAtBorin", "Meisterauftrag bei Borin nötig") : "",
           damageGain && !maxed ? `Dmg <b>+${damageGain}</b>` : "",
           defenseGain && !maxed ? `Def <b>+${defenseGain}</b>` : "",
           !maxed ? critGainText : "",
@@ -1041,14 +1053,14 @@ function renderSmithEnchant() {
     $("enchantGrid").innerHTML = `
       <div class="enchant-locked">
         <div>
-          <span>Arkaner Laden</span>
-          <strong>Mira Nachtfaden hebt nur eine Augenbraue.</strong>
+          <span>${t("enchant.shop", "Arkaner Laden")}</span>
+          <strong>${t("enchant.lockedTitle", "Mira Nachtfaden hebt nur eine Augenbraue.")}</strong>
         </div>
-        <p>"Süß. Du willst Magie an Stahl binden, aber deine Seele stolpert noch über Kieselsteine. Komm wieder, wenn du nicht mehr nach Tutorial riechst."</p>
+        <p>"${t("enchant.lockedQuote", "Süß. Du willst Magie an Stahl binden, aber deine Seele stolpert noch über Kieselsteine. Komm wieder, wenn du nicht mehr nach Tutorial riechst.")}"</p>
         <div class="enchant-lock-requirements">
-          <span class="${state.level >= 8 ? "done" : "missing"}">${state.level >= 8 ? "✓" : "•"} Level 8 erreichen</span>
-          <span class="missing">• Danach einfache Runen freischalten</span>
-          <span class="missing">• Verzauberungen bleiben bis dahin gesperrt</span>
+          <span class="${state.level >= 8 ? "done" : "missing"}">${state.level >= 8 ? "✓" : "•"} ${t("enchant.reachLevel", "Level {level} erreichen", { level: 8 })}</span>
+          <span class="missing">• ${t("enchant.unlockSimpleRunes", "Danach einfache Runen freischalten")}</span>
+          <span class="missing">• ${t("enchant.lockedUntil", "Verzauberungen bleiben bis dahin gesperrt")}</span>
         </div>
       </div>
     `;
@@ -1075,19 +1087,20 @@ function renderSmithEnchant() {
       <div>
         <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
         <p>${labelFor(qualityLabel, quality)} · Slots ${enchantments.length}/${slotLimit}</p>
-        <p>${enchantments.length ? enchantments.map((enchantment) => `${escapeHtml(enchantment.name)}: ${escapeHtml(enchantment.text)}`).join("<br>") : "Noch nicht verzaubert."}</p>
+        <p>${enchantments.length ? enchantments.map((enchantment) => `${escapeHtml(enchantment.name)}: ${escapeHtml(enchantment.text)}`).join("<br>") : t("enchant.notEnchanted", "Noch nicht verzaubert.")}</p>
       </div>
       <div class="enchant-actions">
         ${Object.entries(enchantmentCategoryLabel).map(([category, label]) => {
           const hasPool = enchantmentPool(slot, category, item).length > 0;
           const disabled = full || cannotPay || !hasPool;
+          const categoryLabel = t(`enchant.category.${category}`, label);
           return `<button type="button" data-enchant-slot="${slot}" data-enchant-category="${category}" ${disabled ? "disabled" : ""}>
-            <strong>${escapeHtml(label)}</strong>
-            <span>${hasPool ? "Rune wirken" : "Keine passende Rune"}</span>
+            <strong>${escapeHtml(categoryLabel)}</strong>
+            <span>${hasPool ? t("enchant.castRune", "Rune wirken") : t("enchant.noRune", "Keine passende Rune")}</span>
           </button>`;
         }).join("")}
       </div>
-      <small>${full ? "Alle aktuellen Slots belegt." : `Ritualkosten: ${costText}`}</small>
+      <small>${full ? t("enchant.slotsFull", "Alle aktuellen Slots belegt.") : `${t("enchant.ritualCost", "Ritualkosten")}: ${costText}`}</small>
     </div>`;
   }).join("");
 }
@@ -1102,20 +1115,20 @@ function renderSmithSalvage() {
         const materials = Object.entries(salvageValue(item)).map(([id, amount]) => `${amount} ${labelFor(materialLabel, id)}`).join(" · ");
         const bonusChance = Math.round(renownSalvageBonusChance(item) * 100);
         return `<div class="salvage-row rarity-card rarity-${quality}">
-          <span><strong class="quality-${quality}">${escapeHtml(item.name)}</strong><small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${materials}${bonusChance ? ` · ${bonusChance}% Bonus` : ""}</small></span>
-          <button type="button" data-salvage="${index}">Zerlegen</button>
+          <span><strong class="quality-${quality}">${escapeHtml(item.name)}</strong><small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${materials}${bonusChance ? ` · ${bonusChance}% ${t("smith.bonus", "Bonus")}` : ""}</small></span>
+          <button type="button" data-salvage="${index}">${t("smith.salvage", "Zerlegen")}</button>
         </div>`;
       }).join("")
-    : `<div class="inventory-empty">Keine Items im Rucksack zum Zerlegen.</div>`;
+    : `<div class="inventory-empty">${t("smith.noSalvageItems", "Keine Items im Rucksack zum Zerlegen.")}</div>`;
 
 }
 
 function renderInventory() {
-  $("inventorySummary").innerHTML = `<span>Items: <strong>${state.inventory.length}</strong></span><span>Gold: <strong>${state.gold}</strong></span>`;
+  $("inventorySummary").innerHTML = `<span>${t("common.items", "Items")}: <strong>${state.inventory.length}</strong></span><span>${t("common.gold", "Gold")}: <strong>${state.gold}</strong></span>`;
   $("sellAllBtn").disabled = !state.inventory.length;
 
   if (!state.inventory.length) {
-    $("inventory").innerHTML = `<div class="inventory-empty">Noch keine Items im Inventar.</div>`;
+    $("inventory").innerHTML = `<div class="inventory-empty">${t("inventory.emptyShort", "Noch keine Items im Inventar.")}</div>`;
     return;
   }
 
@@ -1130,17 +1143,17 @@ function renderInventory() {
     const enchantText = itemEnchantmentsText(item);
     return `<div class="inventory-item rarity-card rarity-${quality}">
       <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
-      <p>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · Wert ${sellValue(item)} Gold</p>
+      <p>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("common.value", "Wert")} ${sellValue(item)} ${t("common.gold", "Gold")}</p>
       ${item.set ? `<p class="set-line">${escapeHtml(setBonuses[item.set]?.name || item.set)}</p>` : ""}
       ${statText ? `<p>${statText}</p>` : ""}
       ${enchantText ? `<p>${enchantText}</p>` : ""}
-      <p>Haltbarkeit: ${itemDurability(itemId)}%</p>
+      <p>${t("main.durability", "Haltbarkeit")}: ${itemDurability(itemId)}%</p>
       <div class="loot-compare compact">
         ${renderCompareSpans(compare, 3)}
       </div>
       <div class="inventory-actions">
-        <button type="button" data-equip="${index}">Ausrüsten</button>
-        <button class="sell-button" type="button" data-sell="${index}">Verkaufen</button>
+        <button type="button" data-equip="${index}">${t("inventory.equip", "Ausrüsten")}</button>
+        <button class="sell-button" type="button" data-sell="${index}">${t("inventory.sell", "Verkaufen")}</button>
       </div>
     </div>`;
   }).join("");
@@ -1150,12 +1163,12 @@ function renderInventory() {
 function renderQuests() {
   state.activeQuests = state.activeQuests.filter((id) => !state.completedQuests.includes(id));
   const active = state.activeQuests.map(getQuestById).filter(Boolean);
-  const signature = active.map((quest) => `${quest.id}:${Math.floor(state.quests[quest.id] || 0)}:${state.completedQuests.includes(quest.id) ? 1 : 0}`).join("|") || "empty";
+  const signature = `${currentLanguage()}|${active.map((quest) => `${quest.id}:${Math.floor(state.quests[quest.id] || 0)}:${state.completedQuests.includes(quest.id) ? 1 : 0}`).join("|") || "empty"}`;
   if (renderCache.quests === signature) return;
   renderCache.quests = signature;
 
   if (!active.length) {
-    $("quests").innerHTML = `<div class="inventory-empty">Keine aktive Quest. Öffne die Quest-Tafel.</div>`;
+    $("quests").innerHTML = `<div class="inventory-empty">${t("quest.none", "Keine aktive Quest. Öffne die Quest-Tafel.")}</div>`;
     return;
   }
 
@@ -1166,7 +1179,7 @@ function renderQuests() {
     return `<div class="quest rarity-card rarity-${rarity} ${done ? "done" : ""}">
       <strong><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}</strong>
       <p>${escapeHtml(quest.text)}</p>
-      <p>${done ? "Abgeschlossen" : `${value}/${quest.needed}`} · Belohnung: ${quest.rewardXp} XP, ${quest.rewardGold} Gold, ${questRenownReward(quest)} Ruhm</p>
+      <p>${done ? t("quest.completed", "Abgeschlossen") : `${value}/${quest.needed}`} · ${t("common.reward", "Belohnung")}: ${quest.rewardXp} ${t("common.xp", "XP")}, ${quest.rewardGold} ${t("common.gold", "Gold")}, ${questRenownReward(quest)} ${t("common.renown", "Ruhm")}</p>
     </div>`;
   }).join("");
 }
@@ -1183,15 +1196,15 @@ function renderQuestBoard() {
     refreshQuestBoard(true);
   }
   const boardQuests = state.questBoard.map(getQuestById).filter(Boolean);
-  const signature = boardQuests.map((quest) => {
+  const signature = `${currentLanguage()}|${boardQuests.map((quest) => {
     const active = isQuestActive(quest.id);
     return `${quest.id}:${active ? 1 : 0}:${Math.floor(state.quests[quest.id] || 0)}:${isQuestCompletedPermanent(quest.id) ? 1 : 0}`;
-  }).join("|") || "empty";
+  }).join("|") || "empty"}`;
   if (renderCache.questBoard === signature) return;
   renderCache.questBoard = signature;
 
   if (!boardQuests.length) {
-    $("questBoard").innerHTML = `<div class="inventory-empty">Die Tafel ist leer. Gewonnene Kämpfe bringen bald neue Aufträge.</div>`;
+    $("questBoard").innerHTML = `<div class="inventory-empty">${t("quest.emptyBoard", "Die Tafel ist leer. Gewonnene Kämpfe bringen bald neue Aufträge.")}</div>`;
     return;
   }
 
@@ -1199,25 +1212,25 @@ function renderQuestBoard() {
     const active = isQuestActive(quest.id);
     const isNew = (state.unseenQuests || []).includes(quest.id);
     const value = Math.floor(state.quests[quest.id] || 0);
-    const progress = active ? `${value}/${quest.needed}` : "Noch nicht angenommen";
+    const progress = active ? `${value}/${quest.needed}` : t("quest.notAccepted", "Noch nicht angenommen");
     const levelRange = questLevelRange(quest);
     const button = active
-        ? `<button type="button" disabled>Angenommen</button>`
-        : `<button type="button" data-accept-quest="${quest.id}">Quest annehmen</button>`;
+        ? `<button type="button" disabled>${t("quest.accepted", "Angenommen")}</button>`
+        : `<button type="button" data-accept-quest="${quest.id}">${t("quest.accept", "Quest annehmen")}</button>`;
 
     const rarity = escapeToken(quest.rarity || (quest.rare ? "legendary" : "common"), ["common", "rare", "epic", "legendary"], "common");
     return `<div class="quest-offer rarity-card rarity-${rarity} ${active ? "active" : ""} ${quest.rare ? "rare" : ""} ${isNew ? "new" : ""}">
-      <strong class="quest-offer-title"><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}${isNew ? `<em>Neu</em>` : ""}</strong>
+      <strong class="quest-offer-title"><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}${isNew ? `<em>${t("common.new", "Neu")}</em>` : ""}</strong>
       <div class="quest-offer-body">
         <p>${escapeHtml(quest.text)}</p>
-        <p>Status: ${progress}</p>
+        <p>${t("common.status", "Status")}: ${progress}</p>
       </div>
       <div class="reward-list">
-        <span>${levelRange || "Aktuelles Gebiet"}</span>
-        <span>Belohnung: ${quest.rewardXp} XP</span>
-        <span>Gold: ${quest.rewardGold}</span>
-        <span>Ruhm: ${questRenownReward(quest)}</span>
-        ${quest.rewardItem ? `<span>Item: ${quest.rare ? "legendär" : "episch"}</span>` : ""}
+        <span>${levelRange || t("zone.currentArea", "Aktuelles Gebiet")}</span>
+        <span>${t("common.reward", "Belohnung")}: ${quest.rewardXp} ${t("common.xp", "XP")}</span>
+        <span>${t("common.gold", "Gold")}: ${quest.rewardGold}</span>
+        <span>${t("common.renown", "Ruhm")}: ${questRenownReward(quest)}</span>
+        ${quest.rewardItem ? `<span>${t("quest.itemReward", "Item")}: ${quest.rare ? t("quest.legendary", "legendär") : t("quest.epic", "episch")}</span>` : ""}
       </div>
       <div class="quest-offer-action">${button}</div>
     </div>`;
@@ -1229,7 +1242,7 @@ function acceptQuest(questId) {
   if (isQuestActive(questId) || state.completedQuests.includes(questId)) return;
   const quest = getQuestById(questId);
   if (!questAvailable(quest)) {
-    log("Diese Quest passt noch nicht zu deinen freigeschalteten Gebieten.", "bad");
+    log(t("quest.notReadyArea", "Diese Quest passt noch nicht zu deinen freigeschalteten Gebieten."), "bad");
     render();
     return;
   }
@@ -1237,7 +1250,7 @@ function acceptQuest(questId) {
   state.questBoard = state.questBoard.filter((id) => id !== questId);
   forgetNewQuest(questId);
   state.quests[questId] = state.quests[questId] || 0;
-  log(`Quest angenommen: ${quest.name}.`, "drop");
+  log(t("quest.acceptLog", "Quest angenommen: {quest}.", { quest: quest.name }), "drop");
   save();
   render();
 }
@@ -1267,7 +1280,7 @@ function renderBestiaryList() {
   return `<div class="bestiary-list">
     <div class="bestiary-zone-tabs">
       ${Object.entries(zones).map(([id, zoneData]) => `<button class="${id === selectedBestiaryZone ? "active" : ""}" type="button" data-bestiary-zone="${id}">
-        <strong>${escapeHtml(zoneData.name)}</strong>
+        <strong>${escapeHtml(zoneDisplayName(id))}</strong>
         <span>${zoneData.enemies.length}</span>
       </button>`).join("")}
     </div>
@@ -1275,7 +1288,7 @@ function renderBestiaryList() {
       const completion = lootCompletion(id);
       return `<button class="bestiary-card ${id === selectedBestiaryEnemy ? "active" : ""}" type="button" data-bestiary="${id}">
         <strong>${escapeHtml(enemy.name)}</strong>
-        <p>Sammlung: ${completion.found}/${completion.total} entdeckt</p>
+        <p>${t("bestiary.collection", "Sammlung {found}/{total}", { found: completion.found, total: completion.total })} ${t("bestiary.discovered", "entdeckt")}</p>
         <div class="completion-bar" aria-label="Entdeckter Ausrüstungsfortschritt"><span style="width:${completion.percent}%"></span></div>
       </button>`;
     }).join("")}
@@ -1302,14 +1315,14 @@ function renderBestiaryDetail() {
   detail.innerHTML = `
     <div class="detail-head">
       <div>
-        <p class="eyebrow">${escapeHtml(zoneForEnemy(selectedBestiaryEnemy))}</p>
+        <p class="eyebrow">${escapeHtml(zoneDisplayName(zoneKeyForEnemy(selectedBestiaryEnemy)))}</p>
         <h2>${escapeHtml(detailEnemy.name)}</h2>
       </div>
     </div>
-    <p>Level ${detailEnemy.level}${detailEnemy.boss ? " · Boss" : detailEnemy.elite ? " · Elite" : ""} · ${detailEnemy.hp} Leben · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} Schaden · ${detailEnemy.defense} Rüstung · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)} · Quest-Schriftrolle ${formatChance(rareQuestDropChance(detailEnemy))}</p>
+    <p>${t("common.level", "Level")} ${detailEnemy.level}${detailEnemy.boss ? ` · ${t("common.boss", "Boss")}` : detailEnemy.elite ? ` · ${t("common.elite", "Elite")}` : ""} · ${detailEnemy.hp} ${t("main.life", "Leben")} · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} ${t("main.damage", "Schaden")} · ${detailEnemy.defense} ${t("main.defense", "Rüstung")} · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)} · Quest-Schriftrolle ${formatChance(rareQuestDropChance(detailEnemy))}</p>
     ${renderBossRewardPanel(selectedBestiaryEnemy, detailEnemy)}
     ${renderEnemyAbilities(detailEnemy)}
-    <h3>Sammlung</h3>
+    <h3>${t("bestiary.collection", "Sammlung {found}/{total}", lootCompletion(selectedBestiaryEnemy))}</h3>
     <div class="bestiary-category-grid">
       ${categories.map((category) => `<button class="bestiary-category ${selectedBestiaryCategory === category.id ? "active" : ""}" type="button" data-bestiary-category="${category.id}">
         <strong>${escapeHtml(category.label)}</strong>
@@ -1321,7 +1334,7 @@ function renderBestiaryDetail() {
       <div class="drop-list">${categoryRows}</div>
       ${renderBestiaryItemDetail(selectedBestiaryEnemy, detailEnemy, discovered)}
     </div>
-    <p class="loot-note">Items werden zusammengefasst, seitenweise geladen und Details erscheinen direkt neben der Liste.</p>
+    <p class="loot-note">${t("bestiary.note", "Items werden zusammengefasst, seitenweise geladen und Details erscheinen direkt neben der Liste.")}</p>
   `;
 }
 
@@ -1330,6 +1343,7 @@ function bestiaryDetailSignature(enemyId, enemy, discovered) {
     .map((item) => `${bestiaryItemKey(item)}:${item.damage}:${item.defense}:${item.critChance || 0}:${item.critDamage || 0}:${item.effect || ""}:${item.set || ""}`)
     .join("|");
   return [
+    currentLanguage(),
     enemyId,
     enemy.level,
     enemy.hp,
@@ -1364,12 +1378,12 @@ function renderBossRewardPanel(enemyId, enemy) {
 
   return `<section class="boss-reward-panel">
     <div>
-      <p class="eyebrow">Dungeon-Belohnung</p>
-      <strong>${claimed ? "Erster Sieg bereits geholt" : "Erster Sieg"}</strong>
-      <span>${escapeHtml(reward || "Keine Sonderbelohnung")}</span>
+      <p class="eyebrow">${t("bestiary.dungeonReward", "Dungeon-Belohnung")}</p>
+      <strong>${claimed ? t("bestiary.firstWinClaimed", "Erster Sieg bereits geholt") : t("bestiary.firstWin", "Erster Sieg")}</strong>
+      <span>${escapeHtml(reward || t("bestiary.noSpecialReward", "Keine Sonderbelohnung"))}</span>
     </div>
     <div class="boss-reward-grid">
-      ${drops || "<span>Keine feste Bossbeute</span>"}
+      ${drops || `<span>${t("bestiary.noBossLoot", "Keine feste Bossbeute")}</span>`}
     </div>
   </section>`;
 }
@@ -1377,10 +1391,10 @@ function renderBossRewardPanel(enemyId, enemy) {
 function renderEnemyAbilities(enemy) {
   const entries = enemyAbilityEntries(enemy);
   if (!entries.length) return "";
-  return `<section class="enemy-ability-list" aria-label="Gegnerfähigkeiten">
+  return `<section class="enemy-ability-list" aria-label="${t("bestiary.enemyAbilities", "Gegnerfähigkeiten")}">
     ${entries.map(([id, ability]) => `<div class="enemy-ability ${ability.type === "passive" ? "passive" : ""}" data-enemy-ability="${escapeAttr(id)}">
       <strong>${escapeHtml(ability.name)}</strong>
-      <span>${ability.type === "passive" ? "Passiv" : "Aktiv"} · ${escapeHtml(ability.text)}</span>
+      <span>${ability.type === "passive" ? t("bestiary.passive", "Passiv") : t("bestiary.active", "Aktiv")} · ${escapeHtml(ability.text)}</span>
     </div>`).join("")}
   </section>`;
 }
@@ -1389,13 +1403,13 @@ function bestiaryCategories(enemyId, enemy, discovered = groupedBestiaryLoot(ene
   const generated = generatedBestiaryTemplates(enemy);
   const countGroup = (group) => generated.filter((item) => bestiaryItemGroup(item) === group).length;
   return [
-    { id: "overview", label: "Übersicht", count: generated.length + enemy.drops.length },
-    { id: "weapon", label: "Waffen", count: countGroup("weapon") },
-    { id: "armor", label: "Rüstung", count: countGroup("armor") },
-    { id: "jewelry", label: "Schmuck", count: countGroup("jewelry") },
-    { id: "materials", label: "Materialien", count: (materialDrops[enemyId] || []).length },
-    { id: "fixed", label: "Feste Drops", count: enemy.drops.length },
-    { id: "sets", label: "Set-Items", count: discovered.filter((item) => item.set).length },
+    { id: "overview", label: t("bestiary.categoryOverview", "Übersicht"), count: generated.length + enemy.drops.length },
+    { id: "weapon", label: t("bestiary.categoryWeapons", "Waffen"), count: countGroup("weapon") },
+    { id: "armor", label: t("bestiary.categoryArmor", "Rüstung"), count: countGroup("armor") },
+    { id: "jewelry", label: t("bestiary.categoryJewelry", "Schmuck"), count: countGroup("jewelry") },
+    { id: "materials", label: t("bestiary.materials", "Materialien"), count: (materialDrops[enemyId] || []).length },
+    { id: "fixed", label: t("bestiary.categoryFixed", "Feste Drops"), count: enemy.drops.length },
+    { id: "sets", label: t("bestiary.categorySets", "Set-Items"), count: discovered.filter((item) => item.set).length },
   ].filter((category) => category.id === "overview" || category.count > 0);
 }
 
@@ -1422,17 +1436,17 @@ function renderAllBestiaryRows(enemyId, enemy, discovered = groupedBestiaryLoot(
     .sort((a, b) => bestiaryRowRank(b) - bestiaryRowRank(a) || a.name.localeCompare(b.name))
     .map((template) => renderGeneratedDropRow(template, discovered));
   const materialRows = (materialDrops[enemyId] || []).map((drop) => `<button class="drop-row bestiary-item-row material-hover-row" type="button" data-bestiary-material="${drop.id}" data-material-id="${drop.id}">
-    <span><b>${labelFor(materialLabel, drop.id)}</b><small>Material fürs Schmieden</small></span>
+    <span><b>${labelFor(materialLabel, drop.id)}</b><small>${t("bestiary.materialForSmith", "Material fürs Schmieden")}</small></span>
     <span>${drop.min}-${drop.max}</span>
   </button>`);
   const rows = [...fixedRows, ...generatedRows, ...materialRows];
-  return rows.length ? rows.join("") : `<div class="drop-row"><span>Noch nichts entdeckt</span><span>-</span></div>`;
+  return rows.length ? rows.join("") : `<div class="drop-row"><span>${t("bestiary.nothingDiscovered", "Noch nichts entdeckt")}</span><span>-</span></div>`;
 }
 
 function renderFixedDropRows(enemyId, enemy) {
   return enemy.drops.length
     ? enemy.drops.map((drop) => renderFixedDropRow(enemyId, drop)).join("")
-    : `<div class="drop-row"><span>Keine festen seltenen Drops</span><span>-</span></div>`;
+    : `<div class="drop-row"><span>${t("bestiary.noFixedDrops", "Keine festen seltenen Drops")}</span><span>-</span></div>`;
 }
 
 function renderFixedDropRow(enemyId, drop) {
@@ -1442,9 +1456,9 @@ function renderFixedDropRow(enemyId, drop) {
   const key = `fixed:${drop.id}`;
   const discovered = state.discoveredLoot[enemyId]?.[key];
   const known = Boolean(discovered);
-  const status = known ? ((discovered.count || 0) <= 1 ? "Neu" : "Bekannt") : "Unbekannt";
+  const status = known ? ((discovered.count || 0) <= 1 ? t("common.new", "Neu") : t("common.known", "Bekannt")) : t("common.unknown", "Unbekannt");
   return `<button class="drop-row bestiary-item-row ${known ? "item-hover-row" : "locked-drop"}" type="button" data-bestiary-item="${escapeAttr(key)}" ${known ? `data-tooltip-key="${cacheTooltipItem(item)}"` : ""}>
-    <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>Fester Drop · ${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · Chance ${formatChance(drop.chance)}</small></span>
+    <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>${t("bestiary.fixedDrop", "Fester Drop")} · ${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(drop.chance)}</small></span>
     <span>${status}</span>
   </button>`;
 }
@@ -1453,10 +1467,10 @@ function renderMaterialDropRows(enemyId) {
   const drops = materialDrops[enemyId] || [];
   return drops.length
     ? drops.map((drop) => `<button class="drop-row bestiary-item-row material-hover-row" type="button" data-bestiary-material="${drop.id}" data-material-id="${drop.id}">
-        <span><b>${labelFor(materialLabel, drop.id)}</b><small>Material fürs Schmieden</small></span>
+        <span><b>${labelFor(materialLabel, drop.id)}</b><small>${t("bestiary.materialForSmith", "Material fürs Schmieden")}</small></span>
         <span>${drop.min}-${drop.max}</span>
       </button>`).join("")
-    : `<div class="drop-row"><span>Keine Materialien bekannt</span><span>-</span></div>`;
+    : `<div class="drop-row"><span>${t("bestiary.noMaterials", "Keine Materialien bekannt")}</span><span>-</span></div>`;
 }
 
 function lootCompletion(enemyId) {
@@ -1482,7 +1496,7 @@ function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiar
   const filtered = filterBestiaryLoot(possible);
 
   if (!filtered.length) {
-    return `<div class="drop-row"><span>Noch nichts entdeckt</span><span>-</span></div>`;
+    return `<div class="drop-row"><span>${t("bestiary.nothingDiscovered", "Noch nichts entdeckt")}</span><span>-</span></div>`;
   }
 
   const sorted = filtered.sort((a, b) => bestiaryRowRank(b) - bestiaryRowRank(a) || a.name.localeCompare(b.name));
@@ -1499,9 +1513,9 @@ function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiar
 
   return `${rows}
     <div class="bestiary-pagination">
-      <button type="button" data-bestiary-page="prev" ${selectedBestiaryPage === 0 ? "disabled" : ""}>Zurück</button>
-      <span>Seite ${selectedBestiaryPage + 1}/${pageCount}</span>
-      <button type="button" data-bestiary-page="next" ${selectedBestiaryPage >= pageCount - 1 ? "disabled" : ""}>Weiter</button>
+      <button type="button" data-bestiary-page="prev" ${selectedBestiaryPage === 0 ? "disabled" : ""}>${t("common.previous", "Zurück")}</button>
+      <span>${t("common.page", "Seite")} ${selectedBestiaryPage + 1}/${pageCount}</span>
+      <button type="button" data-bestiary-page="next" ${selectedBestiaryPage >= pageCount - 1 ? "disabled" : ""}>${t("common.next", "Weiter")}</button>
     </div>`;
 }
 
@@ -1511,10 +1525,10 @@ function renderGeneratedDropRow(template, discovered) {
   const quality = itemQuality(item);
   const slot = itemSlot(item);
   const key = found ? bestiaryItemKey(found) : `unknown:${bestiaryItemKey(template)}`;
-  const status = found ? ((found.count || 0) <= 1 ? "Neu" : "Bekannt") : "Unbekannt";
+  const status = found ? ((found.count || 0) <= 1 ? t("common.new", "Neu") : t("common.known", "Bekannt")) : t("common.unknown", "Unbekannt");
   const hoverClass = found ? "item-hover-row" : "locked-drop";
   return `<button class="drop-row discovered-drop bestiary-item-row ${hoverClass} ${selectedBestiaryItemKey === key ? "active" : ""}" type="button" data-bestiary-item="${escapeAttr(key)}" ${found ? `data-tooltip-key="${cacheTooltipItem(found)}"` : ""}>
-    <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · Chance ${formatChance(template.dropChance)}</small></span>
+    <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(template.dropChance)}</small></span>
     <span>${status}</span>
   </button>`;
 }
@@ -1615,14 +1629,14 @@ function filterBestiaryLoot(items) {
 
 function renderBestiaryFilters() {
   const filters = [
-    ["all", "Alle"],
-    ["new", "Neu"],
-    ["sets", "Set-Items"],
-    ["epic", "Episch+"],
-    ["incomplete", "Noch nicht vollständig"],
+    ["all", t("bestiary.filterAll", "Alle")],
+    ["new", t("bestiary.filterNew", "Neu")],
+    ["sets", t("bestiary.categorySets", "Set-Items")],
+    ["epic", t("bestiary.filterEpic", "Episch+")],
+    ["incomplete", t("bestiary.filterIncomplete", "Noch nicht vollständig")],
   ];
   return `<div class="bestiary-filters">
-    <input id="bestiarySearch" type="search" value="${escapeAttr(selectedBestiarySearch)}" placeholder="Item suchen">
+    <input id="bestiarySearch" type="search" value="${escapeAttr(selectedBestiarySearch)}" placeholder="${t("bestiary.search", "Item suchen")}">
     ${filters.map(([id, label]) => `<button class="${selectedBestiaryFilter === id ? "active" : ""}" type="button" data-bestiary-filter="${id}">${label}</button>`).join("")}
   </div>`;
 }
@@ -1646,16 +1660,16 @@ function escapeHtml(value) {
 function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
   if (selectedBestiaryCategory === "overview" && !selectedBestiaryItemKey) {
     return `<aside class="bestiary-selected-detail">
-      <strong>Details</strong>
-      <p>Klicke einen Fund an, um Details zu sehen.</p>
+      <strong>${t("bestiary.details", "Details")}</strong>
+      <p>${t("bestiary.clickDiscovery", "Klicke einen Fund an, um Details zu sehen.")}</p>
     </aside>`;
   }
 
   if (selectedBestiaryCategory === "materials") {
     const material = (materialDrops[enemyId] || []).find((drop) => `mat:${drop.id}` === selectedBestiaryItemKey);
     return `<aside class="bestiary-selected-detail">
-      <strong>Materialien</strong>
-      ${material ? `<p>${labelFor(materialLabel, material.id)}</p><p>Drop-Menge: ${material.min}-${material.max}</p><p>Wird beim Schmied für Upgrades genutzt.</p>` : "<p>Klicke ein Material für Details.</p>"}
+      <strong>${t("bestiary.materials", "Materialien")}</strong>
+      ${material ? `<p>${labelFor(materialLabel, material.id)}</p><p>${t("bestiary.dropAmount", "Drop-Menge")}: ${material.min}-${material.max}</p><p>${t("bestiary.usedForUpgrades", "Wird beim Schmied für Upgrades genutzt.")}</p>` : `<p>${t("bestiary.clickDiscovery", "Klicke ein Material für Details.")}</p>`}
     </aside>`;
   }
 
@@ -1663,8 +1677,8 @@ function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLo
     const key = selectedBestiaryItemKey.replace("unknown:", "");
     const template = generatedBestiaryTemplates(enemy).find((entry) => bestiaryItemKey(entry) === key);
     return `<aside class="bestiary-selected-detail">
-      <strong>Unbekannter Fund</strong>
-      ${template ? `<p>${escapeHtml(template.name)}</p><p>${labelFor(qualityLabel, template.quality)} · ${labelFor(slotLabel, template.slot)}</p><p>Drop-Chance: ${formatChance(template.dropChance)}</p><p>Stats werden nach dem ersten Fund freigeschaltet.</p>` : "<p>Klicke ein Item für Details.</p>"}
+      <strong>${t("bestiary.unknownDrop", "Unbekannter Fund")}</strong>
+      ${template ? `<p>${escapeHtml(template.name)}</p><p>${labelFor(qualityLabel, template.quality)} · ${labelFor(slotLabel, template.slot)}</p><p>${t("bestiary.dropChance", "Drop-Chance")}: ${formatChance(template.dropChance)}</p><p>${t("bestiary.statsAfterDiscovery", "Stats werden nach dem ersten Fund freigeschaltet.")}</p>` : `<p>${t("bestiary.clickDiscovery", "Klicke ein Item für Details.")}</p>`}
     </aside>`;
   }
 
@@ -1675,11 +1689,11 @@ function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLo
     const known = Boolean(state.discoveredLoot[enemyId]?.[selectedBestiaryItemKey]);
     if (!known) {
       return `<aside class="bestiary-selected-detail">
-        <strong>Fester Drop</strong>
+        <strong>${t("bestiary.fixedDrop", "Fester Drop")}</strong>
         <p>${escapeHtml(item.name)}</p>
         <p>${labelFor(qualityLabel, itemQuality(item))} · ${labelFor(slotLabel, itemSlot(item))}</p>
-        <p>Drop-Chance: ${drop ? formatChance(drop.chance) : "Unbekannt"}</p>
-        <p>Stats werden nach dem ersten Fund freigeschaltet.</p>
+        <p>${t("bestiary.dropChance", "Drop-Chance")}: ${drop ? formatChance(drop.chance) : t("common.unknown", "Unbekannt")}</p>
+        <p>${t("bestiary.statsAfterDiscovery", "Stats werden nach dem ersten Fund freigeschaltet.")}</p>
       </aside>`;
     }
     return `<aside class="bestiary-selected-detail">
@@ -1691,8 +1705,8 @@ function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLo
 
   if (!item) {
     return `<aside class="bestiary-selected-detail">
-      <strong>Details</strong>
-      <p>Klicke ein Item für Stats und Vergleich.</p>
+      <strong>${t("bestiary.details", "Details")}</strong>
+      <p>${t("bestiary.clickDiscovery", "Klicke ein Item für Stats und Vergleich.")}</p>
     </aside>`;
   }
 
@@ -1718,7 +1732,7 @@ function renderSetTooltip(setId) {
   if (!set) return "";
   const count = activeSetCounts()[setId]?.count || 0;
   const bonuses = Object.entries(set.bonuses)
-    .map(([needed, bonus]) => `<span class="${count >= Number(needed) ? "compare-good" : "compare-even"}">${needed} Teile: ${escapeHtml(bonus.text)}</span>`)
+    .map(([needed, bonus]) => `<span class="${count >= Number(needed) ? "compare-good" : "compare-even"}">${needed} ${t("common.pieces", "Teile")}: ${escapeHtml(bonus.text)}</span>`)
     .join("");
   return `<div class="item-tooltip">
     <strong>${escapeHtml(set.name)} (${Math.min(count, 6)}/6)</strong>
@@ -1729,13 +1743,13 @@ function renderSetTooltip(setId) {
 function renderItemTooltip(item) {
   const quality = itemQuality(item);
   const slot = itemSlot(item);
-  const current = getItem(state.equipment[slot]) || { name: "Nichts", damage: 0, defense: 0 };
+  const current = getItem(state.equipment[slot]) || { name: t("common.none", "Nichts"), damage: 0, defense: 0 };
   const compare = compareLoot(item, current);
   const equippedId = state.equipment[slot];
   const isEquipped = equippedId && getItem(equippedId) === item;
-  const durabilityLine = isEquipped ? `<span>Haltbarkeit: ${itemDurability(equippedId)}%</span>` : "";
-  const repairLine = isEquipped ? `<span>Reparatur: ${repairCostForSlot(slot)} Gold</span>` : "";
-  const upgradeLine = item.upgrade ? `<span>Verbesserung: +${item.upgrade}</span>` : "";
+  const durabilityLine = isEquipped ? `<span>${t("main.durability", "Haltbarkeit")}: ${itemDurability(equippedId)}%</span>` : "";
+  const repairLine = isEquipped ? `<span>${t("equipment.repair", "Reparatur")}: ${repairCostForSlot(slot)} ${t("common.gold", "Gold")}</span>` : "";
+  const upgradeLine = item.upgrade ? `<span>${t("equipment.upgrade", "Verbesserung")}: +${item.upgrade}</span>` : "";
   const statText = itemStatText(item);
   const enchantText = itemEnchantmentsText(item);
   return `<div class="item-tooltip">
@@ -1748,7 +1762,7 @@ function renderItemTooltip(item) {
     ${renderItemEffectLine(item)}
     ${durabilityLine}
     ${repairLine}
-    <span>Aktuell: ${escapeHtml(current.name)}</span>
+    <span>${t("common.current", "Aktuell")}: ${escapeHtml(current.name)}</span>
     ${renderCompareSpans(compare, 3)}
   </div>`;
 }
@@ -1757,9 +1771,9 @@ function renderMaterialTooltip(materialId) {
   const drop = (materialDrops[selectedBestiaryEnemy] || []).find((entry) => entry.id === materialId);
   return `<div class="item-tooltip">
     <strong>${labelFor(materialLabel, materialId, materialId)}</strong>
-    <span>Material fürs Schmieden</span>
-    ${drop ? `<span>Drop-Menge: ${drop.min}-${drop.max}</span>` : ""}
-    <span>Wird für Upgrades und Ausrüstung genutzt.</span>
+    <span>${t("bestiary.materialForSmith", "Material fürs Schmieden")}</span>
+    ${drop ? `<span>${t("bestiary.dropAmount", "Drop-Menge")}: ${drop.min}-${drop.max}</span>` : ""}
+    <span>${t("bestiary.usedForUpgrades", "Wird für Upgrades und Ausrüstung genutzt.")}</span>
   </div>`;
 }
 
@@ -1840,37 +1854,37 @@ function formatChance(chance) {
 }
 
 function renderLog() {
-  const signature = state.log.slice(0, 18).join("\n") || "empty";
+  const signature = `${currentLanguage()}|${state.log.slice(0, 18).join("\n") || "empty"}`;
   if (renderCache.log === signature) return;
   renderCache.log = signature;
   $("logPreview").innerHTML = state.log.length
     ? state.log.slice(0, 5).map(escapeHtml).join("<br>")
-    : "Noch keine Einträge.";
+    : t("log.empty", "Noch keine Einträge.");
   $("log").innerHTML = state.log.slice(0, 18).map((entry, index) => {
     const type = entry.includes("Tod") ? "bad" : entry.includes("Seltener") || entry.includes("Quest") || entry.includes("ausgerüstet") ? "drop" : index === 0 ? "good" : "";
     return `<div class="${type}">${escapeHtml(entry)}</div>`;
-  }).join("") || `<div>Noch keine Einträge.</div>`;
+  }).join("") || `<div>${t("log.empty", "Noch keine Einträge.")}</div>`;
 }
 
 function renderCombatLog() {
   const entries = Array.isArray(state.combatLog) ? state.combatLog : [];
-  const signature = entries.map((entry) => `${entry.type}:${entry.text}`).join("\n") || "empty";
+  const signature = `${currentLanguage()}|${entries.map((entry) => `${entry.type}:${entry.text}`).join("\n") || "empty"}`;
   if (renderCache.combatLog === signature) return;
   renderCache.combatLog = signature;
-  setText("combatLogSummary", entries.length ? `${entries.length} Einträge` : "Noch leer");
+  setText("combatLogSummary", entries.length ? t("common.entries", "{count} Einträge", { count: entries.length }) : t("combat.logEmpty", "Noch leer"));
   $("combatLog").innerHTML = entries.length
     ? entries.map((entry) => `<div class="combat-log-entry ${escapeToken(entry.type, ["hero", "enemy", "heal", "effect", "critical", "good", "bad"], "effect")}">${escapeHtml(entry.text)}</div>`).join("")
-    : `<div class="combat-log-empty">Starte einen Kampf, dann erscheinen hier Schaden, Heilung und Effekte.</div>`;
+    : `<div class="combat-log-empty">${t("combat.logEmptyLong", "Starte einen Kampf, dann erscheinen hier Schaden, Heilung und Effekte.")}</div>`;
 }
 
 function renderRepairModal() {
   const total = repairCost();
   $("repairSummary").innerHTML = `
     <div>
-      <strong>${total} Gold</strong>
-      <p>Aktuelles Gold: ${state.gold}</p>
+      <strong>${total} ${t("common.gold", "Gold")}</strong>
+      <p>${t("equipment.currentGold", "Aktuelles Gold")}: ${state.gold}</p>
     </div>
-    <button type="button" data-repair-all ${total === 0 || state.gold < total ? "disabled" : ""}>Alles reparieren</button>
+    <button type="button" data-repair-all ${total === 0 || state.gold < total ? "disabled" : ""}>${t("equipment.repairAll", "Alles reparieren")}</button>
   `;
   $("repairList").innerHTML = equipmentSlots.map((slot) => {
     const itemId = state.equipment[slot];
@@ -1879,23 +1893,22 @@ function renderRepairModal() {
       return `<div class="repair-row empty-slot">
         <div>
           <strong>${labelFor(slotLabel, slot)}</strong>
-          <p>Leer</p>
+          <p>${t("common.empty", "Leer")}</p>
         </div>
-        <button type="button" disabled>Keine Ausrüstung</button>
+        <button type="button" disabled>${t("equipment.noGear", "Keine Ausrüstung")}</button>
       </div>`;
     }
     const durability = itemDurability(itemId);
     const cost = repairCostForSlot(slot);
     const disabled = cost === 0 || state.gold < cost ? "disabled" : "";
-    const label = cost === 0 ? "Vollständig" : `${cost} Gold`;
+    const label = cost === 0 ? t("equipment.fullyRepaired", "Vollständig") : `${cost} ${t("common.gold", "Gold")}`;
     const quality = itemQuality(item);
     return `<div class="repair-row rarity-card rarity-${quality}">
       <div>
         <strong class="quality-${quality}">${labelFor(slotLabel, slot)} · ${escapeHtml(item.name)}</strong>
-        <p>${labelFor(qualityLabel, quality)} · Haltbarkeit: ${durability}% · Reparatur: ${cost} Gold</p>
+        <p>${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${durability}% · ${t("equipment.repair", "Reparatur")}: ${cost} ${t("common.gold", "Gold")}</p>
       </div>
       <button type="button" data-repair-slot="${slot}" ${disabled}>${label}</button>
     </div>`;
   }).join("");
 }
-

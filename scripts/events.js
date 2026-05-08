@@ -265,8 +265,8 @@ $("salvageList").addEventListener("click", (event) => {
 $("fightBtn").addEventListener("click", () => {
   if (isFighting) {
     skipCombat = true;
-    $("battleText").textContent = "Kampf wird übersprungen...";
-    $("fightBtn").textContent = "Überspringe...";
+    $("battleText").textContent = t("combat.skippingBattle", "Kampf wird übersprungen...");
+    $("fightBtn").textContent = t("combat.skipping", "Überspringe...");
     $("fightBtn").disabled = true;
     armCombatWatchdog(1800);
     return;
@@ -274,6 +274,7 @@ $("fightBtn").addEventListener("click", () => {
 
   fight();
 });
+$("languageToggleBtn").addEventListener("click", toggleLanguage);
 $("restBtn").addEventListener("click", rest);
 $("openPlayerStatsBtn").addEventListener("click", () => {
   renderPlayerStatsDetails();
@@ -453,7 +454,7 @@ function exportSave() {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  log("Spielstand als Datei gesichert.", "drop");
+  log(t("save.exported", "Spielstand als Datei gesichert."), "drop");
   render();
 }
 
@@ -469,10 +470,10 @@ function importSaveFile(event) {
   const reader = new FileReader();
   reader.onload = () => {
     const imported = importSaveData(String(reader.result || ""));
-    if (imported) log(`Spielstand aus ${file.name} geladen.`, "drop");
+    if (imported) log(t("save.importedFrom", "Spielstand aus {file} geladen.", { file: file.name }), "drop");
   };
   reader.onerror = () => {
-    log("Import fehlgeschlagen: Die Datei konnte nicht gelesen werden.", "bad");
+    log(t("save.importFileUnreadable", "Import fehlgeschlagen: Die Datei konnte nicht gelesen werden."), "bad");
     render();
   };
   reader.readAsText(file);
@@ -498,6 +499,7 @@ function closeModal(id) {
 function setControlsDisabled(disabled) {
   document.querySelectorAll("button").forEach((button) => {
     if (button.id === "openSaveMenuBtn") return;
+    if (button.id === "languageToggleBtn") return;
     if (button.id === "exportSaveTopBtn") return;
     if (button.id === "importSaveTopBtn") return;
     if (button.id === "closeSaveBtn") return;
@@ -554,7 +556,7 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
   const startPlayerHp = combatHealth.playerStartHp ?? state.hp;
   hideBattleResult();
   updateBattleHealth(startPlayerHp, playerMaxHp, enemyMaxHp, enemyMaxHp);
-  $("battleText").textContent = `${enemy.name} tritt vor.`;
+  $("battleText").textContent = t("combat.stepForward", "{enemy} tritt vor.", { enemy: enemy.name });
   stage.classList.remove("victory", "defeat", "hero-attacks", "enemy-attacks", "hero-hit", "enemy-hit");
   await waitCombat(280);
 
@@ -576,7 +578,7 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
   }
 
   if (!skipCombat && events.length > visibleEvents.length) {
-    $("battleText").textContent = "Der Kampf zieht sich schwer und staubig hin.";
+    $("battleText").textContent = t("combat.dragsOn", "Der Kampf zieht sich schwer und staubig hin.");
     await waitCombat(420);
   }
 
@@ -593,11 +595,11 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
 }
 
 function showBattleResult(playerWon, enemyName) {
-  $("battleText").textContent = playerWon ? "Sieg" : "Niederlage";
-  $("battleResultTitle").textContent = playerWon ? "Sieg" : "Niederlage";
+  $("battleText").textContent = playerWon ? t("combat.victory", "Sieg") : t("combat.defeat", "Niederlage");
+  $("battleResultTitle").textContent = playerWon ? t("combat.victory", "Sieg") : t("combat.defeat", "Niederlage");
   $("battleResultText").textContent = playerWon
-    ? `${enemyName} ist besiegt. Beute wird gesichert.`
-    : "Du kehrst angeschlagen ins Lager zurück.";
+    ? t("combat.enemyDefeated", "{enemy} ist besiegt. Beute wird gesichert.", { enemy: enemyName })
+    : t("combat.returnCamp", "Du kehrst angeschlagen ins Lager zurück.");
   $("battleResult").className = `battle-result show ${playerWon ? "win" : "loss"}`;
 }
 
@@ -621,7 +623,7 @@ function highlightAbilityUse(abilityId) {
 function spawnDamage(amount, side, critical = false) {
   const number = document.createElement("span");
   number.className = `damage-number ${side}${critical ? " critical" : ""}`;
-  number.textContent = critical ? `KRIT -${amount}` : `-${amount}`;
+  number.textContent = critical ? `CRIT -${amount}` : `-${amount}`;
   $("battleStage").appendChild(number);
   window.setTimeout(() => number.remove(), 840);
 }

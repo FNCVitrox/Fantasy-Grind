@@ -29,8 +29,8 @@ function openLootModal(modal) {
 
 function updateLootHeader() {
   const isQuestReward = state.pendingLoot.every((item) => item.sourceType === "quest");
-  setText("lootTitle", isQuestReward ? "Questbelohnung" : "Wähle ein Item");
-  setText("lootCounter", isQuestReward ? "Belohnung" : `1 von ${state.pendingLoot.length}`);
+  setText("lootTitle", isQuestReward ? t("loot.questReward", "Questbelohnung") : t("loot.title", "Wähle ein Item"));
+  setText("lootCounter", isQuestReward ? t("loot.reward", "Belohnung") : t("loot.pickCount", "{current} von {total}", { current: 1, total: state.pendingLoot.length }));
 }
 
 function renderLootCard(item, index) {
@@ -49,26 +49,26 @@ function renderLootCard(item, index) {
     ${item.effect ? `<p class="loot-card-effect">${escapeHtml(itemEffectName(item))}: ${escapeHtml(itemEffectText(item))}</p>` : ""}
     ${renderItemEnchantmentLine(item)}
     ${renderLootStatGrid(item)}
-    <p class="loot-card-value">Haltbarkeit: ${item.durability ?? 100}%</p>
-    <p class="loot-card-value">Wert: ${sellValue(item)} Gold</p>
+    <p class="loot-card-value">${t("main.durability", "Haltbarkeit")}: ${item.durability ?? 100}%</p>
+    <p class="loot-card-value">${t("common.value", "Wert")}: ${sellValue(item)} ${t("common.gold", "Gold")}</p>
     ${renderLootCompare(compare)}
     <div class="loot-actions">
-      <button type="button" data-loot="${index}">Ins Inventar</button>
-      <button type="button" data-equip-loot="${index}">Ausrüsten</button>
+      <button type="button" data-loot="${index}">${t("loot.toInventory", "Ins Inventar")}</button>
+      <button type="button" data-equip-loot="${index}">${t("loot.equip", "Ausrüsten")}</button>
     </div>
   </div>`;
 }
 
 function renderLootStatGrid(item) {
   const stats = itemStatEntries(item, {
-    damage: "Angriff",
-    defense: "Verteidigung",
-    critChance: "Crit-Chance",
-    critDamage: "Crit-Schaden",
+    damage: t("stat.damage", "Angriff"),
+    defense: t("stat.defense", "Verteidigung"),
+    critChance: t("stat.critChance", "Crit-Chance"),
+    critDamage: t("stat.critDamage", "Crit-Schaden"),
   });
   const content = stats.length
     ? stats.map((stat) => `<span><em>${stat.label}</em><strong>${stat.value}</strong></span>`).join("")
-    : `<span><em>Werte</em><strong>Keine</strong></span>`;
+    : `<span><em>${t("loot.stats", "Werte")}</em><strong>${t("loot.noStats", "Keine")}</strong></span>`;
   return `<div class="loot-stat-grid" aria-label="Itemwerte">${content}</div>`;
 }
 
@@ -82,7 +82,7 @@ function renderCompareSpans(compare, limit = 0) {
 }
 
 function lootChoicesSignature() {
-  return state.pendingLoot.map((item) => {
+  return `${currentLanguage()}|${state.pendingLoot.map((item) => {
     if (!item) return "empty";
     return [
       item.id,
@@ -100,14 +100,14 @@ function lootChoicesSignature() {
       item.sourceType || "",
       item.discoveryNew ? 1 : 0,
     ].join(":");
-  }).join("|");
+  }).join("|")}`;
 }
 
 function lootDiscoveryStatus(item) {
-  if (item.sourceType === "quest") return { text: "Questbelohnung", className: "quest" };
+  if (item.sourceType === "quest") return { text: t("loot.questReward", "Questbelohnung"), className: "quest" };
   if (!item.sourceEnemy) return null;
-  if (item.discoveryNew === true) return { text: "Neu", className: "new" };
-  return { text: "Bekannt", className: "known" };
+  if (item.discoveryNew === true) return { text: t("loot.discoveryNew", "Neu"), className: "new" };
+  return { text: t("loot.discoveryKnown", "Bekannt"), className: "known" };
 }
 
 function compareLoot(item, current) {
@@ -118,25 +118,25 @@ function compareLoot(item, current) {
   const critChanceDiff = (item.critChance || 0) - (current.critChance || 0);
   const critDamageDiff = (item.critDamage || 0) - (current.critDamage || 0);
   const entries = [
-    compareEntry("Angriff", damageDiff, ""),
-    compareEntry("Verteidigung", defenseDiff, ""),
-    comparePercentEntry("Crit-Chance", critChanceDiff),
-    comparePercentEntry("Crit-Schaden", critDamageDiff),
+    compareEntry(t("stat.damage", "Angriff"), damageDiff, ""),
+    compareEntry(t("stat.defense", "Verteidigung"), defenseDiff, ""),
+    comparePercentEntry(t("stat.critChance", "Crit-Chance"), critChanceDiff),
+    comparePercentEntry(t("stat.critDamage", "Crit-Schaden"), critDamageDiff),
   ].filter((entry) => entry.diff !== 0);
   if (!entries.length) {
-    entries.push({ text: "Keine Stat-Änderung", className: "compare-even", diff: 0 });
+    entries.push({ text: t("loot.noStatChange", "Keine Stat-Änderung"), className: "compare-even", diff: 0 });
   }
 
   return {
-    powerText: compareText("Gesamt", powerDiff, " Kraft"),
+    powerText: compareText(t("main.total", "Gesamt"), powerDiff, " Kraft"),
     powerClass: compareClass(powerDiff),
-    damageText: compareText("Angriff", damageDiff, ""),
+    damageText: compareText(t("stat.damage", "Angriff"), damageDiff, ""),
     damageClass: compareClass(damageDiff),
-    defenseText: compareText("Verteidigung", defenseDiff, ""),
+    defenseText: compareText(t("stat.defense", "Verteidigung"), defenseDiff, ""),
     defenseClass: compareClass(defenseDiff),
-    critChanceText: comparePercentText("Crit-Chance", critChanceDiff),
+    critChanceText: comparePercentText(t("stat.critChance", "Crit-Chance"), critChanceDiff),
     critChanceClass: compareClass(critChanceDiff),
-    critDamageText: comparePercentText("Crit-Schaden", critDamageDiff),
+    critDamageText: comparePercentText(t("stat.critDamage", "Crit-Schaden"), critDamageDiff),
     critDamageClass: compareClass(critDamageDiff),
     entries,
   };
@@ -159,15 +159,15 @@ function comparePercentEntry(label, diff) {
 }
 
 function compareText(label, diff, suffix) {
-  if (diff > 0) return `${label}: besser (+${diff.toFixed(diff % 1 ? 1 : 0)}${suffix})`;
-  if (diff < 0) return `${label}: schlechter (${diff.toFixed(diff % 1 ? 1 : 0)}${suffix})`;
-  return `${label}: gleich`;
+  if (diff > 0) return `${label}: ${t("compare.better", "besser")} (+${diff.toFixed(diff % 1 ? 1 : 0)}${suffix})`;
+  if (diff < 0) return `${label}: ${t("compare.worse", "schlechter")} (${diff.toFixed(diff % 1 ? 1 : 0)}${suffix})`;
+  return `${label}: ${t("compare.equal", "gleich")}`;
 }
 
 function comparePercentText(label, diff) {
-  if (diff > 0) return `${label}: besser (+${formatPercent(diff)})`;
-  if (diff < 0) return `${label}: schlechter (${formatPercent(diff)})`;
-  return `${label}: gleich`;
+  if (diff > 0) return `${label}: ${t("compare.better", "besser")} (+${formatPercent(diff)})`;
+  if (diff < 0) return `${label}: ${t("compare.worse", "schlechter")} (${formatPercent(diff)})`;
+  return `${label}: ${t("compare.equal", "gleich")}`;
 }
 
 function compareClass(diff) {

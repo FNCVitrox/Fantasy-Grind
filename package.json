@@ -1,5 +1,5 @@
 {
   "scripts": {
-    "test": "node --check scripts/data.js && node --check scripts/save-system.js && node --check scripts/core.js && node --check scripts/render.js && node --check scripts/render-loot.js && node --check scripts/events.js && node tests/smoke.js"
+    "test": "node --check scripts/data.js && node --check scripts/i18n.js && node --check scripts/save-system.js && node --check scripts/core.js && node --check scripts/render.js && node --check scripts/render-loot.js && node --check scripts/events.js && node tests/smoke.js"
   }
 }
