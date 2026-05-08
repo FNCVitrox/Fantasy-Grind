@@ -99,6 +99,8 @@ assert.strictEqual(typeof context.defaultState, "function");
 assert.strictEqual(typeof context.renderBestiaryItemDetail, "function");
 assert.strictEqual(context.defaultState().level, 1);
 assert.strictEqual(context.defaultState().build, "damage");
+assert.strictEqual(vm.runInContext("zoneRangeText('meadow')", context), "Level 1-6");
+assert.strictEqual(vm.runInContext("zoneRangeText('ironhold')", context), "Level 13-18");
 assert.strictEqual(vm.runInContext("state = defaultState(); state.language = 'en'; t('nav.smith')", context), "Smith");
 assert(vm.runInContext("state = defaultState(); state.language = 'en'; renderBestiaryList().includes('Collection: 0/')", context), "English mode should translate bestiary collection labels");
 assert(vm.runInContext("state = defaultState(); state.language = 'en'; itemStatText({ damage: 2, defense: 0, critChance: 0.01, critDamage: 0.02 }).includes('Attack +2')", context), "English mode should translate item stat labels");

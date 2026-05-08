@@ -481,11 +481,16 @@ function zoneDisplayName(zoneId) {
 function zoneRangeText(zoneId) {
     const zone = zones[zoneId];
     if (!zone) return "";
-    const range = zone.levelRange || [zone.level || 1, zone.level || 1];
+    const range = zone.levelRange || parseLevelRange(zone.range) || [zone.level || 1, zone.level || 1];
     return t("zone.levelRange", zone.range || `Level ${range[0]}-${range[1]}`, {
         min: range[0],
         max: range[1]
     });
+}
+
+function parseLevelRange(rangeText = "") {
+    const match = String(rangeText).match(/(\d+)\D+(\d+)/);
+    return match ? [Number(match[1]), Number(match[2])] : null;
 }
 
 function riskLabel(risk) {
