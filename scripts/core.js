@@ -1,3 +1,6 @@
+// ============================================================================
+// STATE & GLOBALS
+// ============================================================================
 let state;
 let selectedZone = "meadow";
 let selectedEnemy = zones[selectedZone]?.enemies?.[0] || "wolf";
@@ -16,24 +19,38 @@ let logExpanded = false;
 let smithView = "home";
 let combatWatchdog = 0;
 let bestiarySearchFrame = 0;
+
+// ============================================================================
+// CACHES
+// ============================================================================
 const tooltipItemCache = new Map();
 const tooltipHtmlCache = new Map();
 const bestiaryLootCache = new Map();
 const bestiaryTemplateCache = new Map();
 const renderCache = {};
-
 const elementCache = new Map();
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
 const $ = (id) => {
   if (!elementCache.has(id)) {
     elementCache.set(id, document.getElementById(id));
   }
   return elementCache.get(id);
 };
+
 const random = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 const balanceVersion = 4;
 const eliteEncounterChance = 0.06;
 const maxBestiaryLootPerEnemy = 20;
 const generatedLootPoolSize = maxBestiaryLootPerEnemy;
+
 const renownRanks = [
   { threshold: 0, name: "Fremder", benefit: "Noch kein Vorteil" },
   { threshold: 5, name: "Bekannter Kämpfer", benefit: "Reparaturen -10%" },
@@ -43,6 +60,7 @@ const renownRanks = [
   { threshold: 30, name: "Eliteschrecken", benefit: "Elite-Gegner und Zerlegen geben bessere Chancen" },
   { threshold: 40, name: "Meister der Grauwacht", benefit: "Seltene Aufträge erscheinen öfter" },
 ];
+
 const smithMasteryRanks = [
   {
     id: "emberAnvil",
@@ -79,6 +97,7 @@ const smithMasteryRanks = [
     reward: "Ausrüstung kann bis +20 verbessert werden. Reparaturen dauerhaft zusätzlich -10%.",
   },
 ];
+
 const enchantMasteryRanks = [
   {
     id: "unstableRunes",
@@ -117,6 +136,7 @@ const enchantMasteryRanks = [
     reward: "Arkane Meisterschaft freigeschaltet: extrem seltene instabile Verzauberungen können erscheinen.",
   },
 ];
+
 const upgradeCostSteps = {
   1: { gold: 28, basis: 3 },
   2: { gold: 42, basis: 4 },
@@ -139,18 +159,67 @@ const upgradeCostSteps = {
   19: { gold: 1090, basis: 13, boss: 3 },
   20: { gold: 1250, basis: 15, boss: 4 },
 };
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// ============================================================================
+// STATE INITIALIZATION & LOADING
+// ============================================================================
 state = load();
-// Sofort sensible Defaults setzen, damit spätere Zugriffe nicht auf undefined fallen.
-// Das verhindert, dass Zugriffe wie state.rareQuests[...] eine Exception werfen.
-state.rareQuests = state.rareQuests || {};
-state.activeQuests = Array.isArray(state.activeQuests) ? state.activeQuests : [];
-state.questBoard = Array.isArray(state.questBoard) ? state.questBoard : ["wolves", "rust", "boars"];
-state.discoveredLoot = state.discoveredLoot || {};
-state.inventory = Array.isArray(state.inventory) ? state.inventory : [];
-state.completedQuests = Array.isArray(state.completedQuests) ? state.completedQuests : [];
+initializeState();
 
+function initializeState() {
+  // Set sensible defaults to prevent undefined access errors
+  state.rareQuests = state.rareQuests || {};
+  state.activeQuests = Array.isArray(state.activeQuests) ? state.activeQuests : [];
+  state.questBoard = Array.isArray(state.questBoard) ? state.questBoard : ["wolves", "rust", "boars"];
+  state.discoveredLoot = state.discoveredLoot || {};
+  state.inventory = Array.isArray(state.inventory) ? state.inventory : [];
+  state.completedQuests = Array.isArray(state.completedQuests) ? state.completedQuests : [];
+  
+  // Initialize UI state
+  selectedZone = state.ui?.selectedZone || "meadow";
+  selectedEnemy = state.ui?.selectedEnemy || zones[selectedZone]?.enemies?.[0] || "wolf";
+  selectedBestiaryZone = state.ui?.selectedBestiaryZone || selectedZone;
+  selectedBestiaryEnemy = state.ui?.selectedBestiaryEnemy || selectedEnemy;
+}
+
+// ============================================================================
+// MATERIAL MANAGEMENT
+// ============================================================================
+function emptyMaterials() {
+  return Object.fromEntries(Object.keys(materialLabel).map((id) => [id, 0]));
+}
+
+function normalizeMaterials(materials = {}) {
+  const next = { ...emptyMaterials(), ...materials };
+  const legacyMap = {
+    hide: "leather",
+    fang: "sinew",
+    iron: "scrap",
+  };
+
+  Object.entries(legacyMap).forEach(([oldId, newId]) => {
+    if (!next[oldId]) return;
+    next[newId] = (next[newId] || 0) + next[oldId];
+    delete next[oldId];
+  });
+
+  Object.keys(next).forEach((id) => {
+    if (!materialLabel[id]) delete next[id];
+  });
+
+  return { ...emptyMaterials(), ...next };
+}
+
+function addMaterials(target, source) {
+  Object.entries(source).forEach(([id, amount]) => {
+    target[id] = (target[id] || 0) + amount;
+  });
+  return target;
+}
+
+// ============================================================================
+// STATE NORMALIZATION
+// ============================================================================
 function defaultState() {
   return {
     level: 1,
@@ -189,15 +258,7 @@ function defaultState() {
     activeQuests: [],
     completedQuests: [],
     rareQuests: {},
-    combatStats: {
-      eliteKills: 0,
-      bossKills: 0,
-      wins: 0,
-      itemsUpgraded: 0,
-      itemsSalvaged: 0,
-      itemsEnchanted: 0,
-      rareEnchantments: 0,
-    },
+    combatStats: createEmptyCombatStats(),
     achievements: { claimed: [], notified: [] },
     smithMastery: { limit: 5, active: null, completed: [], progress: {}, discovered: false },
     winsSinceQuestRefresh: 0,
@@ -215,42 +276,16 @@ function defaultState() {
   };
 }
 
-function emptyMaterials() {
-  return Object.fromEntries(Object.keys(materialLabel).map((id) => [id, 0]));
-}
-
-function applyBalanceMigration(loaded) {
-  if ((loaded.balanceVersion || 1) >= balanceVersion) return;
-  Object.values(loaded.customItems || {}).forEach(rebalanceSavedItem);
-  (loaded.pendingLoot || []).forEach(rebalanceSavedItem);
-  (loaded.lootQueue || []).flat().forEach(rebalanceSavedItem);
-  Object.values(loaded.discoveredLoot || {}).forEach((drops) => Object.values(drops || {}).forEach(rebalanceSavedItem));
-  loaded.balanceVersion = balanceVersion;
-  loaded.log = [
-    "Balance überarbeitet: Item-Stats folgen klareren Rollen pro Ausrüstungsslot.",
-    ...(loaded.log || []),
-  ].slice(0, 40);
-}
-
-function normalizeMaterials(materials = {}) {
-  const next = { ...emptyMaterials(), ...materials };
-  const legacyMap = {
-    hide: "leather",
-    fang: "sinew",
-    iron: "scrap",
+function createEmptyCombatStats() {
+  return {
+    eliteKills: 0,
+    bossKills: 0,
+    wins: 0,
+    itemsUpgraded: 0,
+    itemsSalvaged: 0,
+    itemsEnchanted: 0,
+    rareEnchantments: 0,
   };
-
-  Object.entries(legacyMap).forEach(([oldId, newId]) => {
-    if (!next[oldId]) return;
-    next[newId] = (next[newId] || 0) + next[oldId];
-    delete next[oldId];
-  });
-
-  Object.keys(next).forEach((id) => {
-    if (!materialLabel[id]) delete next[id];
-  });
-
-  return { ...emptyMaterials(), ...next };
 }
 
 function normalizeCombatStats(stats = {}) {
@@ -280,66 +315,6 @@ function normalizeAchievements(achievements = {}) {
   };
 }
 
-function normalizeSmithMastery(mastery = {}, sourceState = state) {
-  const savedLimit = Math.max(5, Math.min(20, mastery.limit || 5));
-  const completed = Array.isArray(mastery.completed)
-    ? mastery.completed.filter((id) => smithMasteryRanks.some((rank) => rank.id === id))
-    : [];
-  smithMasteryRanks
-    .filter((rank) => rank.limit <= savedLimit && savedLimit > 5)
-    .forEach((rank) => completed.push(rank.id));
-  const highestCompletedLimit = smithMasteryRanks
-    .filter((rank) => completed.includes(rank.id))
-    .reduce((limit, rank) => Math.max(limit, rank.limit), 5);
-  const limit = Math.max(savedLimit, highestCompletedLimit);
-  const active = smithMasteryRanks.some((rank) => rank.id === mastery.active) && !completed.includes(mastery.active)
-    ? mastery.active
-    : null;
-  return {
-    limit: Math.max(limit, highestCompletedLimit),
-    active,
-    completed: [...new Set(completed)],
-    progress: normalizeSmithMasteryProgress(mastery.progress),
-    discovered: Boolean(mastery.discovered || active || completed.length || hasSavedItemAtSmithLimit(mastery.limit || 5, sourceState)),
-  };
-}
-
-function normalizeEnchanting(enchanting = {}) {
-  const completed = Array.isArray(enchanting.completed)
-    ? enchanting.completed.filter((id) => enchantMasteryRanks.some((rank) => rank.id === id))
-    : [];
-  const active = enchantMasteryRanks.some((rank) => rank.id === enchanting.active) && !completed.includes(enchanting.active)
-    ? enchanting.active
-    : null;
-  return {
-    unlockedSeen: Boolean(enchanting.unlockedSeen),
-    active,
-    completed: [...new Set(completed)],
-    progress: normalizeEnchantMasteryProgress(enchanting.progress),
-    discovered: Boolean(enchanting.discovered || active || completed.length),
-  };
-}
-
-function normalizeEnchantMasteryProgress(progress = {}) {
-  return enchantMasteryRanks.reduce((result, rank) => {
-    const source = progress[rank.id] || {};
-    result[rank.id] = {
-      eliteKills: Math.max(0, Math.floor(source.eliteKills || 0)),
-      bossKills: Math.max(0, Math.floor(source.bossKills || 0)),
-    };
-    return result;
-  }, {});
-}
-
-selectedZone = state.ui?.selectedZone || "meadow";
-selectedEnemy = state.ui?.selectedEnemy || zones[selectedZone]?.enemies?.[0] || "wolf";
-selectedBestiaryZone = state.ui?.selectedBestiaryZone || selectedZone;
-selectedBestiaryEnemy = state.ui?.selectedBestiaryEnemy || selectedEnemy;
-
-function emptyMaterials() {
-  return Object.fromEntries(Object.keys(materialLabel).map((id) => [id, 0]));
-}
-
 function applyBalanceMigration(loaded) {
   if ((loaded.balanceVersion || 1) >= balanceVersion) return;
   Object.values(loaded.customItems || {}).forEach(rebalanceSavedItem);
@@ -353,54 +328,6 @@ function applyBalanceMigration(loaded) {
   ].slice(0, 40);
 }
 
-function normalizeMaterials(materials = {}) {
-  const next = { ...emptyMaterials(), ...materials };
-  const legacyMap = {
-    hide: "leather",
-    fang: "sinew",
-    iron: "scrap",
-  };
-
-  Object.entries(legacyMap).forEach(([oldId, newId]) => {
-    if (!next[oldId]) return;
-    next[newId] = (next[newId] || 0) + next[oldId];
-    delete next[oldId];
-  });
-
-  Object.keys(next).forEach((id) => {
-    if (!materialLabel[id]) delete next[id];
-  });
-
-  return { ...emptyMaterials(), ...next };
-}
-
-function normalizeCombatStats(stats = {}) {
-  return {
-    eliteKills: Math.max(0, Math.floor(stats.eliteKills || 0)),
-    bossKills: Math.max(0, Math.floor(stats.bossKills || 0)),
-    wins: Math.max(0, Math.floor(stats.wins || 0)),
-    itemsUpgraded: Math.max(0, Math.floor(stats.itemsUpgraded || 0)),
-    itemsSalvaged: Math.max(0, Math.floor(stats.itemsSalvaged || 0)),
-    itemsEnchanted: Math.max(0, Math.floor(stats.itemsEnchanted || 0)),
-    rareEnchantments: Math.max(0, Math.floor(stats.rareEnchantments || 0)),
-  };
-}
-
-function normalizeAchievements(achievements = {}) {
-  const catalogReady = Array.isArray(achievementCatalog) && achievementCatalog.length > 0;
-  const ids = new Set(achievementCatalog.map((achievement) => achievement.id));
-  const claimed = Array.isArray(achievements.claimed)
-    ? achievements.claimed.filter((id) => !catalogReady || ids.has(id))
-    : [];
-  const notified = Array.isArray(achievements.notified)
-    ? achievements.notified.filter((id) => !catalogReady || ids.has(id))
-    : [];
-  return {
-    claimed: [...new Set(claimed)],
-    notified: [...new Set(notified)],
-  };
-}
-
 function normalizeSmithMastery(mastery = {}, sourceState = state) {
   const savedLimit = Math.max(5, Math.min(20, mastery.limit || 5));
   const completed = Array.isArray(mastery.completed)
@@ -420,7 +347,7 @@ function normalizeSmithMastery(mastery = {}, sourceState = state) {
     limit: Math.max(limit, highestCompletedLimit),
     active,
     completed: [...new Set(completed)],
-    progress: normalizeSmithMasteryProgress(mastery.progress),
+    progress: normalizeMasteryProgress(mastery.progress, smithMasteryRanks),
     discovered: Boolean(mastery.discovered || active || completed.length || hasSavedItemAtSmithLimit(mastery.limit || 5, sourceState)),
   };
 }
@@ -436,13 +363,13 @@ function normalizeEnchanting(enchanting = {}) {
     unlockedSeen: Boolean(enchanting.unlockedSeen),
     active,
     completed: [...new Set(completed)],
-    progress: normalizeEnchantMasteryProgress(enchanting.progress),
+    progress: normalizeMasteryProgress(enchanting.progress, enchantMasteryRanks),
     discovered: Boolean(enchanting.discovered || active || completed.length),
   };
 }
 
-function normalizeEnchantMasteryProgress(progress = {}) {
-  return enchantMasteryRanks.reduce((result, rank) => {
+function normalizeMasteryProgress(progress = {}, masteryRanks) {
+  return masteryRanks.reduce((result, rank) => {
     const source = progress[rank.id] || {};
     result[rank.id] = {
       eliteKills: Math.max(0, Math.floor(source.eliteKills || 0)),
@@ -452,125 +379,9 @@ function normalizeEnchantMasteryProgress(progress = {}) {
   }, {});
 }
 
-function normalizeSmithMasteryProgress(progress = {}) {
-  return smithMasteryRanks.reduce((result, rank) => {
-    const source = progress[rank.id] || {};
-    result[rank.id] = {
-      eliteKills: Math.max(0, Math.floor(source.eliteKills || 0)),
-      bossKills: Math.max(0, Math.floor(source.bossKills || 0)),
-    };
-    return result;
-  }, {});
-}
-
-function hasSavedItemAtSmithLimit(limit = 5, sourceState = state) {
-  return equipmentSlots.some((slot) => {
-    const itemId = sourceState?.equipment?.[slot];
-    const item = sourceState?.customItems?.[itemId] || items[itemId];
-    return item && (item.upgrade || 0) >= limit;
-  });
-}
-
-function rebalanceSavedItem(item) {
-  if (!item || !item.slot || !item.quality) return item;
-  const upgrade = item.upgrade || Number(item.name?.match(/\+(\d+)$/)?.[1] || 0);
-  const stats = normalizeRolledItemStats(item.slot, item.quality, {
-    damage: item.damage || 0,
-    defense: item.defense || 0,
-  }, upgrade);
-  item.damage = stats.damage;
-  item.defense = stats.defense;
-  item.critChance = item.critChance || 0;
-  item.critDamage = item.critDamage || 0;
-  normalizeItemStatsForSlot(item);
-  return item;
-}
-
-function itemSlotRules(slot) {
-  return {
-    weapon: { damage: true, defense: false, critChance: true, critDamage: true },
-    offhand: { damage: true, defense: true, critChance: false, critDamage: false },
-    chest: { damage: false, defense: true, critChance: false, critDamage: false },
-    pants: { damage: false, defense: true, critChance: false, critDamage: false },
-    boots: { damage: false, defense: true, critChance: false, critDamage: false },
-    necklace: { damage: true, defense: false, critChance: true, critDamage: true },
-    ring: { damage: true, defense: false, critChance: true, critDamage: true },
-  }[slot] || { damage: true, defense: false, critChance: true, critDamage: true };
-}
-
-function normalizeItemStatsForSlot(item) {
-  if (!item) return item;
-  const rules = itemSlotRules(item.slot);
-  item.damage = rules.damage ? Math.max(0, Math.floor(item.damage || 0)) : 0;
-  item.defense = rules.defense ? Math.max(0, Math.floor(item.defense || 0)) : 0;
-  item.critChance = rules.critChance ? normalizePercentStep(item.critChance || 0) : 0;
-  item.critDamage = rules.critDamage ? normalizePercentStep(item.critDamage || 0) : 0;
-  return item;
-}
-
-function normalizePercentStep(value) {
-  return Math.max(0, Math.round((value || 0) * 100) / 100);
-}
-
-function itemStatBounds(slot, quality, upgrade = 0) {
-  const qualityIndex = { common: 0, rare: 1, epic: 2, legendary: 3 }[quality] || 0;
-  const caps = itemStatCap(slot, quality, upgrade);
-  const floorRatio = [0, 0.5, 0.72, 0.88][qualityIndex];
-  return {
-    minDamage: Math.floor(caps.damage * floorRatio),
-    minDefense: Math.floor(caps.defense * floorRatio),
-    maxDamage: caps.damage,
-    maxDefense: caps.defense,
-  };
-}
-
-function normalizeRolledItemStats(slot, quality, stats, upgrade = 0) {
-  const bounds = itemStatBounds(slot, quality, upgrade);
-  const damage = Math.max(bounds.minDamage, Math.min(stats.damage || 0, bounds.maxDamage));
-  const defense = Math.max(bounds.minDefense, Math.min(stats.defense || 0, bounds.maxDefense));
-  return { damage, defense };
-}
-
-function itemStatCap(slot, quality, upgrade = 0) {
-  const qualityIndex = { common: 0, rare: 1, epic: 2, legendary: 3 }[quality] || 0;
-  const caps = {
-    weapon: { damage: [8, 16, 29, 46], defense: [0, 0, 0, 0] },
-    offhand: { damage: [4, 8, 14, 22], defense: [7, 17, 31, 47] },
-    chest: { damage: [0, 0, 0, 0], defense: [11, 26, 50, 76] },
-    pants: { damage: [0, 0, 0, 0], defense: [8, 18, 35, 53] },
-    boots: { damage: [0, 0, 0, 0], defense: [7, 16, 30, 45] },
-    necklace: { damage: [5, 11, 20, 30], defense: [0, 0, 0, 0] },
-    ring: { damage: [4, 10, 18, 28], defense: [0, 0, 0, 0] },
-  };
-  const slotCaps = caps[slot] || caps.ring;
-  const rules = itemSlotRules(slot);
-  return {
-    damage: rules.damage ? slotCaps.damage[qualityIndex] + upgrade * (slot === "weapon" ? 3 : 2) : 0,
-    defense: rules.defense ? slotCaps.defense[qualityIndex] + upgrade * (["chest", "pants", "boots", "offhand"].includes(slot) ? 4 : 0) : 0,
-  };
-}
-
-function migrateEquipmentSlots(loaded) {
-  const defaults = defaultState().equipment;
-  const current = loaded.equipment || {};
-  if (current.armor && !current.chest) {
-    current.chest = current.armor;
-    delete current.armor;
-  }
-  loaded.equipment = { ...defaults, ...current };
-  Object.keys(loaded.equipment).forEach((slot) => {
-    if (!equipmentSlots.includes(slot)) delete loaded.equipment[slot];
-  });
-    Object.values(loaded.customItems || {}).forEach(normalizeItemSlot);
-    (loaded.pendingLoot || []).forEach(normalizeItemSlot);
-    (loaded.lootQueue || []).flat().forEach(normalizeItemSlot);
-    Object.values(loaded.discoveredLoot || {}).forEach((drops) => Object.values(drops || {}).forEach(normalizeItemSlot));
-    Object.values(loaded.rareQuests || {}).forEach((quest) => {
-      if (quest.rarity === "very-rare") quest.rarity = "epic";
-      if (quest.rare && quest.rarity === "epic") quest.rarity = "legendary";
-    });
-  }
-
+// ============================================================================
+// ITEM NORMALIZATION
+// ============================================================================
 function normalizeItemSlot(item) {
   if (!item) return item;
   if (item?.slot === "armor") item.slot = "chest";
@@ -603,6 +414,35 @@ function normalizeItemQuality(item) {
   if (item.quality === "epic" && (legendaryNames.has(baseName) || ["ashenGreatsword", "crownShard"].includes(item.id))) {
     item.quality = "legendary";
   }
+  return item;
+}
+
+function normalizeItemStatsForSlot(item) {
+  if (!item) return item;
+  const rules = itemSlotRules(item.slot);
+  item.damage = rules.damage ? Math.max(0, Math.floor(item.damage || 0)) : 0;
+  item.defense = rules.defense ? Math.max(0, Math.floor(item.defense || 0)) : 0;
+  item.critChance = rules.critChance ? normalizePercentStep(item.critChance || 0) : 0;
+  item.critDamage = rules.critDamage ? normalizePercentStep(item.critDamage || 0) : 0;
+  return item;
+}
+
+function normalizePercentStep(value) {
+  return Math.max(0, Math.round((value || 0) * 100) / 100);
+}
+
+function rebalanceSavedItem(item) {
+  if (!item || !item.slot || !item.quality) return item;
+  const upgrade = item.upgrade || Number(item.name?.match(/\+(\d+)$/)?.[1] || 0);
+  const stats = normalizeRolledItemStats(item.slot, item.quality, {
+    damage: item.damage || 0,
+    defense: item.defense || 0,
+  }, upgrade);
+  item.damage = stats.damage;
+  item.defense = stats.defense;
+  item.critChance = item.critChance || 0;
+  item.critDamage = item.critDamage || 0;
+  normalizeItemStatsForSlot(item);
   return item;
 }
 
@@ -649,11 +489,88 @@ function normalizeSavedText(value) {
   return value;
 }
 
+function migrateEquipmentSlots(loaded) {
+  const defaults = defaultState().equipment;
+  const current = loaded.equipment || {};
+  if (current.armor && !current.chest) {
+    current.chest = current.armor;
+    delete current.armor;
+  }
+  loaded.equipment = { ...defaults, ...current };
+  Object.keys(loaded.equipment).forEach((slot) => {
+    if (!equipmentSlots.includes(slot)) delete loaded.equipment[slot];
+  });
+  Object.values(loaded.customItems || {}).forEach(normalizeItemSlot);
+  (loaded.pendingLoot || []).forEach(normalizeItemSlot);
+  (loaded.lootQueue || []).flat().forEach(normalizeItemSlot);
+  Object.values(loaded.discoveredLoot || {}).forEach((drops) => Object.values(drops || {}).forEach(normalizeItemSlot));
+  Object.values(loaded.rareQuests || {}).forEach((quest) => {
+    if (quest.rarity === "very-rare") quest.rarity = "epic";
+    if (quest.rare && quest.rarity === "epic") quest.rarity = "legendary";
+  });
+}
+
+// ============================================================================
+// ITEM SLOT RULES & STATS
+// ============================================================================
+function itemSlotRules(slot) {
+  return {
+    weapon: { damage: true, defense: false, critChance: true, critDamage: true },
+    offhand: { damage: true, defense: true, critChance: false, critDamage: false },
+    chest: { damage: false, defense: true, critChance: false, critDamage: false },
+    pants: { damage: false, defense: true, critChance: false, critDamage: false },
+    boots: { damage: false, defense: true, critChance: false, critDamage: false },
+    necklace: { damage: true, defense: false, critChance: true, critDamage: true },
+    ring: { damage: true, defense: false, critChance: true, critDamage: true },
+  }[slot] || { damage: true, defense: false, critChance: true, critDamage: true };
+}
+
+function itemStatBounds(slot, quality, upgrade = 0) {
+  const qualityIndex = { common: 0, rare: 1, epic: 2, legendary: 3 }[quality] || 0;
+  const caps = itemStatCap(slot, quality, upgrade);
+  const floorRatio = [0, 0.5, 0.72, 0.88][qualityIndex];
+  return {
+    minDamage: Math.floor(caps.damage * floorRatio),
+    minDefense: Math.floor(caps.defense * floorRatio),
+    maxDamage: caps.damage,
+    maxDefense: caps.defense,
+  };
+}
+
+function normalizeRolledItemStats(slot, quality, stats, upgrade = 0) {
+  const bounds = itemStatBounds(slot, quality, upgrade);
+  const damage = Math.max(bounds.minDamage, Math.min(stats.damage || 0, bounds.maxDamage));
+  const defense = Math.max(bounds.minDefense, Math.min(stats.defense || 0, bounds.maxDefense));
+  return { damage, defense };
+}
+
+function itemStatCap(slot, quality, upgrade = 0) {
+  const qualityIndex = { common: 0, rare: 1, epic: 2, legendary: 3 }[quality] || 0;
+  const caps = {
+    weapon: { damage: [8, 16, 29, 46], defense: [0, 0, 0, 0] },
+    offhand: { damage: [4, 8, 14, 22], defense: [7, 17, 31, 47] },
+    chest: { damage: [0, 0, 0, 0], defense: [11, 26, 50, 76] },
+    pants: { damage: [0, 0, 0, 0], defense: [8, 18, 35, 53] },
+    boots: { damage: [0, 0, 0, 0], defense: [7, 16, 30, 45] },
+    necklace: { damage: [5, 11, 20, 30], defense: [0, 0, 0, 0] },
+    ring: { damage: [4, 10, 18, 28], defense: [0, 0, 0, 0] },
+  };
+  const slotCaps = caps[slot] || caps.ring;
+  const rules = itemSlotRules(slot);
+  return {
+    damage: rules.damage ? slotCaps.damage[qualityIndex] + upgrade * (slot === "weapon" ? 3 : 2) : 0,
+    defense: rules.defense ? slotCaps.defense[qualityIndex] + upgrade * (["chest", "pants", "boots", "offhand"].includes(slot) ? 4 : 0) : 0,
+  };
+}
+
 function getItem(itemId) {
   const item = (state.customItems || {})[itemId] || items[itemId];
   return normalizeItemSlot(item);
 }
 
+// ============================================================================
+// ITEM RETRIEVAL & INVENTORY
+// ============================================================================
 function totalStats() {
   let itemDamage = 0;
   let itemDefense = 0;
@@ -682,209 +599,6 @@ function totalStats() {
     critChance: Math.min(0.65, 0.05 + itemCritChance + enchantStats.critChance + (build.critChanceBonus || 0)),
     critDamage: Math.min(3.2, 1.5 + itemCritDamage + enchantStats.critDamage + (build.critDamageBonus || 0)),
   };
-}
-
-function enchantmentsUnlocked() {
-  return state.level >= 8;
-}
-
-function maxEnchantSlotsForLevel(level = state.level) {
-  if (level < 8) return 0;
-  return currentEnchantSlotLimit();
-}
-
-function currentEnchantSlotLimit() {
-  if (!enchantmentsUnlocked()) return 0;
-  const completed = state.enchanting?.completed || [];
-  if (completed.includes("forbiddenLibrary")) return 3;
-  if (completed.includes("unstableRunes")) return 2;
-  return 1;
-}
-
-function arcaneMasteryUnlocked() {
-  return Boolean(state.enchanting?.completed?.includes("voidRitual"));
-}
-
-function allowedEnchantRarities() {
-  if (arcaneMasteryUnlocked()) return ["common", "rare", "epic", "arcane"];
-  if (state.enchanting?.completed?.includes("forbiddenLibrary")) return ["common", "rare", "epic"];
-  if (state.enchanting?.completed?.includes("unstableRunes")) return ["common", "rare"];
-  return ["common"];
-}
-
-function activeItemEnchantments(item) {
-  if (!item?.enchantments?.length) return [];
-  return item.enchantments
-    .map((id) => enchantmentCatalog[id])
-    .filter((enchantment) => enchantment && enchantment.slots.includes(item.slot));
-}
-
-function equippedEnchantmentSummary() {
-  const summary = equipmentSlots
-    .map((slot) => getItem(state.equipment[slot]))
-    .flatMap(activeItemEnchantments)
-    .reduce((summary, enchantment) => addEnchantmentStats(summary, enchantment.stats), emptyEnchantmentSummary());
-  return clampEnchantmentSummary(summary);
-}
-
-function emptyEnchantmentSummary() {
-  return {
-    damage: 0,
-    defense: 0,
-    maxHp: 0,
-    critChance: 0,
-    critDamage: 0,
-    bossDamage: 0,
-    damageReduction: 0,
-    lowHpShield: 0,
-    goldBonus: 0,
-    xpBonus: 0,
-    lootBonus: 0,
-    durabilityReduction: 0,
-  };
-}
-
-function addEnchantmentStats(summary, stats = {}) {
-  Object.keys(summary).forEach((key) => {
-    summary[key] += stats[key] || 0;
-  });
-  return summary;
-}
-
-function clampEnchantmentSummary(summary) {
-  const limits = {
-    damage: [-10, 35],
-    defense: [-12, 45],
-    maxHp: [-80, 260],
-    critChance: [0, 0.18],
-    critDamage: [-0.18, 0.45],
-    bossDamage: [0, 0.24],
-    damageReduction: [0, 0.24],
-    lowHpShield: [0, 0.25],
-    goldBonus: [0, 0.35],
-    xpBonus: [0, 0.35],
-    lootBonus: [0, 0.24],
-    durabilityReduction: [0, 0.35],
-  };
-  Object.entries(limits).forEach(([key, [min, max]]) => {
-    summary[key] = Math.max(min, Math.min(max, summary[key] || 0));
-  });
-  return summary;
-}
-
-function itemEffect(item) {
-  const effect = itemEffectCatalog[item?.effect];
-  if (!effect) return null;
-  if (!effect.slots?.includes(item.slot)) return null;
-  return { id: item.effect, ...effect };
-}
-
-function equippedItemEffects() {
-  return equipmentSlots
-    .map((slot) => getItem(state.equipment[slot]))
-    .map(itemEffect)
-    .filter(Boolean);
-}
-
-function itemEffectSummary(effects = equippedItemEffects()) {
-  return effects.reduce((summary, effect) => {
-    summary.bleedChance += effect.bleedChance || 0;
-    summary.poisonChance += effect.poisonChance || 0;
-    summary.firstHitReduction = Math.max(summary.firstHitReduction, effect.firstHitReduction || 0);
-    summary.thornsRatio = Math.min(0.18, summary.thornsRatio + (effect.thornsRatio || 0));
-    summary.durabilityReduction = Math.min(0.45, summary.durabilityReduction + (effect.durabilityReduction || 0));
-    summary.goldBonus = Math.min(0.25, summary.goldBonus + (effect.goldBonus || 0));
-    summary.eliteCritChance += effect.eliteCritChance || 0;
-    summary.eliteDamageBonus = Math.min(0.25, summary.eliteDamageBonus + (effect.eliteDamageBonus || 0));
-    summary.postCombatHeal += effect.postCombatHeal || 0;
-    summary.critHealRatio = Math.min(0.08, summary.critHealRatio + (effect.critHealRatio || 0));
-    summary.enemyCritReduction = Math.min(0.08, summary.enemyCritReduction + (effect.enemyCritReduction || 0));
-    summary.eliteArmorIgnore = Math.max(summary.eliteArmorIgnore, effect.eliteArmorIgnore || 0);
-    summary.firstHitWeaken = Math.min(summary.firstHitWeaken, effect.firstHitWeaken || 1);
-    summary.critBurn = summary.critBurn || Boolean(effect.critBurn);
-    return summary;
-  }, {
-    bleedChance: 0,
-    poisonChance: 0,
-    firstHitReduction: 0,
-    thornsRatio: 0,
-    durabilityReduction: 0,
-    goldBonus: 0,
-    eliteCritChance: 0,
-    eliteDamageBonus: 0,
-    postCombatHeal: 0,
-    critHealRatio: 0,
-    enemyCritReduction: 0,
-    eliteArmorIgnore: 0,
-    firstHitWeaken: 1,
-    critBurn: false,
-  });
-}
-
-function combatStatsWithItemEffects(stats, enemy, summary = itemEffectSummary()) {
-  if (!enemy?.elite && !enemy?.boss) return stats;
-  return {
-    ...stats,
-    critChance: Math.min(0.75, stats.critChance + summary.eliteCritChance),
-  };
-}
-
-function activeClass() {
-  return classCatalog[state.characterClass] || classCatalog.warrior;
-}
-
-function activeBuild() {
-  return buildCatalog[state.build] || buildCatalog.damage;
-}
-
-function knownClassAbilities() {
-  return activeBuildAbilityIds().map((id) => [id, abilityCatalog[id]]).filter(([, ability]) => ability);
-}
-
-function activeBuildAbilityIds() {
-  const build = activeBuild();
-  const active = activeClass();
-  return build.abilities || active.buildAbilities?.[state.build] || active.abilities || [];
-}
-
-function hasBuildAbility(id) {
-  return activeBuildAbilityIds().includes(id);
-}
-
-function setBuild(buildId) {
-  if (!buildCatalog[buildId]) return;
-  const hpRatio = state.maxHp > 0 ? state.hp / state.maxHp : 1;
-  state.build = buildId;
-  syncDerivedStats();
-  state.hp = Math.max(1, Math.min(state.maxHp, Math.round(state.maxHp * hpRatio)));
-  log(t("build.changed", "Build gewechselt: {build}.", { build: entityName("build", buildId, buildCatalog[buildId].name) }), "drop");
-  save();
-  render();
-}
-
-function activeSetBonusStats() {
-  const result = { damage: 0, defense: 0, maxHp: 0 };
-  Object.values(activeSetCounts()).forEach(({ id, count }) => {
-    Object.entries(setBonuses[id]?.bonuses || {}).forEach(([needed, bonus]) => {
-      if (count < Number(needed)) return;
-      result.damage += bonus.damage || 0;
-      result.defense += bonus.defense || 0;
-      result.maxHp += bonus.maxHp || 0;
-    });
-  });
-  return result;
-}
-
-function activeSetCounts() {
-  const counts = {};
-  equipmentSlots.forEach((slot) => {
-    const item = getItem(state.equipment[slot]);
-    if (!item) return;
-    if (!item.set) return;
-    counts[item.set] = counts[item.set] || { id: item.set, count: 0 };
-    counts[item.set].count += 1;
-  });
-  return counts;
 }
 
 function itemDurability(itemId) {
@@ -974,77 +688,216 @@ function syncDerivedStats() {
   state.hp = Math.min(state.hp, state.maxHp);
 }
 
-function log(message, type = "") {
-  state.log.unshift(message);
-  state.log = state.log.slice(0, 40);
-  renderLog(type);
+// ============================================================================
+// COMBAT FUNCTIONS
+// ============================================================================
+function riskFor(enemy, stats = totalStats()) {
+  const estimate = combatRiskEstimate(enemy, stats);
+  if (estimate.survivalRatio >= 2.05) return "Einfach";
+  if (estimate.survivalRatio >= 1.18) return "Machbar";
+  if (estimate.survivalRatio >= 0.72) return "Riskant";
+  return "Tödlich";
 }
 
-function resetCombatLog() {
-  state.combatLog = [];
-  renderCombatLog();
-}
-
-function setCombatLog(enemy, events, playerWon, rounds) {
-  const result = playerWon ? t("combat.victory", "Sieg") : t("combat.defeat", "Niederlage");
-  const resultKey = playerWon ? "combat.victoryAgainst" : "combat.defeatAgainst";
-  const entries = [
-    {
-      type: playerWon ? "good" : "bad",
-      text: t(resultKey, `${result} gegen ${enemy.name} nach ${rounds} Runden.`, { enemy: enemy.name, rounds }),
-    },
-    ...events.map(combatLogEntry),
-  ];
-  state.combatLog = entries.slice(0, 80);
-  renderCombatLog();
-}
-
-function combatLogEntry(event) {
-  const actor = event.actor === "hero" ? t("combat.you", "Du") : t("combat.enemy", "Gegner");
-  let type = event.actor === "hero" ? "hero" : "enemy";
-  if (event.critical) type = "critical";
-  if (event.damage === 0) type = "effect";
-  if (/\bheilt\b|\bheilen\b|\bheilung\b/i.test(event.text || "")) type = "heal";
-  const roundText = event.round ? `R${event.round}` : "R?";
+function combatRiskEstimate(enemy, stats = totalStats()) {
+  const effectSummary = itemEffectSummary();
+  const combatStats = combatStatsWithItemEffects(stats, enemy, effectSummary);
+  const playerDamagePerRound = expectedPlayerDamagePerRound(enemy, combatStats, effectSummary);
+  const enemyDamagePerRound = expectedEnemyDamagePerRound(enemy, combatStats, effectSummary);
+  const enemyEffectiveHp = expectedEnemyEffectiveHp(enemy, playerDamagePerRound);
+  const playerEffectiveHp = expectedPlayerEffectiveHp(enemy, combatStats, effectSummary);
+  const playerRoundsToWin = Math.max(1, enemyEffectiveHp / Math.max(1, playerDamagePerRound));
+  const enemyRoundsToWin = Math.max(1, playerEffectiveHp / Math.max(1, enemyDamagePerRound));
   return {
-    type,
-    text: `${roundText} · ${actor}: ${event.text || t("combat.attack", "Aktion ausgeführt.")}`,
+    playerDamagePerRound,
+    enemyDamagePerRound,
+    playerRoundsToWin,
+    enemyRoundsToWin,
+    survivalRatio: enemyRoundsToWin / playerRoundsToWin,
   };
 }
 
-function remindSaveBackup(reason) {
-  if (state.log.slice(0, 8).some((entry) => entry.startsWith("Tipp: Spielstand herunterladen"))) return;
-  log(`Tipp: Spielstand herunterladen - ${reason}`, "drop");
+function expectedPlayerDamagePerRound(enemy, stats, effectSummary = itemEffectSummary()) {
+  const enchantStats = equippedEnchantmentSummary();
+  const critMultiplier = 1 + (stats.critChance || 0) * ((stats.critDamage || 1.5) - 1);
+  const effectArmorIgnore = (enemy.elite || enemy.boss) ? enemy.defense * effectSummary.eliteArmorIgnore : 0;
+  let baseHit = Math.max(1, stats.damage - Math.max(0, enemy.defense - effectArmorIgnore) * 1.08) * critMultiplier;
+  if (enemy.elite || enemy.boss) baseHit *= 1 + enchantStats.bossDamage;
+  if (enemy.elite || enemy.boss) baseHit *= 1 + effectSummary.eliteDamageBonus;
+  baseHit *= playerAbilityDamageMultiplier(enemy);
+  baseHit *= enemyAverageDamageTakenMultiplier(enemy, baseHit);
+  baseHit *= enemyPlayerDamageDebuffMultiplier(enemy);
+  baseHit += stats.damage * Math.min(0.08, effectSummary.bleedChance * 0.22);
+  baseHit += stats.damage * Math.min(0.07, effectSummary.poisonChance * 0.2);
+  baseHit += stats.damage * Math.min(0.08, effectSummary.thornsRatio * 0.35);
+  if (effectSummary.critBurn) baseHit += stats.damage * (stats.critChance || 0) * 0.14;
+  return Math.max(1, baseHit);
 }
 
-function gainXp(amount) {
-  if (state.level >= 20) {
-    state.renown += Math.max(1, Math.floor(amount / 30));
-    return;
+function playerAbilityDamageMultiplier(enemy) {
+  let multiplier = 1;
+  if (hasBuildAbility("heavyStrike")) multiplier += 0.75 / 3;
+  if (hasBuildAbility("bladeFlurry")) multiplier += 0.45 / 4;
+  if (hasBuildAbility("execute")) multiplier += 0.15;
+  if (hasBuildAbility("shatter")) {
+    const armorValue = enemy.defense > 0 ? Math.min(0.25, enemy.defense / Math.max(12, enemy.defense + state.level * 3)) : 0;
+    multiplier += (0.3 + armorValue) / 3;
   }
+  if (hasBuildAbility("counterBlow")) multiplier += 0.08;
+  return multiplier;
+}
 
-  state.xp += amount;
-  while (state.level < 20 && state.xp >= xpForLevel(state.level)) {
-    state.xp -= xpForLevel(state.level);
-    state.level += 1;
-    syncDerivedStats();
-    state.hp = state.maxHp;
-    log(`Level ${state.level} erreicht. Deine Wunden schließen sich, aber der nächste Schritt wird schwerer.`, "good");
-    remindSaveBackup("du hast gerade ein Level geschafft.");
+function enemyAverageDamageTakenMultiplier(enemy, hit) {
+  let total = 0;
+  const sampleRounds = 12;
+  for (let round = 1; round <= sampleRounds; round += 1) {
+    total += enemyDamageTakenMultiplier(enemy, enemy.hp * 0.6, round, hit).multiplier;
   }
+  return total / sampleRounds;
 }
 
-function renownRank() {
-  return renownRanks
-    .slice()
-    .reverse()
-    .find((rank) => state.renown >= rank.threshold) || renownRanks[0];
+function enemyPlayerDamageDebuffMultiplier(enemy) {
+  const ids = enemyAbilityIds(enemy);
+  let multiplier = 1;
+  if (ids.includes("ironBite")) multiplier *= 0.97;
+  if (ids.includes("shieldBash")) multiplier *= 0.94;
+  if (ids.includes("guardBash")) multiplier *= 0.97;
+  if (ids.includes("chainHook")) multiplier *= 0.955;
+  if (ids.includes("boneCurse")) multiplier *= 0.92;
+  if (ids.includes("emberChains")) multiplier *= 0.955;
+  if (ids.includes("hollowGaze")) multiplier *= 0.925;
+  if (ids.includes("cellLockdown")) multiplier *= 0.93;
+  if (ids.includes("wardenVerdict")) multiplier *= 0.94;
+  if (ids.includes("hollowRift")) multiplier *= 0.93;
+  return multiplier;
 }
 
-function nextRenownRank() {
-  return renownRanks.find((rank) => state.renown < rank.threshold) || null;
+function expectedEnemyEffectiveHp(enemy, playerDamagePerRound) {
+  let effectiveHp = enemy.hp;
+  enemyAbilityIds(enemy).forEach((id) => {
+    const ability = enemyAbilityCatalog[id];
+    if (!ability) return;
+    if (id === "lifeDrain") effectiveHp += Math.max(2, playerDamagePerRound * 0.45);
+    if (id === "graveMend") effectiveHp += enemy.hp * 0.08;
+    if (id === "emberPrayer") effectiveHp += enemy.hp * 0.07;
+    if (id === "graveTithe") effectiveHp += enemy.hp * 0.1;
+    if (id === "emberHymn") effectiveHp += enemy.hp * 0.1;
+  });
+  if (enemyPassiveIds(enemy).includes("unholyRenewal")) effectiveHp *= 1.08;
+  if (enemyPassiveIds(enemy).includes("graveBargain")) effectiveHp *= 1.06;
+  if (enemyPassiveIds(enemy).includes("emberChoir")) effectiveHp *= 1.07;
+  if (enemyPassiveIds(enemy).includes("hollowSecondWind")) effectiveHp *= 1.12;
+  return effectiveHp;
 }
 
+function expectedEnemyDamagePerRound(enemy, stats, effectSummary = itemEffectSummary()) {
+  const enchantStats = equippedEnchantmentSummary();
+  const averageHit = (enemy.damage[0] + enemy.damage[1]) / 2;
+  const critStats = enemyCriticalStats(enemy);
+  const enemyCritChance = Math.max(0, critStats.critChance - Math.min(0.08, effectSummary.enemyCritReduction || 0));
+  const critMultiplier = 1 + enemyCritChance * (critStats.critDamage - 1);
+  let hit = Math.max(1, averageHit - stats.defense * 0.42) * critMultiplier;
+  hit *= enemyAbilityDamageMultiplier(enemy);
+  hit *= enemyDamagePassiveMultiplier(enemy, enemy.hp * 0.45);
+  hit += enemyDotDamagePerRound(enemy);
+  hit *= playerDefensiveAbilityMultiplier(stats);
+  hit *= 1 - Math.min(0.35, enchantStats.damageReduction);
+  hit *= 1 - Math.min(0.08, effectSummary.firstHitReduction / 8);
+  hit *= effectSummary.firstHitWeaken < 1 ? 0.985 : 1;
+  hit *= 1 - Math.min(0.04, effectSummary.critHealRatio * 0.3);
+  return Math.max(1, hit);
+}
+
+function enemyAbilityDamageMultiplier(enemy) {
+  let bonus = 0;
+  enemyAbilityIds(enemy).forEach((id) => {
+    const multiplier = enemyAbilityAverageMultiplier(id);
+    if (multiplier !== 1) bonus += multiplier - 1;
+  });
+  return Math.max(0.75, 1 + bonus);
+}
+
+function enemyAbilityAverageMultiplier(id) {
+  const multipliers = {
+    ambush: 1.045,
+    bloodBite: 1 + 0.18 / 3,
+    ironBite: 1 + 0.22 / 3,
+    tuskCharge: 1 + 0.55 / 4,
+    shieldBash: 1 + 0.1 / 3,
+    guardBash: 1 + 0.25 / 3,
+    chainHook: 1 + 0.2 / 4,
+    lifeDrain: 1 + 0.05 / 4,
+    burningBlade: 1 + 0.25 / 3,
+    flameBite: 1 + 0.4 / 4,
+    judgementStrike: 1 + 0.45 / 5,
+    boneCurse: 1 - 0.05 / 3,
+    graveMend: 1 - 0.25 / 4,
+    crushingBlow: 1 + 0.65 / 4,
+    forgeSmash: 1 + 0.45 / 3,
+    emberChains: 1 + 0.15 / 4,
+    dukeCommand: 1 + 0.35 / 3,
+    executionOrder: 1 + 0.7 / 5,
+    emberPrayer: 1 - 0.2 / 4,
+    ashNova: 1 + 0.45 / 5,
+    crownMaul: 1 + 0.55 / 4,
+    ashBlade: 1 + 0.35 / 3,
+    hollowGaze: 1 - 0.1 / 4,
+    championLeap: 1 + 0.75 / 5,
+    eliteFury: 1 + 0.25 / 4,
+    cellLockdown: 1 + 0.1 / 5,
+    graveTithe: 1 - 0.05 / 5,
+    bruteRampage: 1 + 0.5 / 6,
+    wardenVerdict: 1 + 0.35 / 5,
+    anvilQuake: 1 + 0.55 / 5,
+    dukeDuel: 1 + 0.45 / 5,
+    emberHymn: 1 - 0.1 / 5,
+    royalGore: 1 + 0.45 / 5,
+    hollowRift: 1 + 0.4 / 5,
+  };
+  return multipliers[id] || 1;
+}
+
+function enemyDotDamagePerRound(enemy) {
+  const ids = enemyAbilityIds(enemy);
+  let dot = 0;
+  if (ids.includes("bloodBite")) dot += Math.max(1, Math.ceil(enemy.level * 0.65)) * 0.45;
+  if (ids.includes("poisonClaws")) dot += Math.max(1, Math.ceil(enemy.level * 0.7)) * 0.75;
+  if (ids.includes("burningBlade")) dot += Math.max(1, Math.ceil(enemy.level * 0.75)) * 0.5;
+  if (ids.includes("flameBite")) dot += Math.max(1, Math.ceil(enemy.level * 0.85)) * 0.35;
+  if (ids.includes("emberChains")) dot += Math.max(1, Math.ceil(enemy.level * 0.85)) * 0.45;
+  if (ids.includes("ashNova")) dot += Math.max(1, Math.ceil(enemy.level * 0.9)) * 0.35;
+  if (ids.includes("ashBlade")) dot += Math.max(1, Math.ceil(enemy.level * 0.95)) * 0.5;
+  if (ids.includes("graveTithe")) dot += Math.max(1, Math.ceil(enemy.level * 0.65)) * 0.35;
+  if (ids.includes("anvilQuake")) dot += Math.max(1, Math.ceil(enemy.level * 0.8)) * 0.35;
+  if (ids.includes("emberHymn")) dot += Math.max(1, Math.ceil(enemy.level * 0.85)) * 0.35;
+  return dot;
+}
+
+function playerDefensiveAbilityMultiplier(stats) {
+  let multiplier = 1;
+  if (hasBuildAbility("shieldWall")) multiplier *= 0.9;
+  if (hasBuildAbility("tauntingBlow")) multiplier *= 0.94;
+  if (hasBuildAbility("lastStand")) multiplier *= 0.93;
+  if (hasBuildAbility("battleRush")) multiplier *= 0.97;
+  return multiplier;
+}
+
+function expectedPlayerEffectiveHp(enemy, stats, effectSummary = itemEffectSummary()) {
+  const enchantStats = equippedEnchantmentSummary();
+  let hp = Math.max(1, state.hp || stats.maxHp);
+  if (hasBuildAbility("battleRush")) hp += stats.maxHp * 0.18;
+  if (hasBuildAbility("lastStand")) hp += stats.maxHp * 0.14;
+  if (hasBuildAbility("shieldWall")) hp += stats.maxHp * 0.08;
+  if (effectSummary.firstHitReduction > 0) hp += stats.maxHp * 0.04;
+  if (effectSummary.postCombatHeal > 0) hp += stats.maxHp * Math.min(0.12, effectSummary.postCombatHeal);
+  if (enchantStats.lowHpShield > 0) hp += stats.maxHp * Math.min(0.18, enchantStats.lowHpShield);
+  if (enemyAbilityIds(enemy).some((id) => ["judgementStrike", "executionOrder"].includes(id))) hp *= 0.94;
+  return hp;
+}
+
+// ============================================================================
+// QUEST FUNCTIONS
+// ============================================================================
 function questRenownReward(quest) {
   if (quest.rare || quest.rarity === "legendary") return 3;
   if (quest.rarity === "epic") return 2;
@@ -1223,6 +1076,9 @@ function isQuestCompletedPermanent(questId) {
   return Boolean(quest && !quest.repeatable && state.completedQuests.includes(questId));
 }
 
+// ============================================================================
+// COMBAT LOGIC
+// ============================================================================
 function abilityDamage(baseHit, multiplier) {
   return Math.max(1, Math.floor(baseHit * multiplier));
 }
@@ -2093,413 +1949,122 @@ function questSet(quest) {
   return "ashen";
 }
 
-function itemScore(item) {
-  return itemBasePowerScore(item)
-    + itemEffectScore(item)
-    + itemEnchantmentScore(item);
+// ============================================================================
+// ACHIEVEMENT FUNCTIONS
+// ============================================================================
+function achievementById(id) {
+  return achievementCatalog.find((achievement) => achievement.id === id);
 }
 
-function itemBasePowerScore(item) {
-  const durabilityFactor = Math.max(0.65, Math.min(1, (item.durability ?? 100) / 100));
-  return (item.damage * 1.5
-    + item.defense
-    + (item.critChance || 0) * 90
-    + (item.critDamage || 0) * 28) * durabilityFactor;
+function isAchievementClaimed(id) {
+  state.achievements = normalizeAchievements(state.achievements);
+  return state.achievements.claimed.includes(id);
 }
 
-function itemBalanceBudget(item) {
-  const qualityIndex = qualityRank(item.quality);
-  const caps = itemStatCap(item.slot, item.quality, item.upgrade || 0);
-  const critCaps = itemCritBudget(item.slot, qualityIndex);
-  return caps.damage * 1.5
-    + caps.defense
-    + critCaps.critChance * 90
-    + critCaps.critDamage * 28
-    + itemEffectBudget(item.quality);
-}
-
-function qualityRank(quality) {
-  return { common: 0, rare: 1, epic: 2, legendary: 3 }[quality] || 0;
-}
-
-function itemCritBudget(slot, qualityIndex) {
-  if (!itemSlotRules(slot).critChance && !itemSlotRules(slot).critDamage) {
-    return { critChance: 0, critDamage: 0 };
-  }
-  const chanceBudget = {
-    weapon: [0.02, 0.05, 0.08, 0.12],
-    necklace: [0.01, 0.03, 0.06, 0.09],
-    ring: [0.02, 0.04, 0.07, 0.1],
-  }[slot] || [0.01, 0.03, 0.06, 0.09];
-  const damageBudget = {
-    weapon: [0.04, 0.12, 0.2, 0.36],
-    necklace: [0.06, 0.14, 0.24, 0.36],
-    ring: [0.03, 0.1, 0.18, 0.28],
-  }[slot] || [0.03, 0.1, 0.18, 0.28];
+function achievementProgress(achievement) {
+  const value = achievementProgressValue(achievement.metric);
+  const target = Math.max(1, achievement.target || 1);
   return {
-    critChance: chanceBudget[qualityIndex] || 0,
-    critDamage: damageBudget[qualityIndex] || 0,
+    value,
+    target,
+    percent: Math.max(0, Math.min(100, (value / target) * 100)),
+    ready: value >= target,
   };
 }
 
-function itemEffectBudget(quality) {
-  return [0, 8, 16, 24][qualityRank(quality)] || 0;
+function achievementProgressValue(metric) {
+  state.combatStats = normalizeCombatStats(state.combatStats);
+  if (metric === "eliteKills") return state.combatStats.eliteKills;
+  if (metric === "bossKills") return state.combatStats.bossKills;
+  if (metric === "wins") return state.combatStats.wins;
+  if (metric === "itemsUpgraded") return state.combatStats.itemsUpgraded;
+  if (metric === "itemsSalvaged") return state.combatStats.itemsSalvaged;
+  if (metric === "itemsEnchanted") return state.combatStats.itemsEnchanted;
+  if (metric === "rareEnchantments") return Math.max(state.combatStats.rareEnchantments, discoveredRareEnchantments());
+  if (metric === "discoveredItems") return discoveredItemCount();
+  if (metric === "legendaryItems") return hasDiscoveredItem((item) => itemQuality(item) === "legendary") ? 1 : 0;
+  if (metric === "fixedBossDrops") return hasDiscoveredItem((item, enemyId) => item.fixed && enemies[enemyId]?.boss) ? 1 : 0;
+  if (metric === "setItems") return hasDiscoveredItem((item) => Boolean(item.set)) ? 1 : 0;
+  if (metric === "itemAtLimit") return hasEquippedItemAtLimit() ? 1 : 0;
+  if (metric === "smithMasteries") return state.smithMastery?.completed?.length || 0;
+  if (metric === "enchantSlots") return currentEnchantSlotLimit();
+  if (metric === "enchantMasteries") return state.enchanting?.completed?.length || 0;
+  if (metric === "renown") return state.renown || 0;
+  return 0;
 }
 
-function itemEnchantmentScore(item) {
-  return activeItemEnchantments(item).reduce((score, enchantment) => {
-    const stats = enchantment.stats || {};
-    return score
-      + (stats.damage || 0) * 1.5
-      + (stats.defense || 0)
-      + (stats.maxHp || 0) * 0.12
-      + (stats.critChance || 0) * 90
-      + (stats.critDamage || 0) * 28
-      + (stats.bossDamage || 0) * 45
-      + (stats.damageReduction || 0) * 70
-      + (stats.lootBonus || 0) * 42
-      + (stats.goldBonus || 0) * 20
-      + (stats.xpBonus || 0) * 18;
-  }, 0);
+function discoveredItemCount() {
+  return Object.values(state.discoveredLoot || {}).reduce((sum, drops) => sum + Object.keys(drops || {}).length, 0);
 }
 
-function itemEffectScore(item) {
-  const effect = itemEffect(item);
-  if (!effect) return 0;
-  if (effect.critBurn || effect.eliteArmorIgnore || effect.eliteDamageBonus || effect.critHealRatio) return 12;
-  if (effect.eliteCritChance || effect.postCombatHeal || effect.firstHitReduction || effect.enemyCritReduction || effect.thornsRatio || effect.firstHitWeaken < 1) return 8;
-  return 5;
+function hasDiscoveredItem(predicate) {
+  return Object.entries(state.discoveredLoot || {}).some(([enemyId, drops]) =>
+    Object.values(drops || {}).some((item) => predicate(item, enemyId))
+  );
 }
 
-function createLootChoices(enemy, enemyId) {
-  const choices = [generateLootItem(enemy, enemyId), generateLootItem(enemy, enemyId), generateLootItem(enemy, enemyId)];
-  const specialDrop = enemy.drops.find((drop) => Math.random() <= drop.chance);
-
-  if (specialDrop) {
-    const specialItem = getItem(specialDrop.id);
-    choices[random(0, choices.length - 1)] = {
-      ...specialItem,
-      id: specialDrop.id,
-      fixed: true,
-      sourceEnemy: enemyId,
-    };
-    log(`Seltener Fund in der Beuteauswahl: ${specialItem.name} (${qualityLabel[specialItem.quality]}).`, "drop");
-  }
-
-  markLootDiscovery(enemyId, choices);
-  queueLootBatch(choices);
+function discoveredRareEnchantments() {
+  return allSavedItems()
+    .flatMap((item) => activeItemEnchantments(item))
+    .filter((enchantment) => enchantRarityRank(enchantment.rarity) >= enchantRarityRank("rare"))
+    .length;
 }
 
-function queueLootBatch(items) {
-  const equipmentItems = items.filter((item) => item && equipmentSlots.includes(item.slot));
-  if (!equipmentItems.length) return;
-  if (state.pendingLoot.length) {
-    state.lootQueue.push(equipmentItems);
-    return;
-  }
-  state.pendingLoot = equipmentItems;
+function allSavedItems() {
+  const ids = [...Object.values(state.equipment || {}), ...(state.inventory || [])].filter(Boolean);
+  const itemsById = ids.map(getItem).filter(Boolean);
+  return [...itemsById, ...Object.values(state.customItems || {})].filter(Boolean);
 }
 
-function advanceLootQueue() {
-  state.pendingLoot = state.lootQueue.length ? state.lootQueue.shift() : [];
+function readyAchievements() {
+  state.achievements = normalizeAchievements(state.achievements);
+  return achievementCatalog.filter((achievement) =>
+    !isAchievementClaimed(achievement.id) && achievementProgress(achievement).ready
+  );
 }
 
-function generateLootItem(enemy, enemyId) {
-  const lootPick = pickGeneratedLootTemplate(enemy);
-  const slot = lootPick.slot;
-  const quality = lootPick.quality;
-  const base = Math.max(1, Math.floor(enemy.level * 0.82) + random(-2, 1));
-  const power = qualityPower[quality];
-  const id = `loot-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  const stats = normalizeRolledItemStats(slot, quality, rollSlotStats(slot, base, power));
-  const critStats = rollCritStats(slot, quality);
-
-  return {
-    id,
-    name: lootPick.name,
-    slot,
-    quality,
-    damage: stats.damage,
-    defense: stats.defense,
-    ...critStats,
-    effect: rollItemEffect(slot, quality, enemy),
-    set: rollItemSet(enemy, quality),
-    durability: 100,
-    fixed: false,
-    sourceEnemy: enemyId,
-  };
+function readyAchievementCount() {
+  return readyAchievements().length;
 }
 
-function pickGeneratedLootTemplate(enemy) {
-  const profile = enemy.generatedLoot || {};
-  const slots = (profile.slots || lootSlots).filter((slot) => lootSlots.includes(slot));
-  const qualities = (profile.qualities || Object.keys(qualityLabel)).filter((quality) => qualityPower[quality]);
-  const slot = slots.length ? slots[random(0, slots.length - 1)] : lootSlots[random(0, lootSlots.length - 1)];
-  const rolledQuality = rollQuality(enemy);
-  const quality = nearestAllowedQuality(rolledQuality, qualities.length ? qualities : Object.keys(qualityPower));
-  const namePool = lootNames[slot][quality] || lootNames[slot].common;
-
-  return {
-    slot,
-    quality,
-    name: namePool[random(0, namePool.length - 1)],
-  };
+function claimedAchievementCount() {
+  state.achievements = normalizeAchievements(state.achievements);
+  return state.achievements.claimed.length;
 }
 
-function rollItemEffect(slot, quality, enemy = null) {
-  const chance = { common: 0, rare: 0.32, epic: 0.78, legendary: 1 }[quality] || 0;
-  if (Math.random() > chance) return null;
-  const pool = itemEffectPool(slot, quality, enemy);
-  if (!pool.length) return null;
-  return pool[random(0, pool.length - 1)];
-}
-
-function itemEffectPool(slot, quality, enemy = null) {
-  const pool = [];
-  if (slot === "weapon") pool.push("bleedEdge", "venomEdge");
-  if (["offhand", "chest"].includes(slot)) pool.push("guardBlock", "thornGuard", "steadfastWard");
-  if (slot === "pants") pool.push("thornGuard", "steadfastWard");
-  if (["pants", "boots"].includes(slot)) pool.push("steadyStep");
-  if (["boots", "ring", "necklace"].includes(slot)) pool.push("luckyPouch");
-  if (["ring", "necklace"].includes(slot)) pool.push("eliteHunter", "echoHeal");
-
-  if (quality === "epic" || quality === "legendary") {
-    if (["weapon", "ring", "necklace"].includes(slot)) pool.push("duelistMark", "lifeSiphon");
-  }
-
-  if (enemy?.boss || quality === "legendary") {
-    if (["weapon", "ring", "necklace"].includes(slot)) pool.push("crownBurn");
-    if (["weapon", "offhand"].includes(slot)) pool.push("oathBreaker");
-    if (["offhand", "ring", "necklace"].includes(slot)) pool.push("graveCurse");
-  }
-
-  if (enemy?.tags?.dungeon && ["offhand", "ring", "necklace"].includes(slot)) pool.push("graveCurse");
-  if (enemy?.tags?.elite && ["ring", "necklace"].includes(slot)) pool.push("eliteHunter");
-  return pool.filter((id) => itemEffectCatalog[id]?.slots?.includes(slot));
-}
-
-function nearestAllowedQuality(quality, allowedQualities) {
-  const order = ["common", "rare", "epic", "legendary"];
-  const allowed = allowedQualities.filter((item) => order.includes(item));
-  if (allowed.includes(quality)) return quality;
-
-  const targetIndex = order.indexOf(quality);
-  return allowed
-    .slice()
-    .sort((a, b) => Math.abs(order.indexOf(a) - targetIndex) - Math.abs(order.indexOf(b) - targetIndex))[0] || "common";
-}
-
-function generatedLootPoolCount(enemy) {
-  const profile = enemy.generatedLoot || {};
-  const slots = (profile.slots || lootSlots).filter((slot) => lootSlots.includes(slot));
-  const qualities = (profile.qualities || Object.keys(qualityPower)).filter((quality) => qualityPower[quality]);
-  return (slots.length || lootSlots.length) * (qualities.length || Object.keys(qualityPower).length) * 3;
-}
-
-function rollSlotStats(slot, base, power) {
-  const profiles = {
-    weapon: [1.35, 0],
-    offhand: [0.4, 0.85],
-    chest: [0, 1.45],
-    pants: [0, 0.98],
-    boots: [0, 0.78],
-    necklace: [0.78, 0],
-    ring: [0.62, 0],
-  };
-  const [damageScale, defenseScale] = profiles[slot] || profiles.ring;
-  return {
-    damage: damageScale ? Math.max(1, Math.floor(base * damageScale * power + random(0, 2))) : 0,
-    defense: defenseScale ? Math.max(1, Math.floor(base * defenseScale * power + random(0, 3))) : 0,
-  };
-}
-
-function rollItemSet(enemy, quality) {
-  const chance = quality === "legendary" ? 0.55 : quality === "epic" ? 0.3 : quality === "rare" ? 0.12 : 0.02;
-  if (Math.random() > chance) return null;
-  if (enemy.tags?.wolf || enemy.tags?.beast) return "wolf";
-  if (enemy.tags?.bandit || enemy.tags?.rust || enemy.name?.includes("Ritter")) return "iron";
-  if (enemy.tags?.dungeon) return enemy.level >= 18 ? "ashen" : "crypt";
-  return null;
-}
-
-function recordDiscoveredLoot(enemyId, lootItems) {
-  state.discoveredLoot[enemyId] = state.discoveredLoot[enemyId] || {};
-  bestiaryListDirty = true;
-  bestiaryLootCache.delete(enemyId);
-
-  lootItems.forEach((item) => {
-    const key = lootDiscoveryKey(item);
-    const existing = state.discoveredLoot[enemyId][key];
-    const bestItem = existing && itemScore(existing) >= itemScore(item) ? existing : item;
-    state.discoveredLoot[enemyId][key] = {
-      id: bestItem.id,
-      name: bestItem.name,
-      slot: bestItem.slot,
-      quality: bestItem.quality,
-      damage: bestItem.damage,
-      defense: bestItem.defense,
-      critChance: bestItem.critChance || 0,
-      critDamage: bestItem.critDamage || 0,
-      effect: bestItem.effect || null,
-      set: bestItem.set,
-      fixed: bestItem.fixed,
-      count: (existing?.count || 0) + 1,
-    };
+function achievementRewardText(reward = {}) {
+  const parts = [];
+  if (reward.gold) parts.push(`${reward.gold} Gold`);
+  if (reward.renown) parts.push(`${reward.renown} Ruhm`);
+  Object.entries(reward.materials || {}).forEach(([id, amount]) => {
+    parts.push(`${amount} ${materialLabel[id] || id}`);
   });
-  pruneBestiaryLoot(enemyId);
+  return parts.join(" · ") || "Keine Belohnung";
 }
 
-function pruneBestiaryLoot(enemyId) {
-  const entries = Object.entries(state.discoveredLoot[enemyId] || {});
-  const fixed = entries.filter(([, item]) => item.fixed);
-  const generatedLimit = Math.max(0, maxBestiaryLootPerEnemy - fixed.length);
-  const generated = entries
-    .filter(([, item]) => !item.fixed)
-    .sort(([, a], [, b]) => bestiaryKeepScore(b) - bestiaryKeepScore(a));
-
-  state.discoveredLoot[enemyId] = Object.fromEntries([
-    ...fixed,
-    ...generated.slice(0, generatedLimit),
-  ]);
-  bestiaryLootCache.delete(enemyId);
-}
-
-function bestiaryKeepScore(item) {
-  const rarityScore = { common: 1, rare: 10, epic: 25, legendary: 50 }[item.quality] || 0;
-  const setScore = item.set ? 18 : 0;
-  const countScore = Math.min(10, item.count || 0);
-  return rarityScore + setScore + itemScore(item) * 0.2 + countScore;
-}
-
-function markLootDiscovery(enemyId, lootItems) {
-  state.discoveredLoot[enemyId] = state.discoveredLoot[enemyId] || {};
-  lootItems.forEach((item) => {
-    const entry = state.discoveredLoot[enemyId][lootDiscoveryKey(item)];
-    item.discoveryNew = !entry;
-    item.discoveryCount = entry?.count || 0;
-  });
-}
-
-function lootDiscoveryKey(item) {
-  return item.fixed ? `fixed:${item.id}` : `${item.name}|${item.slot}|${item.quality}`;
-}
-
-function rollQuality(enemy) {
-  const roll = Math.random();
-  const eliteBonus = enemy.elite ? 0.025 : 0;
-  const dungeonBonus = enemy.tags.dungeon ? 0.015 : 0;
-  const enchantBonus = Math.min(0.08, equippedEnchantmentSummary().lootBonus || 0);
-  const bonus = eliteBonus + dungeonBonus + Math.min(0.025, enemy.level * 0.0013) + enchantBonus;
-
-  if (roll > 0.996 - bonus) return "legendary";
-  if (roll > 0.965 - bonus) return "epic";
-  if (roll > 0.82 - bonus) return "rare";
-  return "common";
-}
-
-function chooseLoot(index, equipNow = false) {
-  if (!state.pendingLoot[index]) return;
-  const item = state.pendingLoot[index];
-  const sourceEnemy = item.sourceEnemy;
-  if (!item.fixed) {
-    state.customItems[item.id] = item;
-  }
-  if (sourceEnemy) {
-    recordDiscoveredLoot(sourceEnemy, [item]);
-  }
-  setItemDurability(item.id, item.durability ?? 100);
-  if (equipNow) {
-    const previousId = state.equipment[item.slot];
-    state.equipment[item.slot] = item.id;
-    if (previousId) {
-      state.inventory.push(previousId);
-    }
-    log(`${item.name} gewählt und direkt ausgerüstet.`, "drop");
-  } else {
-    state.inventory.push(item.id);
-    log(`${item.name} gewählt und ins Inventar gelegt.`, "drop");
-  }
-  if (["epic", "legendary"].includes(itemQuality(item))) {
-    remindSaveBackup(`du hast ${qualityLabel[itemQuality(item)]}e Beute erhalten.`);
-  }
+function claimAchievement(id) {
+  const achievement = achievementById(id);
+  if (!achievement || isAchievementClaimed(id) || !achievementProgress(achievement).ready) return false;
+  state.achievements.claimed.push(id);
+  grantAchievementReward(achievement.reward);
+  log(`Erfolg eingelöst: ${achievement.name}. Belohnung: ${achievementRewardText(achievement.reward)}.`, "drop");
   notifyReadyAchievements();
-  advanceLootQueue();
   save();
   render();
+  return true;
 }
 
-function equipInventoryItem(index) {
-  const itemId = state.inventory[index];
-  const item = getItem(itemId);
-  if (!item || !equipmentSlots.includes(item.slot)) return;
-
-  const previousId = state.equipment[item.slot];
-  state.equipment[item.slot] = itemId;
-  state.inventory.splice(index, 1);
-  setItemDurability(itemId, itemDurability(itemId) || 100);
-
-  if (previousId) {
-    state.inventory.push(previousId);
-  }
-
-  log(`${item.name} ausgerüstet. ${getItem(previousId)?.name || "Altes Teil"} liegt jetzt im Inventar.`, "drop");
-  save();
-  render();
-}
-
-function sellInventoryItem(index) {
-  const itemId = state.inventory[index];
-  const item = getItem(itemId);
-  if (!item) return;
-
-  const value = sellValue(item);
-  state.inventory.splice(index, 1);
-  delete state.itemDurability[itemId];
-  state.gold += value;
-  log(`${item.name} verkauft. +${value} Gold.`, "drop");
-  save();
-  render();
-}
-
-function sellAllInventoryItems() {
-  if (!state.inventory.length) return;
-  const total = state.inventory.reduce((sum, itemId) => {
-    const item = getItem(itemId);
-    return item ? sum + sellValue(item) : sum;
-  }, 0);
-  const count = state.inventory.length;
-  state.inventory.forEach((itemId) => delete state.itemDurability[itemId]);
-  state.inventory = [];
-  state.gold += total;
-  log(`${count} Items verkauft. +${total} Gold.`, "drop");
-  save();
-  render();
-}
-
-function sellValue(item) {
-  const qualityValue = {
-    common: 4,
-    rare: 12,
-    epic: 30,
-    legendary: 82,
-  };
-  return Math.max(2, Math.floor(qualityValue[item.quality] + itemScore(item) * 1.45));
-}
-
-function grantMaterials(enemyId, eliteBonus = false) {
-  const drops = materialDrops[enemyId] || [];
-  const gained = [];
-  drops.forEach((drop) => {
-    const amount = Math.max(0, random(drop.min, drop.max) + (eliteBonus && Math.random() < 0.65 ? 1 : 0) - (Math.random() < 0.22 ? 1 : 0));
-    if (amount <= 0) return;
-    state.materials[drop.id] = (state.materials[drop.id] || 0) + amount;
-    gained.push(`${amount} ${materialLabel[drop.id]}`);
+function grantAchievementReward(reward = {}) {
+  state.gold += reward.gold || 0;
+  state.renown += reward.renown || 0;
+  Object.entries(reward.materials || {}).forEach(([id, amount]) => {
+    state.materials[id] = (state.materials[id] || 0) + amount;
   });
-  if (gained.length) {
-    log(`Material gefunden: ${gained.join(", ")}.`, "drop");
-  }
 }
 
+// ============================================================================
+// SMITHING FUNCTIONS
+// ============================================================================
 function currentSmithMasteryLimit() {
   return Math.max(5, Math.min(20, state.smithMastery?.limit || 5));
 }
@@ -2630,6 +2195,9 @@ function recordSmithMasteryBattle(enemy) {
   state.smithMastery.progress[active.id] = progress;
 }
 
+// ============================================================================
+// ENCHANTING FUNCTIONS
+// ============================================================================
 function nextEnchantMasteryRank() {
   return enchantMasteryRanks.find((rank) => !state.enchanting.completed.includes(rank.id)) || null;
 }
@@ -2733,789 +2301,4 @@ function recordEnchantMasteryBattle(enemy) {
   if (enemy.elite) progress.eliteKills = Math.min(active.progress?.eliteKills || 0, (progress.eliteKills || 0) + 1);
   if (enemy.boss) progress.bossKills = Math.min(active.progress?.bossKills || 0, (progress.bossKills || 0) + 1);
   state.enchanting.progress[active.id] = progress;
-}
-
-function achievementById(id) {
-  return achievementCatalog.find((achievement) => achievement.id === id);
-}
-
-function isAchievementClaimed(id) {
-  state.achievements = normalizeAchievements(state.achievements);
-  return state.achievements.claimed.includes(id);
-}
-
-function achievementProgress(achievement) {
-  const value = achievementProgressValue(achievement.metric);
-  const target = Math.max(1, achievement.target || 1);
-  return {
-    value,
-    target,
-    percent: Math.max(0, Math.min(100, (value / target) * 100)),
-    ready: value >= target,
-  };
-}
-
-function achievementProgressValue(metric) {
-  state.combatStats = normalizeCombatStats(state.combatStats);
-  if (metric === "eliteKills") return state.combatStats.eliteKills;
-  if (metric === "bossKills") return state.combatStats.bossKills;
-  if (metric === "wins") return state.combatStats.wins;
-  if (metric === "itemsUpgraded") return state.combatStats.itemsUpgraded;
-  if (metric === "itemsSalvaged") return state.combatStats.itemsSalvaged;
-  if (metric === "itemsEnchanted") return state.combatStats.itemsEnchanted;
-  if (metric === "rareEnchantments") return Math.max(state.combatStats.rareEnchantments, discoveredRareEnchantments());
-  if (metric === "discoveredItems") return discoveredItemCount();
-  if (metric === "legendaryItems") return hasDiscoveredItem((item) => itemQuality(item) === "legendary") ? 1 : 0;
-  if (metric === "fixedBossDrops") return hasDiscoveredItem((item, enemyId) => item.fixed && enemies[enemyId]?.boss) ? 1 : 0;
-  if (metric === "setItems") return hasDiscoveredItem((item) => Boolean(item.set)) ? 1 : 0;
-  if (metric === "itemAtLimit") return hasEquippedItemAtLimit() ? 1 : 0;
-  if (metric === "smithMasteries") return state.smithMastery?.completed?.length || 0;
-  if (metric === "enchantSlots") return currentEnchantSlotLimit();
-  if (metric === "enchantMasteries") return state.enchanting?.completed?.length || 0;
-  if (metric === "renown") return state.renown || 0;
-  return 0;
-}
-
-function discoveredItemCount() {
-  return Object.values(state.discoveredLoot || {}).reduce((sum, drops) => sum + Object.keys(drops || {}).length, 0);
-}
-
-function hasDiscoveredItem(predicate) {
-  return Object.entries(state.discoveredLoot || {}).some(([enemyId, drops]) =>
-    Object.values(drops || {}).some((item) => predicate(item, enemyId))
-  );
-}
-
-function discoveredRareEnchantments() {
-  return allSavedItems()
-    .flatMap((item) => activeItemEnchantments(item))
-    .filter((enchantment) => enchantRarityRank(enchantment.rarity) >= enchantRarityRank("rare"))
-    .length;
-}
-
-function allSavedItems() {
-  const ids = [...Object.values(state.equipment || {}), ...(state.inventory || [])].filter(Boolean);
-  const itemsById = ids.map(getItem).filter(Boolean);
-  return [...itemsById, ...Object.values(state.customItems || {})].filter(Boolean);
-}
-
-function readyAchievements() {
-  state.achievements = normalizeAchievements(state.achievements);
-  return achievementCatalog.filter((achievement) =>
-    !isAchievementClaimed(achievement.id) && achievementProgress(achievement).ready
-  );
-}
-
-function readyAchievementCount() {
-  return readyAchievements().length;
-}
-
-function claimedAchievementCount() {
-  state.achievements = normalizeAchievements(state.achievements);
-  return state.achievements.claimed.length;
-}
-
-function achievementRewardText(reward = {}) {
-  const parts = [];
-  if (reward.gold) parts.push(`${reward.gold} Gold`);
-  if (reward.renown) parts.push(`${reward.renown} Ruhm`);
-  Object.entries(reward.materials || {}).forEach(([id, amount]) => {
-    parts.push(`${amount} ${materialLabel[id] || id}`);
-  });
-  return parts.join(" · ") || "Keine Belohnung";
-}
-
-function claimAchievement(id) {
-  const achievement = achievementById(id);
-  if (!achievement || isAchievementClaimed(id) || !achievementProgress(achievement).ready) return false;
-  state.achievements.claimed.push(id);
-  grantAchievementReward(achievement.reward);
-  log(`Erfolg eingelöst: ${achievement.name}. Belohnung: ${achievementRewardText(achievement.reward)}.`, "drop");
-  notifyReadyAchievements();
-  save();
-  render();
-  return true;
-}
-
-function grantAchievementReward(reward = {}) {
-  state.gold += reward.gold || 0;
-  state.renown += reward.renown || 0;
-  Object.entries(reward.materials || {}).forEach(([id, amount]) => {
-    state.materials[id] = (state.materials[id] || 0) + amount;
-  });
-}
-
-function notifyReadyAchievements() {
-  state.achievements = normalizeAchievements(state.achievements);
-  const unseenReady = readyAchievements().filter((achievement) => !state.achievements.notified.includes(achievement.id));
-  if (!unseenReady.length) return;
-  state.achievements.notified = [...new Set([
-    ...state.achievements.notified,
-    ...unseenReady.map((achievement) => achievement.id),
-  ])];
-  const first = unseenReady[0];
-  log(unseenReady.length === 1
-    ? `Neuer Erfolg bereit: ${first.name}.`
-    : `${unseenReady.length} neue Erfolge sind bereit.`,
-  "drop");
-}
-
-function findSmithSacrificeItemId() {
-  return state.inventory.find((itemId) => {
-    const item = getItem(itemId);
-    return item && ["epic", "legendary"].includes(item.quality);
-  });
-}
-
-function removeSmithSacrificeItem() {
-  const itemId = findSmithSacrificeItemId();
-  if (!itemId) return;
-  state.inventory = state.inventory.filter((id) => id !== itemId);
-  delete state.customItems[itemId];
-  delete state.itemDurability[itemId];
-}
-
-function findEnchantSacrificeItemId(quality) {
-  const neededPower = qualityPower[quality] || 0;
-  return state.inventory.find((itemId) => {
-    const item = getItem(itemId);
-    return item && (qualityPower[item.quality] || 0) >= neededPower;
-  });
-}
-
-function removeEnchantSacrificeItem(quality) {
-  const itemId = findEnchantSacrificeItemId(quality);
-  if (!itemId) return;
-  state.inventory = state.inventory.filter((id) => id !== itemId);
-  delete state.customItems[itemId];
-  delete state.itemDurability[itemId];
-}
-
-function upgradeCost(item) {
-  const targetLevel = (item.upgrade || 0) + 1;
-  const step = upgradeCostSteps[targetLevel];
-  if (!step) return { gold: 0, materials: {} };
-  const slotMaterial = primaryMaterialForSlot(item.slot);
-  const materials = { [slotMaterial]: step.basis };
-  if (step.special) materials[specialUpgradeMaterialForItem(item)] = step.special;
-  if (step.rare) materials[rareUpgradeMaterialForItem(item)] = step.rare;
-  if (step.boss) materials[bossUpgradeMaterialForItem(item)] = step.boss;
-  return {
-    gold: Math.max(1, Math.floor(step.gold * (1 - renownUpgradeDiscount()))),
-    materials: Object.fromEntries(Object.entries(materials).filter(([, amount]) => amount > 0)),
-  };
-}
-
-function rollCritStats(slot, quality) {
-  const qualityIndex = { common: 0, rare: 1, epic: 2, legendary: 3 }[quality] || 0;
-  const chanceBase = [0.01, 0.02, 0.04, 0.06][qualityIndex];
-  const damageBase = [0.02, 0.06, 0.12, 0.2][qualityIndex];
-  const [chanceScale, damageScale] = {
-    weapon: [1.25, 1],
-    offhand: [0, 0],
-    chest: [0, 0],
-    pants: [0, 0],
-    boots: [0, 0],
-    necklace: [0.55, 1.15],
-    ring: [1, 0.75],
-  }[slot] || [0, 0];
-  const critChance = normalizePercentStep(chanceBase * chanceScale + random(0, qualityIndex) * 0.01);
-  const critDamage = normalizePercentStep(damageBase * damageScale + random(0, qualityIndex) * 0.01);
-  return {
-    ...(critChance > 0 ? { critChance } : {}),
-    ...(critDamage > 0 ? { critDamage } : {}),
-  };
-}
-
-function primaryMaterialForSlot(slot) {
-  if (slot === "weapon" || slot === "offhand") return "scrap";
-  if (slot === "chest") return "chain";
-  if (slot === "pants") return "cloth";
-  if (slot === "boots") return "leather";
-  return "moonDust";
-}
-
-function specialUpgradeMaterialForItem(item) {
-  if (["weapon", "offhand"].includes(item.slot)) return "emberCore";
-  if (["chest", "pants", "boots"].includes(item.slot)) return "sinew";
-  return "shard";
-}
-
-function rareUpgradeMaterialForItem(item) {
-  if (["weapon", "offhand"].includes(item.slot)) return "oathSteel";
-  if (["chest", "pants", "boots"].includes(item.slot)) return item.set === "crypt" ? "shadowResin" : "wolfFang";
-  return "graveSeal";
-}
-
-function bossUpgradeMaterialForItem(item) {
-  if (item.set === "crypt") return "graveSeal";
-  if (item.set === "iron") return "oathMark";
-  return "crownAsh";
-}
-
-function setMaterialForItem(item) {
-  return {
-    wolf: "wolfFang",
-    iron: "oathMark",
-    crypt: "graveSeal",
-    ashen: "crownAsh",
-  }[item.set] || "shard";
-}
-
-function canUpgrade(item) {
-  if ((item.upgrade || 0) >= currentSmithMasteryLimit()) return false;
-  const cost = upgradeCost(item);
-  return canPayUpgradeCost(cost);
-}
-
-function canPayUpgradeCost(cost) {
-  return state.gold >= cost.gold && Object.entries(cost.materials).every(([id, amount]) => (state.materials[id] || 0) >= amount);
-}
-
-function enchantCost() {
-  const slotLimit = maxEnchantSlotsForLevel();
-  const rarityRank = currentEnchantRarityRank();
-  const materials = {
-    shard: 2 + slotLimit + rarityRank * 2,
-    moonDust: 1 + rarityRank,
-  };
-  if (rarityRank >= 2) materials.emberCore = 1;
-  if (rarityRank >= 3) materials.crownAsh = 1;
-  return {
-    gold: [90, 180, 320, 560][rarityRank] + slotLimit * 25,
-    materials,
-  };
-}
-
-function currentEnchantRarityRank() {
-  return allowedEnchantRarities().reduce((highest, rarity) => Math.max(highest, enchantRarityRank(rarity)), 0);
-}
-
-function enchantRarityRank(rarity) {
-  return { common: 0, rare: 1, epic: 2, arcane: 3 }[rarity] || 0;
-}
-
-function canPayCost(cost) {
-  return state.gold >= cost.gold && Object.entries(cost.materials || {}).every(([id, amount]) => (state.materials[id] || 0) >= amount);
-}
-
-function spendCost(cost) {
-  state.gold -= cost.gold || 0;
-  Object.entries(cost.materials || {}).forEach(([id, amount]) => {
-    state.materials[id] -= amount;
-  });
-}
-
-function enchantmentPool(slot, category, item = null) {
-  const allowedRarities = allowedEnchantRarities();
-  const usedGroups = new Set(activeItemEnchantments(item).map((enchantment) => enchantment.group));
-  return Object.entries(enchantmentCatalog)
-    .filter(([, enchantment]) => enchantment.category === category)
-    .filter(([, enchantment]) => enchantment.slots.includes(slot))
-    .filter(([, enchantment]) => allowedRarities.includes(enchantment.rarity))
-    .filter(([, enchantment]) => !usedGroups.has(enchantment.group))
-    .map(([id]) => id);
-}
-
-function rollEnchantment(slot, category, item) {
-  const pool = enchantmentPool(slot, category, item);
-  if (!pool.length) return null;
-  const weighted = pool.flatMap((id) => {
-    const rarity = enchantmentCatalog[id].rarity;
-    const weight = rarity === "arcane" ? 1 : rarity === "epic" ? 2 : rarity === "rare" ? 4 : 7;
-    return Array.from({ length: weight }, () => id);
-  });
-  return weighted[random(0, weighted.length - 1)];
-}
-
-function ensureCustomEquippedItem(slot) {
-  const itemId = state.equipment[slot];
-  const item = getItem(itemId);
-  if (!item) return null;
-  if (state.customItems[itemId]) return state.customItems[itemId];
-  const custom = { ...item, id: itemId, enchantments: [...(item.enchantments || [])] };
-  state.customItems[itemId] = custom;
-  return custom;
-}
-
-function enchantEquipped(slot, category) {
-  if (!enchantmentsUnlocked()) {
-    log("Mira Nachtfaden erscheint erst, wenn du erfahren genug bist.", "bad");
-    return;
-  }
-  const item = ensureCustomEquippedItem(slot);
-  if (!item) return;
-  const limit = maxEnchantSlotsForLevel();
-  if ((item.enchantments || []).length >= limit) {
-    log(`${item.name} hat aktuell keinen freien Verzauberungs-Slot.`, "bad");
-    return;
-  }
-  const cost = enchantCost();
-  if (!canPayCost(cost)) {
-    log("Mira Nachtfaden braucht mehr Gold, Runensplitter oder Mondstaub.", "bad");
-    return;
-  }
-  const enchantmentId = rollEnchantment(item.slot, category, item);
-  const enchantment = enchantmentCatalog[enchantmentId];
-  if (!enchantment) {
-    log("Für dieses Item passt in dieser Kategorie keine freie Verzauberung.", "bad");
-    return;
-  }
-  spendCost(cost);
-  item.enchantments = [...(item.enchantments || []), enchantmentId];
-  state.combatStats = normalizeCombatStats(state.combatStats);
-  state.combatStats.itemsEnchanted += 1;
-  if (enchantRarityRank(enchantment.rarity) >= enchantRarityRank("rare")) {
-    state.combatStats.rareEnchantments += 1;
-  }
-  log(`${item.name} verzaubert: ${enchantment.name}.`, "drop");
-  notifyReadyAchievements();
-  save();
-  render();
-}
-
-function previewUpgradedItem(item) {
-  const upgraded = { ...item, upgrade: (item.upgrade || 0) + 1 };
-  if (item.slot === "weapon") upgraded.damage += 2;
-  if (item.slot === "offhand") {
-    upgraded.damage += 1;
-    upgraded.defense += 2;
-  }
-  if (item.slot === "chest") upgraded.defense += 3;
-  if (item.slot === "pants" || item.slot === "boots") upgraded.defense += 2;
-  if (item.slot === "necklace" || item.slot === "ring") {
-    upgraded.damage += 1;
-  }
-  if (item.slot === "weapon" || item.slot === "ring") upgraded.critChance = (upgraded.critChance || 0) + 0.01;
-  if (item.slot === "weapon" || item.slot === "necklace") upgraded.critDamage = (upgraded.critDamage || 0) + 0.03;
-  normalizeItemStatsForSlot(upgraded);
-  upgraded.name = item.name.replace(/\s\+\d+$/, "") + ` +${upgraded.upgrade}`;
-  return upgraded;
-}
-
-function upgradeEquipped(slot) {
-  const item = getItem(state.equipment[slot]);
-  if (item && (item.upgrade || 0) >= currentSmithMasteryLimit()) {
-    log("Borin Glutbart knurrt: Der Stahl braucht erst bessere Bindung.", "bad");
-    return;
-  }
-  if (!item || !canUpgrade(item)) {
-    log("Borin Glutbart knurrt: Dem Amboss fehlen noch Material oder Gold.", "bad");
-    return;
-  }
-  const cost = upgradeCost(item);
-  state.gold -= cost.gold;
-  Object.entries(cost.materials).forEach(([id, amount]) => {
-    state.materials[id] -= amount;
-  });
-  const upgraded = previewUpgradedItem(item);
-  upgraded.id = upgraded.id || state.equipment[slot];
-  state.customItems[upgraded.id] = upgraded;
-  if (upgraded.upgrade >= currentSmithMasteryLimit()) {
-    state.smithMastery.discovered = true;
-  }
-  state.combatStats = normalizeCombatStats(state.combatStats);
-  state.combatStats.itemsUpgraded += 1;
-  log(`${upgraded.name} beim Schmied verbessert.`, "drop");
-  notifyReadyAchievements();
-  save();
-  render();
-}
-
-function salvageValue(item) {
-  const qualityAmount = { common: 1, rare: 2, epic: 4, legendary: 7 }[item.quality];
-  const upgradeBonus = item.upgrade || 0;
-  const result = addMaterials({}, salvageBaseMaterials(item.slot, qualityAmount + upgradeBonus));
-  const rareAmount = { common: 0, rare: 1, epic: 2, legendary: 4 }[item.quality] || 0;
-
-  if (rareAmount) addMaterials(result, salvageRareMaterials(item, rareAmount));
-  if (item.set) addMaterials(result, { [setMaterialForItem(item)]: Math.max(1, Math.ceil(rareAmount / 2)) });
-  if (item.quality === "legendary") addMaterials(result, { emberCore: 1 });
-
-  return Object.fromEntries(Object.entries(result).filter(([, amount]) => amount > 0));
-}
-
-function rollSalvageValue(item) {
-  const result = salvageValue(item);
-  const bonus = salvageBonusMaterials(item);
-  if (bonus) addMaterials(result, bonus.materials);
-  return { materials: result, bonus };
-}
-
-function salvageBonusMaterials(item) {
-  if (!item || Math.random() > renownSalvageBonusChance(item)) return null;
-  const amount = item.quality === "legendary" ? 2 : 1;
-  const options = [];
-
-  if (item.set) options.push(setMaterialForItem(item));
-  if (["weapon", "offhand"].includes(item.slot)) options.push("oathSteel", "scrap");
-  if (["chest", "pants", "boots"].includes(item.slot)) options.push("leather", "sinew");
-  if (["necklace", "ring"].includes(item.slot)) options.push("moonDust", "shard");
-  if (["epic", "legendary"].includes(item.quality)) options.push("shard");
-  if (item.quality === "legendary") options.push("emberCore");
-
-  const material = options[random(0, options.length - 1)] || "scrap";
-  return {
-    materials: { [material]: amount },
-    text: `Sauber zerlegt: +${amount} ${materialLabel[material]}.`,
-  };
-}
-
-function addMaterials(target, source) {
-  Object.entries(source).forEach(([id, amount]) => {
-    target[id] = (target[id] || 0) + amount;
-  });
-  return target;
-}
-
-function salvageBaseMaterials(slot, amount) {
-  if (slot === "weapon") return { scrap: amount, oathSteel: Math.floor(amount / 3) };
-  if (slot === "offhand") return { scrap: amount, chain: Math.max(1, Math.floor(amount / 2)) };
-  if (slot === "chest") return { chain: amount, leather: Math.max(1, Math.floor(amount / 2)) };
-  if (slot === "pants") return { cloth: amount, leather: Math.max(1, Math.floor(amount / 2)) };
-  if (slot === "boots") return { leather: amount, sinew: Math.max(1, Math.floor(amount / 2)) };
-  if (slot === "necklace") return { moonDust: amount, shard: Math.max(1, Math.floor(amount / 2)) };
-  return { moonDust: amount, shard: Math.max(1, Math.floor(amount / 2)) };
-}
-
-function salvageRareMaterials(item, amount) {
-  if (item.set === "wolf") return { sinew: amount, wolfFang: Math.ceil(amount / 2) };
-  if (item.set === "iron") return { oathSteel: amount, oathMark: Math.ceil(amount / 2) };
-  if (item.set === "crypt") return { bone: amount, shadowResin: Math.ceil(amount / 2) };
-  if (item.set === "ashen") return { emberCore: Math.ceil(amount / 2), crownAsh: Math.ceil(amount / 2) };
-  if (["necklace", "ring"].includes(item.slot)) return { moonDust: amount, shard: Math.ceil(amount / 2) };
-  return { shard: amount };
-}
-
-function salvageInventoryItem(index) {
-  const itemId = state.inventory[index];
-  const item = getItem(itemId);
-  if (!item) return;
-  const { materials, bonus } = rollSalvageValue(item);
-  Object.entries(materials).forEach(([id, amount]) => {
-    state.materials[id] = (state.materials[id] || 0) + amount;
-  });
-  state.inventory.splice(index, 1);
-  delete state.itemDurability[itemId];
-  state.combatStats = normalizeCombatStats(state.combatStats);
-  state.combatStats.itemsSalvaged += 1;
-  const text = Object.entries(materials).map(([id, amount]) => `${amount} ${materialLabel[id]}`).join(", ");
-  log(`${item.name} zerlegt. Erhalten: ${text}.`, "drop");
-  if (bonus) log(bonus.text, "drop");
-  notifyReadyAchievements();
-  save();
-  render();
-}
-
-function salvageAllInventoryItems() {
-  if (!state.inventory.length) return;
-  const gained = {};
-  let count = 0;
-  let bonusCount = 0;
-
-  state.inventory.forEach((itemId) => {
-    const item = getItem(itemId);
-    if (!item) return;
-    count += 1;
-    const { materials, bonus } = rollSalvageValue(item);
-    if (bonus) bonusCount += 1;
-    Object.entries(materials).forEach(([id, amount]) => {
-      gained[id] = (gained[id] || 0) + amount;
-      state.materials[id] = (state.materials[id] || 0) + amount;
-    });
-  });
-
-  state.inventory.forEach((itemId) => delete state.itemDurability[itemId]);
-  state.inventory = [];
-  state.combatStats = normalizeCombatStats(state.combatStats);
-  state.combatStats.itemsSalvaged += count;
-  const text = Object.entries(gained).map(([id, amount]) => `${amount} ${materialLabel[id]}`).join(", ");
-  log(`${count} Items zerlegt. Erhalten: ${text}.`, "drop");
-  if (bonusCount) log(`${bonusCount} Items wurden sauber zerlegt und gaben Bonus-Material.`, "drop");
-  notifyReadyAchievements();
-  save();
-  render();
-}
-
-function rest() {
-  const cost = restCost();
-  syncDerivedStats();
-  if (state.hp >= state.maxHp) {
-    log("Du bist bereits vollständig erholt.");
-    return;
-  }
-  const paid = state.gold >= cost ? cost : 0;
-  state.gold -= paid;
-  state.hp = state.maxHp;
-  log(paid
-    ? `Du rastest am Lagerplatz. Leben vollständig erholt. Kosten: ${cost} Gold.`
-    : "Du rastest am Lagerplatz. Ohne genug Gold heilt dich die Grauwacht kostenlos.");
-  save();
-  render();
-}
-
-function repair() {
-  const cost = repairCost();
-  if (!cost) {
-    log("Deine Ausrüstung ist bereits in gutem Zustand.");
-    return;
-  }
-  if (state.gold < cost) {
-    log(`Für die Reparatur fehlen ${cost - state.gold} Gold.`, "bad");
-    return;
-  }
-  state.gold -= cost;
-  equipmentSlots.forEach((slot) => {
-    const itemId = state.equipment[slot];
-    if (getItem(itemId)) setItemDurability(itemId, 100);
-  });
-  state.durability = equippedDurabilityAverage();
-  log(`Der Schmied repariert deine ausgerüsteten Items vollständig. Kosten: ${cost} Gold.`);
-  save();
-  render();
-}
-
-function repairSlot(slot) {
-  const itemId = state.equipment[slot];
-  const item = getItem(itemId);
-  if (!item) return;
-  const cost = repairCostForSlot(slot);
-  if (!cost) {
-    log(`${item.name} ist bereits vollständig repariert.`);
-    return;
-  }
-  if (state.gold < cost) {
-    log(`Für ${item.name} fehlen ${cost - state.gold} Gold.`, "bad");
-    return;
-  }
-  state.gold -= cost;
-  setItemDurability(itemId, 100);
-  state.durability = equippedDurabilityAverage();
-  log(`${item.name} repariert. Kosten: ${cost} Gold.`);
-  save();
-  render();
-}
-
-function riskFor(enemy, stats = totalStats()) {
-  const estimate = combatRiskEstimate(enemy, stats);
-  if (estimate.survivalRatio >= 2.05) return "Einfach";
-  if (estimate.survivalRatio >= 1.18) return "Machbar";
-  if (estimate.survivalRatio >= 0.72) return "Riskant";
-  return "Tödlich";
-}
-
-function combatRiskEstimate(enemy, stats = totalStats()) {
-  const effectSummary = itemEffectSummary();
-  const combatStats = combatStatsWithItemEffects(stats, enemy, effectSummary);
-  const playerDamagePerRound = expectedPlayerDamagePerRound(enemy, combatStats, effectSummary);
-  const enemyDamagePerRound = expectedEnemyDamagePerRound(enemy, combatStats, effectSummary);
-  const enemyEffectiveHp = expectedEnemyEffectiveHp(enemy, playerDamagePerRound);
-  const playerEffectiveHp = expectedPlayerEffectiveHp(enemy, combatStats, effectSummary);
-  const playerRoundsToWin = Math.max(1, enemyEffectiveHp / Math.max(1, playerDamagePerRound));
-  const enemyRoundsToWin = Math.max(1, playerEffectiveHp / Math.max(1, enemyDamagePerRound));
-  return {
-    playerDamagePerRound,
-    enemyDamagePerRound,
-    playerRoundsToWin,
-    enemyRoundsToWin,
-    survivalRatio: enemyRoundsToWin / playerRoundsToWin,
-  };
-}
-
-function expectedPlayerDamagePerRound(enemy, stats, effectSummary = itemEffectSummary()) {
-  const enchantStats = equippedEnchantmentSummary();
-  const critMultiplier = 1 + (stats.critChance || 0) * ((stats.critDamage || 1.5) - 1);
-  const effectArmorIgnore = (enemy.elite || enemy.boss) ? enemy.defense * effectSummary.eliteArmorIgnore : 0;
-  let baseHit = Math.max(1, stats.damage - Math.max(0, enemy.defense - effectArmorIgnore) * 1.08) * critMultiplier;
-  if (enemy.elite || enemy.boss) baseHit *= 1 + enchantStats.bossDamage;
-  if (enemy.elite || enemy.boss) baseHit *= 1 + effectSummary.eliteDamageBonus;
-  baseHit *= playerAbilityDamageMultiplier(enemy);
-  baseHit *= enemyAverageDamageTakenMultiplier(enemy, baseHit);
-  baseHit *= enemyPlayerDamageDebuffMultiplier(enemy);
-  baseHit += stats.damage * Math.min(0.08, effectSummary.bleedChance * 0.22);
-  baseHit += stats.damage * Math.min(0.07, effectSummary.poisonChance * 0.2);
-  baseHit += stats.damage * Math.min(0.08, effectSummary.thornsRatio * 0.35);
-  if (effectSummary.critBurn) baseHit += stats.damage * (stats.critChance || 0) * 0.14;
-  return Math.max(1, baseHit);
-}
-
-function playerAbilityDamageMultiplier(enemy) {
-  let multiplier = 1;
-  if (hasBuildAbility("heavyStrike")) multiplier += 0.75 / 3;
-  if (hasBuildAbility("bladeFlurry")) multiplier += 0.45 / 4;
-  if (hasBuildAbility("execute")) multiplier += 0.15;
-  if (hasBuildAbility("shatter")) {
-    const armorValue = enemy.defense > 0 ? Math.min(0.25, enemy.defense / Math.max(12, enemy.defense + state.level * 3)) : 0;
-    multiplier += (0.3 + armorValue) / 3;
-  }
-  if (hasBuildAbility("counterBlow")) multiplier += 0.08;
-  return multiplier;
-}
-
-function enemyAverageDamageTakenMultiplier(enemy, hit) {
-  let total = 0;
-  const sampleRounds = 12;
-  for (let round = 1; round <= sampleRounds; round += 1) {
-    total += enemyDamageTakenMultiplier(enemy, enemy.hp * 0.6, round, hit).multiplier;
-  }
-  return total / sampleRounds;
-}
-
-function enemyPlayerDamageDebuffMultiplier(enemy) {
-  const ids = enemyAbilityIds(enemy);
-  let multiplier = 1;
-  if (ids.includes("ironBite")) multiplier *= 0.97;
-  if (ids.includes("shieldBash")) multiplier *= 0.94;
-  if (ids.includes("guardBash")) multiplier *= 0.97;
-  if (ids.includes("chainHook")) multiplier *= 0.955;
-  if (ids.includes("boneCurse")) multiplier *= 0.92;
-  if (ids.includes("emberChains")) multiplier *= 0.955;
-  if (ids.includes("hollowGaze")) multiplier *= 0.925;
-  if (ids.includes("cellLockdown")) multiplier *= 0.93;
-  if (ids.includes("wardenVerdict")) multiplier *= 0.94;
-  if (ids.includes("hollowRift")) multiplier *= 0.93;
-  return multiplier;
-}
-
-function expectedEnemyEffectiveHp(enemy, playerDamagePerRound) {
-  let effectiveHp = enemy.hp;
-  enemyAbilityIds(enemy).forEach((id) => {
-    const ability = enemyAbilityCatalog[id];
-    if (!ability) return;
-    if (id === "lifeDrain") effectiveHp += Math.max(2, playerDamagePerRound * 0.45);
-    if (id === "graveMend") effectiveHp += enemy.hp * 0.08;
-    if (id === "emberPrayer") effectiveHp += enemy.hp * 0.07;
-    if (id === "graveTithe") effectiveHp += enemy.hp * 0.1;
-    if (id === "emberHymn") effectiveHp += enemy.hp * 0.1;
-  });
-  if (enemyPassiveIds(enemy).includes("unholyRenewal")) effectiveHp *= 1.08;
-  if (enemyPassiveIds(enemy).includes("graveBargain")) effectiveHp *= 1.06;
-  if (enemyPassiveIds(enemy).includes("emberChoir")) effectiveHp *= 1.07;
-  if (enemyPassiveIds(enemy).includes("hollowSecondWind")) effectiveHp *= 1.12;
-  return effectiveHp;
-}
-
-function expectedEnemyDamagePerRound(enemy, stats, effectSummary = itemEffectSummary()) {
-  const enchantStats = equippedEnchantmentSummary();
-  const averageHit = (enemy.damage[0] + enemy.damage[1]) / 2;
-  const critStats = enemyCriticalStats(enemy);
-  const enemyCritChance = Math.max(0, critStats.critChance - Math.min(0.08, effectSummary.enemyCritReduction || 0));
-  const critMultiplier = 1 + enemyCritChance * (critStats.critDamage - 1);
-  let hit = Math.max(1, averageHit - stats.defense * 0.42) * critMultiplier;
-  hit *= enemyAbilityDamageMultiplier(enemy);
-  hit *= enemyDamagePassiveMultiplier(enemy, enemy.hp * 0.45);
-  hit += enemyDotDamagePerRound(enemy);
-  hit *= playerDefensiveAbilityMultiplier(stats);
-  hit *= 1 - Math.min(0.35, enchantStats.damageReduction);
-  hit *= 1 - Math.min(0.08, effectSummary.firstHitReduction / 8);
-  hit *= effectSummary.firstHitWeaken < 1 ? 0.985 : 1;
-  hit *= 1 - Math.min(0.04, effectSummary.critHealRatio * 0.3);
-  return Math.max(1, hit);
-}
-
-function enemyAbilityDamageMultiplier(enemy) {
-  let bonus = 0;
-  enemyAbilityIds(enemy).forEach((id) => {
-    const multiplier = enemyAbilityAverageMultiplier(id);
-    if (multiplier !== 1) bonus += multiplier - 1;
-  });
-  return Math.max(0.75, 1 + bonus);
-}
-
-function enemyAbilityAverageMultiplier(id) {
-  const multipliers = {
-    ambush: 1.045,
-    bloodBite: 1 + 0.18 / 3,
-    ironBite: 1 + 0.22 / 3,
-    tuskCharge: 1 + 0.55 / 4,
-    shieldBash: 1 + 0.1 / 3,
-    guardBash: 1 + 0.25 / 3,
-    chainHook: 1 + 0.2 / 4,
-    lifeDrain: 1 + 0.05 / 4,
-    burningBlade: 1 + 0.25 / 3,
-    flameBite: 1 + 0.4 / 4,
-    judgementStrike: 1 + 0.45 / 5,
-    boneCurse: 1 - 0.05 / 3,
-    graveMend: 1 - 0.25 / 4,
-    crushingBlow: 1 + 0.65 / 4,
-    forgeSmash: 1 + 0.45 / 3,
-    emberChains: 1 + 0.15 / 4,
-    dukeCommand: 1 + 0.35 / 3,
-    executionOrder: 1 + 0.7 / 5,
-    emberPrayer: 1 - 0.2 / 4,
-    ashNova: 1 + 0.45 / 5,
-    crownMaul: 1 + 0.55 / 4,
-    ashBlade: 1 + 0.35 / 3,
-    hollowGaze: 1 - 0.1 / 4,
-    championLeap: 1 + 0.75 / 5,
-    eliteFury: 1 + 0.25 / 4,
-    cellLockdown: 1 + 0.1 / 5,
-    graveTithe: 1 - 0.05 / 5,
-    bruteRampage: 1 + 0.5 / 6,
-    wardenVerdict: 1 + 0.35 / 5,
-    anvilQuake: 1 + 0.55 / 5,
-    dukeDuel: 1 + 0.45 / 5,
-    emberHymn: 1 - 0.1 / 5,
-    royalGore: 1 + 0.45 / 5,
-    hollowRift: 1 + 0.4 / 5,
-  };
-  return multipliers[id] || 1;
-}
-
-function enemyDotDamagePerRound(enemy) {
-  const ids = enemyAbilityIds(enemy);
-  let dot = 0;
-  if (ids.includes("bloodBite")) dot += Math.max(1, Math.ceil(enemy.level * 0.65)) * 0.45;
-  if (ids.includes("poisonClaws")) dot += Math.max(1, Math.ceil(enemy.level * 0.7)) * 0.75;
-  if (ids.includes("burningBlade")) dot += Math.max(1, Math.ceil(enemy.level * 0.75)) * 0.5;
-  if (ids.includes("flameBite")) dot += Math.max(1, Math.ceil(enemy.level * 0.85)) * 0.35;
-  if (ids.includes("emberChains")) dot += Math.max(1, Math.ceil(enemy.level * 0.85)) * 0.45;
-  if (ids.includes("ashNova")) dot += Math.max(1, Math.ceil(enemy.level * 0.9)) * 0.35;
-  if (ids.includes("ashBlade")) dot += Math.max(1, Math.ceil(enemy.level * 0.95)) * 0.5;
-  if (ids.includes("graveTithe")) dot += Math.max(1, Math.ceil(enemy.level * 0.65)) * 0.35;
-  if (ids.includes("anvilQuake")) dot += Math.max(1, Math.ceil(enemy.level * 0.8)) * 0.35;
-  if (ids.includes("emberHymn")) dot += Math.max(1, Math.ceil(enemy.level * 0.85)) * 0.35;
-  return dot;
-}
-
-function playerDefensiveAbilityMultiplier(stats) {
-  let multiplier = 1;
-  if (hasBuildAbility("shieldWall")) multiplier *= 0.9;
-  if (hasBuildAbility("tauntingBlow")) multiplier *= 0.94;
-  if (hasBuildAbility("lastStand")) multiplier *= 0.93;
-  if (hasBuildAbility("battleRush")) multiplier *= 0.97;
-  return multiplier;
-}
-
-function expectedPlayerEffectiveHp(enemy, stats, effectSummary = itemEffectSummary()) {
-  const enchantStats = equippedEnchantmentSummary();
-  let hp = Math.max(1, state.hp || stats.maxHp);
-  if (hasBuildAbility("battleRush")) hp += stats.maxHp * 0.18;
-  if (hasBuildAbility("lastStand")) hp += stats.maxHp * 0.14;
-  if (hasBuildAbility("shieldWall")) hp += stats.maxHp * 0.08;
-  if (effectSummary.firstHitReduction > 0) hp += stats.maxHp * 0.04;
-  if (effectSummary.postCombatHeal > 0) hp += stats.maxHp * Math.min(0.12, effectSummary.postCombatHeal);
-  if (enchantStats.lowHpShield > 0) hp += stats.maxHp * Math.min(0.18, enchantStats.lowHpShield);
-  if (enemyAbilityIds(enemy).some((id) => ["judgementStrike", "executionOrder"].includes(id))) hp *= 0.94;
-  return hp;
-}
-
-function restCost() {
-  return Math.max(8, Math.floor(6 + state.level * 4.2));
-}
-
-function repairCost() {
-  return equipmentSlots.reduce((sum, slot) => sum + repairCostForSlot(slot), 0);
-}
-
-function repairCostForSlot(slot) {
-  const itemId = state.equipment[slot];
-  const item = getItem(itemId);
-  if (!item) return 0;
-  const missing = 100 - itemDurability(itemId);
-  if (!missing) return 0;
-  const qualityMultiplier = { common: 0.75, rare: 1.25, epic: 1.9, legendary: 2.8 }[item.quality] || 1;
-  const upgradeMultiplier = 1 + (item.upgrade || 0) * 0.18;
-  const baseCost = missing * repairSlotMultiplier(slot) * qualityMultiplier * upgradeMultiplier * (0.42 + state.level * 0.025);
-  return Math.ceil(baseCost * (1 - renownRepairDiscount()));
 }
