@@ -1,4 +1,4 @@
-materialDrops = {
+const materialDrops = {
   wolf: [{ id: "leather", min: 1, max: 2 }, { id: "sinew", min: 0, max: 1 }],
   bandit: [{ id: "scrap", min: 1, max: 2 }, { id: "cloth", min: 0, max: 1 }, { id: "shard", min: 0, max: 1 }],
   boar: [{ id: "leather", min: 2, max: 3 }, { id: "sinew", min: 1, max: 2 }, { id: "emberCore", min: 0, max: 1 }],
@@ -20,5 +20,3 @@ materialDrops = {
   crownBeast: [{ id: "sinew", min: 3, max: 5 }, { id: "crownAsh", min: 1, max: 2 }],
   hollowChampion: [{ id: "oathSteel", min: 2, max: 4 }, { id: "emberCore", min: 1, max: 2 }, { id: "crownAsh", min: 0, max: 1 }],
 };
-
-if (typeof markDataPackLoaded === "function") markDataPackLoaded("drops");

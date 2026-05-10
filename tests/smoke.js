@@ -9,23 +9,21 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const html = read("index.html");
 const dataScripts = [
   "scripts/data.js",
-  "scripts/data-loader.js",
   "scripts/data-player.js",
   "scripts/data-world.js",
   "scripts/data-items.js",
   "scripts/data-quests.js",
   "scripts/data-labels.js",
+  "scripts/data-achievements.js",
+  "scripts/data-drops.js",
 ];
 const scripts = [
   ...dataScripts,
   "scripts/i18n.js",
-  "scripts/i18n-en.js",
   "scripts/save-system.js",
   "scripts/core.js",
   "scripts/render.js",
   "scripts/render-loot.js",
-  "scripts/data-achievements.js",
-  "scripts/data-drops.js",
 ].map(read);
 
 assert(!/[Ã�]/.test(html), "index.html still contains likely mojibake characters");
@@ -43,12 +41,13 @@ for (const id of referencedIds) {
 const scriptOrder = [...html.matchAll(/<script src="\.\/([^"?]+)[^"]*"><\/script>/g)].map((match) => match[1]);
 assert.deepStrictEqual(scriptOrder, [
   "scripts/data.js",
-  "scripts/data-loader.js",
   "scripts/data-player.js",
   "scripts/data-world.js",
   "scripts/data-items.js",
   "scripts/data-quests.js",
   "scripts/data-labels.js",
+  "scripts/data-achievements.js",
+  "scripts/data-drops.js",
   "scripts/i18n.js",
   "scripts/save-system.js",
   "scripts/core.js",
