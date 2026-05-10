@@ -2,9 +2,9 @@
 const saveBackupKey = `${saveKey}-backup`;
 const savePreviousKey = `${saveKey}-previous`;
 const saveExportVersion = 1;
-<<<<<<< HEAD
 const assetVersion = "0.8.74";
-=======
->>>>>>> parent of d1c58fd (Lazy data packs for optional game systems)
 
 const xpForLevel = (level) => Math.floor(115 * Math.pow(level, 1.78) + level * 48);
+
+let achievementCatalog = [];
+let materialDrops = {};

@@ -1,4 +1,4 @@
-const achievementCatalog = [
+achievementCatalog = [
   { id: "firstElite", category: "Kampf", name: "Erste Narbe", text: "Besiege deinen ersten Elite-Gegner.", metric: "eliteKills", target: 1, reward: { renown: 1, gold: 40 } },
   { id: "eliteBreaker", category: "Kampf", name: "Elitenbrecher", text: "Besiege 10 Elite-Gegner.", metric: "eliteKills", target: 10, reward: { renown: 2, materials: { oathSteel: 3 } } },
   { id: "firstBoss", category: "Kampf", name: "Tor zur Tiefe", text: "Besiege deinen ersten Dungeon-Boss.", metric: "bossKills", target: 1, reward: { renown: 2, materials: { graveSeal: 1 } } },
@@ -24,3 +24,5 @@ const achievementCatalog = [
 
   { id: "knownFighter", category: "Progression", name: "Bekannter Kämpfer", text: "Erreiche 10 Ruhm.", metric: "renown", target: 10, reward: { gold: 150, materials: { oathSteel: 2 } } },
 ];
+
+if (typeof markDataPackLoaded === "function") markDataPackLoaded("achievements");

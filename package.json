@@ -1,5 +1,5 @@
 {
   "scripts": {
-    "test": "node --check scripts/data.js && node --check scripts/data-player.js && node --check scripts/data-world.js && node --check scripts/data-items.js && node --check scripts/data-quests.js && node --check scripts/data-labels.js && node --check scripts/data-achievements.js && node --check scripts/data-drops.js && node --check scripts/i18n.js && node --check scripts/save-system.js && node --check scripts/core.js && node --check scripts/render.js && node --check scripts/render-loot.js && node --check scripts/events.js && node tests/smoke.js"
+    "test": "node --check scripts/data.js && node --check scripts/data-loader.js && node --check scripts/data-player.js && node --check scripts/data-world.js && node --check scripts/data-items.js && node --check scripts/data-quests.js && node --check scripts/data-labels.js && node --check scripts/data-achievements.js && node --check scripts/data-drops.js && node --check scripts/i18n.js && node --check scripts/i18n-en.js && node --check scripts/save-system.js && node --check scripts/core.js && node --check scripts/render.js && node --check scripts/render-loot.js && node --check scripts/events.js && node tests/smoke.js"
   }
 }
