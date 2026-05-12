@@ -1645,6 +1645,33 @@ function lootCompletion(enemyId) {
   };
 }
 
+function generatedLootPoolCount(enemy) {
+  return generatedBestiaryTemplates(enemy).length;
+}
+
+function pruneBestiaryLoot(enemyId) {
+  const enemy = enemies[enemyId];
+  const drops = state.discoveredLoot[enemyId];
+  if (!enemy || !drops) return;
+
+  const fixedDrops = {};
+  const generatedDrops = Object.entries(drops)
+    .filter(([, item]) => {
+      if (item?.fixed) {
+        fixedDrops[`fixed:${item.id}`] = item;
+        return false;
+      }
+      return true;
+    })
+    .sort(([, a], [, b]) => itemScore(b) - itemScore(a));
+
+  const generatedLimit = generatedLootPoolCount(enemy);
+  state.discoveredLoot[enemyId] = {
+    ...fixedDrops,
+    ...Object.fromEntries(generatedDrops.slice(0, generatedLimit)),
+  };
+}
+
 function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiaryLoot(enemyId)) {
   const enemy = enemies[enemyId];
   const discoveredLookup = discoveredLootLookup(discovered);
@@ -1745,6 +1772,16 @@ function effectiveQualityChance(enemy, quality, allowedQualities) {
   return Object.entries(baseQualityChances(enemy)).reduce((sum, [rolled, chance]) => {
     return nearestAllowedQuality(rolled, allowedQualities) === quality ? sum + chance : sum;
   }, 0);
+}
+
+function nearestAllowedQuality(quality, allowedQualities) {
+  if (allowedQualities.includes(quality)) return quality;
+  const rank = { common: 0, rare: 1, epic: 2, legendary: 3 };
+  const sourceRank = rank[quality] ?? 0;
+  return [...allowedQualities].sort((a, b) =>
+    Math.abs((rank[a] ?? 0) - sourceRank) - Math.abs((rank[b] ?? 0) - sourceRank)
+    || (rank[a] ?? 0) - (rank[b] ?? 0)
+  )[0] || "common";
 }
 
 function baseQualityChances(enemy) {
