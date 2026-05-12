@@ -5,6 +5,13 @@
   applyStaticTranslations();
   syncDerivedStats();
   const stats = totalStats();
+  renderPlayerHud(language);
+  renderMainPanels(stats);
+  renderOpenModals(stats);
+  renderCombatPanel();
+}
+
+function renderPlayerHud(language = currentLanguage()) {
   setText("level", state.level);
   setText("gold", state.gold);
   setText("renown", state.renown);
@@ -21,7 +28,9 @@
     : `<span class="button-main">${restName}</span><span class="button-price">${restPrice}</span>`;
   renderCachedHtml("restBtn", `${language}|${state.hp >= state.maxHp ? "full" : restPrice}`, () => restLabel);
   setDisabled("restBtn", state.hp >= state.maxHp);
+}
 
+function renderMainPanels(stats = totalStats()) {
   renderMap();
   renderEnemies(stats);
   renderEquipment();
@@ -29,17 +38,29 @@
   renderQuestNotice();
   renderAchievementNotice();
   renderQuests();
-  if (isModalOpen("inventoryModal")) renderInventory();
-  if (isModalOpen("questBoardModal")) renderQuestBoard();
-  if (isModalOpen("achievementsModal")) renderAchievements();
-  if (isModalOpen("smithModal")) renderSmith();
-  if (isModalOpen("saveModal")) renderSaveSummary();
-  if (isModalOpen("repairModal")) renderRepairModal();
-  if (isModalOpen("equipmentModal")) renderEquipmentDetails();
-  if (isModalOpen("playerStatsModal")) renderPlayerStatsDetails(stats);
   renderSelectedEnemy();
+}
+
+const modalRenderers = {
+  inventoryModal: () => renderInventory(),
+  questBoardModal: () => renderQuestBoard(),
+  achievementsModal: () => renderAchievements(),
+  smithModal: () => renderSmith(),
+  saveModal: () => renderSaveSummary(),
+  repairModal: () => renderRepairModal(),
+  equipmentModal: () => renderEquipmentDetails(),
+  playerStatsModal: (stats) => renderPlayerStatsDetails(stats),
+  combatLogModal: () => renderCombatLog(),
+};
+
+function renderOpenModals(stats = totalStats()) {
+  Object.entries(modalRenderers).forEach(([modalId, renderer]) => {
+    if (isModalOpen(modalId)) renderer(stats);
+  });
+}
+
+function renderCombatPanel() {
   renderCombatLogSummary();
-  if (isModalOpen("combatLogModal")) renderCombatLog();
   renderLog();
   setText("fightBtn", isFighting ? (skipCombat ? t("combat.skipping", "Überspringe...") : t("combat.skip", "Skip")) : t("combat.start", "Kampf starten"));
   setDisabled("fightBtn", isFighting ? skipCombat : state.pendingLoot.length > 0);
@@ -59,6 +80,11 @@ function setBarWidth(id, value) {
 function setDisabled(id, disabled) {
   const element = $(id);
   if (element.disabled !== disabled) element.disabled = disabled;
+}
+
+function setHidden(id, hidden) {
+  const element = $(id);
+  if (element.hidden !== hidden) element.hidden = hidden;
 }
 
 function renderCachedHtml(id, signature, htmlFactory) {
@@ -666,10 +692,10 @@ function renderSmith() {
   } else {
     renderSmithRenown();
   }
-  $("smithHome").hidden = smithView !== "home";
-  $("smithUpgradeSection").hidden = smithView !== "upgrade";
-  $("smithSalvageSection").hidden = smithView !== "salvage";
-  $("smithEnchantSection").hidden = smithView !== "enchant";
+  setHidden("smithHome", smithView !== "home");
+  setHidden("smithUpgradeSection", smithView !== "upgrade");
+  setHidden("smithSalvageSection", smithView !== "salvage");
+  setHidden("smithEnchantSection", smithView !== "enchant");
 
   if (smithView === "home") renderSmithHome();
   if (smithView === "upgrade") renderSmithUpgrade();
@@ -685,7 +711,25 @@ function formatSaveDate(value) {
 }
 
 function renderSaveSummary() {
-  const metadata = buildSaveMetadata(state.lastSaveExportAt || new Date().toISOString());
+  const signature = [
+    currentLanguage(),
+    state.lastSaveExportAt || "",
+    state.characterClass,
+    state.build,
+    state.level,
+    state.xp,
+    state.gold,
+    state.renown,
+    selectedZone,
+    (state.activeQuests || []).length,
+    (state.inventory || []).length,
+    (state.pendingLoot || []).length,
+    storageStatusSignature(),
+  ].join("|");
+  if (renderCache.saveSummary === signature) return;
+  renderCache.saveSummary = signature;
+
+  const metadata = buildSaveMetadata(state.lastSaveExportAt || "");
   const activeQuestText = t("common.activeCount", "{count} aktiv", { count: metadata.activeQuests });
   const pendingLootText = metadata.pendingLoot ? t("common.openCount", "{count} offen", { count: metadata.pendingLoot }) : t("common.none", "keine");
   $("saveSummary").innerHTML = `
@@ -713,6 +757,19 @@ function renderSaveSummary() {
     </section>
     ${renderStorageStatus()}
   `;
+}
+
+function storageStatusSignature() {
+  const status = browserStorageStatus();
+  const failedLoad = status.failedLoads[0];
+  return [
+    status.localStorage.ok ? 1 : 0,
+    status.sessionStorage.ok ? 1 : 0,
+    status.windowName.ok ? 1 : 0,
+    status.loadedFrom || "",
+    status.recoveredFrom || "",
+    failedLoad ? `${failedLoad.label}:${failedLoad.error}` : "",
+  ].join("|");
 }
 
 function renderStorageStatus() {
@@ -2129,6 +2186,10 @@ function renderCombatLog() {
 
 function renderRepairModal() {
   const total = repairCost();
+  const signature = `${currentLanguage()}|${state.gold}|${total}|${equipmentSignature()}`;
+  if (renderCache.repairModal === signature) return;
+  renderCache.repairModal = signature;
+
   $("repairSummary").innerHTML = `
     <div>
       <strong>${total} ${t("common.gold", "Gold")}</strong>
