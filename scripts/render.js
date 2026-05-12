@@ -96,6 +96,15 @@ function renderCachedHtml(id, signature, htmlFactory) {
   return true;
 }
 
+function renderCachedList(id, signature, items, emptyHtmlFactory, itemHtmlFactory) {
+  return renderCachedHtml(id, `list:${signature}`, () => {
+    const list = Array.isArray(items) ? items : [];
+    return list.length
+      ? list.map(itemHtmlFactory).join("")
+      : emptyHtmlFactory();
+  });
+}
+
 function renderHeroBuildVisual() {
   const build = ["tank", "damage", "bruiser"].includes(state.build) ? state.build : "bruiser";
   const className = `combatant hero-sprite hero-build-${build}`;
@@ -1320,67 +1329,66 @@ function renderInventory() {
   );
   $("sellAllBtn").disabled = !state.inventory.length;
   const signature = `${currentLanguage()}|${inventorySignature()}|${equipmentSignature()}`;
-  if (renderCache.inventory === signature) return;
-  renderCache.inventory = signature;
+  renderCachedList(
+    "inventory",
+    `inventory:${signature}`,
+    state.inventory,
+    () => `<div class="inventory-empty">${t("inventory.emptyShort", "Noch keine Items im Inventar.")}</div>`,
+    renderInventoryItemCard,
+  );
+}
 
-  if (!state.inventory.length) {
-    $("inventory").innerHTML = `<div class="inventory-empty">${t("inventory.emptyShort", "Noch keine Items im Inventar.")}</div>`;
-    return;
-  }
-
-  $("inventory").innerHTML = state.inventory.map((itemId, index) => {
-    const item = getItem(itemId);
-    if (!item) return "";
-    const quality = itemQuality(item);
-    const slot = itemSlot(item);
-    const current = getItem(state.equipment[slot]);
-    const compare = compareLoot(item, current);
-    const statText = itemStatText(item);
-    const enchantText = itemEnchantmentsText(item);
-    return `<div class="inventory-item rarity-card rarity-${quality}">
-      <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
-      <p>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("common.value", "Wert")} ${sellValue(item)} ${t("common.gold", "Gold")}</p>
-      ${item.set ? `<p class="set-line">${escapeHtml(setBonuses[item.set]?.name || item.set)}</p>` : ""}
-      ${statText ? `<p>${statText}</p>` : ""}
-      ${enchantText ? `<p>${enchantText}</p>` : ""}
-      <p>${t("main.durability", "Haltbarkeit")}: ${itemDurability(itemId)}%</p>
-      <div class="loot-compare compact">
-        ${renderCompareSpans(compare, 3)}
-      </div>
-      <div class="inventory-actions">
-        <button type="button" data-equip="${index}">${t("inventory.equip", "Ausrüsten")}</button>
-        <button class="sell-button" type="button" data-sell="${index}">${t("inventory.sell", "Verkaufen")}</button>
-      </div>
-    </div>`;
-  }).join("");
-
+function renderInventoryItemCard(itemId, index) {
+  const item = getItem(itemId);
+  if (!item) return "";
+  const quality = itemQuality(item);
+  const slot = itemSlot(item);
+  const current = getItem(state.equipment[slot]);
+  const compare = compareLoot(item, current);
+  const statText = itemStatText(item);
+  const enchantText = itemEnchantmentsText(item);
+  return `<div class="inventory-item rarity-card rarity-${quality}">
+    <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
+    <p>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("common.value", "Wert")} ${sellValue(item)} ${t("common.gold", "Gold")}</p>
+    ${item.set ? `<p class="set-line">${escapeHtml(setBonuses[item.set]?.name || item.set)}</p>` : ""}
+    ${statText ? `<p>${statText}</p>` : ""}
+    ${enchantText ? `<p>${enchantText}</p>` : ""}
+    <p>${t("main.durability", "Haltbarkeit")}: ${itemDurability(itemId)}%</p>
+    <div class="loot-compare compact">
+      ${renderCompareSpans(compare, 3)}
+    </div>
+    <div class="inventory-actions">
+      <button type="button" data-equip="${index}">${t("inventory.equip", "Ausrüsten")}</button>
+      <button class="sell-button" type="button" data-sell="${index}">${t("inventory.sell", "Verkaufen")}</button>
+    </div>
+  </div>`;
 }
 
 function renderQuests() {
   state.activeQuests = state.activeQuests.filter((id) => !state.completedQuests.includes(id));
   const active = state.activeQuests.map(getQuestById).filter(Boolean);
   const signature = `${currentLanguage()}|${active.map((quest) => `${quest.id}:${Math.floor(state.quests[quest.id] || 0)}:${state.completedQuests.includes(quest.id) ? 1 : 0}`).join("|") || "empty"}`;
-  if (renderCache.quests === signature) return;
-  renderCache.quests = signature;
+  renderCachedList(
+    "quests",
+    `activeQuests:${signature}`,
+    active,
+    () => `<div class="inventory-empty">${t("quest.none", "Keine aktive Quest. Öffne die Quest-Tafel.")}</div>`,
+    renderActiveQuestCard,
+  );
+}
 
-  if (!active.length) {
-    $("quests").innerHTML = `<div class="inventory-empty">${t("quest.none", "Keine aktive Quest. Öffne die Quest-Tafel.")}</div>`;
-    return;
-  }
-
-  $("quests").innerHTML = active.map((quest) => {
-    const value = Math.floor(state.quests[quest.id] || 0);
-    const done = state.completedQuests.includes(quest.id);
-    const rarity = escapeToken(quest.rarity || (quest.rare ? "legendary" : "common"), ["common", "rare", "epic", "legendary"], "common");
-    return `<div class="quest rarity-card rarity-${rarity} ${done ? "done" : ""}">
-      <div class="quest-head">
-        <strong><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}</strong>
-        <button class="quest-delete" type="button" data-cancel-quest="${quest.id}">${t("quest.delete", "Löschen")}</button>
-      </div>
-      <p>${escapeHtml(quest.text)}</p>
-      <p>${done ? t("quest.completed", "Abgeschlossen") : `${value}/${quest.needed}`} · ${t("common.reward", "Belohnung")}: ${quest.rewardXp} ${t("common.xp", "XP")}, ${quest.rewardGold} ${t("common.gold", "Gold")}, ${questRenownReward(quest)} ${t("common.renown", "Ruhm")}</p>
-    </div>`;
-  }).join("");
+function renderActiveQuestCard(quest) {
+  const value = Math.floor(state.quests[quest.id] || 0);
+  const done = state.completedQuests.includes(quest.id);
+  const rarity = escapeToken(quest.rarity || (quest.rare ? "legendary" : "common"), ["common", "rare", "epic", "legendary"], "common");
+  return `<div class="quest rarity-card rarity-${rarity} ${done ? "done" : ""}">
+    <div class="quest-head">
+      <strong><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}</strong>
+      <button class="quest-delete" type="button" data-cancel-quest="${quest.id}">${t("quest.delete", "Löschen")}</button>
+    </div>
+    <p>${escapeHtml(quest.text)}</p>
+    <p>${done ? t("quest.completed", "Abgeschlossen") : `${value}/${quest.needed}`} · ${t("common.reward", "Belohnung")}: ${quest.rewardXp} ${t("common.xp", "XP")}, ${quest.rewardGold} ${t("common.gold", "Gold")}, ${questRenownReward(quest)} ${t("common.renown", "Ruhm")}</p>
+  </div>`;
 }
 
 function questBoardSourceSignature() {
@@ -1421,42 +1429,41 @@ function renderQuestBoard() {
     const active = isQuestActive(quest.id);
     return `${quest.id}:${active ? 1 : 0}:${Math.floor(state.quests[quest.id] || 0)}:${isQuestCompletedPermanent(quest.id) ? 1 : 0}`;
   }).join("|") || "empty"}`;
-  if (renderCache.questBoard === signature) return;
-  renderCache.questBoard = signature;
+  renderCachedList(
+    "questBoard",
+    `questBoard:${signature}`,
+    boardQuests,
+    () => `<div class="inventory-empty">${t("quest.emptyBoard", "Die Tafel ist leer. Gewonnene Kämpfe bringen bald neue Aufträge.")}</div>`,
+    renderQuestOfferCard,
+  );
+}
 
-  if (!boardQuests.length) {
-    $("questBoard").innerHTML = `<div class="inventory-empty">${t("quest.emptyBoard", "Die Tafel ist leer. Gewonnene Kämpfe bringen bald neue Aufträge.")}</div>`;
-    return;
-  }
+function renderQuestOfferCard(quest) {
+  const active = isQuestActive(quest.id);
+  const isNew = (state.unseenQuests || []).includes(quest.id);
+  const value = Math.floor(state.quests[quest.id] || 0);
+  const progress = active ? `${value}/${quest.needed}` : t("quest.notAccepted", "Noch nicht angenommen");
+  const levelRange = questLevelForCurrentEnemy(quest);
+  const button = active
+      ? `<button type="button" disabled>${t("quest.accepted", "Angenommen")}</button>`
+      : `<button type="button" data-accept-quest="${quest.id}">${t("quest.accept", "Quest annehmen")}</button>`;
 
-  $("questBoard").innerHTML = boardQuests.map((quest) => {
-    const active = isQuestActive(quest.id);
-    const isNew = (state.unseenQuests || []).includes(quest.id);
-    const value = Math.floor(state.quests[quest.id] || 0);
-    const progress = active ? `${value}/${quest.needed}` : t("quest.notAccepted", "Noch nicht angenommen");
-    const levelRange = questLevelForCurrentEnemy(quest);
-    const button = active
-        ? `<button type="button" disabled>${t("quest.accepted", "Angenommen")}</button>`
-        : `<button type="button" data-accept-quest="${quest.id}">${t("quest.accept", "Quest annehmen")}</button>`;
-
-    const rarity = escapeToken(quest.rarity || (quest.rare ? "legendary" : "common"), ["common", "rare", "epic", "legendary"], "common");
-    return `<div class="quest-offer rarity-card rarity-${rarity} ${active ? "active" : ""} ${quest.rare ? "rare" : ""} ${isNew ? "new" : ""}">
-      <strong class="quest-offer-title"><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}${isNew ? `<em>${t("common.new", "Neu")}</em>` : ""}</strong>
-      <div class="quest-offer-body">
-        <p>${escapeHtml(quest.text)}</p>
-        <p>${t("common.status", "Status")}: ${progress}</p>
-      </div>
-      <div class="reward-list">
-        <span>${levelRange || t("zone.currentArea", "Aktuelles Gebiet")}</span>
-        <span>${t("common.reward", "Belohnung")}: ${quest.rewardXp} ${t("common.xp", "XP")}</span>
-        <span>${t("common.gold", "Gold")}: ${quest.rewardGold}</span>
-        <span>${t("common.renown", "Ruhm")}: ${questRenownReward(quest)}</span>
-        ${quest.rewardItem ? `<span>${t("quest.itemReward", "Item")}: ${quest.rare ? t("quest.legendary", "legendär") : t("quest.epic", "episch")}</span>` : ""}
-      </div>
-      <div class="quest-offer-action">${button}</div>
-    </div>`;
-  }).join("");
-
+  const rarity = escapeToken(quest.rarity || (quest.rare ? "legendary" : "common"), ["common", "rare", "epic", "legendary"], "common");
+  return `<div class="quest-offer rarity-card rarity-${rarity} ${active ? "active" : ""} ${quest.rare ? "rare" : ""} ${isNew ? "new" : ""}">
+    <strong class="quest-offer-title"><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}${isNew ? `<em>${t("common.new", "Neu")}</em>` : ""}</strong>
+    <div class="quest-offer-body">
+      <p>${escapeHtml(quest.text)}</p>
+      <p>${t("common.status", "Status")}: ${progress}</p>
+    </div>
+    <div class="reward-list">
+      <span>${levelRange || t("zone.currentArea", "Aktuelles Gebiet")}</span>
+      <span>${t("common.reward", "Belohnung")}: ${quest.rewardXp} ${t("common.xp", "XP")}</span>
+      <span>${t("common.gold", "Gold")}: ${quest.rewardGold}</span>
+      <span>${t("common.renown", "Ruhm")}: ${questRenownReward(quest)}</span>
+      ${quest.rewardItem ? `<span>${t("quest.itemReward", "Item")}: ${quest.rare ? t("quest.legendary", "legendär") : t("quest.epic", "episch")}</span>` : ""}
+    </div>
+    <div class="quest-offer-action">${button}</div>
+  </div>`;
 }
 
 function acceptQuest(questId) {
@@ -2197,29 +2204,37 @@ function renderRepairModal() {
     </div>
     <button type="button" data-repair-all ${total === 0 || state.gold < total ? "disabled" : ""}>${t("equipment.repairAll", "Alles reparieren")}</button>
   `;
-  $("repairList").innerHTML = equipmentSlots.map((slot) => {
-    const itemId = state.equipment[slot];
-    const item = getItem(itemId);
-    if (!item) {
-      return `<div class="repair-row empty-slot">
-        <div>
-          <strong>${labelFor(slotLabel, slot)}</strong>
-          <p>${t("common.empty", "Leer")}</p>
-        </div>
-        <button type="button" disabled>${t("equipment.noGear", "Keine Ausrüstung")}</button>
-      </div>`;
-    }
-    const durability = itemDurability(itemId);
-    const cost = repairCostForSlot(slot);
-    const disabled = cost === 0 || state.gold < cost ? "disabled" : "";
-    const label = cost === 0 ? t("equipment.fullyRepaired", "Vollständig") : `${cost} ${t("common.gold", "Gold")}`;
-    const quality = itemQuality(item);
-    return `<div class="repair-row rarity-card rarity-${quality}">
+  renderCachedList(
+    "repairList",
+    `repairList:${signature}`,
+    equipmentSlots,
+    () => "",
+    renderRepairRow,
+  );
+}
+
+function renderRepairRow(slot) {
+  const itemId = state.equipment[slot];
+  const item = getItem(itemId);
+  if (!item) {
+    return `<div class="repair-row empty-slot">
       <div>
-        <strong class="quality-${quality}">${labelFor(slotLabel, slot)} · ${escapeHtml(item.name)}</strong>
-        <p>${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${durability}% · ${t("equipment.repair", "Reparatur")}: ${cost} ${t("common.gold", "Gold")}</p>
+        <strong>${labelFor(slotLabel, slot)}</strong>
+        <p>${t("common.empty", "Leer")}</p>
       </div>
-      <button type="button" data-repair-slot="${slot}" ${disabled}>${label}</button>
+      <button type="button" disabled>${t("equipment.noGear", "Keine Ausrüstung")}</button>
     </div>`;
-  }).join("");
+  }
+  const durability = itemDurability(itemId);
+  const cost = repairCostForSlot(slot);
+  const disabled = cost === 0 || state.gold < cost ? "disabled" : "";
+  const label = cost === 0 ? t("equipment.fullyRepaired", "Vollständig") : `${cost} ${t("common.gold", "Gold")}`;
+  const quality = itemQuality(item);
+  return `<div class="repair-row rarity-card rarity-${quality}">
+    <div>
+      <strong class="quality-${quality}">${labelFor(slotLabel, slot)} · ${escapeHtml(item.name)}</strong>
+      <p>${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${durability}% · ${t("equipment.repair", "Reparatur")}: ${cost} ${t("common.gold", "Gold")}</p>
+    </div>
+    <button type="button" data-repair-slot="${slot}" ${disabled}>${label}</button>
+  </div>`;
 }
