@@ -1201,15 +1201,23 @@ function renderSmithEnchant() {
     const item = getItem(itemId);
     if (!item) return "";
     const quality = itemQuality(item);
+    const savedEnchantments = savedItemEnchantments(item);
     const enchantments = activeItemEnchantments(item);
-    const freeSlots = Math.max(0, slotLimit - enchantments.length);
+    const inactiveEnchantments = inactiveItemEnchantments(item);
+    const freeSlots = Math.max(0, slotLimit - savedEnchantments.length);
     const full = freeSlots <= 0;
     const cannotPay = !canPayCost(cost);
+    const enchantmentText = enchantments.length
+      ? enchantments.map((enchantment) => `${escapeHtml(enchantment.name)}: ${escapeHtml(enchantment.text)}`).join("<br>")
+      : t("enchant.notEnchanted", "Noch nicht verzaubert.");
+    const lockedText = inactiveEnchantments.length
+      ? `<br><span class="muted">${t("enchant.lockedRunes", "Gesperrt bis höhere Bindung")}: ${inactiveEnchantments.map((enchantment) => escapeHtml(enchantment.name)).join(", ")}</span>`
+      : "";
     return `<div class="enchant-card rarity-card rarity-${quality}">
       <div>
         <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
-        <p>${labelFor(qualityLabel, quality)} · Slots ${enchantments.length}/${slotLimit}</p>
-        <p>${enchantments.length ? enchantments.map((enchantment) => `${escapeHtml(enchantment.name)}: ${escapeHtml(enchantment.text)}`).join("<br>") : t("enchant.notEnchanted", "Noch nicht verzaubert.")}</p>
+        <p>${labelFor(qualityLabel, quality)} · Slots ${Math.min(savedEnchantments.length, slotLimit)}/${slotLimit}${inactiveEnchantments.length ? ` · ${inactiveEnchantments.length} ${t("enchant.locked", "gesperrt")}` : ""}</p>
+        <p>${enchantmentText}${lockedText}</p>
       </div>
       <div class="enchant-actions">
         ${Object.entries(enchantmentCategoryLabel).map(([category, label]) => {

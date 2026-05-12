@@ -712,11 +712,24 @@ function allowedEnchantRarities() {
   return ["common"];
 }
 
-function activeItemEnchantments(item) {
+function savedItemEnchantments(item) {
   if (!item?.enchantments?.length) return [];
   return item.enchantments
     .map((id) => enchantmentCatalog[id])
     .filter((enchantment) => enchantment && enchantment.slots.includes(item.slot));
+}
+
+function activeEnchantSlotLimit() {
+  if (typeof state === "undefined" || !state) return 3;
+  return maxEnchantSlotsForLevel();
+}
+
+function activeItemEnchantments(item) {
+  return savedItemEnchantments(item).slice(0, activeEnchantSlotLimit());
+}
+
+function inactiveItemEnchantments(item) {
+  return savedItemEnchantments(item).slice(activeEnchantSlotLimit());
 }
 
 function equippedEnchantmentSummary() {
@@ -3052,7 +3065,7 @@ function spendCost(cost) {
 
 function enchantmentPool(slot, category, item = null) {
   const allowedRarities = allowedEnchantRarities();
-  const usedGroups = new Set(activeItemEnchantments(item).map((enchantment) => enchantment.group));
+  const usedGroups = new Set(savedItemEnchantments(item).map((enchantment) => enchantment.group));
   return Object.entries(enchantmentCatalog)
     .filter(([, enchantment]) => enchantment.category === category)
     .filter(([, enchantment]) => enchantment.slots.includes(slot))
@@ -3090,7 +3103,7 @@ function enchantEquipped(slot, category) {
   const item = ensureCustomEquippedItem(slot);
   if (!item) return;
   const limit = maxEnchantSlotsForLevel();
-  if ((item.enchantments || []).length >= limit) {
+  if (savedItemEnchantments(item).length >= limit) {
     log(`${item.name} hat aktuell keinen freien Verzauberungs-Slot.`, "bad");
     return;
   }
