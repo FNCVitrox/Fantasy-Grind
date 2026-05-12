@@ -11,14 +11,14 @@ materialDrops = {
   emberStalker: [{ id: "sinew", min: 2, max: 4 }, { id: "emberCore", min: 1, max: 2 }],
   crownSentinel: [{ id: "oathSteel", min: 2, max: 4 }, { id: "crownAsh", min: 1, max: 2 }],
   ratguard: [{ id: "scrap", min: 2, max: 3 }, { id: "chain", min: 0, max: 1 }],
-  boneAcolyte: [{ id: "bone", min: 1, max: 3 }, { id: "shard", min: 1, max: 2 }],
-  cryptBrute: [{ id: "chain", min: 2, max: 4 }, { id: "shadowResin", min: 0, max: 1 }],
+  boneAcolyte: [{ id: "bone", min: 1, max: 3 }, { id: "shard", min: 1, max: 2 }, { id: "graveSeal", min: 0, max: 1 }],
+  cryptBrute: [{ id: "chain", min: 2, max: 4 }, { id: "shadowResin", min: 0, max: 1 }, { id: "graveSeal", min: 0, max: 1 }],
   chainWarden: [{ id: "chain", min: 2, max: 4 }, { id: "oathSteel", min: 0, max: 1 }],
   oathForger: [{ id: "oathSteel", min: 2, max: 4 }, { id: "emberCore", min: 0, max: 1 }],
   ironDuke: [{ id: "oathSteel", min: 3, max: 5 }, { id: "oathMark", min: 1, max: 2 }],
-  emberPriest: [{ id: "shard", min: 2, max: 4 }, { id: "emberCore", min: 1, max: 2 }],
-  crownBeast: [{ id: "sinew", min: 3, max: 5 }, { id: "crownAsh", min: 1, max: 2 }],
-  hollowChampion: [{ id: "oathSteel", min: 2, max: 4 }, { id: "emberCore", min: 1, max: 2 }, { id: "crownAsh", min: 0, max: 1 }],
+  emberPriest: [{ id: "shard", min: 2, max: 4 }, { id: "emberCore", min: 1, max: 2 }, { id: "graveSeal", min: 0, max: 1 }],
+  crownBeast: [{ id: "sinew", min: 3, max: 5 }, { id: "crownAsh", min: 1, max: 2 }, { id: "graveSeal", min: 0, max: 1 }],
+  hollowChampion: [{ id: "oathSteel", min: 2, max: 4 }, { id: "emberCore", min: 1, max: 2 }, { id: "crownAsh", min: 0, max: 1 }, { id: "graveSeal", min: 0, max: 2 }],
 };
 
 if (typeof markDataPackLoaded === "function") markDataPackLoaded("drops");
