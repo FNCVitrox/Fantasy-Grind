@@ -111,6 +111,14 @@ button:disabled {
   margin-right: auto;
 }
 
+.topbar-actions {
+  flex: 999 1 780px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 h1,
 h2,
 p {

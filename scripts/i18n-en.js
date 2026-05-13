@@ -78,6 +78,7 @@ translations.en = {
         "combat.skipping": "Skipping...",
         "combat.skippingBattle": "Skipping fight...",
         "combat.waits": "waits.",
+        "combat.ready": "Ready",
         "combat.victory": "Victory",
         "combat.defeat": "Defeat",
         "combat.you": "You",

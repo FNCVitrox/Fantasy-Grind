@@ -467,7 +467,7 @@ function renderSelectedEnemy() {
     meta.innerHTML = metaHtml;
   }
   setBattleEnemyVisual(enemy);
-  $("battleText").textContent = `${enemy.name} ${t("combat.waits", "wartet.")}`;
+  $("battleText").textContent = t("combat.ready", "Bereit");
 }
 
 function renderSelectedEnemyMeta(enemy, enemyId = selectedEnemy) {

@@ -82,6 +82,7 @@ const translations = {
         "combat.skipping": "Überspringe...",
         "combat.skippingBattle": "Kampf wird übersprungen...",
         "combat.waits": "wartet.",
+        "combat.ready": "Bereit",
         "combat.victory": "Sieg",
         "combat.defeat": "Niederlage",
         "combat.you": "Du",
