@@ -202,7 +202,7 @@ function renderPlayerStatsDetails(stats = totalStats()) {
   const buildHp = Math.round(((build.maxHpMultiplier || 1) - 1) * 100);
   const setLines = Object.values(activeSetCounts())
     .filter(({ count }) => count >= 2)
-    .map(({ id, count }) => `<span>${escapeHtml(setBonuses[id]?.name || id)} · ${count} ${t("common.pieces", "Teile")}</span>`)
+    .map(({ id, count }) => `<span>${escapeHtml(setDisplayName(id))} · ${count} ${t("common.pieces", "Teile")}</span>`)
     .join("");
   const className = entityName("class", state.characterClass, activeClass().name);
   const buildName = entityName("build", state.build, build.name);
@@ -287,11 +287,11 @@ function itemCritText(item) {
 }
 
 function itemEffectName(item) {
-  return itemEffectCatalog[item?.effect]?.name || "";
+  return item?.effect ? itemEffectDisplayName(item.effect) : "";
 }
 
 function itemEffectText(item) {
-  return itemEffectCatalog[item?.effect]?.text || "";
+  return item?.effect ? itemEffectDisplayText(item.effect) : "";
 }
 
 function renderItemEffectLine(item) {
@@ -303,7 +303,7 @@ function renderItemEffectLine(item) {
 function itemEnchantmentsText(item) {
   const enchantments = activeItemEnchantments(item);
   if (!enchantments.length) return "";
-  return `${t("loot.enchantment", "Verzauberung")}: ${enchantments.map((enchantment) => `${enchantment.name} (${enchantment.text})`).join(" · ")}`;
+  return `${t("loot.enchantment", "Verzauberung")}: ${enchantments.map((enchantment) => `${enchantmentDisplayName(enchantment)} (${enchantmentDisplayText(enchantment)})`).join(" · ")}`;
 }
 
 function renderItemEnchantmentLine(item) {
@@ -493,7 +493,7 @@ function renderSelectedEnemyMeta(enemy, enemyId = selectedEnemy) {
   const drops = (enemy.drops || []).map((drop) => {
     const item = getItem(drop.id);
     const quality = itemQuality(item);
-    return `<span class="boss-meta-chip quality-${quality}">${escapeHtml(item.name)} ${formatChance(drop.chance)}</span>`;
+    return `<span class="boss-meta-chip quality-${quality}">${escapeHtml(itemDisplayName(item, drop.id))} ${formatChance(drop.chance)}</span>`;
   }).join("");
   const claimed = bossFirstClearClaimed(enemy.baseId || enemyId);
   const reward = bossFirstClearRewardText(enemy);
@@ -658,16 +658,17 @@ function renderEquipment() {
     const durability = itemDurability(id);
     const repairCost = repairCostForSlot(slot);
     const quality = itemQuality(item);
-    const setName = item.set ? setBonuses[item.set]?.name || item.set : "";
+    const itemName = itemDisplayName(item, id);
+    const setName = item.set ? setDisplayName(item.set) : "";
     const statText = itemStatText(item);
     const enchantText = itemEnchantmentsText(item);
     return `<button class="equipment-chip rarity-card rarity-${quality}" type="button" data-open-equipment>
       <strong>${labelFor(slotLabel, slot)}</strong>
-      <span class="quality-${quality}">${escapeHtml(item.name)}</span>
+      <span class="quality-${quality}">${escapeHtml(itemName)}</span>
       <small>${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</small>
       <small class="${durability <= 25 ? "durability-low" : ""}">${durability}% · ${repairCost} ${t("common.gold", "Gold")}</small>
       <span class="equipment-hover-detail" aria-hidden="true">
-        <b class="quality-${quality}">${escapeHtml(item.name)}</b>
+        <b class="quality-${quality}">${escapeHtml(itemName)}</b>
         <em>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</em>
         ${statText ? `<em>${statText}</em>` : ""}
         ${enchantText ? `<em>${enchantText}</em>` : ""}
@@ -700,8 +701,8 @@ function renderEquipmentDetails() {
     const enchantText = itemEnchantmentsText(item);
     return `<div class="slot rarity-card rarity-${quality}">
       <strong>${labelFor(slotLabel, slot)}</strong>
-      <p class="quality-${quality}">${escapeHtml(item.name)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</p>
-      ${item.set ? `<p class="set-line set-hover-row"><span>${escapeHtml(setBonuses[item.set]?.name || item.set)}</span><span class="tooltip-source" data-set-tooltip-key="${setKey}"></span></p>` : ""}
+      <p class="quality-${quality}">${escapeHtml(itemDisplayName(item, id))} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</p>
+      ${item.set ? `<p class="set-line set-hover-row"><span>${escapeHtml(setDisplayName(item.set))}</span><span class="tooltip-source" data-set-tooltip-key="${setKey}"></span></p>` : ""}
       ${statText ? `<p>${statText}</p>` : ""}
       ${enchantText ? `<p>${enchantText}</p>` : ""}
       <p class="${itemDurability(id) <= 25 ? "durability-low" : ""}">${t("main.durability", "Haltbarkeit")}: ${itemDurability(id)}%</p>
@@ -935,17 +936,19 @@ function smithDialogueForRank(previous = -1) {
   const lines = smithDialogues[rank.threshold] || smithDialogues[0];
   let index = random(0, lines.length - 1);
   if (lines.length > 1 && index === previous) index = (index + 1) % lines.length;
-  return { ...lines[index], index };
+  return { ...lines[index], index, threshold: rank.threshold };
 }
 
 function renderSmithGreetingMarkup() {
   const previous = Number($("smithGreeting")?.dataset.dialogueIndex ?? -1);
   const dialogue = smithDialogueForRank(previous);
+  const title = t(`smith.dialogue.${dialogue.threshold}.${dialogue.index}.title`, dialogue.title);
+  const text = t(`smith.dialogue.${dialogue.threshold}.${dialogue.index}.text`, dialogue.text);
   return `<div class="smith-greeting" id="smithGreeting" data-dialogue-index="${dialogue.index}">
     <div class="smith-avatar" aria-hidden="true"></div>
     <div>
-      <strong>${escapeHtml(dialogue.title)}</strong>
-      <p>"${escapeHtml(dialogue.text)}"</p>
+      <strong>${escapeHtml(title)}</strong>
+      <p>"${escapeHtml(text)}"</p>
     </div>
   </div>`;
 }
@@ -967,11 +970,11 @@ function renderSmithRenown() {
   renderCachedHtml("smithRenown", `smithRenown:${signature}`, () => `
     <div>
       <span>${t("smith.renownRank", "Ruhm {renown}", { renown: state.renown })}</span>
-      <strong>${escapeHtml(rank.name)}</strong>
+      <strong>${escapeHtml(renownRankName(rank))}</strong>
     </div>
-    <p>${escapeHtml(rank.benefit)}</p>
+    <p>${escapeHtml(renownRankBenefit(rank))}</p>
     <small>${next
-      ? t("smith.nextRenown", "Nächster Rang bei {renown} Ruhm: {benefit}", { renown: next.threshold, benefit: next.benefit })
+      ? t("smith.nextRenown", "Nächster Rang bei {renown} Ruhm: {benefit}", { renown: next.threshold, benefit: renownRankBenefit(next) })
       : t("smith.allRenownUnlocked", "Alle Ruhm-Vorteile freigeschaltet.")}</small>
   `);
 }
@@ -983,9 +986,9 @@ function renderEnchantStatus() {
     ? enchantMasteryRankById(state.enchanting.active)
     : nextEnchantMasteryRank();
   const nextText = next
-    ? state.enchanting?.active === next.id
-      ? t("enchant.activeMission", "Aktiver Auftrag: {name}", { name: next.name })
-      : t("enchant.nextMission", "Nächster Auftrag: {name}", { name: next.name })
+      ? state.enchanting?.active === next.id
+      ? t("enchant.activeMission", "Aktiver Auftrag: {name}", { name: enchantMasteryName(next) })
+      : t("enchant.nextMission", "Nächster Auftrag: {name}", { name: enchantMasteryName(next) })
     : arcaneMasteryUnlocked()
       ? t("enchant.arcaneComplete", "Arkane Meisterschaft vollständig gebunden.")
       : t("enchant.allBindings", "Alle aktuellen Runenbindungen freigeschaltet.");
@@ -1069,23 +1072,23 @@ function renderSmithMasteryMarkup() {
   const readyToStart = canStartSmithMasteryMission(next);
   const readyToComplete = canCompleteSmithMasteryMission(next);
   const intro = {
-    emberAnvil: "Dein Stahl ist an seiner Grenze. Mein Amboss braucht heißeres Feuer.",
-    pressureSteel: "Du hast deinen Stahl weit gebracht. Jetzt braucht er Druck, nicht nur Feuer.",
-    watchMastermark: "Jetzt reden wir nicht mehr über bessere Arbeit. Jetzt reden wir über einen Schwur im Metall.",
+    emberAnvil: t("smith.masteryIntro.emberAnvil", "Dein Stahl ist an seiner Grenze. Mein Amboss braucht heißeres Feuer."),
+    pressureSteel: t("smith.masteryIntro.pressureSteel", "Du hast deinen Stahl weit gebracht. Jetzt braucht er Druck, nicht nur Feuer."),
+    watchMastermark: t("smith.masteryIntro.watchMastermark", "Jetzt reden wir nicht mehr über bessere Arbeit. Jetzt reden wir über einen Schwur im Metall."),
   }[next.id];
   return `
     <div class="smith-mastery-head">
       <div>
         <span>${t("smith.mastery", "Schmied-Meisterschaft")}</span>
-        <strong>${escapeHtml(isActive
-          ? t("smith.activeMission", "Aktiv: {name}", { name: next.name })
-          : t("smith.nextMission", "Nächster Auftrag: {name}", { name: next.name }))}</strong>
+      <strong>${escapeHtml(isActive
+          ? t("smith.activeMission", "Aktiv: {name}", { name: smithMasteryName(next) })
+          : t("smith.nextMission", "Nächster Auftrag: {name}", { name: smithMasteryName(next) }))}</strong>
       </div>
       <b>Limit +${limit} → +${next.limit}</b>
     </div>
     <p>"${escapeHtml(intro)}"</p>
     ${isActive ? renderSmithMasteryObjectives(objectives) : renderSmithMasteryRequirements(requirements)}
-    <div class="smith-mastery-reward">${escapeHtml(next.reward)}</div>
+    <div class="smith-mastery-reward">${escapeHtml(smithMasteryReward(next))}</div>
     ${isActive
       ? `<button type="button" data-complete-smith-mission="${next.id}" ${readyToComplete ? "" : "disabled"}>${t("smith.completeMission", "Meisterauftrag abschließen")}</button>`
       : `<button type="button" data-start-smith-mission="${next.id}" ${readyToStart ? "" : "disabled"}>${t("smith.startMission", "Meisterauftrag beginnen")}</button>`}
@@ -1120,7 +1123,7 @@ function renderEnchantMasteryMarkup() {
         </div>
         <b>${t("enchant.arcane", "Arkan")}</b>
       </div>
-      <p>"Jetzt hörst du es auch, oder? Stahl flüstert, wenn die Rune richtig sitzt."</p>
+      <p>"${t("enchant.completeQuote", "Jetzt hörst du es auch, oder? Stahl flüstert, wenn die Rune richtig sitzt.")}"</p>
       <div class="smith-mastery-reward">${t("enchant.masterDone", "Alle Runen-Slots und arkane Verzauberungen sind freigeschaltet.")}</div>
     `;
   }
@@ -1131,10 +1134,10 @@ function renderEnchantMasteryMarkup() {
   const readyToStart = canStartEnchantMasteryMission(next);
   const readyToComplete = canCompleteEnchantMasteryMission(next);
   const intro = {
-    unstableRunes: "Die erste Rune hält. Jetzt will ich sehen, ob sie auch unter Druck singt.",
-    forbiddenLibrary: "Drei Bindungen brauchen Wissen, das man nicht offen liegen lässt.",
-    voidRitual: "Die Leere beantwortet nur Fragen, die klug genug gestellt werden.",
-  }[next.id] || "Magie ist kein Schmuck. Sie ist ein Handel.";
+    unstableRunes: t("enchant.masteryIntro.unstableRunes", "Die erste Rune hält. Jetzt will ich sehen, ob sie auch unter Druck singt."),
+    forbiddenLibrary: t("enchant.masteryIntro.forbiddenLibrary", "Drei Bindungen brauchen Wissen, das man nicht offen liegen lässt."),
+    voidRitual: t("enchant.masteryIntro.voidRitual", "Die Leere beantwortet nur Fragen, die klug genug gestellt werden."),
+  }[next.id] || t("enchant.masteryIntro.default", "Magie ist kein Schmuck. Sie ist ein Handel.");
   const badge = next.arcaneMastery
     ? t("enchant.mastery", "Arkane Meisterschaft")
     : `Slots ${currentEnchantSlotLimit()} → ${next.slotLimit}`;
@@ -1143,15 +1146,15 @@ function renderEnchantMasteryMarkup() {
     <div class="smith-mastery-head">
       <div>
         <span>${t("enchant.masterMission", "Miras Meisterauftrag")}</span>
-        <strong>${escapeHtml(isActive
-          ? t("enchant.activeMission", "Aktiver Auftrag: {name}", { name: next.name })
-          : t("enchant.nextMission", "Nächster Auftrag: {name}", { name: next.name }))}</strong>
+      <strong>${escapeHtml(isActive
+          ? t("enchant.activeMission", "Aktiver Auftrag: {name}", { name: enchantMasteryName(next) })
+          : t("enchant.nextMission", "Nächster Auftrag: {name}", { name: enchantMasteryName(next) }))}</strong>
       </div>
       <b>${escapeHtml(badge)}</b>
     </div>
     <p>"${escapeHtml(intro)}"</p>
     ${isActive ? renderEnchantMasteryObjectives(objectives) : renderEnchantMasteryRequirements(requirements)}
-    <div class="smith-mastery-reward">${escapeHtml(next.reward)}</div>
+    <div class="smith-mastery-reward">${escapeHtml(enchantMasteryReward(next))}</div>
     ${isActive
       ? `<button type="button" data-complete-enchant-mission="${next.id}" ${readyToComplete ? "" : "disabled"}>${t("enchant.completeMission", "Ritual vollenden")}</button>`
       : `<button type="button" data-start-enchant-mission="${next.id}" ${readyToStart ? "" : "disabled"}>${t("enchant.startMission", "Arkanen Auftrag beginnen")}</button>`}
@@ -1216,7 +1219,7 @@ function renderSmithUpgrade() {
       : `<p>${cost.gold} ${t("common.gold", "Gold")}${discountText}</p><p class="smith-material-cost">${materialText}</p>`;
     return `<div class="smith-card rarity-card rarity-${quality}">
       <div class="smith-item-main">
-        <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
+        <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</span></strong>
         <p>+${item.upgrade || 0}/${limit}${statText ? ` · ${statText}` : ""} · ${t("main.durability", "Haltbarkeit")} ${itemDurability(itemId)}%</p>
       </div>
       <button class="upgrade-preview" type="button" data-upgrade="${slot}" ${disabled ? "disabled" : ""}>
@@ -1292,14 +1295,14 @@ function renderSmithEnchant() {
     const full = freeSlots <= 0;
     const cannotPay = !canPayCost(cost);
     const enchantmentText = enchantments.length
-      ? enchantments.map((enchantment) => `${escapeHtml(enchantment.name)}: ${escapeHtml(enchantment.text)}`).join("<br>")
+      ? enchantments.map((enchantment) => `${escapeHtml(enchantmentDisplayName(enchantment))}: ${escapeHtml(enchantmentDisplayText(enchantment))}`).join("<br>")
       : t("enchant.notEnchanted", "Noch nicht verzaubert.");
     const lockedText = inactiveEnchantments.length
-      ? `<br><span class="muted">${t("enchant.lockedRunes", "Gesperrt bis höhere Bindung")}: ${inactiveEnchantments.map((enchantment) => escapeHtml(enchantment.name)).join(", ")}</span>`
+      ? `<br><span class="muted">${t("enchant.lockedRunes", "Gesperrt bis höhere Bindung")}: ${inactiveEnchantments.map((enchantment) => escapeHtml(enchantmentDisplayName(enchantment))).join(", ")}</span>`
       : "";
     return `<div class="enchant-card rarity-card rarity-${quality}">
       <div>
-        <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(item.name)}</span></strong>
+        <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</span></strong>
         <p>${labelFor(qualityLabel, quality)} · Slots ${Math.min(savedEnchantments.length, slotLimit)}/${slotLimit}${inactiveEnchantments.length ? ` · ${inactiveEnchantments.length} ${t("enchant.locked", "gesperrt")}` : ""}</p>
         <p>${enchantmentText}${lockedText}</p>
       </div>
@@ -1333,7 +1336,7 @@ function renderSmithSalvage() {
         const materials = Object.entries(salvageValue(item)).map(([id, amount]) => `${amount} ${labelFor(materialLabel, id)}`).join(" · ");
         const bonusChance = Math.round(renownSalvageBonusChance(item) * 100);
         return `<div class="salvage-row rarity-card rarity-${quality}">
-          <span><strong class="quality-${quality}">${escapeHtml(item.name)}</strong><small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${materials}${bonusChance ? ` · ${bonusChance}% ${t("smith.bonus", "Bonus")}` : ""}</small></span>
+          <span><strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong><small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${materials}${bonusChance ? ` · ${bonusChance}% ${t("smith.bonus", "Bonus")}` : ""}</small></span>
           <button type="button" data-salvage="${index}">${t("smith.salvage", "Zerlegen")}</button>
         </div>`;
       }).join("")
@@ -1365,9 +1368,9 @@ function renderInventoryItemCard(itemId, index) {
   const statText = itemStatText(item);
   const enchantText = itemEnchantmentsText(item);
   return `<div class="inventory-item rarity-card rarity-${quality}">
-    <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
+    <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
     <p>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("common.value", "Wert")} ${sellValue(item)} ${t("common.gold", "Gold")}</p>
-    ${item.set ? `<p class="set-line">${escapeHtml(setBonuses[item.set]?.name || item.set)}</p>` : ""}
+    ${item.set ? `<p class="set-line">${escapeHtml(setDisplayName(item.set))}</p>` : ""}
     ${statText ? `<p>${statText}</p>` : ""}
     ${enchantText ? `<p>${enchantText}</p>` : ""}
     <p>${t("main.durability", "Haltbarkeit")}: ${itemDurability(itemId)}%</p>
@@ -1405,7 +1408,7 @@ function renderMerchantItemRow(itemId, index) {
   const slot = itemSlot(item);
   return `<div class="merchant-row rarity-card rarity-${quality}">
     <span>
-      <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
+      <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
       <small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${itemDurability(itemId)}%</small>
     </span>
     <b>${sellValue(item)} ${t("common.gold", "Gold")}</b>
@@ -1648,7 +1651,7 @@ function renderBossRewardPanel(enemyId, enemy) {
     const item = getItem(drop.id);
     const quality = itemQuality(item);
     return `<div class="boss-reward-drop">
-      <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
+      <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, drop.id))}</strong>
       <span>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, itemSlot(item))} · ${formatChance(drop.chance)}</span>
     </div>`;
   }).join("");
@@ -1670,8 +1673,8 @@ function renderEnemyAbilities(enemy) {
   if (!entries.length) return "";
   return `<section class="enemy-ability-list" aria-label="${t("bestiary.enemyAbilities", "Gegnerfähigkeiten")}">
     ${entries.map(([id, ability]) => `<div class="enemy-ability ${ability.type === "passive" ? "passive" : ""}" data-enemy-ability="${escapeAttr(id)}">
-      <strong>${escapeHtml(ability.name)}</strong>
-      <span>${ability.type === "passive" ? t("bestiary.passive", "Passiv") : t("bestiary.active", "Aktiv")} · ${escapeHtml(ability.text)}</span>
+      <strong>${escapeHtml(enemyAbilityDisplayName(ability, id))}</strong>
+      <span>${ability.type === "passive" ? t("bestiary.passive", "Passiv") : t("bestiary.active", "Aktiv")} · ${escapeHtml(enemyAbilityDisplayText(ability, id))}</span>
     </div>`).join("")}
   </section>`;
 }
@@ -1736,7 +1739,7 @@ function renderFixedDropRow(enemyId, drop) {
   const known = Boolean(discovered);
   const status = known ? ((discovered.count || 0) <= 1 ? t("common.new", "Neu") : t("common.known", "Bekannt")) : t("common.unknown", "Unbekannt");
   return `<button class="drop-row bestiary-item-row ${known ? "item-hover-row" : "locked-drop"}" type="button" data-bestiary-item="${escapeAttr(key)}" ${known ? `data-tooltip-key="${cacheTooltipItem(item)}"` : ""}>
-    <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>${t("bestiary.fixedDrop", "Fester Drop")} · ${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(drop.chance)}</small></span>
+    <span><b class="quality-${quality}">${escapeHtml(itemDisplayName(item, drop.id))}</b><small>${t("bestiary.fixedDrop", "Fester Drop")} · ${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(drop.chance)}</small></span>
     <span>${status}</span>
   </button>`;
 }
@@ -1841,7 +1844,7 @@ function renderGeneratedDropRow(template, discoveredLookup) {
   const status = found ? ((found.count || 0) <= 1 ? t("common.new", "Neu") : t("common.known", "Bekannt")) : t("common.unknown", "Unbekannt");
   const hoverClass = found ? "item-hover-row" : "locked-drop";
   return `<button class="drop-row discovered-drop bestiary-item-row ${hoverClass} ${selectedBestiaryItemKey === key ? "active" : ""}" type="button" data-bestiary-item="${escapeAttr(key)}" ${found ? `data-tooltip-key="${cacheTooltipItem(found)}"` : ""}>
-    <span><b class="quality-${quality}">${escapeHtml(item.name)}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(template.dropChance)}</small></span>
+    <span><b class="quality-${quality}">${escapeHtml(itemDisplayName(item, item.id))}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(template.dropChance)}</small></span>
     <span>${status}</span>
   </button>`;
 }
@@ -1954,7 +1957,7 @@ function bestiaryItemGroup(item) {
 
 function filterBestiaryLoot(items) {
   const search = selectedBestiarySearch.trim().toLowerCase();
-  const searched = search ? items.filter((item) => item.name.toLowerCase().includes(search)) : items;
+  const searched = search ? items.filter((item) => itemDisplayName(item, item.id).toLowerCase().includes(search)) : items;
   if (selectedBestiaryFilter === "new") return searched.filter((item) => (item.count || 0) <= 1);
   if (selectedBestiaryFilter === "sets") return searched.filter((item) => item.set);
   if (selectedBestiaryFilter === "epic") return searched.filter((item) => item.quality === "epic" || item.quality === "legendary");
@@ -2013,7 +2016,7 @@ function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLo
     const template = generatedBestiaryTemplates(enemy).find((entry) => bestiaryItemKey(entry) === key);
     return `<aside class="bestiary-selected-detail">
       <strong>${t("bestiary.unknownDrop", "Unbekannter Fund")}</strong>
-      ${template ? `<p>${escapeHtml(template.name)}</p><p>${labelFor(qualityLabel, template.quality)} · ${labelFor(slotLabel, template.slot)}</p><p>${t("bestiary.dropChance", "Drop-Chance")}: ${formatChance(template.dropChance)}</p><p>${t("bestiary.statsAfterDiscovery", "Stats werden nach dem ersten Fund freigeschaltet.")}</p>` : `<p>${t("bestiary.clickDiscovery", "Klicke ein Item für Details.")}</p>`}
+      ${template ? `<p>${escapeHtml(itemDisplayName(template))}</p><p>${labelFor(qualityLabel, template.quality)} · ${labelFor(slotLabel, template.slot)}</p><p>${t("bestiary.dropChance", "Drop-Chance")}: ${formatChance(template.dropChance)}</p><p>${t("bestiary.statsAfterDiscovery", "Stats werden nach dem ersten Fund freigeschaltet.")}</p>` : `<p>${t("bestiary.clickDiscovery", "Klicke ein Item für Details.")}</p>`}
     </aside>`;
   }
 
@@ -2025,7 +2028,7 @@ function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLo
     if (!known) {
       return `<aside class="bestiary-selected-detail">
         <strong>${t("bestiary.fixedDrop", "Fester Drop")}</strong>
-        <p>${escapeHtml(item.name)}</p>
+        <p>${escapeHtml(itemDisplayName(item, itemId))}</p>
         <p>${labelFor(qualityLabel, itemQuality(item))} · ${labelFor(slotLabel, itemSlot(item))}</p>
         <p>${t("bestiary.dropChance", "Drop-Chance")}: ${drop ? formatChance(drop.chance) : t("common.unknown", "Unbekannt")}</p>
         <p>${t("bestiary.statsAfterDiscovery", "Stats werden nach dem ersten Fund freigeschaltet.")}</p>
@@ -2067,10 +2070,10 @@ function renderSetTooltip(setId) {
   if (!set) return "";
   const count = activeSetCounts()[setId]?.count || 0;
   const bonuses = Object.entries(set.bonuses)
-    .map(([needed, bonus]) => `<span class="${count >= Number(needed) ? "compare-good" : "compare-even"}">${needed} ${t("common.pieces", "Teile")}: ${escapeHtml(bonus.text)}</span>`)
+    .map(([needed]) => `<span class="${count >= Number(needed) ? "compare-good" : "compare-even"}">${needed} ${t("common.pieces", "Teile")}: ${escapeHtml(setBonusDisplayText(setId, needed))}</span>`)
     .join("");
   return `<div class="item-tooltip">
-    <strong>${escapeHtml(set.name)} (${Math.min(count, 6)}/6)</strong>
+    <strong>${escapeHtml(setDisplayName(setId))} (${Math.min(count, 6)}/6)</strong>
     ${bonuses}
   </div>`;
 }
@@ -2078,7 +2081,8 @@ function renderSetTooltip(setId) {
 function renderItemTooltip(item) {
   const quality = itemQuality(item);
   const slot = itemSlot(item);
-  const current = getItem(state.equipment[slot]) || { name: t("common.none", "Nichts"), damage: 0, defense: 0 };
+  const currentItem = getItem(state.equipment[slot]);
+  const current = currentItem || { name: t("common.none", "Nichts"), damage: 0, defense: 0 };
   const compare = compareLoot(item, current);
   const equippedId = state.equipment[slot];
   const isEquipped = equippedId && getItem(equippedId) === item;
@@ -2088,16 +2092,16 @@ function renderItemTooltip(item) {
   const statText = itemStatText(item);
   const enchantText = itemEnchantmentsText(item);
   return `<div class="item-tooltip">
-    <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
+    <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, item.id))}</strong>
     <span>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)}</span>
-    ${item.set ? `<span>Set: ${escapeHtml(setBonuses[item.set]?.name || item.set)}</span>` : ""}
+    ${item.set ? `<span>Set: ${escapeHtml(setDisplayName(item.set))}</span>` : ""}
     ${upgradeLine}
     ${statText ? `<span>${statText}</span>` : ""}
     ${enchantText ? `<span>${escapeHtml(enchantText)}</span>` : ""}
     ${renderItemEffectLine(item)}
     ${durabilityLine}
     ${repairLine}
-    <span>${t("common.current", "Aktuell")}: ${escapeHtml(current.name)}</span>
+    <span>${t("common.current", "Aktuell")}: ${escapeHtml(currentItem ? itemDisplayName(currentItem, state.equipment[slot]) : current.name)}</span>
     ${renderCompareSpans(compare, 3)}
   </div>`;
 }
@@ -2310,7 +2314,7 @@ function renderRepairRow(slot) {
   const quality = itemQuality(item);
   return `<div class="repair-row rarity-card rarity-${quality}">
     <div>
-      <strong class="quality-${quality}">${labelFor(slotLabel, slot)} · ${escapeHtml(item.name)}</strong>
+      <strong class="quality-${quality}">${labelFor(slotLabel, slot)} · ${escapeHtml(itemDisplayName(item, state.equipment[slot]))}</strong>
       <p>${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${durability}% · ${t("equipment.repair", "Reparatur")}: ${cost} ${t("common.gold", "Gold")}</p>
     </div>
     <button type="button" data-repair-slot="${slot}" ${disabled}>${label}</button>

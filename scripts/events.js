@@ -596,8 +596,8 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
     const side = event.actor === "hero" ? "right" : "left";
     stage.className = `battle-stage ${attackClass} ${eventClass}`.trim();
     $("battleText").textContent = event.text || (event.actor === "hero"
-      ? `Du triffst für ${event.damage}.`
-      : `${enemyName} trifft für ${event.damage}.`);
+      ? t("combat.heroHit", "Du triffst für {damage}.", { damage: event.damage })
+      : t("combat.enemyHit", "{enemy} trifft für {damage}.", { enemy: enemyName, damage: event.damage }));
     updateBattleHealth(event.playerHp, playerMaxHp, event.enemyHp, enemyMaxHp);
     highlightAbilityUse(event.abilityId);
     if (event.damage > 0) spawnDamage(event.damage, side, event.critical);

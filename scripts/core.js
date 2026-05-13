@@ -743,7 +743,7 @@ function allowedEnchantRarities() {
 function savedItemEnchantments(item) {
   if (!item?.enchantments?.length) return [];
   return item.enchantments
-    .map((id) => enchantmentCatalog[id])
+    .map((id) => enchantmentCatalog[id] ? { ...enchantmentCatalog[id], id } : null)
     .filter((enchantment) => enchantment && enchantment.slots.includes(item.slot));
 }
 
@@ -1003,7 +1003,7 @@ function damageEquippedItems(enemy, extraLoss = 0) {
     state.equipment[slot] = null;
     delete state.itemDurability[itemId];
     if (state.customItems[itemId]) delete state.customItems[itemId];
-    log(`${item.name} ist zerbrochen.`, "bad");
+    log(t("equipment.brokenLog", "{item} ist zerbrochen.", { item: itemDisplayName(item, itemId) }), "bad");
   });
 
   state.durability = equippedDurabilityAverage();
@@ -1845,7 +1845,11 @@ async function fight() {
     let enemyText = shieldWall ? `Schildwall dämpft den Treffer auf ${enemyHit}.` : `${enemyName} trifft für ${enemyHit}.`;
     if (enemyAbility) {
       const ability = enemyAbilityCatalog[enemyAbility.id];
-      enemyText = `${enemyName}: ${ability.name} trifft für ${enemyHit}.`;
+      enemyText = t("combat.enemyAbilityHit", "{enemy}: {ability} trifft für {damage}.", {
+        enemy: enemyName,
+        ability: enemyAbilityDisplayName(ability, enemyAbility.id),
+        damage: enemyHit,
+      });
       if (enemyAbility.playerDamageMultiplier) {
         fightState.playerDamageMultiplier = Math.min(fightState.playerDamageMultiplier, enemyAbility.playerDamageMultiplier);
         enemyText += " Dein nächster Angriff wird schwächer.";
@@ -2111,7 +2115,10 @@ function updateQuestProgress(enemy, enemyId = selectedEnemy) {
         const reward = createQuestRewardItem(quest);
         state.customItems[reward.id] = reward;
         queueLootBatch([reward]);
-        log(`Questbelohnung erhalten: ${reward.name} (${qualityLabel[reward.quality]}).`, "drop");
+        log(t("quest.rewardLog", "Questbelohnung erhalten: {item} ({quality}).", {
+          item: itemDisplayName(reward, reward.id),
+          quality: labelFor(qualityLabel, reward.quality),
+        }), "drop");
       }
       log(t("quest.completeLog", "Quest abgeschlossen: {quest}. +{xp} XP, +{gold} Gold, +{renown} Ruhm.", {
         quest: questDisplayName(quest),
@@ -2371,7 +2378,10 @@ function createLootChoices(enemy, enemyId) {
       fixed: true,
       sourceEnemy: enemyId,
     };
-    log(`Seltener Fund in der Beuteauswahl: ${specialItem.name} (${qualityLabel[specialItem.quality]}).`, "drop");
+    log(t("loot.rareChoiceLog", "Seltener Fund in der Beuteauswahl: {item} ({quality}).", {
+      item: itemDisplayName(specialItem, specialDrop.id),
+      quality: labelFor(qualityLabel, specialItem.quality),
+    }), "drop");
   }
 
   markLootDiscovery(enemyId, choices);
@@ -2604,13 +2614,13 @@ function chooseLoot(index, equipNow = false) {
     if (previousId) {
       state.inventory.push(previousId);
     }
-    log(`${item.name} gewählt und direkt ausgerüstet.`, "drop");
+    log(t("loot.chosenEquippedLog", "{item} gewählt und direkt ausgerüstet.", { item: itemDisplayName(item, item.id) }), "drop");
   } else {
     state.inventory.push(item.id);
-    log(`${item.name} gewählt und ins Inventar gelegt.`, "drop");
+    log(t("loot.chosenInventoryLog", "{item} gewählt und ins Inventar gelegt.", { item: itemDisplayName(item, item.id) }), "drop");
   }
   if (["epic", "legendary"].includes(itemQuality(item))) {
-    remindSaveBackup(`du hast ${qualityLabel[itemQuality(item)]}e Beute erhalten.`);
+    remindSaveBackup(t("save.backupLootReason", "du hast {quality}e Beute erhalten.", { quality: labelFor(qualityLabel, itemQuality(item)) }));
   }
   notifyReadyAchievements();
   advanceLootQueue();
@@ -2632,7 +2642,10 @@ function equipInventoryItem(index) {
     state.inventory.push(previousId);
   }
 
-  log(`${item.name} ausgerüstet. ${getItem(previousId)?.name || "Altes Teil"} liegt jetzt im Inventar.`, "drop");
+  log(t("inventory.equipLog", "{item} ausgerüstet. {previous} liegt jetzt im Inventar.", {
+    item: itemDisplayName(item, itemId),
+    previous: previousId ? itemDisplayName(getItem(previousId), previousId) : t("inventory.oldItem", "Altes Teil"),
+  }), "drop");
   save();
   render();
 }
@@ -2646,7 +2659,7 @@ function sellInventoryItem(index) {
   state.inventory.splice(index, 1);
   delete state.itemDurability[itemId];
   state.gold += value;
-  log(`Tilda Münzhand kauft ${item.name}. +${value} Gold.`, "drop");
+  log(t("merchant.sellItemLog", "Tilda Münzhand kauft {item}. +{gold} Gold.", { item: itemDisplayName(item, itemId), gold: value }), "drop");
   save();
   render();
 }
@@ -2658,7 +2671,7 @@ function sellAllInventoryItems() {
   state.inventory.forEach((itemId) => delete state.itemDurability[itemId]);
   state.inventory = [];
   state.gold += total;
-  log(`Tilda Münzhand kauft ${count} Items. +${total} Gold.`, "drop");
+  log(t("merchant.sellAllLog", "Tilda Münzhand kauft {count} Items. +{gold} Gold.", { count, gold: total }), "drop");
   save();
   render();
 }
@@ -2687,10 +2700,10 @@ function grantMaterials(enemyId, eliteBonus = false) {
     const amount = Math.max(0, random(drop.min, drop.max) + (eliteBonus && Math.random() < 0.65 ? 1 : 0) - (Math.random() < 0.22 ? 1 : 0));
     if (amount <= 0) return;
     state.materials[drop.id] = (state.materials[drop.id] || 0) + amount;
-    gained.push(`${amount} ${materialLabel[drop.id]}`);
+    gained.push(`${amount} ${labelFor(materialLabel, drop.id)}`);
   });
   if (gained.length) {
-    log(`Material gefunden: ${gained.join(", ")}.`, "drop");
+    log(t("material.foundLog", "Material gefunden: {materials}.", { materials: gained.join(", ") }), "drop");
   }
 }
 
@@ -2747,13 +2760,13 @@ function canStartSmithMasteryMission(rank) {
 function startSmithMasteryMission(rankId) {
   const rank = smithMasteryRankById(rankId);
   if (!canStartSmithMasteryMission(rank)) {
-    log("Borin Glutbart schüttelt den Kopf. Für diesen Meisterauftrag fehlt dir noch etwas.", "bad");
+    log(t("smith.masteryBlockedLog", "Borin Glutbart schüttelt den Kopf. Für diesen Meisterauftrag fehlt dir noch etwas."), "bad");
     return;
   }
   state.smithMastery.discovered = true;
   state.smithMastery.active = rank.id;
   state.smithMastery.progress[rank.id] = { eliteKills: 0, bossKills: 0 };
-  log(`Meisterauftrag begonnen: ${rank.name}.`, "drop");
+  log(t("smith.masteryStartLog", "Meisterauftrag begonnen: {name}.", { name: smithMasteryName(rank) }), "drop");
   save();
   render();
 }
@@ -2790,7 +2803,7 @@ function canCompleteSmithMasteryMission(rank) {
 function completeSmithMasteryMission(rankId) {
   const rank = smithMasteryRankById(rankId);
   if (!canCompleteSmithMasteryMission(rank)) {
-    log("Borin Glutbart knurrt: Bring mir Erz, nicht Ausreden.", "bad");
+    log(t("smith.masteryIncompleteLog", "Borin Glutbart knurrt: Bring mir Erz, nicht Ausreden."), "bad");
     return;
   }
 
@@ -2804,8 +2817,12 @@ function completeSmithMasteryMission(rankId) {
   state.smithMastery.active = null;
   state.smithMastery.completed = [...new Set([...state.smithMastery.completed, rank.id])];
   state.renown += rank.rewardRenown;
-  log(`Borin Glutbart vollendet "${rank.name}". Neues Upgrade-Limit: +${rank.limit}. +${rank.rewardRenown} Ruhm.`, "drop");
-  remindSaveBackup("Borin hat seine Werkstatt erweitert.");
+  log(t("smith.masteryCompleteLog", "Borin Glutbart vollendet \"{name}\". Neues Upgrade-Limit: +{limit}. +{renown} Ruhm.", {
+    name: smithMasteryName(rank),
+    limit: rank.limit,
+    renown: rank.rewardRenown,
+  }), "drop");
+  remindSaveBackup(t("save.backupSmithReason", "Borin hat seine Werkstatt erweitert."));
   notifyReadyAchievements();
   save();
   render();
@@ -2857,13 +2874,13 @@ function canStartEnchantMasteryMission(rank) {
 function startEnchantMasteryMission(rankId) {
   const rank = enchantMasteryRankById(rankId);
   if (!canStartEnchantMasteryMission(rank)) {
-    log("Mira Nachtfaden lächelt spitz: Erst die Prüfung, dann das Ritual.", "bad");
+    log(t("enchant.masteryBlockedLog", "Mira Nachtfaden lächelt spitz: Erst die Prüfung, dann das Ritual."), "bad");
     return;
   }
   state.enchanting.discovered = true;
   state.enchanting.active = rank.id;
   state.enchanting.progress[rank.id] = { eliteKills: 0, bossKills: 0 };
-  log(`Arkaner Auftrag begonnen: ${rank.name}.`, "drop");
+  log(t("enchant.masteryStartLog", "Arkaner Auftrag begonnen: {name}.", { name: enchantMasteryName(rank) }), "drop");
   save();
   render();
 }
@@ -2900,7 +2917,7 @@ function canCompleteEnchantMasteryMission(rank) {
 function completeEnchantMasteryMission(rankId) {
   const rank = enchantMasteryRankById(rankId);
   if (!canCompleteEnchantMasteryMission(rank)) {
-    log("Mira Nachtfaden tippt auf den Runenkreis. Er bleibt kalt.", "bad");
+    log(t("enchant.masteryIncompleteLog", "Mira Nachtfaden tippt auf den Runenkreis. Er bleibt kalt."), "bad");
     return;
   }
 
@@ -2913,8 +2930,12 @@ function completeEnchantMasteryMission(rankId) {
   state.enchanting.active = null;
   state.enchanting.completed = [...new Set([...state.enchanting.completed, rank.id])];
   state.renown += rank.rewardRenown;
-  log(`Mira vollendet "${rank.name}". ${rank.reward} +${rank.rewardRenown} Ruhm.`, "drop");
-  remindSaveBackup("Mira hat deine Runenbindung erweitert.");
+  log(t("enchant.masteryCompleteLog", "Mira vollendet \"{name}\". {reward} +{renown} Ruhm.", {
+    name: enchantMasteryName(rank),
+    reward: enchantMasteryReward(rank),
+    renown: rank.rewardRenown,
+  }), "drop");
+  remindSaveBackup(t("save.backupEnchantReason", "Mira hat deine Runenbindung erweitert."));
   notifyReadyAchievements();
   save();
   render();
@@ -3234,25 +3255,25 @@ function ensureCustomEquippedItem(slot) {
 
 function enchantEquipped(slot, category) {
   if (!enchantmentsUnlocked()) {
-    log("Mira Nachtfaden erscheint erst, wenn du erfahren genug bist.", "bad");
+    log(t("enchant.tooLowLog", "Mira Nachtfaden erscheint erst, wenn du erfahren genug bist."), "bad");
     return;
   }
   const item = ensureCustomEquippedItem(slot);
   if (!item) return;
   const limit = maxEnchantSlotsForLevel();
   if (savedItemEnchantments(item).length >= limit) {
-    log(`${item.name} hat aktuell keinen freien Verzauberungs-Slot.`, "bad");
+    log(t("enchant.noSlotLog", "{item} hat aktuell keinen freien Verzauberungs-Slot.", { item: itemDisplayName(item, state.equipment[slot]) }), "bad");
     return;
   }
   const cost = enchantCost();
   if (!canPayCost(cost)) {
-    log("Mira Nachtfaden braucht mehr Gold, Runensplitter oder Mondstaub.", "bad");
+    log(t("enchant.costMissingLog", "Mira Nachtfaden braucht mehr Gold, Runensplitter oder Mondstaub."), "bad");
     return;
   }
   const enchantmentId = rollEnchantment(item.slot, category, item);
   const enchantment = enchantmentCatalog[enchantmentId];
   if (!enchantment) {
-    log("Für dieses Item passt in dieser Kategorie keine freie Verzauberung.", "bad");
+    log(t("enchant.noRuneForItemLog", "Für dieses Item passt in dieser Kategorie keine freie Verzauberung."), "bad");
     return;
   }
   spendCost(cost);
@@ -3262,7 +3283,10 @@ function enchantEquipped(slot, category) {
   if (enchantRarityRank(enchantment.rarity) >= enchantRarityRank("rare")) {
     state.combatStats.rareEnchantments += 1;
   }
-  log(`${item.name} verzaubert: ${enchantment.name}.`, "drop");
+  log(t("enchant.successLog", "{item} verzaubert: {enchantment}.", {
+    item: itemDisplayName(item, state.equipment[slot]),
+    enchantment: enchantmentDisplayName(enchantment, enchantmentId),
+  }), "drop");
   notifyReadyAchievements();
   save();
   render();
@@ -3311,11 +3335,11 @@ function upgradeCritDamageGain(upgrade) {
 function upgradeEquipped(slot) {
   const item = getItem(state.equipment[slot]);
   if (item && (item.upgrade || 0) >= currentSmithMasteryLimit()) {
-    log("Borin Glutbart knurrt: Der Stahl braucht erst bessere Bindung.", "bad");
+    log(t("smith.limitLog", "Borin Glutbart knurrt: Der Stahl braucht erst bessere Bindung."), "bad");
     return;
   }
   if (!item || !canUpgrade(item)) {
-    log("Borin Glutbart knurrt: Dem Amboss fehlen noch Material oder Gold.", "bad");
+    log(t("smith.costMissingLog", "Borin Glutbart knurrt: Dem Amboss fehlen noch Material oder Gold."), "bad");
     return;
   }
   const cost = upgradeCost(item);
@@ -3331,7 +3355,7 @@ function upgradeEquipped(slot) {
   }
   state.combatStats = normalizeCombatStats(state.combatStats);
   state.combatStats.itemsUpgraded += 1;
-  log(`${upgraded.name} beim Schmied verbessert.`, "drop");
+  log(t("smith.upgradeLog", "{item} beim Schmied verbessert.", { item: itemDisplayName(upgraded, upgraded.id) }), "drop");
   notifyReadyAchievements();
   save();
   render();
@@ -3372,7 +3396,7 @@ function salvageBonusMaterials(item) {
   const material = options[random(0, options.length - 1)] || "scrap";
   return {
     materials: { [material]: amount },
-    text: `Sauber zerlegt: +${amount} ${materialLabel[material]}.`,
+    text: t("smith.salvageBonusLog", "Sauber zerlegt: +{amount} {material}.", { amount, material: labelFor(materialLabel, material) }),
   };
 }
 
@@ -3414,8 +3438,8 @@ function salvageInventoryItem(index) {
   delete state.itemDurability[itemId];
   state.combatStats = normalizeCombatStats(state.combatStats);
   state.combatStats.itemsSalvaged += 1;
-  const text = Object.entries(materials).map(([id, amount]) => `${amount} ${materialLabel[id]}`).join(", ");
-  log(`${item.name} zerlegt. Erhalten: ${text}.`, "drop");
+  const text = Object.entries(materials).map(([id, amount]) => `${amount} ${labelFor(materialLabel, id)}`).join(", ");
+  log(t("smith.salvageLog", "{item} zerlegt. Erhalten: {materials}.", { item: itemDisplayName(item, itemId), materials: text }), "drop");
   if (bonus) log(bonus.text, "drop");
   notifyReadyAchievements();
   save();
@@ -3444,9 +3468,9 @@ function salvageAllInventoryItems() {
   state.inventory = [];
   state.combatStats = normalizeCombatStats(state.combatStats);
   state.combatStats.itemsSalvaged += count;
-  const text = Object.entries(gained).map(([id, amount]) => `${amount} ${materialLabel[id]}`).join(", ");
-  log(`${count} Items zerlegt. Erhalten: ${text}.`, "drop");
-  if (bonusCount) log(`${bonusCount} Items wurden sauber zerlegt und gaben Bonus-Material.`, "drop");
+  const text = Object.entries(gained).map(([id, amount]) => `${amount} ${labelFor(materialLabel, id)}`).join(", ");
+  log(t("smith.salvageAllLog", "{count} Items zerlegt. Erhalten: {materials}.", { count, materials: text }), "drop");
+  if (bonusCount) log(t("smith.salvageAllBonusLog", "{count} Items wurden sauber zerlegt und gaben Bonus-Material.", { count: bonusCount }), "drop");
   notifyReadyAchievements();
   save();
   render();
@@ -3456,15 +3480,15 @@ function rest() {
   const cost = restCost();
   syncDerivedStats();
   if (state.hp >= state.maxHp) {
-    log("Du bist bereits vollständig erholt.");
+    log(t("camp.alreadyRestedLog", "Du bist bereits vollständig erholt."));
     return;
   }
   const paid = state.gold >= cost ? cost : 0;
   state.gold -= paid;
   state.hp = state.maxHp;
   log(paid
-    ? `Du rastest am Lagerplatz. Leben vollständig erholt. Kosten: ${cost} Gold.`
-    : "Du rastest am Lagerplatz. Ohne genug Gold heilt dich die Grauwacht kostenlos.");
+    ? t("camp.restPaidLog", "Du rastest am Lagerplatz. Leben vollständig erholt. Kosten: {gold} Gold.", { gold: cost })
+    : t("camp.restFreeLog", "Du rastest am Lagerplatz. Ohne genug Gold heilt dich die Grauwacht kostenlos."));
   save();
   render();
 }
@@ -3472,11 +3496,11 @@ function rest() {
 function repair() {
   const cost = repairCost();
   if (!cost) {
-    log("Deine Ausrüstung ist bereits in gutem Zustand.");
+    log(t("equipment.repairAllGoodLog", "Deine Ausrüstung ist bereits in gutem Zustand."));
     return;
   }
   if (state.gold < cost) {
-    log(`Für die Reparatur fehlen ${cost - state.gold} Gold.`, "bad");
+    log(t("equipment.repairMissingLog", "Für die Reparatur fehlen {gold} Gold.", { gold: cost - state.gold }), "bad");
     return;
   }
   state.gold -= cost;
@@ -3485,7 +3509,7 @@ function repair() {
     if (getItem(itemId)) setItemDurability(itemId, 100);
   });
   state.durability = equippedDurabilityAverage();
-  log(`Der Schmied repariert deine ausgerüsteten Items vollständig. Kosten: ${cost} Gold.`);
+  log(t("equipment.repairAllLog", "Der Schmied repariert deine ausgerüsteten Items vollständig. Kosten: {gold} Gold.", { gold: cost }));
   save();
   render();
 }
@@ -3496,17 +3520,17 @@ function repairSlot(slot) {
   if (!item) return;
   const cost = repairCostForSlot(slot);
   if (!cost) {
-    log(`${item.name} ist bereits vollständig repariert.`);
+    log(t("equipment.repairSlotFullLog", "{item} ist bereits vollständig repariert.", { item: itemDisplayName(item, itemId) }));
     return;
   }
   if (state.gold < cost) {
-    log(`Für ${item.name} fehlen ${cost - state.gold} Gold.`, "bad");
+    log(t("equipment.repairSlotMissingLog", "Für {item} fehlen {gold} Gold.", { item: itemDisplayName(item, itemId), gold: cost - state.gold }), "bad");
     return;
   }
   state.gold -= cost;
   setItemDurability(itemId, 100);
   state.durability = equippedDurabilityAverage();
-  log(`${item.name} repariert. Kosten: ${cost} Gold.`);
+  log(t("equipment.repairSlotLog", "{item} repariert. Kosten: {gold} Gold.", { item: itemDisplayName(item, itemId), gold: cost }));
   save();
   render();
 }

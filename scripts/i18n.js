@@ -107,6 +107,9 @@ const translations = {
         "combat.winLog": "Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.",
         "combat.lossLog": "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.",
         "combat.renownLog": "Dein Ruf wächst: +1 Ruhm für den Sieg gegen {enemy}.",
+        "combat.enemyAbilityHit": "{enemy}: {ability} trifft für {damage}.",
+        "combat.heroHit": "Du triffst für {damage}.",
+        "combat.enemyHit": "{enemy} trifft für {damage}.",
         "risk.easy": "Einfach",
         "risk.machbar": "Machbar",
         "risk.risky": "Riskant",
@@ -137,6 +140,9 @@ const translations = {
         "loot.noStatChange": "Keine Stat-Änderung",
         "loot.effect": "Effekt",
         "loot.enchantment": "Verzauberung",
+        "loot.rareChoiceLog": "Seltener Fund in der Beuteauswahl: {item} ({quality}).",
+        "loot.chosenEquippedLog": "{item} gewählt und direkt ausgerüstet.",
+        "loot.chosenInventoryLog": "{item} gewählt und ins Inventar gelegt.",
         "inventory.title": "Rucksack",
         "inventory.modalTitle": "Inventar",
         "inventory.empty": "Dein Rucksack ist leer.",
@@ -149,6 +155,22 @@ const translations = {
         "merchant.title": "Tilda Münzhand",
         "merchant.sellValue": "Verkaufswert",
         "merchant.noItems": "Tilda findet nichts Verkaufbares in deinem Rucksack.",
+        "merchant.sellItemLog": "Tilda Münzhand kauft {item}. +{gold} Gold.",
+        "merchant.sellAllLog": "Tilda Münzhand kauft {count} Items. +{gold} Gold.",
+        "material.foundLog": "Material gefunden: {materials}.",
+        "item.suffix.graywatch": "der Grauwacht",
+        "inventory.equipLog": "{item} ausgerüstet. {previous} liegt jetzt im Inventar.",
+        "inventory.oldItem": "Altes Teil",
+        "equipment.brokenLog": "{item} ist zerbrochen.",
+        "equipment.repairAllGoodLog": "Deine Ausrüstung ist bereits in gutem Zustand.",
+        "equipment.repairMissingLog": "Für die Reparatur fehlen {gold} Gold.",
+        "equipment.repairAllLog": "Der Schmied repariert deine ausgerüsteten Items vollständig. Kosten: {gold} Gold.",
+        "equipment.repairSlotFullLog": "{item} ist bereits vollständig repariert.",
+        "equipment.repairSlotMissingLog": "Für {item} fehlen {gold} Gold.",
+        "equipment.repairSlotLog": "{item} repariert. Kosten: {gold} Gold.",
+        "camp.alreadyRestedLog": "Du bist bereits vollständig erholt.",
+        "camp.restPaidLog": "Du rastest am Lagerplatz. Leben vollständig erholt. Kosten: {gold} Gold.",
+        "camp.restFreeLog": "Du rastest am Lagerplatz. Ohne genug Gold heilt dich die Grauwacht kostenlos.",
         "equipment.empty": "Kein Item ausgerüstet.",
         "equipment.repairCost": "{cost} Gold",
         "equipment.upgradeLevel": "Stufe +{level}/{limit}",
@@ -240,6 +262,7 @@ const translations = {
         "quest.cancelLog": "Quest gelöscht: {quest}.",
         "quest.completeLog": "Quest abgeschlossen: {quest}. +{xp} XP, +{gold} Gold, +{renown} Ruhm.",
         "quest.rareFoundLog": "Seltene Quest-Schriftrolle gefunden: {quest}. Sie liegt auf der Quest-Tafel.",
+        "quest.rewardLog": "Questbelohnung erhalten: {item} ({quality}).",
         "quest.emptyBoard": "Die Tafel ist leer. Gewonnene Kämpfe bringen bald neue Aufträge.",
         "quest.status": "Status",
         "quest.itemReward": "Item",
@@ -452,6 +475,17 @@ const translations = {
         "smith.hiddenWork": "Verborgene Arbeit",
         "smith.hiddenIntro": "Dein Stahl hat noch Luft. Bring mir erst ein Stück, das keinen einfachen Schlag mehr annimmt.",
         "smith.hiddenReward": "Borin verrät dir mehr, sobald deine Ausrüstung wirklich an ihre Grenze stößt.",
+        "smith.masteryBlockedLog": "Borin Glutbart schüttelt den Kopf. Für diesen Meisterauftrag fehlt dir noch etwas.",
+        "smith.masteryStartLog": "Meisterauftrag begonnen: {name}.",
+        "smith.masteryIncompleteLog": "Borin Glutbart knurrt: Bring mir Erz, nicht Ausreden.",
+        "smith.masteryCompleteLog": "Borin Glutbart vollendet \"{name}\". Neues Upgrade-Limit: +{limit}. +{renown} Ruhm.",
+        "smith.limitLog": "Borin Glutbart knurrt: Der Stahl braucht erst bessere Bindung.",
+        "smith.costMissingLog": "Borin Glutbart knurrt: Dem Amboss fehlen noch Material oder Gold.",
+        "smith.upgradeLog": "{item} beim Schmied verbessert.",
+        "smith.salvageBonusLog": "Sauber zerlegt: +{amount} {material}.",
+        "smith.salvageLog": "{item} zerlegt. Erhalten: {materials}.",
+        "smith.salvageAllLog": "{count} Items zerlegt. Erhalten: {materials}.",
+        "smith.salvageAllBonusLog": "{count} Items wurden sauber zerlegt und gaben Bonus-Material.",
         "smith.masterMark": "Meisterzeichen der Grauwacht",
         "smith.masterDone": "Deine Ausrüstung trägt Borins stärkste Bindung. Mehr gibt der Amboss nicht her.",
         "smith.activeMission": "Aktiv: {name}",
@@ -494,6 +528,18 @@ const translations = {
         "enchant.reachLevel": "Level {level} erreichen",
         "enchant.unlockSimpleRunes": "Danach einfache Runen freischalten",
         "enchant.lockedUntil": "Verzauberungen bleiben bis dahin gesperrt",
+        "enchant.masteryBlockedLog": "Mira Nachtfaden lächelt spitz: Erst die Prüfung, dann das Ritual.",
+        "enchant.masteryStartLog": "Arkaner Auftrag begonnen: {name}.",
+        "enchant.masteryIncompleteLog": "Mira Nachtfaden tippt auf den Runenkreis. Er bleibt kalt.",
+        "enchant.masteryCompleteLog": "Mira vollendet \"{name}\". {reward} +{renown} Ruhm.",
+        "enchant.tooLowLog": "Mira Nachtfaden erscheint erst, wenn du erfahren genug bist.",
+        "enchant.noSlotLog": "{item} hat aktuell keinen freien Verzauberungs-Slot.",
+        "enchant.costMissingLog": "Mira Nachtfaden braucht mehr Gold, Runensplitter oder Mondstaub.",
+        "enchant.noRuneForItemLog": "Für dieses Item passt in dieser Kategorie keine freie Verzauberung.",
+        "enchant.successLog": "{item} verzaubert: {enchantment}.",
+        "save.backupLootReason": "du hast {quality}e Beute erhalten.",
+        "save.backupSmithReason": "Borin hat seine Werkstatt erweitert.",
+        "save.backupEnchantReason": "Mira hat deine Runenbindung erweitert.",
         "enchant.notEnchanted": "Noch nicht verzaubert.",
         "enchant.castRune": "Rune wirken",
         "enchant.noRune": "Keine passende Rune",
@@ -509,8 +555,257 @@ const translations = {
     }
 };
 
+Object.assign(translations.de, {
+    "renownRank.0.name": "Fremder",
+    "renownRank.0.benefit": "Noch kein Vorteil",
+    "renownRank.5.name": "Bekannter Kämpfer",
+    "renownRank.5.benefit": "Reparaturen -10%",
+    "renownRank.10.name": "Verlässliche Klinge",
+    "renownRank.10.benefit": "Quest-Tafel hält 4 Aufträge bereit",
+    "renownRank.15.name": "Schmiedefreund",
+    "renownRank.15.benefit": "Zerlegen kann Bonus-Material geben",
+    "renownRank.20.name": "Held der Grauwacht",
+    "renownRank.20.benefit": "Upgrades -8% Goldkosten",
+    "renownRank.30.name": "Eliteschrecken",
+    "renownRank.30.benefit": "Elite-Gegner und Zerlegen geben bessere Chancen",
+    "renownRank.40.name": "Meister der Grauwacht",
+    "renownRank.40.benefit": "Seltene Aufträge erscheinen öfter",
+    "smithMastery.emberAnvil.name": "Glut des Ambosses",
+    "smithMastery.emberAnvil.text": "Ausrüstung kann bis +10 verbessert werden. Reparaturen dauerhaft -5%.",
+    "smithMastery.pressureSteel.name": "Stahl unter Druck",
+    "smithMastery.pressureSteel.text": "Ausrüstung kann bis +15 verbessert werden. Upgrade-Goldkosten dauerhaft -5%.",
+    "smithMastery.watchMastermark.name": "Meisterzeichen der Grauwacht",
+    "smithMastery.watchMastermark.text": "Ausrüstung kann bis +20 verbessert werden. Reparaturen dauerhaft zusätzlich -10%.",
+    "enchantMastery.unstableRunes.name": "Instabile Magie",
+    "enchantMastery.unstableRunes.text": "Mira öffnet den zweiten Runen-Slot und seltene Verzauberungen.",
+    "enchantMastery.forbiddenLibrary.name": "Die verbotene Bibliothek",
+    "enchantMastery.forbiddenLibrary.text": "Mira öffnet den dritten Runen-Slot und epische Verzauberungen.",
+    "enchantMastery.voidRitual.name": "Das Ritual der Leere",
+    "enchantMastery.voidRitual.text": "Arkane Meisterschaft freigeschaltet: extrem seltene instabile Verzauberungen können erscheinen.",
+    "set.wolf.name": "Rudeljäger",
+    "set.wolf.bonus.2": "+3 Schaden, +1 Verteidigung",
+    "set.wolf.bonus.4": "+5 Schaden, +4 Verteidigung",
+    "set.wolf.bonus.6": "+11 Schaden, +7 Verteidigung, +18 Leben",
+    "set.iron.name": "Grenzwacht",
+    "set.iron.bonus.2": "+5 Verteidigung",
+    "set.iron.bonus.4": "+3 Schaden, +10 Verteidigung",
+    "set.iron.bonus.6": "+7 Schaden, +20 Verteidigung, +26 Leben",
+    "set.crypt.name": "Gruftbund",
+    "set.crypt.bonus.2": "+4 Schaden, +12 Leben",
+    "set.crypt.bonus.4": "+7 Schaden, +6 Verteidigung, +22 Leben",
+    "set.crypt.bonus.6": "+13 Schaden, +11 Verteidigung, +48 Leben",
+    "set.ashen.name": "Aschenkrone",
+    "set.ashen.bonus.2": "+8 Schaden, +5 Verteidigung",
+    "set.ashen.bonus.4": "+14 Schaden, +11 Verteidigung, +32 Leben",
+    "set.ashen.bonus.6": "+28 Schaden, +19 Verteidigung, +64 Leben",
+    "item.trainingSword.name": "Übungsschwert",
+    "item.wornBuckler.name": "Abgenutzter Buckler",
+    "item.paddedVest.name": "Gepolsterte Weste",
+    "item.patchedTrousers.name": "Geflickte Hose",
+    "item.travelBoots.name": "Reisestiefel",
+    "item.twineNecklace.name": "Kordelhalskette",
+    "item.copperRing.name": "Kupferring",
+    "item.wolfRing.name": "Ring des Rudels",
+    "item.rustBlade.name": "Rostklinge",
+    "item.tollKnife.name": "Zollmesser",
+    "item.houndGreaves.name": "Eisenhund-Stiefel",
+    "item.hideArmor.name": "Dornenleder",
+    "item.oathRing.name": "Eidring",
+    "item.knightPlate.name": "Grenzritterplatte",
+    "item.crowTalisman.name": "Seuchentalisman",
+    "item.wraithLantern.name": "Schemenlaterne",
+    "item.ashHook.name": "Aschenhaken",
+    "item.emberClaw.name": "Glutklaue",
+    "item.sentinelVisor.name": "Kronenvisier",
+    "item.guardAxe.name": "Gardistenaxt",
+    "item.cellkeeperBulwark.name": "Bollwerk des Zellhüters",
+    "item.graveRing.name": "Grablichtring",
+    "item.boneChalice.name": "Kelch der stillen Knochen",
+    "item.bruteMail.name": "Schlägerkettenhemd",
+    "item.cryptCrusher.name": "Gruftspalter",
+    "item.wardenChain.name": "Kette des Aufsehers",
+    "item.wardenShackle.name": "Aufseherfessel",
+    "item.forgeHammer.name": "Hammer des Eidschmieds",
+    "item.oathMantle.name": "Eidmantel",
+    "item.dukeSignet.name": "Siegel des Herzogs",
+    "item.ironCrownplate.name": "Eisenkronenplatte",
+    "item.emberRosary.name": "Glutrosenkranz",
+    "item.emberCenser.name": "Rauchfass der Glutmesse",
+    "item.crownFang.name": "Kronenfang",
+    "item.royalSpurs.name": "Königssporn",
+    "item.ashenGreatsword.name": "Aschgraues Großschwert",
+    "item.crownShard.name": "Splitter der Krone",
+    "lootName.Kerbenschwert": "Kerbenschwert",
+    "lootName.Feldbeil": "Feldbeil",
+    "lootName.Wachklinge": "Wachklinge",
+    "lootName.Runenklinge": "Runenklinge",
+    "lootName.Blutrost-Axt": "Blutrost-Axt",
+    "lootName.Silberfalchion": "Silberfalchion",
+    "lootName.Eidbrecher": "Eidbrecher",
+    "lootName.Sternstahlklinge": "Sternstahlklinge",
+    "lootName.Gruftspalter": "Gruftspalter",
+    "lootName.Königsschneide": "Königsschneide",
+    "lootName.Aschenurteil": "Aschenurteil",
+    "lootName.Drachenzahn": "Drachenzahn",
+    "lootName.Holzschild": "Holzschild",
+    "lootName.Parierdolch": "Parierdolch",
+    "lootName.Rostbuckler": "Rostbuckler",
+    "lootName.Wolfsbuckler": "Wolfsbuckler",
+    "lootName.Gardistenschild": "Gardistenschild",
+    "lootName.Hakenklinge": "Hakenklinge",
+    "lootName.Eidwall": "Eidwall",
+    "lootName.Runenfokus": "Runenfokus",
+    "lootName.Gruftlaterne": "Gruftlaterne",
+    "lootName.Sonnenschild": "Sonnenschild",
+    "lootName.Aschenfokus": "Aschenfokus",
+    "lootName.Splitterparade": "Splitterparade",
+    "lootName.Lederwams": "Lederwams",
+    "lootName.Kettenfetzen": "Kettenfetzen",
+    "lootName.Reiserüstung": "Reiserüstung",
+    "lootName.Wolfsleder": "Wolfsleder",
+    "lootName.Schildplattenrock": "Schildplattenrock",
+    "lootName.Schuppenpanzer": "Schuppenpanzer",
+    "lootName.Eidhüterplatte": "Eidhüterplatte",
+    "lootName.Nachtkettenhemd": "Nachtkettenhemd",
+    "lootName.Runenharnisch": "Runenharnisch",
+    "lootName.Krone der Bastion": "Krone der Bastion",
+    "lootName.Aschenpanzer": "Aschenpanzer",
+    "lootName.Sonnenharnisch": "Sonnenharnisch",
+    "lootName.Leinenhose": "Leinenhose",
+    "lootName.Wanderbeinlinge": "Wanderbeinlinge",
+    "lootName.Kettenhose": "Kettenhose",
+    "lootName.Wolfsbeinlinge": "Wolfsbeinlinge",
+    "lootName.Schmiedeplatten": "Schmiedeplatten",
+    "lootName.Räuberhose": "Räuberhose",
+    "lootName.Eidbeinplatten": "Eidbeinplatten",
+    "lootName.Grabstahl-Beinlinge": "Grabstahl-Beinlinge",
+    "lootName.Runenbeinpanzer": "Runenbeinpanzer",
+    "lootName.Aschenbeinplatten": "Aschenbeinplatten",
+    "lootName.Königsgamaschen": "Königsgamaschen",
+    "lootName.Sonnenbeinschutz": "Sonnenbeinschutz",
+    "lootName.Lederstiefel": "Lederstiefel",
+    "lootName.Marschschuhe": "Marschschuhe",
+    "lootName.Eisenkappen": "Eisenkappen",
+    "lootName.Fährtenstiefel": "Fährtenstiefel",
+    "lootName.Wachstiefel": "Wachstiefel",
+    "lootName.Dornenläufer": "Dornenläufer",
+    "lootName.Eidtreter": "Eidtreter",
+    "lootName.Gruftschritte": "Gruftschritte",
+    "lootName.Runensohlen": "Runensohlen",
+    "lootName.Aschenläufer": "Aschenläufer",
+    "lootName.Sonnenstiefel": "Sonnenstiefel",
+    "lootName.Kronenschritte": "Kronenschritte",
+    "lootName.Holzamulett": "Holzamulett",
+    "lootName.Kordelkette": "Kordelkette",
+    "lootName.Kupfertalisman": "Kupfertalisman",
+    "lootName.Wolfszahnkette": "Wolfszahnkette",
+    "lootName.Rostmedaillon": "Rostmedaillon",
+    "lootName.Wachhalsreif": "Wachhalsreif",
+    "lootName.Eidamulett": "Eidamulett",
+    "lootName.Grablichtkette": "Grablichtkette",
+    "lootName.Runenhalsreif": "Runenhalsreif",
+    "lootName.Aschenmedaillon": "Aschenmedaillon",
+    "lootName.Sonnenanhänger": "Sonnenanhänger",
+    "lootName.Kronentalisman": "Kronentalisman",
+    "lootName.Zinnring": "Zinnring",
+    "lootName.Feldreif": "Feldreif",
+    "lootName.Schlichter Talisman": "Schlichter Talisman",
+    "lootName.Blutsteinring": "Blutsteinring",
+    "lootName.Wolfszeichen": "Wolfszeichen",
+    "lootName.Wachtersiegel": "Wachtersiegel",
+    "lootName.Grablichtreif": "Grablichtreif",
+    "lootName.Eidsiegel": "Eidsiegel",
+    "lootName.Sternsplitterring": "Sternsplitterring",
+    "lootName.Splitterkrone": "Splitterkrone",
+    "lootName.Ring des alten Feuers": "Ring des alten Feuers",
+    "lootName.Königszeichen": "Königszeichen"
+});
+
+Object.assign(translations.de, {
+    "smith.masteryIntro.emberAnvil": "Dein Stahl ist an seiner Grenze. Mein Amboss braucht heißeres Feuer.",
+    "smith.masteryIntro.pressureSteel": "Du hast deinen Stahl weit gebracht. Jetzt braucht er Druck, nicht nur Feuer.",
+    "smith.masteryIntro.watchMastermark": "Jetzt reden wir nicht mehr über bessere Arbeit. Jetzt reden wir über einen Schwur im Metall.",
+    "enchant.completeQuote": "Jetzt hörst du es auch, oder? Stahl flüstert, wenn die Rune richtig sitzt.",
+    "enchant.masteryIntro.unstableRunes": "Die erste Rune hält. Jetzt will ich sehen, ob sie auch unter Druck singt.",
+    "enchant.masteryIntro.forbiddenLibrary": "Drei Bindungen brauchen Wissen, das man nicht offen liegen lässt.",
+    "enchant.masteryIntro.voidRitual": "Die Leere beantwortet nur Fragen, die klug genug gestellt werden.",
+    "enchant.masteryIntro.default": "Magie ist kein Schmuck. Sie ist ein Handel.",
+    "smith.dialogue.0.0.title": "Borin mustert deine Ausrüstung.",
+    "smith.dialogue.0.0.text": "Eine Klinge lügt nicht. Entweder sie hält, oder sie bricht.",
+    "smith.dialogue.0.1.title": "Borin klopft auf den Amboss.",
+    "smith.dialogue.0.1.text": "Gold auf den Tisch, Material daneben. Freundliche Worte härten keinen Stahl.",
+    "smith.dialogue.5.0.title": "Borin nickt knapp.",
+    "smith.dialogue.5.0.text": "Du kommst öfter zurück, als ich erwartet habe. Gut. Deine Sachen halten schon mehr aus.",
+    "smith.dialogue.5.1.title": "Borin nimmt dein Schwert genauer.",
+    "smith.dialogue.5.1.text": "Für dich nehme ich mir einen sauberen Amboss. Reparaturen werden etwas günstiger.",
+    "smith.dialogue.5.2.title": "Borin schnaubt zufrieden.",
+    "smith.dialogue.5.2.text": "Du überlebst. Das ist in Grauwacht fast schon ein Empfehlungsschreiben.",
+    "smith.dialogue.10.0.title": "Borin grüßt dich mit einem Nicken.",
+    "smith.dialogue.10.0.text": "Die Quest-Tafel hört auf deinen Namen. Mehr Aufträge bedeuten mehr Gründe für bessere Klingen.",
+    "smith.dialogue.10.1.title": "Borin wischt Ruß von seinen Händen.",
+    "smith.dialogue.10.1.text": "Verlässliche Hände bekommen verlässliche Aufträge. Such dir aus, was dich nicht umbringt.",
+    "smith.dialogue.15.0.title": "Der Zwergenmeister prüft eine Klinge im Licht.",
+    "smith.dialogue.15.0.text": "Aus Schrott kann man mehr holen, wenn man weiß, wo man schneiden muss. Ich helfe dir beim Zerlegen.",
+    "smith.dialogue.15.1.title": "Borin sortiert deine Beute.",
+    "smith.dialogue.15.1.text": "Wegwerfen wäre Verschwendung. Gib mir die Teile, ich finde noch brauchbares Material darin.",
+    "smith.dialogue.15.2.title": "Borin legt Material beiseite.",
+    "smith.dialogue.15.2.text": "Du bringst mir gute Arbeit. Dafür hole ich dir aus altem Zeug ein bisschen mehr heraus.",
+    "smith.dialogue.20.0.title": "Borin zieht die Augenbraue hoch.",
+    "smith.dialogue.20.0.text": "Jetzt reden wir nicht mehr über Flickwerk. Deine Upgrades bekommen meinen besten Preis.",
+    "smith.dialogue.20.1.title": "Borin lächelt fast.",
+    "smith.dialogue.20.1.text": "Held der Grauwacht, hm? Dann soll deine Ausrüstung auch danach klingen.",
+    "smith.dialogue.30.0.title": "Borin senkt die Stimme.",
+    "smith.dialogue.30.0.text": "Elite-Gegner tragen bessere Spuren am Stahl. Bring sie mir, ich erkenne den Wert.",
+    "smith.dialogue.30.1.title": "Borin prüft deine Narben.",
+    "smith.dialogue.30.1.text": "Wer Eliten jagt, braucht mehr als Mut. Deine Beute behandle ich entsprechend.",
+    "smith.dialogue.30.2.title": "Borin arbeitet ohne aufzusehen.",
+    "smith.dialogue.30.2.text": "Du suchst die gefährlichen Kämpfe. Gut. Gefährliche Beute lässt sich besser verwerten.",
+    "smith.dialogue.40.0.title": "Borin spricht wie zu einem Verbündeten.",
+    "smith.dialogue.40.0.text": "Meister der Grauwacht. Für dich halte ich die seltenen Aufträge nicht mehr unter der Theke.",
+    "smith.dialogue.40.1.title": "Borin reicht dir das beste Werkzeug.",
+    "smith.dialogue.40.1.text": "Du hast dir Vertrauen verdient. Wenn etwas Besonderes auftaucht, erfährst du es zuerst.",
+    "smith.dialogue.40.2.title": "Borin schlägt den Hammer langsam an.",
+    "smith.dialogue.40.2.text": "Jetzt bauen wir nicht nur Ausrüstung. Jetzt bauen wir Legenden, Stück für Stück."
+});
+
 function normalizeLanguage(language) {
     return supportedLanguages.includes(language) ? language : "de";
+}
+
+function syncGermanFallbackKeys() {
+    if (!translations.en) return;
+    Object.keys(translations.en).forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(translations.de, key)) return;
+        translations.de[key] = germanFallbackForTranslationKey(key) ?? translations.en[key];
+    });
+}
+
+function germanFallbackForTranslationKey(key) {
+    const entityMatch = key.match(/^(itemEffect|enchantment|item|enemyAbility|smithMastery|enchantMastery)\.([^.]+)\.(name|text)$/);
+    if (entityMatch) {
+        const [, group, id, field] = entityMatch;
+        const sources = {
+            itemEffect: typeof itemEffectCatalog !== "undefined" ? itemEffectCatalog : null,
+            enchantment: typeof enchantmentCatalog !== "undefined" ? enchantmentCatalog : null,
+            item: typeof items !== "undefined" ? items : null,
+            enemyAbility: typeof enemyAbilityCatalog !== "undefined" ? enemyAbilityCatalog : null,
+            smithMastery: typeof smithMasteryRanks !== "undefined" ? Object.fromEntries(smithMasteryRanks.map((rank) => [rank.id, rank])) : null,
+            enchantMastery: typeof enchantMasteryRanks !== "undefined" ? Object.fromEntries(enchantMasteryRanks.map((rank) => [rank.id, rank])) : null,
+        };
+        return sources[group]?.[id]?.[field] || "";
+    }
+    const setMatch = key.match(/^set\.([^.]+)\.(name|bonus)\.?(\d+)?$/);
+    if (setMatch && typeof setBonuses !== "undefined") {
+        const [, setId, field, count] = setMatch;
+        return field === "name" ? setBonuses[setId]?.name : setBonuses[setId]?.bonuses?.[count]?.text;
+    }
+    const rankMatch = key.match(/^renownRank\.(\d+)\.(name|benefit)$/);
+    if (rankMatch && typeof renownRanks !== "undefined") {
+        const [, threshold, field] = rankMatch;
+        return renownRanks.find((rank) => String(rank.threshold) === threshold)?.[field];
+    }
+    if (key.startsWith("lootName.")) return key.slice("lootName.".length);
+    return undefined;
 }
 
 function defaultLanguage() {
@@ -641,6 +936,106 @@ function achievementDisplayName(achievement) {
 
 function achievementDisplayText(achievement) {
     return entityText("achievement", achievement?.id, achievement?.text || "");
+}
+
+function knownObjectId(collection, value) {
+    if (!collection || !value) return "";
+    return Object.entries(collection).find(([, entry]) => entry === value)?.[0] || "";
+}
+
+function splitItemNameParts(name = "") {
+    const upgrade = name.match(/\s\+\d+$/)?.[0] || "";
+    let baseName = upgrade ? name.slice(0, -upgrade.length) : name;
+    const graywatchSuffix = baseName.endsWith(" der Grauwacht");
+    if (graywatchSuffix) baseName = baseName.slice(0, -" der Grauwacht".length);
+    return { baseName, graywatchSuffix, upgrade };
+}
+
+function lootNameDisplayName(name = "") {
+    return t(`lootName.${name}`, name);
+}
+
+function itemIdFor(item, itemId = "") {
+    if (itemId && typeof items !== "undefined" && items[itemId]) return itemId;
+    if (item?.id && typeof items !== "undefined" && items[item.id]) return item.id;
+    return typeof items !== "undefined" ? knownObjectId(items, item) : "";
+}
+
+function itemDisplayName(item, itemId = "") {
+    if (!item) return "";
+    const fixedId = itemIdFor(item, itemId);
+    if (fixedId) {
+        const translated = entityName("item", fixedId, items[fixedId]?.name || item.name || fixedId);
+        const upgrade = item.upgrade ? ` +${item.upgrade}` : item.name?.match(/\s\+\d+$/)?.[0] || "";
+        return translated.endsWith(upgrade) ? translated : `${translated}${upgrade}`;
+    }
+    const { baseName, graywatchSuffix, upgrade } = splitItemNameParts(item.name || "");
+    const suffix = graywatchSuffix ? ` ${t("item.suffix.graywatch", "der Grauwacht")}` : "";
+    return `${lootNameDisplayName(baseName)}${suffix}${upgrade}`;
+}
+
+function itemEffectDisplayName(effectId) {
+    const effect = typeof itemEffectCatalog !== "undefined" ? itemEffectCatalog[effectId] : null;
+    return entityName("itemEffect", effectId, effect?.name || effectId || "");
+}
+
+function itemEffectDisplayText(effectId) {
+    const effect = typeof itemEffectCatalog !== "undefined" ? itemEffectCatalog[effectId] : null;
+    return entityText("itemEffect", effectId, effect?.text || "");
+}
+
+function enchantmentDisplayName(enchantment, enchantmentId = "") {
+    const id = enchantmentId || enchantment?.id || (typeof enchantmentCatalog !== "undefined" ? knownObjectId(enchantmentCatalog, enchantment) : "");
+    return entityName("enchantment", id, enchantment?.name || id || "");
+}
+
+function enchantmentDisplayText(enchantment, enchantmentId = "") {
+    const id = enchantmentId || enchantment?.id || (typeof enchantmentCatalog !== "undefined" ? knownObjectId(enchantmentCatalog, enchantment) : "");
+    return entityText("enchantment", id, enchantment?.text || "");
+}
+
+function setDisplayName(setId) {
+    const set = typeof setBonuses !== "undefined" ? setBonuses[setId] : null;
+    return entityName("set", setId, set?.name || setId || "");
+}
+
+function setBonusDisplayText(setId, count) {
+    const bonus = typeof setBonuses !== "undefined" ? setBonuses[setId]?.bonuses?.[count] : null;
+    return t(`set.${setId}.bonus.${count}`, bonus?.text || "");
+}
+
+function enemyAbilityDisplayName(ability, abilityId = "") {
+    const id = abilityId || (typeof enemyAbilityCatalog !== "undefined" ? knownObjectId(enemyAbilityCatalog, ability) : "");
+    return entityName("enemyAbility", id, ability?.name || id || "");
+}
+
+function enemyAbilityDisplayText(ability, abilityId = "") {
+    const id = abilityId || (typeof enemyAbilityCatalog !== "undefined" ? knownObjectId(enemyAbilityCatalog, ability) : "");
+    return entityText("enemyAbility", id, ability?.text || "");
+}
+
+function renownRankName(rank) {
+    return t(`renownRank.${rank?.threshold}.name`, rank?.name || "");
+}
+
+function renownRankBenefit(rank) {
+    return t(`renownRank.${rank?.threshold}.benefit`, rank?.benefit || "");
+}
+
+function smithMasteryName(rank) {
+    return entityName("smithMastery", rank?.id, rank?.name || "");
+}
+
+function smithMasteryReward(rank) {
+    return entityText("smithMastery", rank?.id, rank?.reward || "");
+}
+
+function enchantMasteryName(rank) {
+    return entityName("enchantMastery", rank?.id, rank?.name || "");
+}
+
+function enchantMasteryReward(rank) {
+    return entityText("enchantMastery", rank?.id, rank?.reward || "");
 }
 
 function combatEventName(event) {
