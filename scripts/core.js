@@ -2223,7 +2223,24 @@ function itemEnchantmentScore(item) {
 function itemEffectScore(item) {
   const effect = itemEffect(item);
   if (!effect) return 0;
+  const effectAxes = [
+    effect.bleedChance,
+    effect.poisonChance,
+    effect.firstHitReduction,
+    effect.thornsRatio,
+    effect.durabilityReduction,
+    effect.goldBonus,
+    effect.eliteCritChance,
+    effect.eliteDamageBonus,
+    effect.postCombatHeal,
+    effect.critHealRatio,
+    effect.enemyCritReduction,
+    effect.eliteArmorIgnore,
+    effect.firstHitWeaken < 1 ? 1 - effect.firstHitWeaken : 0,
+    effect.critBurn ? 1 : 0,
+  ].filter(Boolean).length;
   if (effect.critBurn || effect.eliteArmorIgnore || effect.eliteDamageBonus || effect.critHealRatio) return 12;
+  if (effectAxes >= 2) return 10;
   if (effect.eliteCritChance || effect.postCombatHeal || effect.firstHitReduction || effect.enemyCritReduction || effect.thornsRatio || effect.firstHitWeaken < 1) return 8;
   return 5;
 }
@@ -2313,15 +2330,17 @@ function rollItemEffect(slot, quality, enemy = null) {
 
 function itemEffectPool(slot, quality, enemy = null) {
   const pool = [];
-  if (slot === "weapon") pool.push("bleedEdge", "venomEdge");
-  if (["offhand", "chest"].includes(slot)) pool.push("guardBlock", "thornGuard", "steadfastWard");
-  if (slot === "pants") pool.push("thornGuard", "steadfastWard");
+  if (slot === "weapon") pool.push("bleedEdge", "venomEdge", "rendEdge");
+  if (["offhand", "chest"].includes(slot)) pool.push("guardBlock", "unbrokenOath", "thornGuard", "steadfastWard");
+  if (slot === "pants") pool.push("unbrokenOath", "thornGuard", "steadfastWard");
   if (["pants", "boots"].includes(slot)) pool.push("steadyStep");
+  if (slot === "boots") pool.push("wardedTread");
   if (["boots", "ring", "necklace"].includes(slot)) pool.push("luckyPouch");
-  if (["ring", "necklace"].includes(slot)) pool.push("eliteHunter", "echoHeal");
+  if (["ring", "necklace"].includes(slot)) pool.push("eliteHunter", "trophyHunter", "echoHeal", "soulAnchor");
 
   if (quality === "epic" || quality === "legendary") {
     if (["weapon", "ring", "necklace"].includes(slot)) pool.push("duelistMark", "lifeSiphon");
+    if (slot === "offhand") pool.push("soulAnchor");
   }
 
   if (enemy?.boss || quality === "legendary") {
