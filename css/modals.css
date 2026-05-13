@@ -920,6 +920,15 @@ button.drop-row span:last-child {
   filter: blur(8px);
 }
 
+.battle-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .battle-log-tab {
   position: absolute;
   z-index: 3;
@@ -1671,8 +1680,38 @@ button.drop-row span:last-child {
 
 .damage-number.critical {
   color: #ff4f4f;
+  display: grid;
+  justify-items: center;
+  gap: 0;
   font-size: 30px;
   text-shadow: 0 2px 0 #4d0808, 0 0 16px rgba(255, 79, 79, 0.95);
+}
+
+.damage-number.critical b {
+  color: #ff2f2f;
+  font-size: 14px;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.damage-number.critical span {
+  line-height: 1;
+}
+
+.battle-stage.critical-event::after {
+  opacity: 0.48;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 75, 75, 0.26), transparent 42%),
+    linear-gradient(90deg, rgba(255, 75, 75, 0.1), transparent 45%, rgba(255, 75, 75, 0.1));
+  animation: combat-flash 360ms ease-out;
+}
+
+.battle-stage.effect-event .battle-center strong {
+  color: var(--gold);
+}
+
+.battle-stage.heal-event .battle-center strong {
+  color: #87f3b8;
 }
 
 @keyframes hero-lunge {
@@ -1705,6 +1744,12 @@ button.drop-row span:last-child {
   0% { opacity: 0; transform: translateY(10px) scale(0.8); }
   18% { opacity: 1; }
   100% { opacity: 0; transform: translateY(-54px) scale(1.1); }
+}
+
+@keyframes combat-flash {
+  0% { opacity: 0; }
+  35% { opacity: 0.5; }
+  100% { opacity: 0; }
 }
 
 @keyframes victory-bob {

@@ -564,18 +564,21 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
   const playerMaxHp = combatHealth.playerMaxHp || state.maxHp;
   const enemyMaxHp = combatHealth.enemyMaxHp || enemy.hp;
   const startPlayerHp = combatHealth.playerStartHp ?? state.hp;
+  const rounds = Math.max(0, ...events.map((event) => event.round || 0));
+  const summary = combatAnimationSummary(events);
   hideBattleResult();
   updateBattleHealth(startPlayerHp, playerMaxHp, enemyMaxHp, enemyMaxHp);
   $("battleText").textContent = t("combat.stepForward", "{enemy} tritt vor.", { enemy: enemy.name });
-  stage.classList.remove("victory", "defeat", "hero-attacks", "enemy-attacks", "hero-hit", "enemy-hit");
+  stage.classList.remove("victory", "defeat", "hero-attacks", "enemy-attacks", "hero-hit", "enemy-hit", "critical-event", "effect-event", "heal-event");
   await waitCombat(280);
 
   const visibleEvents = events.slice(0, 14);
   for (const event of visibleEvents) {
     if (skipCombat) break;
+    const eventClass = combatEventClass(event);
     const attackClass = event.actor === "hero" ? "hero-attacks enemy-hit" : "enemy-attacks hero-hit";
     const side = event.actor === "hero" ? "right" : "left";
-    stage.className = `battle-stage ${attackClass}`;
+    stage.className = `battle-stage ${attackClass} ${eventClass}`.trim();
     $("battleText").textContent = event.text || (event.actor === "hero"
       ? `Du triffst für ${event.damage}.`
       : `${enemy.name} trifft für ${event.damage}.`);
@@ -599,17 +602,36 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
 
   stage.className = "battle-stage";
   stage.classList.add(playerWon ? "victory" : "defeat");
-  showBattleResult(playerWon, enemy.name);
+  showBattleResult(playerWon, enemy.name, rounds, summary);
   await waitResult(skipCombat ? 850 : 1350);
   hideBattleResult();
 }
 
-function showBattleResult(playerWon, enemyName) {
+function combatEventClass(event) {
+  if (event.critical) return "critical-event";
+  if (/\bheilt\b|\bheilen\b|\bheilung\b/i.test(event.text || "")) return "heal-event";
+  if (event.damage === 0) return "effect-event";
+  return "";
+}
+
+function combatAnimationSummary(events) {
+  const criticals = events.filter((event) => event.critical).length;
+  const effects = events.filter((event) => event.damage === 0 && !/\bheilt\b|\bheilen\b|\bheilung\b/i.test(event.text || "")).length;
+  return { criticals, effects };
+}
+
+function showBattleResult(playerWon, enemyName, rounds = 0, summary = {}) {
   $("battleText").textContent = playerWon ? t("combat.victory", "Sieg") : t("combat.defeat", "Niederlage");
-  $("battleResultTitle").textContent = playerWon ? t("combat.victory", "Sieg") : t("combat.defeat", "Niederlage");
-  $("battleResultText").textContent = playerWon
+  $("battleResultTitle").textContent = playerWon ? t("combat.resultWin", "Sieg!") : t("combat.resultLose", "Niederlage");
+  const detail = [
+    rounds ? `${rounds} ${rounds === 1 ? "Runde" : "Runden"}` : "",
+    summary.criticals ? `${summary.criticals} Crit${summary.criticals === 1 ? "" : "s"}` : "",
+    summary.effects ? `${summary.effects} Effekt${summary.effects === 1 ? "" : "e"}` : "",
+  ].filter(Boolean).join(" · ");
+  const baseText = playerWon
     ? t("combat.enemyDefeated", "{enemy} ist besiegt. Beute wird gesichert.", { enemy: enemyName })
     : t("combat.returnCamp", "Du kehrst angeschlagen ins Lager zurück.");
+  $("battleResultText").textContent = detail ? `${baseText} ${detail}` : baseText;
   $("battleResult").className = `battle-result show ${playerWon ? "win" : "loss"}`;
 }
 
@@ -633,7 +655,7 @@ function highlightAbilityUse(abilityId) {
 function spawnDamage(amount, side, critical = false) {
   const number = document.createElement("span");
   number.className = `damage-number ${side}${critical ? " critical" : ""}`;
-  number.textContent = critical ? `CRIT -${amount}` : `-${amount}`;
+  number.innerHTML = critical ? `<b>CRIT</b><span>-${amount}</span>` : `-${amount}`;
   $("battleStage").appendChild(number);
   window.setTimeout(() => number.remove(), 840);
 }

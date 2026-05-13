@@ -1001,15 +1001,27 @@ function resetCombatLog() {
 function setCombatLog(enemy, events, playerWon, rounds) {
   const result = playerWon ? t("combat.victory", "Sieg") : t("combat.defeat", "Niederlage");
   const resultKey = playerWon ? "combat.victoryAgainst" : "combat.defeatAgainst";
+  const summary = combatSummary(events);
   const entries = [
     {
       type: playerWon ? "good" : "bad",
-      text: t(resultKey, `${result} gegen ${enemy.name} nach ${rounds} Runden.`, { enemy: enemy.name, rounds }),
+      text: [t(resultKey, `${result} gegen ${enemy.name} nach ${rounds} Runden.`, { enemy: enemy.name, rounds }), summary].filter(Boolean).join(" "),
     },
     ...events.map(combatLogEntry),
   ];
   state.combatLog = entries.slice(0, 80);
   renderCombatLog();
+}
+
+function combatSummary(events) {
+  const criticals = events.filter((event) => event.critical).length;
+  const heals = events.filter((event) => /\bheilt\b|\bheilen\b|\bheilung\b/i.test(event.text || "")).length;
+  const effects = events.filter((event) => event.damage === 0 && !event.critical && !/\bheilt\b|\bheilen\b|\bheilung\b/i.test(event.text || "")).length;
+  return [
+    criticals ? `${criticals} Crit${criticals === 1 ? "" : "s"}` : "",
+    heals ? `${heals} Heilung${heals === 1 ? "" : "en"}` : "",
+    effects ? `${effects} Effekt${effects === 1 ? "" : "e"}` : "",
+  ].filter(Boolean).join(" · ");
 }
 
 function combatLogEntry(event) {
