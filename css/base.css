@@ -58,7 +58,6 @@ body.modal-open {
   font-weight: 800;
   letter-spacing: 0;
   pointer-events: none;
-  backdrop-filter: blur(8px);
 }
 
 button {
@@ -1598,4 +1597,3 @@ h2 {
   padding: 10px;
   background: rgba(7, 17, 27, 0.72);
 }
-

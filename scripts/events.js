@@ -136,43 +136,25 @@ $("bestiary").addEventListener("input", (event) => {
   });
 });
 
-$("bestiary").addEventListener("mouseover", (event) => {
-  const row = event.target.closest(".item-hover-row, .material-hover-row");
-  if (!row || row.contains(event.relatedTarget)) return;
-  showFloatingTooltip(row);
-  positionFloatingTooltip(event);
-});
+function bindFloatingTooltip(containerId, selector) {
+  const container = $(containerId);
+  container.addEventListener("mouseover", (event) => {
+    const row = event.target.closest(selector);
+    if (!row || row.contains(event.relatedTarget)) return;
+    if (showFloatingTooltip(row)) positionFloatingTooltip(event);
+  });
+  container.addEventListener("mousemove", (event) => {
+    if (event.target.closest(selector)) positionFloatingTooltip(event);
+  }, { passive: true });
+  container.addEventListener("mouseout", (event) => {
+    const row = event.target.closest(selector);
+    if (!row || row.contains(event.relatedTarget)) return;
+    hideFloatingTooltip();
+  });
+}
 
-$("bestiary").addEventListener("mousemove", (event) => {
-  if (event.target.closest(".item-hover-row, .material-hover-row")) {
-    positionFloatingTooltip(event);
-  }
-});
-
-$("bestiary").addEventListener("mouseout", (event) => {
-  const row = event.target.closest(".item-hover-row, .material-hover-row");
-  if (!row || row.contains(event.relatedTarget)) return;
-  hideFloatingTooltip();
-});
-
-$("equipmentDetails").addEventListener("mouseover", (event) => {
-  const row = event.target.closest(".set-hover-row");
-  if (!row || row.contains(event.relatedTarget)) return;
-  showFloatingTooltip(row);
-  positionFloatingTooltip(event);
-});
-
-$("equipmentDetails").addEventListener("mousemove", (event) => {
-  if (event.target.closest(".set-hover-row")) {
-    positionFloatingTooltip(event);
-  }
-});
-
-$("equipmentDetails").addEventListener("mouseout", (event) => {
-  const row = event.target.closest(".set-hover-row");
-  if (!row || row.contains(event.relatedTarget)) return;
-  hideFloatingTooltip();
-});
+bindFloatingTooltip("bestiary", ".item-hover-row, .material-hover-row");
+bindFloatingTooltip("equipmentDetails", ".set-hover-row");
 
 $("equipment").addEventListener("click", (event) => {
   if (!event.target.closest("[data-open-equipment]")) return;
@@ -180,24 +162,7 @@ $("equipment").addEventListener("click", (event) => {
   openModal("equipmentModal");
 });
 
-$("equipment").addEventListener("mouseover", (event) => {
-  const row = event.target.closest(".item-hover-row");
-  if (!row || row.contains(event.relatedTarget)) return;
-  showFloatingTooltip(row);
-  positionFloatingTooltip(event);
-});
-
-$("equipment").addEventListener("mousemove", (event) => {
-  if (event.target.closest(".item-hover-row")) {
-    positionFloatingTooltip(event);
-  }
-});
-
-$("equipment").addEventListener("mouseout", (event) => {
-  const row = event.target.closest(".item-hover-row");
-  if (!row || row.contains(event.relatedTarget)) return;
-  hideFloatingTooltip();
-});
+bindFloatingTooltip("equipment", ".item-hover-row");
 
 $("smithGrid").addEventListener("click", (event) => {
   const button = event.target.closest("[data-upgrade]");
@@ -401,6 +366,7 @@ $("saveFileInput").addEventListener("change", importSaveFile);
 
 void bootGame();
 window.addEventListener("beforeunload", save);
+window.addEventListener("scroll", hideFloatingTooltip, { passive: true, capture: true });
 
 async function bootGame() {
   await ensureLanguagePack(currentLanguage());
@@ -640,4 +606,3 @@ function spawnDamage(amount, side, critical = false) {
   $("battleStage").appendChild(number);
   window.setTimeout(() => number.remove(), 840);
 }
-

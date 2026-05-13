@@ -2064,20 +2064,37 @@ function renderMaterialTooltip(materialId) {
 }
 
 function showFloatingTooltip(row) {
+  if (!canShowFloatingTooltip()) return false;
   const materialId = row.dataset.materialId;
+  const key = materialId
+    ? `material:${selectedBestiaryEnemy}:${materialId}`
+    : row.dataset.tooltipKey || row.querySelector("[data-tooltip-key]")?.dataset.tooltipKey || row.querySelector("[data-set-tooltip-key]")?.dataset.setTooltipKey;
+  if (!key || activeTooltipKey === key) return Boolean(key);
+
   if (materialId) {
     const tooltip = $("floatingTooltip");
-    tooltip.innerHTML = cachedTooltipHtml(`material:${selectedBestiaryEnemy}:${materialId}`, () => renderMaterialTooltip(materialId));
-    tooltip.classList.add("open");
-    tooltip.setAttribute("aria-hidden", "false");
-    return;
+    tooltip.innerHTML = cachedTooltipHtml(key, () => renderMaterialTooltip(materialId));
+    openFloatingTooltip(key);
+    return true;
   }
-  const key = row.dataset.tooltipKey || row.querySelector("[data-tooltip-key]")?.dataset.tooltipKey || row.querySelector("[data-set-tooltip-key]")?.dataset.setTooltipKey;
   const item = tooltipItemCache.get(key);
-  if (!item) return;
+  if (!item) return false;
   const tooltip = $("floatingTooltip");
   const renderKey = tooltipCacheKey(key, item);
   tooltip.innerHTML = cachedTooltipHtml(renderKey, () => item.tooltipType === "set" ? renderSetTooltip(item.setId) : renderItemTooltip(item));
+  openFloatingTooltip(key);
+  return true;
+}
+
+function canShowFloatingTooltip() {
+  return window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches ?? true;
+}
+
+function openFloatingTooltip(key) {
+  const tooltip = $("floatingTooltip");
+  activeTooltipKey = key;
+  tooltipSize = null;
+  lastTooltipPosition = { x: -9999, y: -9999 };
   tooltip.classList.add("open");
   tooltip.setAttribute("aria-hidden", "false");
 }
@@ -2097,6 +2114,7 @@ function tooltipCacheKey(key, item) {
 function positionFloatingTooltip(event) {
   const tooltip = $("floatingTooltip");
   if (!tooltip.classList.contains("open")) return;
+  if (Math.abs(event.clientX - lastTooltipPosition.x) + Math.abs(event.clientY - lastTooltipPosition.y) < 8) return;
 
   pendingTooltipEvent = event;
   if (tooltipFrame) return;
@@ -2108,6 +2126,9 @@ function positionFloatingTooltip(event) {
 
 let tooltipFrame = 0;
 let pendingTooltipEvent = null;
+let activeTooltipKey = "";
+let tooltipSize = null;
+let lastTooltipPosition = { x: -9999, y: -9999 };
 
 function applyTooltipPosition(event) {
   const tooltip = $("floatingTooltip");
@@ -2115,19 +2136,22 @@ function applyTooltipPosition(event) {
 
   const margin = 16;
   const offset = 18;
-  const rect = tooltip.getBoundingClientRect();
+  if (!tooltipSize) {
+    const rect = tooltip.getBoundingClientRect();
+    tooltipSize = { width: rect.width, height: rect.height };
+  }
   let left = event.clientX + offset;
   let top = event.clientY + offset;
 
-  if (left + rect.width + margin > window.innerWidth) {
-    left = event.clientX - rect.width - offset;
+  if (left + tooltipSize.width + margin > window.innerWidth) {
+    left = event.clientX - tooltipSize.width - offset;
   }
-  if (top + rect.height + margin > window.innerHeight) {
-    top = event.clientY - rect.height - offset;
+  if (top + tooltipSize.height + margin > window.innerHeight) {
+    top = event.clientY - tooltipSize.height - offset;
   }
 
-  tooltip.style.left = `${Math.max(margin, left)}px`;
-  tooltip.style.top = `${Math.max(margin, top)}px`;
+  lastTooltipPosition = { x: event.clientX, y: event.clientY };
+  tooltip.style.transform = `translate3d(${Math.max(margin, left)}px, ${Math.max(margin, top)}px, 0)`;
 }
 
 function hideFloatingTooltip() {
@@ -2136,6 +2160,11 @@ function hideFloatingTooltip() {
     cancelAnimationFrame(tooltipFrame);
     tooltipFrame = 0;
   }
+  activeTooltipKey = "";
+  tooltipSize = null;
+  pendingTooltipEvent = null;
+  lastTooltipPosition = { x: -9999, y: -9999 };
+  tooltip.style.transform = "translate3d(0, 0, 0)";
   tooltip.classList.remove("open");
   tooltip.setAttribute("aria-hidden", "true");
 }

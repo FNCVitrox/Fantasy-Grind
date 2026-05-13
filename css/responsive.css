@@ -95,7 +95,6 @@
     padding: 9px;
     border-radius: 10px;
     background: rgba(10, 20, 31, 0.96);
-    backdrop-filter: blur(14px);
     max-width: 100%;
     overflow: hidden;
   }
@@ -669,4 +668,3 @@
     min-height: 160px;
   }
 }
-
