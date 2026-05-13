@@ -4,49 +4,52 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=0.8.76" />
-    <link rel="stylesheet" href="./css/modals.css?v=0.8.76" />
-    <link rel="stylesheet" href="./css/responsive.css?v=0.8.76" />
+    <link rel="stylesheet" href="./css/base.css?v=0.8.77" />
+    <link rel="stylesheet" href="./css/modals.css?v=0.8.77" />
+    <link rel="stylesheet" href="./css/responsive.css?v=0.8.77" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.76</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.77</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
           <p class="eyebrow">Fantasy Grind</p>
           <h1>Grauwacht</h1>
         </div>
-        <div class="topbar-actions" aria-label="Schnellzugriff">
-        <button class="book-button camp-button" id="restBtn" type="button" aria-label="Am Lagerplatz heilen">
-          <span>Lagerplatz</span>
+        <button class="mobile-menu-toggle" id="mobileMenuBtn" type="button" aria-expanded="false" aria-controls="topbarActions">
+          Menü
         </button>
-        <button class="book-button" id="openBestiaryBtn" type="button" aria-label="Bestiarium öffnen">
-          <span>Bestiarium</span>
-        </button>
-        <button class="book-button quest-board-button" id="openQuestBoardBtn" type="button" aria-label="Quest-Tafel öffnen">
-          <span>Quests</span>
-          <em class="quest-notice" id="questNotice" hidden>0</em>
-        </button>
-        <button class="book-button achievement-button" id="openAchievementsBtn" type="button" aria-label="Erfolge öffnen">
-          <span>Erfolge</span>
-          <em class="quest-notice achievement-notice" id="achievementNotice" hidden>0</em>
-        </button>
-        <button class="book-button backpack-button" id="openInventoryBtn" type="button" aria-label="Rucksack öffnen">
-          <span>Rucksack</span>
-        </button>
-        <button class="book-button smith-button" id="openSmithBtn" type="button" aria-label="Schmied öffnen">
-          <span>Schmied</span>
-        </button>
-        <button class="book-button enchant-button" id="openEnchantBtn" type="button" aria-label="Arkanistin öffnen">
-          <span>Arkanistin</span>
-        </button>
-        <button class="book-button save-menu-button" id="openSaveMenuBtn" type="button" aria-label="Spielstand öffnen">
-          <span>Save</span>
-        </button>
-        <button class="book-button language-button" id="languageToggleBtn" type="button" aria-label="Sprache wechseln">
-          <span id="languageButtonLabel">Sprache</span>
-          <small id="languageButtonValue">DE</small>
-        </button>
+        <div class="topbar-actions" id="topbarActions" aria-label="Schnellzugriff">
+          <button class="book-button camp-button" id="restBtn" type="button" aria-label="Am Lagerplatz heilen">
+            <span>Lagerplatz</span>
+          </button>
+          <button class="book-button" id="openBestiaryBtn" type="button" aria-label="Bestiarium öffnen">
+            <span>Bestiarium</span>
+          </button>
+          <button class="book-button quest-board-button" id="openQuestBoardBtn" type="button" aria-label="Quest-Tafel öffnen">
+            <span>Quests</span>
+            <em class="quest-notice" id="questNotice" hidden>0</em>
+          </button>
+          <button class="book-button achievement-button" id="openAchievementsBtn" type="button" aria-label="Erfolge öffnen">
+            <span>Erfolge</span>
+            <em class="quest-notice achievement-notice" id="achievementNotice" hidden>0</em>
+          </button>
+          <button class="book-button backpack-button" id="openInventoryBtn" type="button" aria-label="Rucksack öffnen">
+            <span>Rucksack</span>
+          </button>
+          <button class="book-button smith-button" id="openSmithBtn" type="button" aria-label="Schmied öffnen">
+            <span>Schmied</span>
+          </button>
+          <button class="book-button enchant-button" id="openEnchantBtn" type="button" aria-label="Arkanistin öffnen">
+            <span>Arkanistin</span>
+          </button>
+          <button class="book-button save-menu-button" id="openSaveMenuBtn" type="button" aria-label="Spielstand öffnen">
+            <span>Save</span>
+          </button>
+          <button class="book-button language-button" id="languageToggleBtn" type="button" aria-label="Sprache wechseln">
+            <span id="languageButtonLabel">Sprache</span>
+            <small id="languageButtonValue">DE</small>
+          </button>
         </div>
         <input id="saveFileInput" type="file" accept="application/json,.json" hidden />
       </section>
@@ -388,18 +391,18 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=0.8.76"></script>
-    <script src="./scripts/data-loader.js?v=0.8.76"></script>
-    <script src="./scripts/data-player.js?v=0.8.76"></script>
-    <script src="./scripts/data-world.js?v=0.8.76"></script>
-    <script src="./scripts/data-items.js?v=0.8.76"></script>
-    <script src="./scripts/data-quests.js?v=0.8.76"></script>
-    <script src="./scripts/data-labels.js?v=0.8.76"></script>
-    <script src="./scripts/i18n.js?v=0.8.76"></script>
-    <script src="./scripts/save-system.js?v=0.8.76"></script>
-    <script src="./scripts/core.js?v=0.8.76"></script>
-    <script src="./scripts/render.js?v=0.8.76"></script>
-    <script src="./scripts/render-loot.js?v=0.8.76"></script>
-    <script src="./scripts/events.js?v=0.8.76"></script>
+    <script src="./scripts/data.js?v=0.8.77"></script>
+    <script src="./scripts/data-loader.js?v=0.8.77"></script>
+    <script src="./scripts/data-player.js?v=0.8.77"></script>
+    <script src="./scripts/data-world.js?v=0.8.77"></script>
+    <script src="./scripts/data-items.js?v=0.8.77"></script>
+    <script src="./scripts/data-quests.js?v=0.8.77"></script>
+    <script src="./scripts/data-labels.js?v=0.8.77"></script>
+    <script src="./scripts/i18n.js?v=0.8.77"></script>
+    <script src="./scripts/save-system.js?v=0.8.77"></script>
+    <script src="./scripts/core.js?v=0.8.77"></script>
+    <script src="./scripts/render.js?v=0.8.77"></script>
+    <script src="./scripts/render-loot.js?v=0.8.77"></script>
+    <script src="./scripts/events.js?v=0.8.77"></script>
   </body>
 </html>

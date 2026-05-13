@@ -244,6 +244,33 @@ $("fightBtn").addEventListener("click", () => {
 
   fight();
 });
+
+function setMobileMenuOpen(isOpen) {
+  const menu = $("topbarActions");
+  const button = $("mobileMenuBtn");
+  if (!menu || !button) return;
+  menu.classList.toggle("open", isOpen);
+  button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+}
+
+$("mobileMenuBtn").addEventListener("click", (event) => {
+  event.stopPropagation();
+  setMobileMenuOpen(!$("topbarActions").classList.contains("open"));
+});
+
+$("topbarActions").addEventListener("click", (event) => {
+  if (event.target.closest("button")) setMobileMenuOpen(false);
+});
+
+document.addEventListener("click", (event) => {
+  if (event.target.closest("#topbarActions, #mobileMenuBtn")) return;
+  setMobileMenuOpen(false);
+});
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") setMobileMenuOpen(false);
+});
+
 $("languageToggleBtn").addEventListener("click", toggleLanguage);
 $("restBtn").addEventListener("click", rest);
 $("openPlayerStatsBtn").addEventListener("click", () => {

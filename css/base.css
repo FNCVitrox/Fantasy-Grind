@@ -119,6 +119,10 @@ button:disabled {
   gap: 10px;
 }
 
+.mobile-menu-toggle {
+  display: none;
+}
+
 h1,
 h2,
 p {
