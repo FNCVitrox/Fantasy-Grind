@@ -1290,6 +1290,21 @@ function enemyCriticalStats(enemy) {
   return { critChance: 0.03, critDamage: 1.5 };
 }
 
+function enemyDefenseMitigation(defense) {
+  return Math.floor(defense * 0.42);
+}
+
+function enemyMinimumPressure(enemy) {
+  const averageHit = (enemy.damage[0] + enemy.damage[1]) / 2;
+  const pressure = enemy.boss ? 0.22 : enemy.elite ? 0.14 : 0.07;
+  return Math.max(1, Math.floor(averageHit * pressure));
+}
+
+function enemyBaseDamageAfterDefense(enemy, defense) {
+  const rolled = random(enemy.damage[0], enemy.damage[1]);
+  return Math.max(enemyMinimumPressure(enemy), rolled - enemyDefenseMitigation(defense));
+}
+
 function rollEnemyCritical(hit, enemy, effectSummary = itemEffectSummary()) {
   const stats = enemyCriticalStats(enemy);
   const critChance = Math.max(0, stats.critChance - Math.min(0.08, effectSummary.enemyCritReduction || 0));
@@ -1723,7 +1738,7 @@ async function fight() {
     if (enemyHp <= 0) break;
 
     const shieldWall = hasBuildAbility("shieldWall") && rounds % 4 === 0;
-    const enemyBaseHit = Math.max(1, random(enemy.damage[0], enemy.damage[1]) - Math.floor(combatStats.defense * 0.42));
+    const enemyBaseHit = enemyBaseDamageAfterDefense(enemy, combatStats.defense);
     const enemyAbility = triggeredEnemyAbility(enemy, rounds, playerHp, combatStats.maxHp, enemyHp);
     const enemyDamageMultiplier = shieldWall
       ? Math.min(fightState.nextEnemyDamageMultiplier, 0.45)
@@ -3152,21 +3167,42 @@ function enchantEquipped(slot, category) {
 
 function previewUpgradedItem(item) {
   const upgraded = { ...item, upgrade: (item.upgrade || 0) + 1 };
-  if (item.slot === "weapon") upgraded.damage += 2;
+  const gain = upgradeGainMultiplier(upgraded.upgrade);
+  if (item.slot === "weapon") upgraded.damage += Math.max(1, Math.round(2 * gain));
   if (item.slot === "offhand") {
     upgraded.damage += 1;
-    upgraded.defense += 2;
+    upgraded.defense += Math.max(1, Math.round(2 * gain));
   }
-  if (item.slot === "chest") upgraded.defense += 3;
-  if (item.slot === "pants" || item.slot === "boots") upgraded.defense += 2;
+  if (item.slot === "chest") upgraded.defense += Math.max(1, Math.round(3 * gain));
+  if (item.slot === "pants" || item.slot === "boots") upgraded.defense += Math.max(1, Math.round(2 * gain));
   if (item.slot === "necklace" || item.slot === "ring") {
     upgraded.damage += 1;
   }
-  if (item.slot === "weapon" || item.slot === "ring") upgraded.critChance = (upgraded.critChance || 0) + 0.01;
-  if (item.slot === "weapon" || item.slot === "necklace") upgraded.critDamage = (upgraded.critDamage || 0) + 0.03;
+  if ((item.slot === "weapon" || item.slot === "ring") && shouldGainUpgradeCrit(upgraded.upgrade)) {
+    upgraded.critChance = (upgraded.critChance || 0) + 0.01;
+  }
+  if (item.slot === "weapon" || item.slot === "necklace") upgraded.critDamage = (upgraded.critDamage || 0) + upgradeCritDamageGain(upgraded.upgrade);
   normalizeItemStatsForSlot(upgraded);
   upgraded.name = item.name.replace(/\s\+\d+$/, "") + ` +${upgraded.upgrade}`;
   return upgraded;
+}
+
+function upgradeGainMultiplier(upgrade) {
+  if (upgrade > 20) return 0.35;
+  if (upgrade > 10) return 0.6;
+  return 1;
+}
+
+function shouldGainUpgradeCrit(upgrade) {
+  if (upgrade <= 10) return true;
+  if (upgrade <= 20) return upgrade % 2 === 0;
+  return upgrade % 3 === 0;
+}
+
+function upgradeCritDamageGain(upgrade) {
+  if (upgrade > 20) return 0.01;
+  if (upgrade > 10) return 0.02;
+  return 0.03;
 }
 
 function upgradeEquipped(slot) {
@@ -3477,7 +3513,7 @@ function expectedEnemyDamagePerRound(enemy, stats, effectSummary = itemEffectSum
   const critStats = enemyCriticalStats(enemy);
   const enemyCritChance = Math.max(0, critStats.critChance - Math.min(0.08, effectSummary.enemyCritReduction || 0));
   const critMultiplier = 1 + enemyCritChance * (critStats.critDamage - 1);
-  let hit = Math.max(1, averageHit - stats.defense * 0.42) * critMultiplier;
+  let hit = Math.max(enemyMinimumPressure(enemy), averageHit - enemyDefenseMitigation(stats.defense)) * critMultiplier;
   hit *= enemyAbilityDamageMultiplier(enemy);
   hit *= enemyDamagePassiveMultiplier(enemy, enemy.hp * 0.45);
   hit += enemyDotDamagePerRound(enemy);
