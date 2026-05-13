@@ -23,6 +23,9 @@ $("inventory").addEventListener("click", (event) => {
     equipInventoryItem(Number(equip.dataset.equip));
     return;
   }
+});
+
+$("merchantList").addEventListener("click", (event) => {
   const sell = event.target.closest("[data-sell]");
   if (sell) sellInventoryItem(Number(sell.dataset.sell));
 });
@@ -330,6 +333,14 @@ $("closeInventoryBtn").addEventListener("click", closeInventory);
 $("inventoryModal").addEventListener("click", (event) => {
   if (event.target.id === "inventoryModal") closeInventory();
 });
+$("openMerchantBtn").addEventListener("click", () => {
+  renderMerchant();
+  openModal("merchantModal");
+});
+$("closeMerchantBtn").addEventListener("click", closeMerchant);
+$("merchantModal").addEventListener("click", (event) => {
+  if (event.target.id === "merchantModal") closeMerchant();
+});
 $("openSmithBtn").addEventListener("click", () => {
   smithView = "home";
   renderSmith();
@@ -422,6 +433,10 @@ function closeAchievements() {
 
 function closeInventory() {
   closeModal("inventoryModal");
+}
+
+function closeMerchant() {
+  closeModal("merchantModal");
 }
 
 function closeSmith() {

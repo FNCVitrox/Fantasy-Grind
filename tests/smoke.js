@@ -125,6 +125,9 @@ assert(vm.runInContext("state = defaultState(); state.level = 20; state.renown =
 assert(vm.runInContext("(() => { state = defaultState(); state.level = 20; state.renown = 40; return Object.entries(zones).every(([zoneId, zone]) => zone.enemies.every((enemyId) => { selectedZone = zoneId; selectedEnemy = enemyId; state.questBoard = []; refreshQuestBoard(true); return state.questBoard.length > 0 && state.questBoard.every((id) => questRelevantForCurrentEnemy(getQuestById(id))); })); })()", context), "every enemy should have at least one matching quest board offer");
 assert(vm.runInContext("(() => { state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'wolf'; state.questBoard = ['wolves']; const before = questBoardSourceSignature(); state.gold += 10; return before === questBoardSourceSignature(); })()", context), "quest board cache source should ignore unrelated gold changes");
 assert(vm.runInContext("(() => { state = defaultState(); const before = inventorySignature(); state.gold += 10; return before === inventorySignature(); })()", context), "inventory list signature should ignore gold-only changes");
+assert(!vm.runInContext("state = defaultState(); renderInventoryItemCard('rustBlade', 0).includes('data-sell')", context), "backpack item cards should not sell directly");
+assert(vm.runInContext("state = defaultState(); state.inventory = ['rustBlade', 'wolfRing']; inventorySellTotal() === sellValue(items.rustBlade) + sellValue(items.wolfRing)", context), "merchant sell total should sum backpack items");
+assert(vm.runInContext("state = defaultState(); renderMerchantItemRow('rustBlade', 0).includes('data-sell')", context), "merchant rows should expose item selling");
 assert(vm.runInContext("(() => { state = defaultState(); const before = smithMasterySignature(); state.xp += 10; return before === smithMasterySignature(); })()", context), "smith mastery cache should ignore unrelated xp-only changes");
 assert.strictEqual(vm.runInContext("eliteEncounterChance", context), 0.06);
 assert.strictEqual(vm.runInContext("knownClassAbilities().length", context), 3);
@@ -182,6 +185,8 @@ assert(vm.runInContext("renderLootCompare(compareLoot({ damage: 0, defense: 0, c
 assert.strictEqual(vm.runInContext("combatLogEntry({ round: 2, actor: 'hero', damage: 7, text: 'Du triffst für 7.' }).text", context), "R2 · Du: Du triffst für 7.");
 assert.strictEqual(vm.runInContext("combatLogEntry({ round: 3, actor: 'enemy', damage: 0, text: 'Kampfrausch heilt 12 Leben.' }).type", context), "heal");
 assert.strictEqual(vm.runInContext("combatSummary([{ critical: true, damage: 20, text: 'Du triffst kritisch.' }, { damage: 0, text: 'Kampfrausch heilt 12 Leben.' }, { damage: 0, text: 'Blutung hält an.' }])", context), "1 Crit · 1 Heilung · 1 Effekt");
+assert.strictEqual(vm.runInContext("rollCombatEvent(enemies.wolf, 1)", context), null);
+assert(vm.runInContext("combatEventLogText({ name: 'Klare Öffnung', text: 'Test.' }).includes('Kampfereignis')", context), "combat event log text should be explicit");
 assert(vm.runInContext("['Einfach', 'Machbar', 'Riskant', 'Tödlich'].includes(riskFor(enemies.wolf))", context), "risk labels should use the clear risk scale");
 assert(vm.runInContext("state = defaultState(); state.hp = 10; riskFor(enemies.boar) !== 'Einfach'", context), "low current health should make risk stricter");
 assert(vm.runInContext("combatRiskEstimate(enemies.wolf).playerDamagePerRound > 0 && combatRiskEstimate(enemies.wolf).enemyDamagePerRound > 0", context), "risk estimate should expose positive combat pressure values");

@@ -313,6 +313,10 @@ h2 {
   background: var(--green);
 }
 
+.merchant-button::before {
+  background: linear-gradient(180deg, #f2c14e, #65d7b2);
+}
+
 .smith-button::before {
   background: var(--gold);
 }
@@ -1527,6 +1531,69 @@ h2 {
   color: var(--gold);
 }
 
+.merchant-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.merchant-summary div {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(7, 17, 27, 0.72);
+}
+
+.merchant-summary span,
+.merchant-row small {
+  color: var(--muted);
+}
+
+.merchant-summary strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--text);
+  font-size: 22px;
+}
+
+.merchant-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.merchant-list {
+  display: grid;
+  gap: 8px;
+}
+
+.merchant-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 72px;
+}
+
+.merchant-row span {
+  min-width: 0;
+}
+
+.merchant-row strong,
+.merchant-row small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.merchant-row b {
+  color: var(--gold);
+  white-space: nowrap;
+}
+
 .bulk-action {
   min-height: 34px;
   padding: 0 12px;
@@ -1537,7 +1604,7 @@ h2 {
 
 .inventory-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 8px;
 }
 

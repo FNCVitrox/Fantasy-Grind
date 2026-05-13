@@ -35,6 +35,7 @@
 
 @supports (content-visibility: auto) {
   .inventory-item,
+  .merchant-row,
   .quest,
   .quest-offer,
   .drop-row,

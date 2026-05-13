@@ -170,12 +170,13 @@
   .camp-button { order: 1; }
   .quest-board-button { order: 2; }
   .backpack-button { order: 3; }
-  #openBestiaryBtn { order: 4; }
-  .smith-button { order: 5; }
-  .enchant-button { order: 6; }
-  .achievement-button { order: 7; }
-  .save-menu-button { order: 8; }
-  .language-button { order: 9; }
+  .merchant-button { order: 4; }
+  #openBestiaryBtn { order: 5; }
+  .smith-button { order: 6; }
+  .enchant-button { order: 7; }
+  .achievement-button { order: 8; }
+  .save-menu-button { order: 9; }
+  .language-button { order: 10; }
 
   .book-button .button-price {
     margin-top: 1px;
@@ -606,6 +607,7 @@
   }
 
   .loot-window .loot-choices,
+  .merchant-summary,
   .save-profile,
   .save-grid,
   .save-actions,
@@ -626,6 +628,20 @@
   .smith-greeting,
   .salvage-row {
     grid-template-columns: 1fr;
+  }
+
+  .merchant-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .merchant-actions {
+    justify-content: stretch;
+  }
+
+  .merchant-actions button,
+  .merchant-row button {
+    width: 100%;
   }
 
   .quest-board-window,

@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=0.8.82" />
-    <link rel="stylesheet" href="./css/modals.css?v=0.8.82" />
-    <link rel="stylesheet" href="./css/responsive.css?v=0.8.82" />
+    <link rel="stylesheet" href="./css/base.css?v=0.8.83" />
+    <link rel="stylesheet" href="./css/modals.css?v=0.8.83" />
+    <link rel="stylesheet" href="./css/responsive.css?v=0.8.83" />
   </head>
   <body>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.82</div>
+    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.83</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus">
         <div>
@@ -36,6 +36,9 @@
           </button>
           <button class="book-button backpack-button" id="openInventoryBtn" type="button" aria-label="Rucksack öffnen">
             <span>Rucksack</span>
+          </button>
+          <button class="book-button merchant-button" id="openMerchantBtn" type="button" aria-label="Händler öffnen">
+            <span>Händler</span>
           </button>
           <button class="book-button smith-button" id="openSmithBtn" type="button" aria-label="Schmied öffnen">
             <span>Schmied</span>
@@ -259,9 +262,24 @@
         </div>
         <div class="inventory-summary">
           <div id="inventorySummary"></div>
-          <button class="bulk-action sell-button" id="sellAllBtn" type="button">Alles verkaufen</button>
         </div>
         <div class="inventory" id="inventory"></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="merchantModal" aria-hidden="true">
+      <div class="modal-window merchant-window" role="dialog" aria-modal="true" aria-labelledby="merchantTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow" id="merchantEyebrow">Handelsposten</p>
+            <h2 id="merchantTitle">Tilda Münzhand</h2>
+          </div>
+          <button class="modal-close" id="closeMerchantBtn" type="button" aria-label="Händler schließen">Schließen</button>
+        </div>
+        <div class="merchant-summary" id="merchantSummary"></div>
+        <div class="merchant-actions">
+          <button class="bulk-action sell-button" id="sellAllBtn" type="button">Alles verkaufen</button>
+        </div>
+        <div class="merchant-list" id="merchantList"></div>
       </div>
     </div>
     <div class="modal-overlay" id="smithModal" aria-hidden="true">
@@ -396,18 +414,18 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=0.8.82"></script>
-    <script src="./scripts/data-loader.js?v=0.8.82"></script>
-    <script src="./scripts/data-player.js?v=0.8.82"></script>
-    <script src="./scripts/data-world.js?v=0.8.82"></script>
-    <script src="./scripts/data-items.js?v=0.8.82"></script>
-    <script src="./scripts/data-quests.js?v=0.8.82"></script>
-    <script src="./scripts/data-labels.js?v=0.8.82"></script>
-    <script src="./scripts/i18n.js?v=0.8.82"></script>
-    <script src="./scripts/save-system.js?v=0.8.82"></script>
-    <script src="./scripts/core.js?v=0.8.82"></script>
-    <script src="./scripts/render.js?v=0.8.82"></script>
-    <script src="./scripts/render-loot.js?v=0.8.82"></script>
-    <script src="./scripts/events.js?v=0.8.82"></script>
+    <script src="./scripts/data.js?v=0.8.83"></script>
+    <script src="./scripts/data-loader.js?v=0.8.83"></script>
+    <script src="./scripts/data-player.js?v=0.8.83"></script>
+    <script src="./scripts/data-world.js?v=0.8.83"></script>
+    <script src="./scripts/data-items.js?v=0.8.83"></script>
+    <script src="./scripts/data-quests.js?v=0.8.83"></script>
+    <script src="./scripts/data-labels.js?v=0.8.83"></script>
+    <script src="./scripts/i18n.js?v=0.8.83"></script>
+    <script src="./scripts/save-system.js?v=0.8.83"></script>
+    <script src="./scripts/core.js?v=0.8.83"></script>
+    <script src="./scripts/render.js?v=0.8.83"></script>
+    <script src="./scripts/render-loot.js?v=0.8.83"></script>
+    <script src="./scripts/events.js?v=0.8.83"></script>
   </body>
 </html>

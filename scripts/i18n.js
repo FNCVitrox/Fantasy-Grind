@@ -9,6 +9,7 @@ const translations = {
         "nav.quests": "Quest-Tafel",
         "nav.achievements": "Erfolge",
         "nav.inventory": "Rucksack",
+        "nav.merchant": "Händler",
         "nav.smith": "Schmied",
         "nav.enchant": "Arkanistin",
         "nav.save": "Spielstand",
@@ -101,6 +102,7 @@ const translations = {
         "combat.dragsOn": "Der Kampf zieht sich schwer und staubig hin.",
         "combat.enemyDefeated": "{enemy} ist besiegt. Beute wird gesichert.",
         "combat.returnCamp": "Du kehrst angeschlagen ins Lager zurück.",
+        "combat.beforeFight": "Vor Kampf",
         "risk.easy": "Einfach",
         "risk.machbar": "Machbar",
         "risk.risky": "Riskant",
@@ -138,6 +140,11 @@ const translations = {
         "inventory.sellAll": "Alles verkaufen",
         "inventory.equip": "Ausrüsten",
         "inventory.sell": "Verkaufen",
+        "inventory.sellHint": "Verkauf beim Händler",
+        "merchant.eyebrow": "Handelsposten",
+        "merchant.title": "Tilda Münzhand",
+        "merchant.sellValue": "Verkaufswert",
+        "merchant.noItems": "Tilda findet nichts Verkaufbares in deinem Rucksack.",
         "equipment.empty": "Kein Item ausgerüstet.",
         "equipment.repairCost": "{cost} Gold",
         "equipment.upgradeLevel": "Stufe +{level}/{limit}",
@@ -521,6 +528,7 @@ function applyStaticTranslations() {
     setStaticText("#openQuestBoardBtn span", "nav.quests");
     setStaticText("#openAchievementsBtn span", "nav.achievements");
     setStaticText("#openInventoryBtn span", "nav.inventory");
+    setStaticText("#openMerchantBtn span", "nav.merchant");
     setStaticText("#openSmithBtn span", "nav.smith");
     setStaticText("#openEnchantBtn span", "nav.enchant");
     setStaticText("#openSaveMenuBtn span", "nav.save");
@@ -528,6 +536,7 @@ function applyStaticTranslations() {
     setStaticText("#languageButtonValue", "language.value");
     setStaticText("#lootTitle", "loot.title");
     setStaticText("#inventoryTitle", "inventory.title");
+    setStaticText("#merchantTitle", "merchant.title");
     setStaticText("#zoneTitle", "zone.travelTitle");
     setStaticText("#bestiaryTitle", "bestiary.title");
     setStaticText("#questBoardTitle", "quest.title");
@@ -555,6 +564,7 @@ function applyStaticTranslations() {
     setStaticText(".loot-window .eyebrow", "loot.eyebrow");
     setStaticText("#zoneModal .eyebrow", "zone.travelEyebrow");
     setStaticText("#inventoryModal .eyebrow", "nav.inventory");
+    setStaticText("#merchantModal .eyebrow", "merchant.eyebrow");
     setStaticText("#bestiaryModal .eyebrow", "bestiary.eyebrow");
     setStaticText("#questBoardModal .eyebrow", "nav.quests");
     setStaticText("#achievementsModal .eyebrow", "nav.achievements");

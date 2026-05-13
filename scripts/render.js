@@ -44,6 +44,7 @@ function renderMainPanels(stats = totalStats()) {
 
 const modalRenderers = {
   inventoryModal: () => renderInventory(),
+  merchantModal: () => renderMerchant(),
   questBoardModal: () => renderQuestBoard(),
   achievementsModal: () => renderAchievements(),
   smithModal: () => renderSmith(),
@@ -1341,9 +1342,8 @@ function renderSmithSalvage() {
 
 function renderInventory() {
   renderCachedHtml("inventorySummary", `${currentLanguage()}|${state.inventory.length}|${state.gold}`, () =>
-    `<span>${t("common.items", "Items")}: <strong>${state.inventory.length}</strong></span><span>${t("common.gold", "Gold")}: <strong>${state.gold}</strong></span>`
+    `<span>${t("common.items", "Items")}: <strong>${state.inventory.length}</strong></span><span>${t("inventory.sellHint", "Verkauf beim Händler")}</span>`
   );
-  $("sellAllBtn").disabled = !state.inventory.length;
   const signature = `${currentLanguage()}|${inventorySignature()}|${equipmentSignature()}`;
   renderCachedList(
     "inventory",
@@ -1375,8 +1375,40 @@ function renderInventoryItemCard(itemId, index) {
     </div>
     <div class="inventory-actions">
       <button type="button" data-equip="${index}">${t("inventory.equip", "Ausrüsten")}</button>
-      <button class="sell-button" type="button" data-sell="${index}">${t("inventory.sell", "Verkaufen")}</button>
     </div>
+  </div>`;
+}
+
+function renderMerchant() {
+  const total = inventorySellTotal();
+  renderCachedHtml("merchantSummary", `${currentLanguage()}|${state.inventory.length}|${state.gold}|${total}`, () =>
+    `<div><span>${t("common.gold", "Gold")}</span><strong>${state.gold}</strong></div>
+    <div><span>${t("common.items", "Items")}</span><strong>${state.inventory.length}</strong></div>
+    <div><span>${t("merchant.sellValue", "Verkaufswert")}</span><strong>${total} ${t("common.gold", "Gold")}</strong></div>`
+  );
+  $("sellAllBtn").disabled = !state.inventory.length;
+  const signature = `${currentLanguage()}|${inventorySignature()}`;
+  renderCachedList(
+    "merchantList",
+    `merchant:${signature}`,
+    state.inventory,
+    () => `<div class="inventory-empty">${t("merchant.noItems", "Tilda findet nichts Verkaufbares in deinem Rucksack.")}</div>`,
+    renderMerchantItemRow,
+  );
+}
+
+function renderMerchantItemRow(itemId, index) {
+  const item = getItem(itemId);
+  if (!item) return "";
+  const quality = itemQuality(item);
+  const slot = itemSlot(item);
+  return `<div class="merchant-row rarity-card rarity-${quality}">
+    <span>
+      <strong class="quality-${quality}">${escapeHtml(item.name)}</strong>
+      <small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${itemDurability(itemId)}%</small>
+    </span>
+    <b>${sellValue(item)} ${t("common.gold", "Gold")}</b>
+    <button class="sell-button" type="button" data-sell="${index}">${t("inventory.sell", "Verkaufen")}</button>
   </div>`;
 }
 

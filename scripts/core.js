@@ -32,8 +32,36 @@ const $ = (id) => {
 const random = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const balanceVersion = 4;
 const eliteEncounterChance = 0.06;
+const combatEventChance = 0.24;
 const maxBestiaryLootPerEnemy = 20;
 const generatedLootPoolSize = maxBestiaryLootPerEnemy;
+const combatEventCatalog = [
+  {
+    id: "clearOpening",
+    name: "Klare Öffnung",
+    text: "Du erkennst eine Lücke in der Deckung. Dein Schaden ist in diesem Kampf leicht erhöht.",
+    playerDamageBonus: 0.08,
+  },
+  {
+    id: "looseGround",
+    name: "Lockerer Grund",
+    text: "Der Boden gibt nach. Beide Seiten treffen etwas vorsichtiger.",
+    playerDamageBonus: -0.04,
+    enemyDamageBonus: -0.06,
+  },
+  {
+    id: "merchantRumor",
+    name: "Händlergerücht",
+    text: "Tilda nannte dir vorher einen Käufer. Der Goldfund dieses Kampfes ist leicht besser.",
+    goldBonus: 0.08,
+  },
+  {
+    id: "grimOmen",
+    name: "Düsteres Omen",
+    text: "Die Luft wird schwer. Der Gegner schlägt in diesem Kampf etwas härter zu.",
+    enemyDamageBonus: 0.07,
+  },
+];
 const renownRanks = [
   { threshold: 0, name: "Fremder", benefit: "Noch kein Vorteil" },
   { threshold: 5, name: "Bekannter Kämpfer", benefit: "Reparaturen -10%" },
@@ -1030,7 +1058,7 @@ function combatLogEntry(event) {
   if (event.critical) type = "critical";
   if (event.damage === 0) type = "effect";
   if (/\bheilt\b|\bheilen\b|\bheilung\b/i.test(event.text || "")) type = "heal";
-  const roundText = event.round ? `R${event.round}` : "R?";
+  const roundText = event.round ? `R${event.round}` : t("combat.beforeFight", "Vor Kampf");
   return {
     type,
     text: `${roundText} · ${actor}: ${event.text || t("combat.attack", "Aktion ausgeführt.")}`,
@@ -1367,6 +1395,18 @@ function enemyAbilityEntries(enemy) {
     .filter(([, ability]) => ability);
 }
 
+function rollCombatEvent(enemy, roll = Math.random()) {
+  if (!enemy || roll > combatEventChance) return null;
+  const weight = enemy.boss || enemy.elite ? 2 : 1;
+  const pool = combatEventCatalog.flatMap((event) => Array.from({ length: event.id === "grimOmen" ? weight : 1 }, () => event));
+  return pool[random(0, pool.length - 1)];
+}
+
+function combatEventLogText(event) {
+  if (!event) return "";
+  return `Kampfereignis - ${event.name}: ${event.text}`;
+}
+
 function eliteBonusAbilityFor(enemy) {
   if (enemy.tags?.beast || enemy.tags?.wolf) return "eliteFury";
   return "eliteGuard";
@@ -1549,8 +1589,16 @@ async function fight() {
   const effectSummary = itemEffectSummary();
   const enchantStats = equippedEnchantmentSummary();
   const combatStats = combatStatsWithItemEffects(stats, enemy, effectSummary);
+  const combatEvent = rollCombatEvent(enemy);
   let rounds = 0;
-  const events = [];
+  const events = combatEvent ? [{
+    round: 0,
+    actor: "hero",
+    damage: 0,
+    enemyHp: enemy.hp,
+    playerHp,
+    text: combatEventLogText(combatEvent),
+  }] : [];
   const fightState = {
     sustainUsed: false,
     nextEnemyDamageMultiplier: 1,
@@ -1561,6 +1609,7 @@ async function fight() {
     graveCurseUsed: false,
     lastCounterRound: -99,
     lastExecuteRound: -99,
+    combatEvent,
   };
 
   while (playerHp > 0 && enemyHp > 0 && rounds < 80) {
@@ -1625,6 +1674,7 @@ async function fight() {
     const effectiveDefense = Math.max(0, enemy.defense - armorIgnore - effectArmorIgnore);
     const basePlayerHit = Math.max(1, random(combatStats.damage - 4, combatStats.damage + 3) - Math.floor(effectiveDefense * 1.08));
     let playerHit = basePlayerHit;
+    if (fightState.combatEvent?.playerDamageBonus) playerHit = Math.max(1, Math.floor(playerHit * (1 + fightState.combatEvent.playerDamageBonus)));
     if (enemy.elite || enemy.boss) playerHit = Math.max(1, Math.floor(playerHit * (1 + enchantStats.bossDamage)));
     if (enemy.elite || enemy.boss) playerHit = Math.max(1, Math.floor(playerHit * (1 + effectSummary.eliteDamageBonus)));
     let playerText = `Du triffst für ${playerHit}.`;
@@ -1775,6 +1825,7 @@ async function fight() {
     const abilityMultiplier = enemyAbility?.damageMultiplier || 1;
     const passiveEnemyMultiplier = enemyDamagePassiveMultiplier(enemy, enemyHp);
     let enemyHit = Math.max(1, Math.floor(enemyBaseHit * enemyDamageMultiplier * abilityMultiplier * passiveEnemyMultiplier));
+    if (fightState.combatEvent?.enemyDamageBonus) enemyHit = Math.max(1, Math.floor(enemyHit * (1 + fightState.combatEvent.enemyDamageBonus)));
     enemyHit = Math.max(1, Math.floor(enemyHit * (1 - Math.min(0.35, enchantStats.damageReduction))));
     let guardBlocked = false;
     if (!fightState.guardBlockUsed && effectSummary.firstHitReduction > 0) {
@@ -1894,7 +1945,7 @@ async function fight() {
     if (playerHp > 0) {
       state.hp = Math.max(1, playerHp);
       const enchantStats = equippedEnchantmentSummary();
-      const goldBonus = enchantStats.goldBonus + effectSummary.goldBonus;
+      const goldBonus = enchantStats.goldBonus + effectSummary.goldBonus + (combatEvent?.goldBonus || 0);
       const gold = Math.max(1, Math.floor(random(enemy.gold[0], enemy.gold[1]) * (1 + goldBonus)));
       const xp = Math.max(1, Math.floor(enemy.xp * (1 + enchantStats.xpBonus)));
       state.gold += gold;
@@ -2585,24 +2636,28 @@ function sellInventoryItem(index) {
   state.inventory.splice(index, 1);
   delete state.itemDurability[itemId];
   state.gold += value;
-  log(`${item.name} verkauft. +${value} Gold.`, "drop");
+  log(`Tilda Münzhand kauft ${item.name}. +${value} Gold.`, "drop");
   save();
   render();
 }
 
 function sellAllInventoryItems() {
   if (!state.inventory.length) return;
-  const total = state.inventory.reduce((sum, itemId) => {
-    const item = getItem(itemId);
-    return item ? sum + sellValue(item) : sum;
-  }, 0);
+  const total = inventorySellTotal();
   const count = state.inventory.length;
   state.inventory.forEach((itemId) => delete state.itemDurability[itemId]);
   state.inventory = [];
   state.gold += total;
-  log(`${count} Items verkauft. +${total} Gold.`, "drop");
+  log(`Tilda Münzhand kauft ${count} Items. +${total} Gold.`, "drop");
   save();
   render();
+}
+
+function inventorySellTotal() {
+  return state.inventory.reduce((sum, itemId) => {
+    const item = getItem(itemId);
+    return item ? sum + sellValue(item) : sum;
+  }, 0);
 }
 
 function sellValue(item) {
