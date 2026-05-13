@@ -360,6 +360,10 @@ h2 {
   width: min(70%, 150px);
 }
 
+.portrait-summary {
+  display: none;
+}
+
 .portrait:hover,
 .portrait:focus-visible {
   border-color: var(--gold);

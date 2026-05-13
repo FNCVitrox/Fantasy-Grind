@@ -2224,6 +2224,7 @@ button.drop-row span:last-child {
 .player-stats-hero,
 .player-progress-grid,
 .player-stat-grid,
+.player-build-switch,
 .player-stat-sources {
   display: grid;
   gap: 10px;
@@ -2288,6 +2289,48 @@ button.drop-row span:last-child {
 
 .player-stat-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.player-build-switch {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0c1723;
+}
+
+.player-build-switch > strong {
+  color: var(--gold);
+}
+
+.player-build-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.player-build-options button {
+  min-height: 70px;
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  padding: 9px;
+  text-align: left;
+}
+
+.player-build-options button.active {
+  border-color: var(--gold);
+  background: rgba(216, 174, 75, 0.13);
+}
+
+.player-build-options span {
+  color: var(--text);
+  font-weight: 900;
+}
+
+.player-build-options small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.25;
 }
 
 .player-stat-card {

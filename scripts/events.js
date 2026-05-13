@@ -376,6 +376,10 @@ $("equipmentModal").addEventListener("click", (event) => {
   if (event.target.id === "equipmentModal") closeEquipment();
 });
 $("closePlayerStatsBtn").addEventListener("click", closePlayerStats);
+$("playerStatsDetails").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-build]");
+  if (button) setBuild(button.dataset.build);
+});
 $("playerStatsModal").addEventListener("click", (event) => {
   if (event.target.id === "playerStatsModal") closePlayerStats();
 });

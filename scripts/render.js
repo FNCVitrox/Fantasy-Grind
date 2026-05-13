@@ -15,6 +15,7 @@ function renderPlayerHud(language = currentLanguage()) {
   setText("level", state.level);
   setText("gold", state.gold);
   setText("renown", state.renown);
+  setText("characterSummaryMeta", `${t("common.level", "Level")} ${state.level}`);
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
   setText("xpText", state.level >= 20 ? t("common.max", "Max") : `${state.xp}/${needed}`);
   setBarWidth("xpBar", state.level >= 20 ? 100 : Math.max(2, (state.xp / needed) * 100));
@@ -142,7 +143,11 @@ function renderMap() {
 }
 
 function renderClassPanel() {
-  setText("className", entityName("class", state.characterClass, activeClass().name));
+  const className = entityName("class", state.characterClass, activeClass().name);
+  const buildName = entityName("build", state.build, activeBuild().name);
+  setText("className", className);
+  setText("characterSummaryName", className);
+  setText("characterBuildSummary", buildName);
   const signature = `${currentLanguage()}|${state.characterClass}|${state.build}`;
   if (renderCache.classPanel === signature) return;
   renderCache.classPanel = signature;
@@ -210,6 +215,17 @@ function renderPlayerStatsDetails(stats = totalStats()) {
       <div class="player-stat-currency">
         <span>${t("common.gold", "Gold")} <strong>${state.gold}</strong></span>
         <span>${t("common.renown", "Ruhm")} <strong>${state.renown}</strong></span>
+      </div>
+    </section>
+    <section class="player-build-switch" aria-label="${t("main.build", "Build")}">
+      <strong>${t("main.build", "Build")}</strong>
+      <div class="player-build-options">
+        ${Object.entries(buildCatalog).map(([id, option]) => `
+          <button class="${state.build === id ? "active" : ""}" type="button" data-build="${id}">
+            <span>${escapeHtml(entityName("build", id, option.name))}</span>
+            <small>${escapeHtml(entityText("build", id, option.description))}</small>
+          </button>
+        `).join("")}
       </div>
     </section>
     <section class="player-progress-grid">
