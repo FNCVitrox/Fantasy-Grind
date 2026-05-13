@@ -42,15 +42,21 @@ function renderLootCard(item, index) {
   const discovery = lootDiscoveryStatus(item);
 
   return `<div class="loot-card rarity-card rarity-${quality}">
-    <strong class="loot-card-title quality-${quality}">${escapeHtml(item.name)}</strong>
-    <div class="loot-card-badge">${discovery ? `<span class="discovery-badge ${discovery.className}">${discovery.text}</span>` : ""}</div>
-    <p class="loot-card-meta">${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)}</p>
-    <p class="loot-card-set ${item.set ? "set-line" : "empty"}">${item.set ? escapeHtml(setBonuses[item.set]?.name || item.set) : "&nbsp;"}</p>
-    ${item.effect ? `<p class="loot-card-effect">${escapeHtml(itemEffectName(item))}: ${escapeHtml(itemEffectText(item))}</p>` : ""}
-    ${renderItemEnchantmentLine(item)}
-    ${renderLootStatGrid(item)}
-    <p class="loot-card-value">${t("main.durability", "Haltbarkeit")}: ${item.durability ?? 100}%</p>
-    <p class="loot-card-value">${t("common.value", "Wert")}: ${sellValue(item)} ${t("common.gold", "Gold")}</p>
+    <div class="loot-card-head">
+      <strong class="loot-card-title quality-${quality}">${escapeHtml(item.name)}</strong>
+      <div class="loot-card-badge">${discovery ? `<span class="discovery-badge ${discovery.className}">${discovery.text}</span>` : ""}</div>
+      <p class="loot-card-meta">${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)}</p>
+      <p class="loot-card-set ${item.set ? "set-line" : "empty"}">${item.set ? escapeHtml(setBonuses[item.set]?.name || item.set) : "&nbsp;"}</p>
+    </div>
+    <div class="loot-card-special">
+      ${item.effect ? `<p class="loot-card-effect">${escapeHtml(itemEffectName(item))}: ${escapeHtml(itemEffectText(item))}</p>` : ""}
+      ${renderItemEnchantmentLine(item)}
+    </div>
+    <div class="loot-card-stats">${renderLootStatGrid(item)}</div>
+    <div class="loot-card-values">
+      <p class="loot-card-value">${t("main.durability", "Haltbarkeit")}: ${item.durability ?? 100}%</p>
+      <p class="loot-card-value">${t("common.value", "Wert")}: ${sellValue(item)} ${t("common.gold", "Gold")}</p>
+    </div>
     ${renderLootCompare(compare)}
     <div class="loot-actions">
       <button type="button" data-loot="${index}">${t("loot.toInventory", "Ins Inventar")}</button>

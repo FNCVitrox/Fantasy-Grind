@@ -1204,16 +1204,24 @@ function unlockedEnemyIds() {
 }
 
 function questTargetAvailable(target) {
+  if (target === "enemy") return false;
   return unlockedEnemyIds().some((enemyId) => {
     const enemy = enemies[enemyId];
     if (!enemy) return false;
-    if (target === "elite") return enemy.elite || !enemy.boss;
+    if (target === "elite") return Boolean(enemy.elite);
+    if (target === "dungeon") return zones[questZoneIdForEnemy(enemyId)]?.type === "dungeon";
     return Boolean(enemy.tags?.[target]);
   });
 }
 
 function questAvailable(quest) {
-  return Boolean(quest && questTargetAvailable(quest.target) && questRelevantForCurrentZone(quest));
+  return Boolean(quest && questTargetAvailableForQuest(quest) && questRelevantForCurrentZone(quest));
+}
+
+function questTargetAvailableForQuest(quest) {
+  const enemyIds = questEnemyIds(quest);
+  if (enemyIds.length) return enemyIds.some((enemyId) => unlockedEnemyIds().includes(enemyId));
+  return questTargetAvailable(quest.target);
 }
 
 function questRelevantForCurrentZone(quest) {
@@ -1234,8 +1242,11 @@ function questRelevantForCurrentEnemy(quest) {
 function questMatchesEnemy(quest, enemyId) {
   const enemy = enemies[enemyId];
   if (!quest || !enemy) return false;
+  const enemyIds = questEnemyIds(quest);
+  if (enemyIds.length) return enemyIds.includes(enemyId);
   const zone = zones[questZoneIdForEnemy(enemyId)] || zones[selectedZone];
-  if (quest.target === "dungeon") return zone?.type === "dungeon" || Boolean(enemy.tags?.dungeon);
+  if (quest.target === "elite") return Boolean(enemy.elite);
+  if (quest.target === "dungeon") return zone?.type === "dungeon";
   return Boolean(enemy.tags?.[quest.target]);
 }
 
@@ -1243,14 +1254,20 @@ function questZoneIdForEnemy(enemyId) {
   return Object.entries(zones).find(([, zone]) => zone.enemies.includes(enemyId))?.[0] || selectedZone;
 }
 
+function questEnemyIds(quest) {
+  return Array.isArray(quest?.enemyIds) ? quest.enemyIds.filter((enemyId) => enemies[enemyId]) : [];
+}
+
 function questEnemyIdsForZone(quest, zoneId) {
   const zone = zones[zoneId];
   if (!zone) return [];
+  const enemyIds = questEnemyIds(quest);
+  if (enemyIds.length) return enemyIds.filter((enemyId) => zone.enemies.includes(enemyId));
   return zone.enemies.filter((enemyId) => {
     const enemy = enemies[enemyId];
     if (!enemy) return false;
-    if (quest.target === "elite") return enemy.elite || !enemy.boss;
-    if (quest.target === "dungeon") return zone.type === "dungeon" || Boolean(enemy.tags?.dungeon);
+    if (quest.target === "elite") return Boolean(enemy.elite);
+    if (quest.target === "dungeon") return zone.type === "dungeon";
     return Boolean(enemy.tags?.[quest.target]);
   });
 }
@@ -1889,7 +1906,7 @@ async function fight() {
       state.combatStats.wins += 1;
       recordSmithMasteryBattle(enemy);
       recordEnchantMasteryBattle(enemy);
-      updateQuestProgress(enemy);
+      updateQuestProgress(enemy, enemy.baseId || selectedEnemy);
       maybeGrantBattleRenown(enemy);
       const firstClearReward = grantBossFirstClear(enemy, enemy.baseId || selectedEnemy);
       maybeDropRareQuest(enemy);
@@ -2013,12 +2030,12 @@ function createEliteEnemy(base, enemyId) {
   };
 }
 
-function updateQuestProgress(enemy) {
+function updateQuestProgress(enemy, enemyId = selectedEnemy) {
   state.activeQuests.map(getQuestById).filter(Boolean).forEach((quest) => {
     if (!isQuestActive(quest.id)) return;
     if (isQuestCompletedPermanent(quest.id)) return;
     const current = state.quests[quest.id] || 0;
-    const gain = enemy.tags[quest.target] || 0;
+    const gain = questProgressGain(quest, enemy, enemyId);
     if (!gain) return;
     state.quests[quest.id] = Math.min(quest.needed, current + gain);
     if (state.quests[quest.id] >= quest.needed) {
@@ -2043,6 +2060,15 @@ function updateQuestProgress(enemy) {
       log(`Quest abgeschlossen: ${quest.name}. +${quest.rewardXp} XP, +${quest.rewardGold} Gold, +${renown} Ruhm.`, "drop");
     }
   });
+}
+
+function questProgressGain(quest, enemy, enemyId = selectedEnemy) {
+  if (!quest || !enemy) return 0;
+  const enemyIds = questEnemyIds(quest);
+  if (enemyIds.length) return enemyIds.includes(enemyId) ? 1 : 0;
+  if (quest.target === "elite") return enemy.elite ? 1 : 0;
+  if (quest.target === "dungeon") return zones[questZoneIdForEnemy(enemyId)]?.type === "dungeon" ? 1 : 0;
+  return enemy.tags?.[quest.target] || 0;
 }
 
 function maybeDropRareQuest(enemy) {

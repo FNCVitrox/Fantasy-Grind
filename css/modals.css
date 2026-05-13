@@ -63,13 +63,30 @@
 }
 
 .loot-window .loot-card {
-  display: flex;
-  flex-direction: column;
-  min-height: 390px;
+  display: grid;
+  grid-template-rows: 112px 54px 92px 46px minmax(116px, 1fr) auto;
+  gap: 8px;
+  min-height: 460px;
   height: 100%;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
     #07111b;
+}
+
+.loot-card-head,
+.loot-card-special,
+.loot-card-stats,
+.loot-card-values {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.loot-card-head,
+.loot-card-special,
+.loot-card-values {
+  display: grid;
+  align-content: start;
+  gap: 5px;
 }
 
 .loot-card-title {
@@ -114,6 +131,10 @@
 .loot-card-set.empty {
   color: transparent;
   cursor: default;
+}
+
+.loot-card-special:empty::before {
+  content: "";
 }
 
 .loot-stat-grid {
@@ -162,7 +183,6 @@
 .loot-window .loot-compare {
   min-height: 126px;
   align-content: start;
-  margin-top: auto;
 }
 
 .loot-window .loot-compare span {

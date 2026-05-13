@@ -688,10 +688,17 @@
   }
 
   .loot-window .loot-card {
+    grid-template-rows: auto auto auto auto auto auto;
     min-height: 0;
     gap: 6px;
     padding: 10px;
     border-radius: 10px;
+  }
+
+  .loot-card-head,
+  .loot-card-special,
+  .loot-card-values {
+    gap: 4px;
   }
 
   .loot-card-title {
