@@ -77,7 +77,7 @@
     width: min(100vw - 14px, 1720px);
     max-width: 100%;
     overflow-x: hidden;
-    padding: max(8px, env(safe-area-inset-top)) 0 calc(92px + env(safe-area-inset-bottom));
+    padding: max(8px, env(safe-area-inset-top)) 0 calc(112px + env(safe-area-inset-bottom));
   }
 
   .version-badge {
@@ -222,9 +222,13 @@
 
   .equipment-chip {
     min-width: 0;
-    min-height: 74px;
-    padding: 8px;
+    min-height: 68px;
+    padding: 8px 9px;
     overflow: hidden;
+  }
+
+  .equipment-chip .equipment-hover-detail {
+    display: none !important;
   }
 
   .equipment-chip strong {
@@ -241,26 +245,37 @@
     width: 100%;
     max-width: none;
     min-width: 0;
-    grid-template-columns: minmax(0, 1fr) minmax(58px, 0.46fr) minmax(0, 1fr);
-    gap: 4px;
-    min-height: 198px;
-    padding: 34px 8px 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(48px, 0.34fr) minmax(0, 1fr);
+    gap: 2px;
+    min-height: 178px;
+    padding: 32px 7px 9px;
     border-radius: 10px;
+  }
+
+  .battle-stage::before {
+    inset: auto 12% 18px;
+    height: 24px;
+    filter: blur(5px);
   }
 
   .combatant {
     min-width: 0;
-    gap: 4px;
+    gap: 3px;
   }
 
   .combatant b {
-    font-size: 15px;
+    max-width: 112px;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.08;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .combat-health {
     width: 100%;
-    max-width: 132px;
-    padding: 6px;
+    max-width: 118px;
+    padding: 5px 6px;
   }
 
   .combat-health-label {
@@ -275,18 +290,126 @@
   .battle-log-tab {
     top: 8px;
     left: 8px;
-    min-width: 70px;
-    min-height: 38px;
-    padding: 5px 8px;
+    min-width: 44px;
+    min-height: 36px;
+    padding: 5px 7px;
   }
 
   .battle-log-tab span {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .battle-log-tab small {
-    max-width: 74px;
-    font-size: 10px;
+    display: none;
+  }
+
+  .battle-center {
+    gap: 6px;
+    min-height: 82px;
+  }
+
+  .battle-center strong {
+    max-width: 72px;
+    overflow-wrap: anywhere;
+    font-size: 13px;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .hero-body,
+  .enemy-body {
+    transform: scale(0.82);
+    transform-origin: center bottom;
+  }
+
+  .enemy-sprite.elite-variant .enemy-body {
+    transform: scale(0.9);
+  }
+
+  .damage-number {
+    font-size: 21px;
+  }
+
+  .damage-number.critical {
+    font-size: 27px;
+  }
+
+  .damage-number.left {
+    left: 18%;
+  }
+
+  .damage-number.right {
+    right: 18%;
+  }
+
+  .combat-card {
+    position: sticky;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    z-index: 22;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 9px;
+    padding: 12px;
+    border-color: rgba(73, 182, 255, 0.44);
+    background:
+      linear-gradient(90deg, rgba(63, 214, 163, 0.12), transparent 34%),
+      rgba(12, 23, 35, 0.98);
+    box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.28);
+  }
+
+  .target-command {
+    min-width: 0;
+    padding-left: 14px;
+  }
+
+  .target-sigil {
+    top: 4px;
+    width: 6px;
+    height: 34px;
+  }
+
+  .target-command h2 {
+    font-size: 26px;
+    line-height: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .target-command #selectedEnemyMeta {
+    gap: 4px;
+  }
+
+  .boss-meta-row {
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .boss-meta-chip {
+    min-height: 20px;
+    padding: 2px 6px;
+  }
+
+  .primary {
+    width: 100%;
+    min-height: 56px;
+    border-radius: 10px;
+    font-size: 19px;
+    font-weight: 900;
+    box-shadow: 0 0 0 3px rgba(73, 182, 255, 0.12);
+  }
+
+  .combat-log {
+    max-height: calc(100dvh - 140px);
+    min-height: min(360px, calc(100dvh - 180px));
+  }
+
+  .combat-log-entry,
+  .combat-log-empty {
+    min-height: 40px;
+    padding: 7px 8px;
+    font-size: 12px;
   }
 
   .enemy-list {
@@ -319,39 +442,12 @@
     text-align: center;
   }
 
-  .combat-card {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    align-items: stretch;
-    flex-direction: column;
-    gap: 12px;
-    padding: 14px;
-    background:
-      linear-gradient(90deg, rgba(63, 214, 163, 0.12), transparent 34%),
-      #0c1723;
-  }
-
-  .target-command h2 {
-    font-size: 30px;
-    line-height: 1;
-    overflow-wrap: anywhere;
-  }
-
-  .primary {
-    width: 100%;
-    min-height: 58px;
-    border-radius: 10px;
-    font-size: 20px;
-    font-weight: 900;
-    box-shadow: 0 0 0 3px rgba(73, 182, 255, 0.12);
-  }
-
   .modal-window {
     width: min(100%, calc(100vw - 18px));
-    max-height: calc(100vh - 28px);
+    max-height: calc(100dvh - 18px);
     padding: 12px;
     overflow: auto;
+    overscroll-behavior: contain;
   }
 
   .modal-window-head {
@@ -370,8 +466,8 @@
 
   .modal-close {
     min-height: 42px;
-    padding: 8px 14px;
-    font-size: 16px;
+    padding: 8px 12px;
+    font-size: 15px;
   }
 
   .modal-head-actions {
@@ -482,6 +578,9 @@
 
   .loot-window .loot-choices {
     gap: 8px;
+    max-height: calc(100dvh - 118px);
+    overflow: auto;
+    padding-right: 1px;
   }
 
   .loot-window .loot-card {
@@ -545,7 +644,7 @@
   }
 
   .loot-card button {
-    min-height: 42px;
+    min-height: 44px;
     font-size: 14px;
   }
 
@@ -575,7 +674,7 @@
   }
 
   .drop-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .player-stat-currency {
@@ -666,5 +765,92 @@
 
   .log-panel.compact {
     min-height: 160px;
+  }
+}
+
+@media (max-width: 420px) {
+  .shell {
+    width: calc(100vw - 10px);
+  }
+
+  .topbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    padding: 7px;
+  }
+
+  .topbar h1 {
+    font-size: clamp(28px, 11vw, 38px);
+  }
+
+  .book-button {
+    min-height: 44px;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .equipment-belt .equipment {
+    gap: 6px;
+  }
+
+  .equipment-chip {
+    min-height: 62px;
+    padding: 7px;
+  }
+
+  .battle-stage {
+    min-height: 166px;
+    padding-inline: 5px;
+  }
+
+  .hero-body,
+  .enemy-body {
+    transform: scale(0.74);
+  }
+
+  .enemy-sprite.elite-variant .enemy-body {
+    transform: scale(0.82);
+  }
+
+  .combat-health {
+    max-width: 106px;
+  }
+
+  .combat-health-label span {
+    display: none;
+  }
+
+  .battle-center strong {
+    max-width: 58px;
+    font-size: 12px;
+  }
+
+  .target-command h2 {
+    font-size: 23px;
+  }
+
+  .modal-window {
+    width: calc(100vw - 10px);
+    max-height: calc(100dvh - 10px);
+    padding: 10px;
+  }
+
+  .modal-window-head {
+    align-items: stretch;
+  }
+
+  .quest-offer,
+  .loot-window .loot-card,
+  .inventory-item {
+    padding: 9px;
+  }
+
+  .reward-list {
+    padding: 7px 8px;
+  }
+
+  .inventory-actions,
+  .loot-actions {
+    gap: 6px;
   }
 }
