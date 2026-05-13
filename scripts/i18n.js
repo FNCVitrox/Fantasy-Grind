@@ -103,6 +103,10 @@ const translations = {
         "combat.enemyDefeated": "{enemy} ist besiegt. Beute wird gesichert.",
         "combat.returnCamp": "Du kehrst angeschlagen ins Lager zurück.",
         "combat.beforeFight": "Vor Kampf",
+        "combat.eventLog": "Kampfereignis - {event}: {text}",
+        "combat.winLog": "Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.",
+        "combat.lossLog": "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.",
+        "combat.renownLog": "Dein Ruf wächst: +1 Ruhm für den Sieg gegen {enemy}.",
         "risk.easy": "Einfach",
         "risk.machbar": "Machbar",
         "risk.risky": "Riskant",
@@ -177,14 +181,18 @@ const translations = {
         "material.chain": "Kettenglieder",
         "material.sinew": "Bestiensehnen",
         "material.rune": "Runensplitter",
+        "material.shard": "Runensplitter",
         "material.moonDust": "Mondstaub",
         "material.oathSteel": "Eidstahl",
         "material.bone": "Knochenstücke",
         "material.shadowResin": "Schattenharz",
         "material.emberCore": "Glutkern",
         "material.packFang": "Rudelfang",
+        "material.wolfFang": "Rudelfang",
         "material.oathmark": "Eidmarke",
+        "material.oathMark": "Eidmarke",
         "material.graveSigil": "Grabessiegel",
+        "material.graveSeal": "Grabessiegel",
         "material.crownAsh": "Kronenasche",
         "class.warrior.name": "Krieger",
         "build.tank.name": "Tank",
@@ -212,6 +220,7 @@ const translations = {
         "zone.fields.name": "Verfluchte Felder",
         "zone.ashgrounds.name": "Aschegrund",
         "zone.ratcellar.name": "Rattenkeller",
+        "zone.crypt.name": "Krypta der Grauwacht",
         "zone.ironhold.name": "Eisenfeste",
         "zone.ashcathedral.name": "Aschekathedrale",
         "zone.levelRange": "Level {min}-{max}",
@@ -229,12 +238,132 @@ const translations = {
         "quest.newAvailable": "Neue Quest verfügbar",
         "quest.acceptLog": "Quest angenommen: {quest}.",
         "quest.cancelLog": "Quest gelöscht: {quest}.",
+        "quest.completeLog": "Quest abgeschlossen: {quest}. +{xp} XP, +{gold} Gold, +{renown} Ruhm.",
+        "quest.rareFoundLog": "Seltene Quest-Schriftrolle gefunden: {quest}. Sie liegt auf der Quest-Tafel.",
         "quest.emptyBoard": "Die Tafel ist leer. Gewonnene Kämpfe bringen bald neue Aufträge.",
         "quest.status": "Status",
         "quest.itemReward": "Item",
         "quest.legendary": "legendär",
         "quest.epic": "episch",
         "quest.notReadyArea": "Diese Quest passt noch nicht zu deinen freigeschalteten Gebieten.",
+        "quest.wolves.name": "Sichere den Waldrand",
+        "quest.wolves.text": "Töte 10 Waldwölfe.",
+        "quest.rust.name": "Rost für den Schmied",
+        "quest.rust.text": "Sammle 5 Rostsplitter von Wegräubern.",
+        "quest.elites.name": "Mut unter Stein",
+        "quest.elites.text": "Besiege 3 Elite-Gegner.",
+        "quest.boars.name": "Dornen im Acker",
+        "quest.boars.text": "Erlege 7 Dornenkeiler.",
+        "quest.dungeon.name": "Licht unter Stein",
+        "quest.dungeon.text": "Besiege 8 Dungeon-Gegner.",
+        "quest.bandits.name": "Wege wieder sicher",
+        "quest.bandits.text": "Besiege 9 Wegräuber.",
+        "quest.fields.name": "Nebel über den Feldern",
+        "quest.fields.text": "Vertreibe 6 Gegner aus den verfluchten Feldern.",
+        "quest.ash.name": "Asche im Wind",
+        "quest.ash.text": "Besiege 6 Gegner im Aschengrund.",
+        "quest.ironHound.name": "Eiserne Fährte",
+        "quest.ironHound.text": "Erlege 6 Eisenhunde auf der Räuberstraße.",
+        "quest.plagueCrow.name": "Schwarze Federn",
+        "quest.plagueCrow.text": "Vertreibe 6 Seuchenkrähen von den Feldern.",
+        "quest.fieldWraith.name": "Schemen im Nebel",
+        "quest.fieldWraith.text": "Banne 5 Feldschemen in den verfluchten Feldern.",
+        "quest.emberStalker.name": "Glutpirscher-Fährte",
+        "quest.emberStalker.text": "Jage 5 Glutpirscher im Aschengrund.",
+        "quest.crownSentinel.name": "Wacht der Krone",
+        "quest.crownSentinel.text": "Besiege 4 Kronenwächter im Aschengrund.",
+        "quest.ratguard.name": "Riegel im Keller",
+        "quest.ratguard.text": "Besiege 4 Kellergardisten in der Krypta.",
+        "quest.boneAcolyte.name": "Knochenlitanei",
+        "quest.boneAcolyte.text": "Unterbrich 4 Knochenakolythen in der Krypta.",
+        "quest.cryptBrute.name": "Gruftbrecher",
+        "quest.cryptBrute.text": "Bezwinge 3 Gruftschläger in der Krypta.",
+        "quest.chainWarden.name": "Ketten lösen",
+        "quest.chainWarden.text": "Bezwinge 3 Kettenaufseher in der Eisenbruch-Festung.",
+        "quest.oathForger.name": "Amboss zum Schweigen",
+        "quest.oathForger.text": "Besiege 3 Eidschmiede in der Eisenbruch-Festung.",
+        "quest.ironDuke.name": "Herzogsfall",
+        "quest.ironDuke.text": "Stürze Herzog Eisenbruch in seiner Festung.",
+        "quest.emberPriest.name": "Glutchor brechen",
+        "quest.emberPriest.text": "Besiege 3 Glutpriester in der Aschenkathedrale.",
+        "quest.crownBeast.name": "Bestiensehnen",
+        "quest.crownBeast.text": "Erlege die Bestie der Krone in der Aschenkathedrale.",
+        "quest.hollowChampion.name": "Leere Krone",
+        "quest.hollowChampion.text": "Besiege den Hohlen Champion der Aschenkathedrale.",
+        "achievement.category.Kampf": "Kampf",
+        "achievement.category.Loot": "Loot",
+        "achievement.category.Schmied": "Schmied",
+        "achievement.category.Mira": "Mira",
+        "achievement.category.Progression": "Progression",
+        "achievement.firstElite.name": "Erste Narbe",
+        "achievement.firstElite.text": "Besiege deinen ersten Elite-Gegner.",
+        "achievement.eliteBreaker.name": "Elitenbrecher",
+        "achievement.eliteBreaker.text": "Besiege 10 Elite-Gegner.",
+        "achievement.firstBoss.name": "Tor zur Tiefe",
+        "achievement.firstBoss.text": "Besiege deinen ersten Dungeon-Boss.",
+        "achievement.bossHunter.name": "Bossjäger",
+        "achievement.bossHunter.text": "Besiege 5 Dungeon-Bosse.",
+        "achievement.tenWins.name": "Nicht kleinzukriegen",
+        "achievement.tenWins.text": "Gewinne 10 Kämpfe.",
+        "achievement.fiftyWins.name": "Grauwacht-Veteran",
+        "achievement.fiftyWins.text": "Gewinne 50 Kämpfe.",
+        "achievement.tenItems.name": "Sammlerblick",
+        "achievement.tenItems.text": "Entdecke 10 verschiedene Items.",
+        "achievement.twentyFiveItems.name": "Schatzsucher",
+        "achievement.twentyFiveItems.text": "Entdecke 25 verschiedene Items.",
+        "achievement.legendaryFind.name": "Legendärer Fund",
+        "achievement.legendaryFind.text": "Finde ein legendäres Item.",
+        "achievement.bossTrophy.name": "Boss-Trophäe",
+        "achievement.bossTrophy.text": "Finde einen festen Boss-Drop.",
+        "achievement.setHunter.name": "Set-Jäger",
+        "achievement.setHunter.text": "Entdecke ein Set-Item.",
+        "achievement.anvilTrial.name": "Ambossprobe",
+        "achievement.anvilTrial.text": "Bringe ein Item an dein aktuelles Upgrade-Limit.",
+        "achievement.tenUpgrades.name": "Stahl will Arbeit",
+        "achievement.tenUpgrades.text": "Verbessere Ausrüstung 10-mal.",
+        "achievement.smithLimit.name": "Meisterstahl",
+        "achievement.smithLimit.text": "Schalte ein neues Upgrade-Limit frei.",
+        "achievement.salvager.name": "Zerleger",
+        "achievement.salvager.text": "Zerlege 10 Items.",
+        "achievement.firstEnchant.name": "Runenfunke",
+        "achievement.firstEnchant.text": "Verzaubere dein erstes Item.",
+        "achievement.secondBinding.name": "Zweite Bindung",
+        "achievement.secondBinding.text": "Schalte 2 Verzauberungs-Slots frei.",
+        "achievement.rareEnchant.name": "Arkane Spur",
+        "achievement.rareEnchant.text": "Wirke oder trage eine seltene Verzauberung.",
+        "achievement.miraAlmostSmiles.name": "Mira lächelt fast",
+        "achievement.miraAlmostSmiles.text": "Schließe einen arkanen Auftrag ab.",
+        "achievement.knownFighter.name": "Bekannter Kämpfer",
+        "achievement.knownFighter.text": "Erreiche 10 Ruhm.",
+        "enemy.eliteName": "Elite-{enemy}",
+        "enemy.wolf.name": "Waldwolf",
+        "enemy.bandit.name": "Wegräuber",
+        "enemy.roadThief.name": "Straßenräuber",
+        "enemy.ironHound.name": "Eisenhund",
+        "enemy.boar.name": "Dornenkeiler",
+        "enemy.oldKnight.name": "Alter Grenzritter",
+        "enemy.plagueCrow.name": "Seuchenkrähe",
+        "enemy.fieldWraith.name": "Feldschemen",
+        "enemy.ashMarauder.name": "Aschenmarodeur",
+        "enemy.emberStalker.name": "Glutpirscher",
+        "enemy.crownSentinel.name": "Kronenwächter",
+        "enemy.ratguard.name": "Kellergardist",
+        "enemy.boneAcolyte.name": "Knochenakolyth",
+        "enemy.cryptBrute.name": "Gruftschläger",
+        "enemy.chainWarden.name": "Kettenaufseher",
+        "enemy.oathForger.name": "Eidschmied",
+        "enemy.ironDuke.name": "Herzog Eisenbruch",
+        "enemy.emberPriest.name": "Glutpriester",
+        "enemy.crownBeast.name": "Bestie der Krone",
+        "enemy.hollowChampion.name": "Hohler Champion",
+        "combatEvent.clearOpening.name": "Klare Öffnung",
+        "combatEvent.clearOpening.text": "Du erkennst eine Lücke in der Deckung. Dein Schaden ist in diesem Kampf leicht erhöht.",
+        "combatEvent.looseGround.name": "Lockerer Grund",
+        "combatEvent.looseGround.text": "Der Boden gibt nach. Beide Seiten treffen etwas vorsichtiger.",
+        "combatEvent.merchantRumor.name": "Händlergerücht",
+        "combatEvent.merchantRumor.text": "Tilda nannte dir vorher einen Käufer. Der Goldfund dieses Kampfes ist leicht besser.",
+        "combatEvent.grimOmen.name": "Düsteres Omen",
+        "combatEvent.grimOmen.text": "Die Luft wird schwer. Der Gegner schlägt in diesem Kampf etwas härter zu.",
         "save.title": "Spielstand",
         "save.download": "Spielstand herunterladen",
         "save.load": "Spielstand laden",
@@ -459,6 +588,7 @@ function clearRenderCache() {
         delete renderCache[key];
     });
     if (typeof tooltipHtmlCache !== "undefined") tooltipHtmlCache.clear();
+    if (typeof bestiaryListDirty !== "undefined") bestiaryListDirty = true;
 }
 
 function mapLabel(map, key, fallback = key) {
@@ -480,6 +610,45 @@ function entityName(group, id, fallback = id) {
 
 function entityText(group, id, fallback = id) {
     return t(`${group}.${id}.text`, fallback);
+}
+
+function enemyDisplayName(enemy, enemyId = "") {
+    const id = enemyId || enemy?.baseId || enemyIdFor(enemy);
+    const baseName = entityName("enemy", id, enemy?.name || id);
+    return enemy?.eliteVariant ? t("enemy.eliteName", "Elite-{enemy}", { enemy: baseName }) : baseName;
+}
+
+function enemyIdFor(enemy) {
+    if (!enemy || typeof enemies === "undefined") return "";
+    return Object.entries(enemies).find(([, candidate]) => candidate === enemy)?.[0] || "";
+}
+
+function questDisplayName(quest) {
+    return entityName("quest", quest?.id, quest?.name || "");
+}
+
+function questDisplayText(quest) {
+    return entityText("quest", quest?.id, quest?.text || "");
+}
+
+function achievementCategoryName(category) {
+    return t(`achievement.category.${category}`, category);
+}
+
+function achievementDisplayName(achievement) {
+    return entityName("achievement", achievement?.id, achievement?.name || "");
+}
+
+function achievementDisplayText(achievement) {
+    return entityText("achievement", achievement?.id, achievement?.text || "");
+}
+
+function combatEventName(event) {
+    return entityName("combatEvent", event?.id, event?.name || "");
+}
+
+function combatEventText(event) {
+    return entityText("combatEvent", event?.id, event?.text || "");
 }
 
 function zoneDisplayName(zoneId) {

@@ -576,6 +576,7 @@ function waitResult(ms) {
 
 async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) {
   const stage = $("battleStage");
+  const enemyName = enemyDisplayName(enemy, enemy.baseId || selectedEnemy);
   const playerMaxHp = combatHealth.playerMaxHp || state.maxHp;
   const enemyMaxHp = combatHealth.enemyMaxHp || enemy.hp;
   const startPlayerHp = combatHealth.playerStartHp ?? state.hp;
@@ -583,7 +584,7 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
   const summary = combatAnimationSummary(events);
   hideBattleResult();
   updateBattleHealth(startPlayerHp, playerMaxHp, enemyMaxHp, enemyMaxHp);
-  $("battleText").textContent = t("combat.stepForward", "{enemy} tritt vor.", { enemy: enemy.name });
+  $("battleText").textContent = t("combat.stepForward", "{enemy} tritt vor.", { enemy: enemyName });
   stage.classList.remove("victory", "defeat", "hero-attacks", "enemy-attacks", "hero-hit", "enemy-hit", "critical-event", "effect-event", "heal-event");
   await waitCombat(280);
 
@@ -596,7 +597,7 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
     stage.className = `battle-stage ${attackClass} ${eventClass}`.trim();
     $("battleText").textContent = event.text || (event.actor === "hero"
       ? `Du triffst für ${event.damage}.`
-      : `${enemy.name} trifft für ${event.damage}.`);
+      : `${enemyName} trifft für ${event.damage}.`);
     updateBattleHealth(event.playerHp, playerMaxHp, event.enemyHp, enemyMaxHp);
     highlightAbilityUse(event.abilityId);
     if (event.damage > 0) spawnDamage(event.damage, side, event.critical);
@@ -617,7 +618,7 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
 
   stage.className = "battle-stage";
   stage.classList.add(playerWon ? "victory" : "defeat");
-  showBattleResult(playerWon, enemy.name, rounds, summary);
+  showBattleResult(playerWon, enemyName, rounds, summary);
   await waitResult(skipCombat ? 850 : 1350);
   hideBattleResult();
 }

@@ -347,8 +347,9 @@ function renderEnemies(stats = totalStats()) {
     const rarity = enemyRarity(enemy);
     const safeRarity = escapeToken(rarity, ["common", "rare", "epic", "legendary"], "common");
     const enemyType = enemy.boss ? ` · ${t("common.boss", "Boss")}` : enemy.elite ? ` · ${t("common.elite", "Elite")}` : "";
+    const displayName = enemyDisplayName(enemy, id);
     return `<button class="enemy rarity-card rarity-${safeRarity} ${id === selectedEnemy ? "active" : ""}" type="button" data-enemy="${id}">
-      <span><strong>${escapeHtml(enemy.name)}</strong><p><span class="quality-${safeRarity}">${labelFor(rarityLabel, safeRarity)}</span> · ${t("common.level", "Level")} ${enemy.level}${enemyType} · ${enemy.xp} ${t("common.xp", "XP")}</p></span>
+      <span><strong>${escapeHtml(displayName)}</strong><p><span class="quality-${safeRarity}">${labelFor(rarityLabel, safeRarity)}</span> · ${t("common.level", "Level")} ${enemy.level}${enemyType} · ${enemy.xp} ${t("common.xp", "XP")}</p></span>
       <em class="risk ${riskLabelClass(risk)}">${riskLabel(risk)}</em>
     </button>`;
   }).join("");
@@ -397,7 +398,7 @@ function renderAchievements() {
 function renderAchievementCategory(category) {
   const achievements = achievementCatalog.filter((achievement) => achievement.category === category);
   return `<section class="achievement-category">
-    <h3>${escapeHtml(category)}</h3>
+    <h3>${escapeHtml(achievementCategoryName(category))}</h3>
     <div class="achievement-grid">
       ${achievements.map(renderAchievementCard).join("")}
     </div>
@@ -412,8 +413,8 @@ function renderAchievementCard(achievement) {
   return `<article class="achievement-card ${stateClass}">
     <div class="achievement-card-head">
       <div>
-        <strong>${escapeHtml(achievement.name)}</strong>
-        <p>${escapeHtml(achievement.text)}</p>
+        <strong>${escapeHtml(achievementDisplayName(achievement))}</strong>
+        <p>${escapeHtml(achievementDisplayText(achievement))}</p>
       </div>
       <span>${claimed ? t("common.claimed", "Erhalten") : ready ? t("common.ready", "Bereit") : `${Math.min(progress.value, progress.target)}/${progress.target}`}</span>
     </div>
@@ -476,7 +477,7 @@ function renderSelectedEnemy() {
   renderCache.selectedEnemy = signature;
   const enemy = getPreparedEncounter(selectedEnemy);
   resetBattleStageState();
-  setText("selectedEnemyName", enemy.name);
+  setText("selectedEnemyName", enemyDisplayName(enemy, selectedEnemy));
   const meta = $("selectedEnemyMeta");
   const metaHtml = renderSelectedEnemyMeta(enemy, selectedEnemy);
   if (meta) {
@@ -512,7 +513,7 @@ function resetBattleStageState() {
 }
 
 function setBattleEnemyVisual(enemy) {
-  setText("enemySpriteName", enemy.name);
+  setText("enemySpriteName", enemyDisplayName(enemy, enemy.baseId || selectedEnemy));
   const className = `combatant enemy-sprite ${enemy.sprite}${enemy.eliteVariant ? " elite-variant" : ""}`;
   if ($("enemySprite").className !== className) $("enemySprite").className = className;
   updateBattleHealth(state.hp, state.maxHp, enemy.hp, enemy.hp);
@@ -1431,10 +1432,10 @@ function renderActiveQuestCard(quest) {
   const rarity = escapeToken(quest.rarity || (quest.rare ? "legendary" : "common"), ["common", "rare", "epic", "legendary"], "common");
   return `<div class="quest rarity-card rarity-${rarity} ${done ? "done" : ""}">
     <div class="quest-head">
-      <strong><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}</strong>
+      <strong><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(questDisplayName(quest))}</strong>
       <button class="quest-delete" type="button" data-cancel-quest="${quest.id}">${t("quest.delete", "Löschen")}</button>
     </div>
-    <p>${escapeHtml(quest.text)}</p>
+    <p>${escapeHtml(questDisplayText(quest))}</p>
     <p>${done ? t("quest.completed", "Abgeschlossen") : `${value}/${quest.needed}`} · ${t("common.reward", "Belohnung")}: ${quest.rewardXp} ${t("common.xp", "XP")}, ${quest.rewardGold} ${t("common.gold", "Gold")}, ${questRenownReward(quest)} ${t("common.renown", "Ruhm")}</p>
   </div>`;
 }
@@ -1498,9 +1499,9 @@ function renderQuestOfferCard(quest) {
 
   const rarity = escapeToken(quest.rarity || (quest.rare ? "legendary" : "common"), ["common", "rare", "epic", "legendary"], "common");
   return `<div class="quest-offer rarity-card rarity-${rarity} ${active ? "active" : ""} ${quest.rare ? "rare" : ""} ${isNew ? "new" : ""}">
-    <strong class="quest-offer-title"><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(quest.name)}${isNew ? `<em>${t("common.new", "Neu")}</em>` : ""}</strong>
+    <strong class="quest-offer-title"><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(questDisplayName(quest))}${isNew ? `<em>${t("common.new", "Neu")}</em>` : ""}</strong>
     <div class="quest-offer-body">
-      <p>${escapeHtml(quest.text)}</p>
+      <p>${escapeHtml(questDisplayText(quest))}</p>
       <p>${t("common.status", "Status")}: ${progress}</p>
     </div>
     <div class="reward-list">
@@ -1526,7 +1527,7 @@ function acceptQuest(questId) {
   state.questBoard = state.questBoard.filter((id) => id !== questId);
   forgetNewQuest(questId);
   state.quests[questId] = state.quests[questId] || 0;
-  log(t("quest.acceptLog", "Quest angenommen: {quest}.", { quest: quest.name }), "drop");
+  log(t("quest.acceptLog", "Quest angenommen: {quest}.", { quest: questDisplayName(quest) }), "drop");
   save();
   render();
 }
@@ -1563,7 +1564,7 @@ function renderBestiaryList() {
     ${entries.map(([id, enemy]) => {
       const completion = lootCompletion(id);
       return `<button class="bestiary-card ${id === selectedBestiaryEnemy ? "active" : ""}" type="button" data-bestiary="${id}">
-        <strong>${escapeHtml(enemy.name)}</strong>
+        <strong>${escapeHtml(enemyDisplayName(enemy, id))}</strong>
         <p>${t("bestiary.collection", "Sammlung {found}/{total}", { found: completion.found, total: completion.total })} ${t("bestiary.discovered", "entdeckt")}</p>
         <div class="completion-bar" aria-label="Entdeckter Ausrüstungsfortschritt"><span style="width:${completion.percent}%"></span></div>
       </button>`;
@@ -1592,7 +1593,7 @@ function renderBestiaryDetail() {
     <div class="detail-head">
       <div>
         <p class="eyebrow">${escapeHtml(zoneDisplayName(zoneKeyForEnemy(selectedBestiaryEnemy)))}</p>
-        <h2>${escapeHtml(detailEnemy.name)}</h2>
+        <h2>${escapeHtml(enemyDisplayName(detailEnemy, selectedBestiaryEnemy))}</h2>
       </div>
     </div>
     <p>${t("common.level", "Level")} ${detailEnemy.level}${detailEnemy.boss ? ` · ${t("common.boss", "Boss")}` : detailEnemy.elite ? ` · ${t("common.elite", "Elite")}` : ""} · ${detailEnemy.hp} ${t("main.life", "Leben")} · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} ${t("main.damage", "Schaden")} · ${detailEnemy.defense} ${t("main.defense", "Rüstung")} · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)} · Quest-Schriftrolle ${formatChance(rareQuestDropChance(detailEnemy))}</p>

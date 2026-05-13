@@ -1030,10 +1030,11 @@ function setCombatLog(enemy, events, playerWon, rounds) {
   const result = playerWon ? t("combat.victory", "Sieg") : t("combat.defeat", "Niederlage");
   const resultKey = playerWon ? "combat.victoryAgainst" : "combat.defeatAgainst";
   const summary = combatSummary(events);
+  const enemyName = enemyDisplayName(enemy, enemy.baseId || selectedEnemy);
   const entries = [
     {
       type: playerWon ? "good" : "bad",
-      text: [t(resultKey, `${result} gegen ${enemy.name} nach ${rounds} Runden.`, { enemy: enemy.name, rounds }), summary].filter(Boolean).join(" "),
+      text: [t(resultKey, `${result} gegen ${enemyName} nach ${rounds} Runden.`, { enemy: enemyName, rounds }), summary].filter(Boolean).join(" "),
     },
     ...events.map(combatLogEntry),
   ];
@@ -1143,7 +1144,7 @@ function maybeGrantBattleRenown(enemy) {
   const chance = state.renown >= 30 ? 0.14 : 0.08;
   if (!guaranteed && Math.random() > chance) return;
   state.renown += 1;
-  log(`Dein Ruf wächst: +1 Ruhm für den Sieg gegen ${enemy.name}.`, "drop");
+  log(t("combat.renownLog", "Dein Ruf wächst: +1 Ruhm für den Sieg gegen {enemy}.", { enemy: enemyDisplayName(enemy, enemy.baseId || selectedEnemy) }), "drop");
 }
 
 function bossFirstClearClaimed(enemyId) {
@@ -1404,7 +1405,10 @@ function rollCombatEvent(enemy, roll = Math.random()) {
 
 function combatEventLogText(event) {
   if (!event) return "";
-  return `Kampfereignis - ${event.name}: ${event.text}`;
+  return t("combat.eventLog", "Kampfereignis - {event}: {text}", {
+    event: combatEventName(event),
+    text: combatEventText(event),
+  });
 }
 
 function eliteBonusAbilityFor(enemy) {
@@ -1570,6 +1574,7 @@ function triggeredEnemyAbility(enemy, rounds, playerHp, playerMaxHp, enemyHp) {
 async function fight() {
   if (isFighting) return;
   const enemy = getPreparedEncounter(selectedEnemy);
+  const enemyName = enemyDisplayName(enemy, enemy.baseId || selectedEnemy);
   syncDerivedStats();
 
   if (state.hp <= 0) {
@@ -1721,7 +1726,7 @@ async function fight() {
           damage: 0,
           enemyHp: Math.max(0, enemyHp),
           playerHp: Math.max(0, playerHp),
-          text: `${enemy.name} nutzt ${enemyDefense.defensive.join(" + ")}.`,
+          text: `${enemyName} nutzt ${enemyDefense.defensive.join(" + ")}.`,
         });
       }
     }
@@ -1837,10 +1842,10 @@ async function fight() {
     enemyHit = enemyCrit.damage;
     fightState.nextEnemyDamageMultiplier = 1;
     playerHp -= enemyHit;
-    let enemyText = shieldWall ? `Schildwall dämpft den Treffer auf ${enemyHit}.` : `${enemy.name} trifft für ${enemyHit}.`;
+    let enemyText = shieldWall ? `Schildwall dämpft den Treffer auf ${enemyHit}.` : `${enemyName} trifft für ${enemyHit}.`;
     if (enemyAbility) {
       const ability = enemyAbilityCatalog[enemyAbility.id];
-      enemyText = `${enemy.name}: ${ability.name} trifft für ${enemyHit}.`;
+      enemyText = `${enemyName}: ${ability.name} trifft für ${enemyHit}.`;
       if (enemyAbility.playerDamageMultiplier) {
         fightState.playerDamageMultiplier = Math.min(fightState.playerDamageMultiplier, enemyAbility.playerDamageMultiplier);
         enemyText += " Dein nächster Angriff wird schwächer.";
@@ -1962,7 +1967,7 @@ async function fight() {
       const firstClearReward = grantBossFirstClear(enemy, enemy.baseId || selectedEnemy);
       maybeDropRareQuest(enemy);
       refreshQuestBoard(false);
-      log(`Sieg gegen ${enemy.name} nach ${rounds} Runden. +${xp} XP, +${gold} Gold.`, "good");
+      log(t("combat.winLog", "Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.", { enemy: enemyName, rounds, xp, gold }), "good");
       if (firstClearReward) {
         log(`Erster Dungeon-Sieg: ${bossFirstClearRewardText(enemy)}.`, "drop");
       }
@@ -1976,7 +1981,7 @@ async function fight() {
       state.deaths += 1;
       state.hp = Math.max(1, Math.floor(state.maxHp * 0.35));
       damageEquippedItems(enemy, 2);
-      log(`Tod gegen ${enemy.name}. Du verlierst ${xpLoss} XP, ${goldLoss} Gold und kehrst angeschlagen ins Lager zurück.`, "bad");
+      log(t("combat.lossLog", "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.", { enemy: enemyName, xp: xpLoss, gold: goldLoss }), "bad");
     }
   } catch (error) {
     console.error(error);
@@ -2108,7 +2113,12 @@ function updateQuestProgress(enemy, enemyId = selectedEnemy) {
         queueLootBatch([reward]);
         log(`Questbelohnung erhalten: ${reward.name} (${qualityLabel[reward.quality]}).`, "drop");
       }
-      log(`Quest abgeschlossen: ${quest.name}. +${quest.rewardXp} XP, +${quest.rewardGold} Gold, +${renown} Ruhm.`, "drop");
+      log(t("quest.completeLog", "Quest abgeschlossen: {quest}. +{xp} XP, +{gold} Gold, +{renown} Ruhm.", {
+        quest: questDisplayName(quest),
+        xp: quest.rewardXp,
+        gold: quest.rewardGold,
+        renown,
+      }), "drop");
     }
   });
 }
@@ -2140,7 +2150,7 @@ function maybeDropRareQuest(enemy) {
   state.questBoard.unshift(id);
   state.questBoard = uniqueQuestIds(state.questBoard).slice(0, state.renown >= 40 ? 6 : 5);
   markQuestAsNew(id);
-  log(`Seltene Quest-Schriftrolle gefunden: ${quest.name}. Sie liegt auf der Quest-Tafel.`, "drop");
+  log(t("quest.rareFoundLog", "Seltene Quest-Schriftrolle gefunden: {quest}. Sie liegt auf der Quest-Tafel.", { quest: questDisplayName(quest) }), "drop");
 }
 
 function rareQuestDropChance(enemy) {
@@ -2216,7 +2226,7 @@ function cancelQuest(questId) {
   state.questBoard = state.questBoard.filter((id) => id !== questId);
   forgetNewQuest(questId);
   refreshQuestBoard(true);
-  log(t("quest.cancelLog", "Quest gelöscht: {quest}.", { quest: quest.name }), "bad");
+  log(t("quest.cancelLog", "Quest gelöscht: {quest}.", { quest: questDisplayName(quest) }), "bad");
   save();
   render();
 }
