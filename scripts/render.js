@@ -2227,7 +2227,7 @@ function zoneKeyForEnemy(enemyId) {
 }
 
 function zoneForEnemy(enemyId) {
-  return zones[zoneKeyForEnemy(enemyId)].name;
+  return zoneDisplayName(zoneKeyForEnemy(enemyId));
 }
 
 function formatChance(chance) {

@@ -249,6 +249,9 @@ const translations = {
         "zone.travelEyebrow": "Reisekarte",
         "zone.travelTitle": "Reiseziel wählen",
         "zone.currentArea": "Aktuelles Gebiet",
+        "zone.lockedLog": "{zone} ist noch gesperrt. {requirements}.",
+        "zone.lockNeeds": "Benötigt {requirements}",
+        "zone.lockAnd": " und ",
         "quest.title": "Quest-Tafel",
         "quest.active": "Aktive Quests",
         "quest.none": "Keine aktive Quest. Öffne die Quest-Tafel.",
@@ -313,6 +316,16 @@ const translations = {
         "quest.crownBeast.text": "Erlege die Bestie der Krone in der Aschenkathedrale.",
         "quest.hollowChampion.name": "Leere Krone",
         "quest.hollowChampion.text": "Besiege den Hohlen Champion der Aschenkathedrale.",
+        "rareQuest.wolf.name": "Blutspur des Rudels",
+        "rareQuest.wolf.text": "Jage 9 Waldwölfe für eine alte Jagdtrophäe.",
+        "rareQuest.bandit.name": "Versiegelter Steckbrief",
+        "rareQuest.bandit.text": "Besiege 8 Wegräuber und bringe den Steckbrief zurück.",
+        "rareQuest.elite.name": "Schwur gegen die Gefallenen",
+        "rareQuest.elite.text": "Bezwinge 4 Elite-Gegner für eine seltene Reliquie.",
+        "rareQuest.dungeon.name": "Runen aus der Tiefe",
+        "rareQuest.dungeon.text": "Besiege 7 Dungeon-Gegner und berge eine Runenbelohnung.",
+        "rareQuest.ash.name": "Schwarzer Chor",
+        "rareQuest.ash.text": "Bezwinge 5 Aschengegner für eine versengte Reliquie.",
         "achievement.category.Kampf": "Kampf",
         "achievement.category.Loot": "Loot",
         "achievement.category.Schmied": "Schmied",
@@ -359,6 +372,7 @@ const translations = {
         "achievement.knownFighter.name": "Bekannter Kämpfer",
         "achievement.knownFighter.text": "Erreiche 10 Ruhm.",
         "enemy.eliteName": "Elite-{enemy}",
+        "enemy.nextEliteLog": "Der nächste {enemy} ist eine Elite-Version.",
         "enemy.wolf.name": "Waldwolf",
         "enemy.bandit.name": "Wegräuber",
         "enemy.roadThief.name": "Straßenräuber",
@@ -418,6 +432,9 @@ const translations = {
         "achievements.claimReward": "Belohnung abholen",
         "achievements.claimed": "Abgeholt",
         "achievements.closed": "Noch offen",
+        "achievements.claimLog": "Erfolg eingelöst: {achievement}. Belohnung: {reward}.",
+        "achievements.readyLog": "Neuer Erfolg bereit: {achievement}.",
+        "achievements.readyManyLog": "{count} neue Erfolge sind bereit.",
         "bestiary.title": "Bestiarium",
         "bestiary.eyebrow": "Buch der Gegner",
         "bestiary.collection": "Sammlung: {found}/{total}",
@@ -919,10 +936,16 @@ function enemyIdFor(enemy) {
 }
 
 function questDisplayName(quest) {
+    if (quest?.key && quest?.id?.startsWith?.("rare-")) {
+        return entityName("rareQuest", quest.key, quest.name || "");
+    }
     return entityName("quest", quest?.id, quest?.name || "");
 }
 
 function questDisplayText(quest) {
+    if (quest?.key && quest?.id?.startsWith?.("rare-")) {
+        return entityText("rareQuest", quest.key, quest.text || "");
+    }
     return entityText("quest", quest?.id, quest?.text || "");
 }
 

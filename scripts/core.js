@@ -1210,14 +1210,17 @@ function zoneLockText(zoneId) {
   const unlock = zone.unlock || {};
   const missing = [];
   if (state.level < (unlock.level || 1)) missing.push(`Level ${unlock.level}`);
-  if (state.renown < (unlock.renown || 0)) missing.push(`${unlock.renown} Ruhm`);
-  return `Benötigt ${missing.join(" und ")}`;
+  if (state.renown < (unlock.renown || 0)) missing.push(`${unlock.renown} ${t("common.renown", "Ruhm")}`);
+  return t("zone.lockNeeds", "Benötigt {requirements}", { requirements: missing.join(t("zone.lockAnd", " und ")) });
 }
 
 function selectZone(zoneId) {
   if (!zones[zoneId]) return false;
   if (!isZoneUnlocked(zoneId)) {
-    log(`${zones[zoneId].name} ist noch gesperrt. ${zoneLockText(zoneId)}.`, "bad");
+    log(t("zone.lockedLog", "{zone} ist noch gesperrt. {requirements}.", {
+      zone: zoneDisplayName(zoneId),
+      requirements: zoneLockText(zoneId),
+    }), "bad");
     return false;
   }
   selectedZone = zoneId;
@@ -2062,7 +2065,7 @@ function prepareNextEncounter(enemyId) {
   const elite = Math.random() <= eliteEncounterChance;
   state.nextEncounters[enemyId] = { elite };
   if (elite) {
-    log(`Der nächste ${base.name} ist eine Elite-Version.`, "bad");
+    log(t("enemy.nextEliteLog", "Der nächste {enemy} ist eine Elite-Version.", { enemy: enemyDisplayName(base, enemyId) }), "bad");
   }
 }
 
@@ -3045,7 +3048,10 @@ function claimAchievement(id) {
   if (!achievement || isAchievementClaimed(id) || !achievementProgress(achievement).ready) return false;
   state.achievements.claimed.push(id);
   grantAchievementReward(achievement.reward);
-  log(`Erfolg eingelöst: ${achievement.name}. Belohnung: ${achievementRewardText(achievement.reward)}.`, "drop");
+  log(t("achievements.claimLog", "Erfolg eingelöst: {achievement}. Belohnung: {reward}.", {
+    achievement: achievementDisplayName(achievement),
+    reward: achievementRewardText(achievement.reward),
+  }), "drop");
   notifyReadyAchievements();
   save();
   render();
@@ -3070,8 +3076,8 @@ function notifyReadyAchievements() {
   ])];
   const first = unseenReady[0];
   log(unseenReady.length === 1
-    ? `Neuer Erfolg bereit: ${first.name}.`
-    : `${unseenReady.length} neue Erfolge sind bereit.`,
+    ? t("achievements.readyLog", "Neuer Erfolg bereit: {achievement}.", { achievement: achievementDisplayName(first) })
+    : t("achievements.readyManyLog", "{count} neue Erfolge sind bereit.", { count: unseenReady.length }),
   "drop");
 }
 
