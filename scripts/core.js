@@ -3,6 +3,7 @@ let selectedZone = "meadow";
 let selectedEnemy = zones[selectedZone]?.enemies?.[0] || "wolf";
 let selectedBestiaryZone = selectedZone;
 let selectedBestiaryEnemy = selectedEnemy;
+let selectedBestiaryType = zones[selectedBestiaryZone]?.type || "zone";
 let isFighting = false;
 let skipCombat = false;
 let bestiaryListDirty = true;
@@ -396,6 +397,7 @@ selectedZone = state.ui?.selectedZone || "meadow";
 selectedEnemy = state.ui?.selectedEnemy || zones[selectedZone]?.enemies?.[0] || "wolf";
 selectedBestiaryZone = state.ui?.selectedBestiaryZone || selectedZone;
 selectedBestiaryEnemy = state.ui?.selectedBestiaryEnemy || selectedEnemy;
+selectedBestiaryType = zones[selectedBestiaryZone]?.type || "zone";
 
 function emptyMaterials() {
   return Object.fromEntries(Object.keys(materialLabel).map((id) => [id, 0]));

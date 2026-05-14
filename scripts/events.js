@@ -66,9 +66,28 @@ $("achievements").addEventListener("click", (event) => {
 });
 
 $("bestiary").addEventListener("click", (event) => {
+  const type = event.target.closest("[data-bestiary-type]");
+  if (type) {
+    selectedBestiaryType = type.dataset.bestiaryType;
+    const firstZone = bestiaryZonesForType(selectedBestiaryType)[0];
+    if (firstZone) {
+      selectedBestiaryZone = firstZone[0];
+      selectedBestiaryEnemy = firstZone[1].enemies[0] || selectedBestiaryEnemy;
+    }
+    selectedBestiaryCategory = "overview";
+    selectedBestiaryFilter = "all";
+    selectedBestiarySearch = "";
+    selectedBestiaryPage = 0;
+    selectedBestiaryItemKey = "";
+    bestiaryListDirty = true;
+    renderBestiary();
+    return;
+  }
+
   const zone = event.target.closest("[data-bestiary-zone]");
   if (zone) {
     selectedBestiaryZone = zone.dataset.bestiaryZone;
+    selectedBestiaryType = zones[selectedBestiaryZone]?.type || "zone";
     selectedBestiaryEnemy = zones[selectedBestiaryZone]?.enemies[0] || selectedBestiaryEnemy;
     selectedBestiaryCategory = "overview";
     selectedBestiaryFilter = "all";
@@ -125,6 +144,7 @@ $("bestiary").addEventListener("click", (event) => {
   if (!button) return;
   selectedBestiaryEnemy = button.dataset.bestiary;
   selectedBestiaryZone = zoneKeyForEnemy(selectedBestiaryEnemy);
+  selectedBestiaryType = zones[selectedBestiaryZone]?.type || "zone";
   selectedBestiaryCategory = "overview";
   selectedBestiaryFilter = "all";
   selectedBestiarySearch = "";

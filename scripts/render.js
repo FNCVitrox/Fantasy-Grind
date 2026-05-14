@@ -1591,11 +1591,23 @@ function renderBestiary() {
 }
 
 function renderBestiaryList() {
+  selectedBestiaryType = ["zone", "dungeon"].includes(selectedBestiaryType) ? selectedBestiaryType : "zone";
+  const availableZones = bestiaryZonesForType(selectedBestiaryType);
+  if (!availableZones.some(([id]) => id === selectedBestiaryZone)) {
+    selectedBestiaryZone = availableZones[0]?.[0] || "meadow";
+    selectedBestiaryEnemy = zones[selectedBestiaryZone]?.enemies[0] || selectedBestiaryEnemy;
+  }
   const zone = zones[selectedBestiaryZone] || zones.meadow;
   const entries = zone.enemies.map((id) => [id, enemies[id]]).filter(([, enemy]) => enemy);
   return `<div class="bestiary-list">
+    <div class="bestiary-type-tabs" role="tablist" aria-label="${t("bestiary.typeTabs", "Bestiarium-Bereiche")}">
+      ${bestiaryTypeTabs().map((tab) => `<button class="${selectedBestiaryType === tab.id ? "active" : ""}" type="button" data-bestiary-type="${tab.id}">
+        <span>${escapeHtml(tab.label)}</span>
+        <strong>${tab.count}</strong>
+      </button>`).join("")}
+    </div>
     <div class="bestiary-zone-tabs">
-      ${Object.entries(zones).map(([id, zoneData]) => `<button class="${id === selectedBestiaryZone ? "active" : ""}" type="button" data-bestiary-zone="${id}">
+      ${availableZones.map(([id, zoneData]) => `<button class="${id === selectedBestiaryZone ? "active" : ""}" type="button" data-bestiary-zone="${id}">
         <strong>${escapeHtml(zoneDisplayName(id))}</strong>
         <span>${zoneData.enemies.length}</span>
       </button>`).join("")}
@@ -1609,6 +1621,17 @@ function renderBestiaryList() {
       </button>`;
     }).join("")}
   </div>`;
+}
+
+function bestiaryZonesForType(type) {
+  return Object.entries(zones).filter(([, zone]) => zone.type === type);
+}
+
+function bestiaryTypeTabs() {
+  return [
+    { id: "zone", label: t("bestiary.tabZones", "Gebiete"), count: bestiaryZonesForType("zone").length },
+    { id: "dungeon", label: t("bestiary.tabDungeons", "Dungeons"), count: bestiaryZonesForType("dungeon").length },
+  ];
 }
 
 function updateBestiaryActiveCard() {
