@@ -523,6 +523,8 @@ function renderBattleEventBadge(event) {
   const tone = event.combatEventTone || "neutral";
   badge.className = `battle-event-badge ${tone}`;
   badge.hidden = false;
+  const stage = $("battleStage");
+  if (stage && !isFighting) stage.className = `battle-stage event-tone-${tone}`;
   $("battleEventLabel").textContent = t(`combat.eventTone.${tone}`, "Event");
   $("battleEventName").textContent = event.combatEventName || event.combatEventId;
 }
@@ -532,6 +534,8 @@ function hideBattleEventBadge() {
   if (!badge) return;
   badge.hidden = true;
   badge.className = "battle-event-badge";
+  const stage = $("battleStage");
+  if (stage && !isFighting) stage.className = "battle-stage";
 }
 
 function setBattleEnemyVisual(enemy) {
