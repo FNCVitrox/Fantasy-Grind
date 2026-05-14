@@ -97,6 +97,10 @@ for (const source of scripts) {
 
 assert.strictEqual(typeof context.defaultState, "function");
 assert.strictEqual(typeof context.renderBestiaryItemDetail, "function");
+const assetVersionInCode = vm.runInContext("assetVersion", context);
+const htmlAssetVersions = [...html.matchAll(/\?v=([^"]+)/g)].map((match) => match[1]);
+assert(htmlAssetVersions.length > 0 && htmlAssetVersions.every((version) => version === assetVersionInCode), "HTML asset versions should match assetVersion for cache busting");
+assert(html.includes(`Alpha v${assetVersionInCode}`), "visible version badge should match assetVersion");
 assert.strictEqual(context.defaultState().level, 1);
 assert.strictEqual(context.defaultState().build, "damage");
 assert.strictEqual(vm.runInContext("zoneRangeText('meadow')", context), "Level 1-6");
