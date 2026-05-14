@@ -749,7 +749,15 @@ Object.assign(translations.de, {
     "lootName.Sternsplitterring": "Sternsplitterring",
     "lootName.Splitterkrone": "Splitterkrone",
     "lootName.Ring des alten Feuers": "Ring des alten Feuers",
-    "lootName.Königszeichen": "Königszeichen"
+    "lootName.Königszeichen": "Königszeichen",
+    "itemEffect.huntingMark.name": "Jagdsiegel",
+    "itemEffect.huntingMark.text": "+3% Crit-Chance und +4% Schaden gegen Elite-Gegner und Bosse.",
+    "itemEffect.ironWard.name": "Eisenwacht",
+    "itemEffect.ironWard.text": "Der erste Gegentreffer wird um 8% reduziert und gegnerische Crit-Chance sinkt um 2%.",
+    "itemEffect.pilgrimPace.name": "Pilgerschritt",
+    "itemEffect.pilgrimPace.text": "Haltbarkeitsverlust -6% und nach Siegen +5% Gold.",
+    "itemEffect.mendersThread.name": "Heilerfaden",
+    "itemEffect.mendersThread.text": "Kritische Treffer heilen 1% Leben. Nach einem Sieg heilt 2% Leben."
 });
 
 Object.assign(translations.de, {

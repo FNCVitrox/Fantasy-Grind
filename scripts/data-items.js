@@ -58,6 +58,13 @@ const itemEffectCatalog = {
     bleedChance: 0.06,
     eliteDamageBonus: 0.05,
   },
+  huntingMark: {
+    name: "Jagdsiegel",
+    text: "+3% Crit-Chance und +4% Schaden gegen Elite-Gegner und Bosse.",
+    slots: ["weapon", "ring", "necklace"],
+    eliteCritChance: 0.03,
+    eliteDamageBonus: 0.04,
+  },
   guardBlock: {
     name: "Wachblock",
     text: "Der erste Gegentreffer im Kampf wird um 15% reduziert.",
@@ -96,6 +103,13 @@ const itemEffectCatalog = {
     slots: ["offhand", "chest", "pants"],
     enemyCritReduction: 0.03,
   },
+  ironWard: {
+    name: "Eisenwacht",
+    text: "Der erste Gegentreffer wird um 8% reduziert und gegnerische Crit-Chance sinkt um 2%.",
+    slots: ["offhand", "chest", "pants"],
+    firstHitReduction: 0.08,
+    enemyCritReduction: 0.02,
+  },
   steadyStep: {
     name: "Zäher Schritt",
     text: "Haltbarkeitsverlust nach Kämpfen -10%.",
@@ -114,6 +128,13 @@ const itemEffectCatalog = {
     text: "Nach Siegen +8% Gold.",
     slots: ["boots", "ring", "necklace"],
     goldBonus: 0.08,
+  },
+  pilgrimPace: {
+    name: "Pilgerschritt",
+    text: "Haltbarkeitsverlust -6% und nach Siegen +5% Gold.",
+    slots: ["boots", "ring", "necklace"],
+    durabilityReduction: 0.06,
+    goldBonus: 0.05,
   },
   royalPace: {
     name: "Königsschritt",
@@ -153,6 +174,13 @@ const itemEffectCatalog = {
     text: "Nach einem Sieg heilt 4% Leben.",
     slots: ["ring", "necklace"],
     postCombatHeal: 0.04,
+  },
+  mendersThread: {
+    name: "Heilerfaden",
+    text: "Kritische Treffer heilen 1% Leben. Nach einem Sieg heilt 2% Leben.",
+    slots: ["ring", "necklace"],
+    critHealRatio: 0.01,
+    postCombatHeal: 0.02,
   },
   soulAnchor: {
     name: "Seelenanker",

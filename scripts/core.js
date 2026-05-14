@@ -2457,13 +2457,13 @@ function rollItemEffect(slot, quality, enemy = null) {
 
 function itemEffectPool(slot, quality, enemy = null) {
   const pool = [];
-  if (slot === "weapon") pool.push("bleedEdge", "venomEdge", "rendEdge");
-  if (["offhand", "chest"].includes(slot)) pool.push("guardBlock", "unbrokenOath", "thornGuard", "steadfastWard");
-  if (slot === "pants") pool.push("unbrokenOath", "thornGuard", "steadfastWard");
+  if (slot === "weapon") pool.push("bleedEdge", "venomEdge", "rendEdge", "huntingMark");
+  if (["offhand", "chest"].includes(slot)) pool.push("guardBlock", "unbrokenOath", "thornGuard", "steadfastWard", "ironWard");
+  if (slot === "pants") pool.push("unbrokenOath", "thornGuard", "steadfastWard", "ironWard");
   if (["pants", "boots"].includes(slot)) pool.push("steadyStep");
   if (slot === "boots") pool.push("wardedTread");
-  if (["boots", "ring", "necklace"].includes(slot)) pool.push("luckyPouch");
-  if (["ring", "necklace"].includes(slot)) pool.push("eliteHunter", "trophyHunter", "echoHeal", "soulAnchor");
+  if (["boots", "ring", "necklace"].includes(slot)) pool.push("luckyPouch", "pilgrimPace");
+  if (["ring", "necklace"].includes(slot)) pool.push("eliteHunter", "trophyHunter", "echoHeal", "soulAnchor", "mendersThread", "huntingMark");
 
   if (quality === "epic" || quality === "legendary") {
     if (["weapon", "ring", "necklace"].includes(slot)) pool.push("duelistMark", "lifeSiphon");
@@ -2476,7 +2476,7 @@ function itemEffectPool(slot, quality, enemy = null) {
     if (["offhand", "ring", "necklace"].includes(slot)) pool.push("graveCurse");
   }
 
-  if (enemy?.tags?.dungeon && ["offhand", "ring", "necklace"].includes(slot)) pool.push("graveCurse");
+  if (enemy?.tags?.dungeon && ["offhand", "ring", "necklace"].includes(slot)) pool.push("graveCurse", "chainSnare");
   if (enemy?.tags?.elite && ["ring", "necklace"].includes(slot)) pool.push("eliteHunter");
   return pool.filter((id) => itemEffectCatalog[id]?.slots?.includes(slot));
 }
