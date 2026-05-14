@@ -485,6 +485,7 @@ function renderSelectedEnemy() {
     meta.innerHTML = metaHtml;
   }
   setBattleEnemyVisual(enemy);
+  renderBattleEventBadge(combatEventAnimationEntry(prepareCombatEvent(enemy, selectedEnemy), enemy, state.hp));
   $("battleText").textContent = t("combat.ready", "Bereit");
 }
 
@@ -510,11 +511,27 @@ function resetBattleStageState() {
   stage.querySelectorAll(".damage-number").forEach((number) => number.remove());
   const result = $("battleResult");
   if (result) result.className = "battle-result";
-  const eventBadge = $("battleEventBadge");
-  if (eventBadge) {
-    eventBadge.hidden = true;
-    eventBadge.className = "battle-event-badge";
+  hideBattleEventBadge();
+}
+
+function renderBattleEventBadge(event) {
+  const badge = $("battleEventBadge");
+  if (!badge || !event?.combatEventId) {
+    hideBattleEventBadge();
+    return;
   }
+  const tone = event.combatEventTone || "neutral";
+  badge.className = `battle-event-badge ${tone}`;
+  badge.hidden = false;
+  $("battleEventLabel").textContent = t(`combat.eventTone.${tone}`, "Event");
+  $("battleEventName").textContent = event.combatEventName || event.combatEventId;
+}
+
+function hideBattleEventBadge() {
+  const badge = $("battleEventBadge");
+  if (!badge) return;
+  badge.hidden = true;
+  badge.className = "battle-event-badge";
 }
 
 function setBattleEnemyVisual(enemy) {

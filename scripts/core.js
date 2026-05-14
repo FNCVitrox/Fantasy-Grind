@@ -16,6 +16,7 @@ let logExpanded = false;
 let smithView = "home";
 let combatWatchdog = 0;
 let bestiarySearchFrame = 0;
+const preparedCombatEvents = new Map();
 const tooltipItemCache = new Map();
 const tooltipHtmlCache = new Map();
 const bestiaryLootCache = new Map();
@@ -1438,6 +1439,27 @@ function rollCombatEvent(enemy, roll = Math.random()) {
   return pool[random(0, pool.length - 1)];
 }
 
+function preparedCombatEventKey(enemyId = selectedEnemy) {
+  const elite = state.nextEncounters?.[enemyId]?.elite ? 1 : 0;
+  return `${selectedZone}:${enemyId}:${elite}`;
+}
+
+function prepareCombatEvent(enemy, enemyId = selectedEnemy) {
+  const key = preparedCombatEventKey(enemyId);
+  if (!preparedCombatEvents.has(key)) {
+    preparedCombatEvents.set(key, rollCombatEvent(enemy));
+  }
+  return preparedCombatEvents.get(key);
+}
+
+function consumePreparedCombatEvent(enemy, enemyId = selectedEnemy) {
+  const key = preparedCombatEventKey(enemyId);
+  if (!preparedCombatEvents.has(key)) return rollCombatEvent(enemy);
+  const combatEvent = preparedCombatEvents.get(key);
+  preparedCombatEvents.delete(key);
+  return combatEvent;
+}
+
 function combatEventPool(enemy) {
   return combatEventCatalog.filter((event) => combatEventMatchesEnemy(event, enemy));
 }
@@ -1469,6 +1491,21 @@ function combatEventLogText(event) {
     event: combatEventName(event),
     text: combatEventText(event),
   });
+}
+
+function combatEventAnimationEntry(combatEvent, enemy, playerHp) {
+  if (!combatEvent) return null;
+  return {
+    round: 0,
+    actor: "hero",
+    damage: 0,
+    enemyHp: enemy.hp,
+    playerHp,
+    text: combatEventLogText(combatEvent),
+    combatEventId: combatEvent.id,
+    combatEventName: combatEventName(combatEvent),
+    combatEventTone: combatEventTone(combatEvent),
+  };
 }
 
 function eliteBonusAbilityFor(enemy) {
@@ -1654,19 +1691,10 @@ async function fight() {
   const effectSummary = itemEffectSummary();
   const enchantStats = equippedEnchantmentSummary();
   const combatStats = combatStatsWithItemEffects(stats, enemy, effectSummary);
-  const combatEvent = rollCombatEvent(enemy);
+  const combatEvent = consumePreparedCombatEvent(enemy, enemy.baseId || selectedEnemy);
   let rounds = 0;
-  const events = combatEvent ? [{
-    round: 0,
-    actor: "hero",
-    damage: 0,
-    enemyHp: enemy.hp,
-    playerHp,
-    text: combatEventLogText(combatEvent),
-    combatEventId: combatEvent.id,
-    combatEventName: combatEventName(combatEvent),
-    combatEventTone: combatEventTone(combatEvent),
-  }] : [];
+  const preparedEventEntry = combatEventAnimationEntry(combatEvent, enemy, playerHp);
+  const events = preparedEventEntry ? [preparedEventEntry] : [];
   const fightState = {
     sustainUsed: false,
     nextEnemyDamageMultiplier: 1,

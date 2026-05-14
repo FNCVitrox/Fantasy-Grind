@@ -594,7 +594,7 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
   const summary = combatAnimationSummary(events);
   const activeCombatEvent = events.find((event) => event.combatEventId);
   hideBattleResult();
-  showBattleEventBadge(activeCombatEvent);
+  renderBattleEventBadge(activeCombatEvent);
   updateBattleHealth(startPlayerHp, playerMaxHp, enemyMaxHp, enemyMaxHp);
   $("battleText").textContent = t("combat.stepForward", "{enemy} tritt vor.", { enemy: enemyName });
   stage.classList.remove("victory", "defeat", "hero-attacks", "enemy-attacks", "hero-hit", "enemy-hit", "critical-event", "effect-event", "heal-event");
@@ -641,30 +641,6 @@ function setBattleStageClass(stage, classNames = "", activeCombatEvent = null) {
   const tone = activeCombatEvent?.combatEventTone || "neutral";
   const eventClass = activeCombatEvent ? `event-tone-${tone}` : "";
   stage.className = `battle-stage ${eventClass} ${classNames}`.trim();
-}
-
-function showBattleEventBadge(event) {
-  const badge = $("battleEventBadge");
-  if (!badge || !event?.combatEventId) {
-    hideBattleEventBadge();
-    return;
-  }
-  const tone = event.combatEventTone || "neutral";
-  badge.className = `battle-event-badge ${tone}`;
-  badge.hidden = false;
-  $("battleEventLabel").textContent = combatEventToneLabel(tone);
-  $("battleEventName").textContent = event.combatEventName || event.combatEventId;
-}
-
-function hideBattleEventBadge() {
-  const badge = $("battleEventBadge");
-  if (!badge) return;
-  badge.hidden = true;
-  badge.className = "battle-event-badge";
-}
-
-function combatEventToneLabel(tone) {
-  return t(`combat.eventTone.${tone}`, "Event");
 }
 
 function combatEventClass(event) {
