@@ -2371,24 +2371,32 @@ function itemEffectScore(item) {
 
 function createLootChoices(enemy, enemyId) {
   const choices = [generateLootItem(enemy, enemyId), generateLootItem(enemy, enemyId), generateLootItem(enemy, enemyId)];
-  const specialDrop = enemy.drops.find((drop) => Math.random() <= drop.chance);
+  addFixedDropChoices(choices, enemy, enemyId);
 
-  if (specialDrop) {
-    const specialItem = getItem(specialDrop.id);
-    choices[random(0, choices.length - 1)] = {
+  markLootDiscovery(enemyId, choices);
+  queueLootBatch(choices);
+}
+
+function addFixedDropChoices(choices, enemy, enemyId) {
+  const fixedDrops = (enemy.drops || []).filter((drop) => Math.random() <= drop.chance);
+  const availableIndexes = choices.map((_, index) => index);
+  fixedDrops.forEach((drop) => {
+    if (!availableIndexes.length) return;
+    const specialItem = getItem(drop.id);
+    if (!specialItem) return;
+    const slotIndex = random(0, availableIndexes.length - 1);
+    const choiceIndex = availableIndexes.splice(slotIndex, 1)[0];
+    choices[choiceIndex] = {
       ...specialItem,
-      id: specialDrop.id,
+      id: drop.id,
       fixed: true,
       sourceEnemy: enemyId,
     };
     log(t("loot.rareChoiceLog", "Seltener Fund in der Beuteauswahl: {item} ({quality}).", {
-      item: itemDisplayName(specialItem, specialDrop.id),
+      item: itemDisplayName(specialItem, drop.id),
       quality: labelFor(qualityLabel, specialItem.quality),
     }), "drop");
-  }
-
-  markLootDiscovery(enemyId, choices);
-  queueLootBatch(choices);
+  });
 }
 
 function queueLootBatch(items) {

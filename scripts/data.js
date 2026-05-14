@@ -2,7 +2,7 @@
 const saveBackupKey = `${saveKey}-backup`;
 const savePreviousKey = `${saveKey}-previous`;
 const saveExportVersion = 1;
-const assetVersion = "0.8.85";
+const assetVersion = "0.8.86";
 
 const xpForLevel = (level) => Math.floor(115 * Math.pow(level, 1.78) + level * 48);
 
