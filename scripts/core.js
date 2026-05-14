@@ -177,6 +177,7 @@ state.activeQuests = Array.isArray(state.activeQuests) ? state.activeQuests : []
 state.questBoard = Array.isArray(state.questBoard) ? state.questBoard : ["wolves", "rust", "boars"];
 state.discoveredLoot = state.discoveredLoot || {};
 state.inventory = Array.isArray(state.inventory) ? state.inventory : [];
+state.lockedItems = Array.isArray(state.lockedItems) ? state.lockedItems : [];
 state.completedQuests = Array.isArray(state.completedQuests) ? state.completedQuests : [];
 
 function defaultState() {
@@ -208,6 +209,7 @@ function defaultState() {
     lootQueue: [],
     nextEncounters: {},
     inventory: [],
+    lockedItems: [],
     materials: emptyMaterials(),
     discoveredLoot: {},
     defeatedBosses: [],
@@ -2661,9 +2663,14 @@ function sellInventoryItem(index) {
   const itemId = state.inventory[index];
   const item = getItem(itemId);
   if (!item) return;
+  if (isInventoryItemLocked(itemId)) {
+    log(t("merchant.lockedItemLog", "{item} ist geschützt und wird nicht verkauft.", { item: itemDisplayName(item, itemId) }), "bad");
+    return;
+  }
 
   const value = sellValue(item);
   state.inventory.splice(index, 1);
+  unlockInventoryItem(itemId);
   delete state.itemDurability[itemId];
   state.gold += value;
   log(t("merchant.sellItemLog", "Tilda Münzhand kauft {item}. +{gold} Gold.", { item: itemDisplayName(item, itemId), gold: value }), "drop");
@@ -2674,9 +2681,14 @@ function sellInventoryItem(index) {
 function sellAllInventoryItems() {
   if (!state.inventory.length) return;
   const total = inventorySellTotal();
-  const count = state.inventory.length;
-  state.inventory.forEach((itemId) => delete state.itemDurability[itemId]);
-  state.inventory = [];
+  const soldItems = state.inventory.filter((itemId) => !isInventoryItemLocked(itemId));
+  if (!soldItems.length) return;
+  const count = soldItems.length;
+  soldItems.forEach((itemId) => {
+    delete state.itemDurability[itemId];
+    unlockInventoryItem(itemId);
+  });
+  state.inventory = state.inventory.filter((itemId) => isInventoryItemLocked(itemId));
   state.gold += total;
   log(t("merchant.sellAllLog", "Tilda Münzhand kauft {count} Items. +{gold} Gold.", { count, gold: total }), "drop");
   save();
@@ -2686,8 +2698,35 @@ function sellAllInventoryItems() {
 function inventorySellTotal() {
   return state.inventory.reduce((sum, itemId) => {
     const item = getItem(itemId);
-    return item ? sum + sellValue(item) : sum;
+    return item && !isInventoryItemLocked(itemId) ? sum + sellValue(item) : sum;
   }, 0);
+}
+
+function isInventoryItemLocked(itemId) {
+  return (state.lockedItems || []).includes(itemId);
+}
+
+function lockInventoryItem(itemId) {
+  state.lockedItems = [...new Set([...(state.lockedItems || []), itemId])];
+}
+
+function unlockInventoryItem(itemId) {
+  state.lockedItems = (state.lockedItems || []).filter((id) => id !== itemId);
+}
+
+function toggleInventoryItemLock(index) {
+  const itemId = state.inventory[index];
+  const item = getItem(itemId);
+  if (!item) return;
+  if (isInventoryItemLocked(itemId)) {
+    unlockInventoryItem(itemId);
+    log(t("merchant.unlockItemLog", "{item} ist nicht mehr geschützt.", { item: itemDisplayName(item, itemId) }), "drop");
+  } else {
+    lockInventoryItem(itemId);
+    log(t("merchant.lockItemLog", "{item} ist vor Verkauf geschützt.", { item: itemDisplayName(item, itemId) }), "drop");
+  }
+  save();
+  render();
 }
 
 function sellValue(item) {

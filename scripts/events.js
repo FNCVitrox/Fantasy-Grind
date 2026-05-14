@@ -18,6 +18,11 @@ $("enemyList").addEventListener("click", (event) => {
 });
 
 $("inventory").addEventListener("click", (event) => {
+  const lock = event.target.closest("[data-lock]");
+  if (lock) {
+    toggleInventoryItemLock(Number(lock.dataset.lock));
+    return;
+  }
   const equip = event.target.closest("[data-equip]");
   if (equip) {
     equipInventoryItem(Number(equip.dataset.equip));
@@ -26,6 +31,11 @@ $("inventory").addEventListener("click", (event) => {
 });
 
 $("merchantList").addEventListener("click", (event) => {
+  const lock = event.target.closest("[data-lock]");
+  if (lock) {
+    toggleInventoryItemLock(Number(lock.dataset.lock));
+    return;
+  }
   const sell = event.target.closest("[data-sell]");
   if (sell) sellInventoryItem(Number(sell.dataset.sell));
 });

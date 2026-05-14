@@ -255,6 +255,9 @@ function normalizeLoadedCollections(loaded) {
   loaded.lootQueue = Array.isArray(loaded.lootQueue) ? loaded.lootQueue : [];
   loaded.nextEncounters = plainObjectOrEmpty(loaded.nextEncounters);
   loaded.inventory = Array.isArray(loaded.inventory) ? loaded.inventory : [];
+  loaded.lockedItems = Array.isArray(loaded.lockedItems)
+    ? [...new Set(loaded.lockedItems)].filter((id) => loaded.inventory.includes(id))
+    : [];
   loaded.log = Array.isArray(loaded.log) ? loaded.log : defaultState().log;
   loaded.lastSaveExportAt = loaded.lastSaveExportAt || "";
 }

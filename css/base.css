@@ -1571,7 +1571,7 @@ h2 {
 
 .merchant-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   align-items: center;
   gap: 10px;
   min-height: 72px;
@@ -1617,6 +1617,17 @@ h2 {
 .sell-button {
   border-color: rgba(185, 85, 72, 0.7);
   background: rgba(81, 35, 31, 0.72);
+}
+
+.item-locked {
+  border-color: rgba(233, 198, 101, 0.72);
+  background:
+    linear-gradient(90deg, rgba(233, 198, 101, 0.08), rgba(11, 25, 39, 0.76));
+}
+
+.lock-note {
+  color: var(--gold);
+  font-weight: 800;
 }
 
 .inventory-empty {

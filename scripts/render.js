@@ -577,7 +577,7 @@ function itemRenderSignature(item, id = "") {
 
 function inventorySignature() {
   return (state.inventory || [])
-    .map((id, index) => `${index}:${itemRenderSignature(getItem(id), id)}:${state.itemDurability[id] ?? ""}`)
+    .map((id, index) => `${index}:${itemRenderSignature(getItem(id), id)}:${state.itemDurability[id] ?? ""}:${isInventoryItemLocked(id) ? 1 : 0}`)
     .join("|");
 }
 
@@ -1345,8 +1345,9 @@ function renderSmithSalvage() {
 }
 
 function renderInventory() {
-  renderCachedHtml("inventorySummary", `${currentLanguage()}|${state.inventory.length}|${state.gold}`, () =>
-    `<span>${t("common.items", "Items")}: <strong>${state.inventory.length}</strong></span><span>${t("inventory.sellHint", "Verkauf beim Händler")}</span>`
+  const lockedCount = (state.inventory || []).filter(isInventoryItemLocked).length;
+  renderCachedHtml("inventorySummary", `${currentLanguage()}|${state.inventory.length}|${lockedCount}|${state.gold}`, () =>
+    `<span>${t("common.items", "Items")}: <strong>${state.inventory.length}</strong></span><span>${lockedCount ? t("merchant.lockedCount", "{count} geschützt", { count: lockedCount }) : t("inventory.sellHint", "Verkauf beim Händler")}</span>`
   );
   const signature = `${currentLanguage()}|${inventorySignature()}|${equipmentSignature()}`;
   renderCachedList(
@@ -1367,9 +1368,11 @@ function renderInventoryItemCard(itemId, index) {
   const compare = compareLoot(item, current);
   const statText = itemStatText(item);
   const enchantText = itemEnchantmentsText(item);
-  return `<div class="inventory-item rarity-card rarity-${quality}">
+  const locked = isInventoryItemLocked(itemId);
+  return `<div class="inventory-item rarity-card rarity-${quality} ${locked ? "item-locked" : ""}">
     <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
     <p>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("common.value", "Wert")} ${sellValue(item)} ${t("common.gold", "Gold")}</p>
+    ${locked ? `<p class="lock-note">${t("merchant.lockedItem", "Geschützt")}</p>` : ""}
     ${item.set ? `<p class="set-line">${escapeHtml(setDisplayName(item.set))}</p>` : ""}
     ${statText ? `<p>${statText}</p>` : ""}
     ${enchantText ? `<p>${enchantText}</p>` : ""}
@@ -1379,18 +1382,21 @@ function renderInventoryItemCard(itemId, index) {
     </div>
     <div class="inventory-actions">
       <button type="button" data-equip="${index}">${t("inventory.equip", "Ausrüsten")}</button>
+      <button type="button" data-lock="${index}">${locked ? t("merchant.unlockItem", "Schutz entfernen") : t("merchant.lockItem", "Schützen")}</button>
     </div>
   </div>`;
 }
 
 function renderMerchant() {
   const total = inventorySellTotal();
-  renderCachedHtml("merchantSummary", `${currentLanguage()}|${state.inventory.length}|${state.gold}|${total}`, () =>
+  const sellableCount = (state.inventory || []).filter((itemId) => !isInventoryItemLocked(itemId)).length;
+  const lockedCount = Math.max(0, state.inventory.length - sellableCount);
+  renderCachedHtml("merchantSummary", `${currentLanguage()}|${state.inventory.length}|${sellableCount}|${lockedCount}|${state.gold}|${total}`, () =>
     `<div><span>${t("common.gold", "Gold")}</span><strong>${state.gold}</strong></div>
-    <div><span>${t("common.items", "Items")}</span><strong>${state.inventory.length}</strong></div>
+    <div><span>${t("common.items", "Items")}</span><strong>${sellableCount}/${state.inventory.length}</strong></div>
     <div><span>${t("merchant.sellValue", "Verkaufswert")}</span><strong>${total} ${t("common.gold", "Gold")}</strong></div>`
   );
-  $("sellAllBtn").disabled = !state.inventory.length;
+  $("sellAllBtn").disabled = !sellableCount;
   const signature = `${currentLanguage()}|${inventorySignature()}`;
   renderCachedList(
     "merchantList",
@@ -1406,13 +1412,15 @@ function renderMerchantItemRow(itemId, index) {
   if (!item) return "";
   const quality = itemQuality(item);
   const slot = itemSlot(item);
-  return `<div class="merchant-row rarity-card rarity-${quality}">
+  const locked = isInventoryItemLocked(itemId);
+  return `<div class="merchant-row rarity-card rarity-${quality} ${locked ? "item-locked" : ""}">
     <span>
       <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
-      <small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${itemDurability(itemId)}%</small>
+      <small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${itemDurability(itemId)}%${locked ? ` · ${t("merchant.lockedItem", "Geschützt")}` : ""}</small>
     </span>
     <b>${sellValue(item)} ${t("common.gold", "Gold")}</b>
-    <button class="sell-button" type="button" data-sell="${index}">${t("inventory.sell", "Verkaufen")}</button>
+    <button type="button" data-lock="${index}">${locked ? t("merchant.unlockItem", "Schutz entfernen") : t("merchant.lockItem", "Schützen")}</button>
+    <button class="sell-button" type="button" data-sell="${index}" ${locked ? "disabled" : ""}>${t("inventory.sell", "Verkaufen")}</button>
   </div>`;
 }
 
