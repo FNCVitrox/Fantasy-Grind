@@ -61,6 +61,36 @@ const combatEventCatalog = [
     text: "Die Luft wird schwer. Der Gegner schlägt in diesem Kampf etwas härter zu.",
     enemyDamageBonus: 0.07,
   },
+  {
+    id: "ancientCache",
+    name: "Altes Versteck",
+    text: "Zwischen den Steinen blitzt etwas Wertvolles. Der Goldfund dieses Kampfes ist besser.",
+    goldBonus: 0.12,
+    conditions: { dungeon: true },
+  },
+  {
+    id: "beastTracks",
+    name: "Frische Fährten",
+    text: "Du liest die Spuren der Bestie. Dein Schaden ist leicht erhöht.",
+    playerDamageBonus: 0.06,
+    conditions: { beast: true },
+  },
+  {
+    id: "ashfall",
+    name: "Ascheregen",
+    text: "Asche kratzt in den Augen. Beide Seiten treffen unsauberer.",
+    playerDamageBonus: -0.03,
+    enemyDamageBonus: -0.04,
+    conditions: { ash: true },
+  },
+  {
+    id: "challengerRoar",
+    name: "Herausforderung",
+    text: "Der Gegner erzwingt ein hartes Duell. Beide Seiten schlagen entschlossener zu.",
+    playerDamageBonus: 0.04,
+    enemyDamageBonus: 0.04,
+    conditions: { elite: true },
+  },
 ];
 const renownRanks = [
   { threshold: 0, name: "Fremder", benefit: "Noch kein Vorteil" },
@@ -1404,8 +1434,21 @@ function enemyAbilityEntries(enemy) {
 function rollCombatEvent(enemy, roll = Math.random()) {
   if (!enemy || roll > combatEventChance) return null;
   const weight = enemy.boss || enemy.elite ? 2 : 1;
-  const pool = combatEventCatalog.flatMap((event) => Array.from({ length: event.id === "grimOmen" ? weight : 1 }, () => event));
+  const pool = combatEventPool(enemy).flatMap((event) => Array.from({ length: event.id === "grimOmen" ? weight : 1 }, () => event));
   return pool[random(0, pool.length - 1)];
+}
+
+function combatEventPool(enemy) {
+  return combatEventCatalog.filter((event) => combatEventMatchesEnemy(event, enemy));
+}
+
+function combatEventMatchesEnemy(event, enemy) {
+  const conditions = event.conditions || {};
+  if (conditions.dungeon && !enemy.tags?.dungeon) return false;
+  if (conditions.beast && !(enemy.tags?.beast || enemy.tags?.wolf)) return false;
+  if (conditions.ash && !enemy.tags?.ash) return false;
+  if (conditions.elite && !(enemy.elite || enemy.boss || enemy.tags?.elite)) return false;
+  return true;
 }
 
 function combatEventLogText(event) {

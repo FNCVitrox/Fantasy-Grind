@@ -202,6 +202,10 @@ assert.strictEqual(vm.runInContext("combatLogEntry({ round: 3, actor: 'enemy', d
 assert.strictEqual(vm.runInContext("combatSummary([{ critical: true, damage: 20, text: 'Du triffst kritisch.' }, { damage: 0, text: 'Kampfrausch heilt 12 Leben.' }, { damage: 0, text: 'Blutung hält an.' }])", context), "1 Crit · 1 Heilung · 1 Effekt");
 assert.strictEqual(vm.runInContext("rollCombatEvent(enemies.wolf, 1)", context), null);
 assert(vm.runInContext("combatEventLogText({ name: 'Klare Öffnung', text: 'Test.' }).includes('Kampfereignis')", context), "combat event log text should be explicit");
+assert(vm.runInContext("combatEventPool(enemies.wolf).some((event) => event.id === 'beastTracks') && !combatEventPool(enemies.bandit).some((event) => event.id === 'beastTracks')", context), "beast combat events should only appear for beast or wolf enemies");
+assert(vm.runInContext("combatEventPool(enemies.ratguard).some((event) => event.id === 'ancientCache') && combatEventPool(enemies.ratguard).some((event) => event.id === 'challengerRoar')", context), "dungeon bosses should include dungeon and elite combat events");
+assert(vm.runInContext("combatEventPool(enemies.crownBeast).some((event) => event.id === 'ashfall') && combatEventPool(enemies.crownBeast).some((event) => event.id === 'beastTracks')", context), "ash beasts should include ash and beast combat events");
+assert(vm.runInContext("state = defaultState(); state.language = 'en'; combatEventLogText(combatEventCatalog.find((event) => event.id === 'ancientCache')).includes('Ancient Cache')", context), "new combat events should use English translations");
 assert(vm.runInContext("['Einfach', 'Machbar', 'Riskant', 'Tödlich'].includes(riskFor(enemies.wolf))", context), "risk labels should use the clear risk scale");
 assert(vm.runInContext("state = defaultState(); state.hp = 10; riskFor(enemies.boar) !== 'Einfach'", context), "low current health should make risk stricter");
 assert(vm.runInContext("combatRiskEstimate(enemies.wolf).playerDamagePerRound > 0 && combatRiskEstimate(enemies.wolf).enemyDamagePerRound > 0", context), "risk estimate should expose positive combat pressure values");
