@@ -1375,9 +1375,11 @@ function renderInventoryItemCard(itemId, index) {
   const enchantText = itemEnchantmentsText(item);
   const locked = isInventoryItemLocked(itemId);
   return `<div class="inventory-item rarity-card rarity-${quality} ${locked ? "item-locked" : ""}">
-    <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
+    <div class="inventory-item-head">
+      <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
+      ${locked ? `<span class="lock-note">${t("merchant.lockedItem", "Geschützt")}</span>` : ""}
+    </div>
     <p>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("common.value", "Wert")} ${sellValue(item)} ${t("common.gold", "Gold")}</p>
-    ${locked ? `<p class="lock-note">${t("merchant.lockedItem", "Geschützt")}</p>` : ""}
     ${item.set ? `<p class="set-line">${escapeHtml(setDisplayName(item.set))}</p>` : ""}
     ${statText ? `<p>${statText}</p>` : ""}
     ${enchantText ? `<p>${enchantText}</p>` : ""}

@@ -942,6 +942,40 @@ h2 {
 .inventory-item {
   display: grid;
   gap: 8px;
+  align-content: start;
+}
+
+.inventory-item-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.inventory-item-head strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lock-note {
+  flex: 0 0 auto;
+  max-width: 44%;
+  min-height: 24px;
+  padding: 3px 7px;
+  border: 1px solid rgba(52, 213, 216, 0.62);
+  border-radius: 999px;
+  background: rgba(52, 213, 216, 0.1);
+  color: #74f4ff;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.2;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .inventory-window {
@@ -1623,11 +1657,6 @@ h2 {
   border-color: rgba(233, 198, 101, 0.72);
   background:
     linear-gradient(90deg, rgba(233, 198, 101, 0.08), rgba(11, 25, 39, 0.76));
-}
-
-.lock-note {
-  color: var(--gold);
-  font-weight: 800;
 }
 
 .inventory-empty {
