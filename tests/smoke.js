@@ -131,6 +131,7 @@ assert(vm.runInContext("state = defaultState(); renderMerchantItemRow('rustBlade
 assert(vm.runInContext("(() => { state = defaultState(); const before = smithMasterySignature(); state.xp += 10; return before === smithMasterySignature(); })()", context), "smith mastery cache should ignore unrelated xp-only changes");
 assert.strictEqual(vm.runInContext("eliteEncounterChance", context), 0.06);
 assert.strictEqual(vm.runInContext("knownClassAbilities().length", context), 3);
+assert(vm.runInContext("(() => { state = defaultState(); state.language = 'en'; state.build = 'bruiser'; const text = knownClassAbilities().map(([id, ability]) => `${entityName('ability', id, ability.name)} ${entityText('ability', id, ability.text)}`).join(' | '); return text.includes('Battle Rush') && text.includes('Shatter') && text.includes('Counterblow') && !text.includes('Kampfrausch') && !text.includes('Zerschmettern') && !text.includes('Konterschlag'); })()", context), "bruiser abilities should render English names and descriptions");
 assert(vm.runInContext("state = defaultState(); state.build = 'tank'; const tankDamage = totalStats().damage; state.build = 'damage'; totalStats().damage > tankDamage", context), "damage build should deal more damage than tank");
 assert(vm.runInContext("state = defaultState(); state.build = 'damage'; totalStats().critChance > 0.1 && totalStats().critDamage > 1.7", context), "damage build should improve critical stats");
 assert.strictEqual(
