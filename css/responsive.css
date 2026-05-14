@@ -407,6 +407,26 @@
     display: none;
   }
 
+  .battle-event-badge {
+    top: 8px;
+    right: 8px;
+    left: auto;
+    max-width: calc(100% - 68px);
+    min-height: 32px;
+    gap: 6px;
+    padding: 5px 8px;
+    transform: none;
+    animation: none;
+  }
+
+  .battle-event-badge span {
+    font-size: 9px;
+  }
+
+  .battle-event-badge strong {
+    font-size: 11px;
+  }
+
   .battle-center {
     gap: 4px;
     min-height: 72px;

@@ -510,6 +510,11 @@ function resetBattleStageState() {
   stage.querySelectorAll(".damage-number").forEach((number) => number.remove());
   const result = $("battleResult");
   if (result) result.className = "battle-result";
+  const eventBadge = $("battleEventBadge");
+  if (eventBadge) {
+    eventBadge.hidden = true;
+    eventBadge.className = "battle-event-badge";
+  }
 }
 
 function setBattleEnemyVisual(enemy) {

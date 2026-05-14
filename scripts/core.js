@@ -1451,6 +1451,18 @@ function combatEventMatchesEnemy(event, enemy) {
   return true;
 }
 
+function combatEventTone(event) {
+  if (!event) return "neutral";
+  if (event.goldBonus) return "reward";
+  const playerDamageBonus = event.playerDamageBonus || 0;
+  const enemyDamageBonus = event.enemyDamageBonus || 0;
+  if (playerDamageBonus > 0 && enemyDamageBonus <= 0) return "advantage";
+  if (enemyDamageBonus > 0 && playerDamageBonus <= 0) return "danger";
+  if (playerDamageBonus < 0 && enemyDamageBonus < 0) return "control";
+  if (playerDamageBonus !== 0 || enemyDamageBonus !== 0) return "clash";
+  return "neutral";
+}
+
 function combatEventLogText(event) {
   if (!event) return "";
   return t("combat.eventLog", "Kampfereignis - {event}: {text}", {
@@ -1651,6 +1663,9 @@ async function fight() {
     enemyHp: enemy.hp,
     playerHp,
     text: combatEventLogText(combatEvent),
+    combatEventId: combatEvent.id,
+    combatEventName: combatEventName(combatEvent),
+    combatEventTone: combatEventTone(combatEvent),
   }] : [];
   const fightState = {
     sustainUsed: false,

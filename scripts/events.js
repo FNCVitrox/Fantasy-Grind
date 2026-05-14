@@ -592,19 +592,22 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
   const startPlayerHp = combatHealth.playerStartHp ?? state.hp;
   const rounds = Math.max(0, ...events.map((event) => event.round || 0));
   const summary = combatAnimationSummary(events);
+  const activeCombatEvent = events.find((event) => event.combatEventId);
   hideBattleResult();
+  showBattleEventBadge(activeCombatEvent);
   updateBattleHealth(startPlayerHp, playerMaxHp, enemyMaxHp, enemyMaxHp);
   $("battleText").textContent = t("combat.stepForward", "{enemy} tritt vor.", { enemy: enemyName });
   stage.classList.remove("victory", "defeat", "hero-attacks", "enemy-attacks", "hero-hit", "enemy-hit", "critical-event", "effect-event", "heal-event");
+  setBattleStageClass(stage, "", activeCombatEvent);
   await waitCombat(280);
 
   const visibleEvents = events.slice(0, 14);
   for (const event of visibleEvents) {
     if (skipCombat) break;
     const eventClass = combatEventClass(event);
-    const attackClass = event.actor === "hero" ? "hero-attacks enemy-hit" : "enemy-attacks hero-hit";
+    const attackClass = event.combatEventId ? "" : event.actor === "hero" ? "hero-attacks enemy-hit" : "enemy-attacks hero-hit";
     const side = event.actor === "hero" ? "right" : "left";
-    stage.className = `battle-stage ${attackClass} ${eventClass}`.trim();
+    setBattleStageClass(stage, `${attackClass} ${eventClass}`, activeCombatEvent);
     $("battleText").textContent = event.text || (event.actor === "hero"
       ? t("combat.heroHit", "Du triffst für {damage}.", { damage: event.damage })
       : t("combat.enemyHit", "{enemy} trifft für {damage}.", { enemy: enemyName, damage: event.damage }));
@@ -612,7 +615,7 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
     highlightAbilityUse(event.abilityId);
     if (event.damage > 0) spawnDamage(event.damage, side, event.critical);
     await waitCombat(470);
-    stage.className = "battle-stage";
+    setBattleStageClass(stage, "", activeCombatEvent);
     await waitCombat(110);
   }
 
@@ -626,11 +629,42 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
     updateBattleHealth(finalEvent.playerHp, playerMaxHp, finalEvent.enemyHp, enemyMaxHp);
   }
 
+  hideBattleEventBadge();
   stage.className = "battle-stage";
   stage.classList.add(playerWon ? "victory" : "defeat");
   showBattleResult(playerWon, enemyName, rounds, summary);
   await waitResult(skipCombat ? 850 : 1350);
   hideBattleResult();
+}
+
+function setBattleStageClass(stage, classNames = "", activeCombatEvent = null) {
+  const tone = activeCombatEvent?.combatEventTone || "neutral";
+  const eventClass = activeCombatEvent ? `event-tone-${tone}` : "";
+  stage.className = `battle-stage ${eventClass} ${classNames}`.trim();
+}
+
+function showBattleEventBadge(event) {
+  const badge = $("battleEventBadge");
+  if (!badge || !event?.combatEventId) {
+    hideBattleEventBadge();
+    return;
+  }
+  const tone = event.combatEventTone || "neutral";
+  badge.className = `battle-event-badge ${tone}`;
+  badge.hidden = false;
+  $("battleEventLabel").textContent = combatEventToneLabel(tone);
+  $("battleEventName").textContent = event.combatEventName || event.combatEventId;
+}
+
+function hideBattleEventBadge() {
+  const badge = $("battleEventBadge");
+  if (!badge) return;
+  badge.hidden = true;
+  badge.className = "battle-event-badge";
+}
+
+function combatEventToneLabel(tone) {
+  return t(`combat.eventTone.${tone}`, "Event");
 }
 
 function combatEventClass(event) {
