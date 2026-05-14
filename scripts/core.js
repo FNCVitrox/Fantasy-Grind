@@ -2347,26 +2347,22 @@ function itemEnchantmentScore(item) {
 function itemEffectScore(item) {
   const effect = itemEffect(item);
   if (!effect) return 0;
-  const effectAxes = [
-    effect.bleedChance,
-    effect.poisonChance,
-    effect.firstHitReduction,
-    effect.thornsRatio,
-    effect.durabilityReduction,
-    effect.goldBonus,
-    effect.eliteCritChance,
-    effect.eliteDamageBonus,
-    effect.postCombatHeal,
-    effect.critHealRatio,
-    effect.enemyCritReduction,
-    effect.eliteArmorIgnore,
-    effect.firstHitWeaken < 1 ? 1 - effect.firstHitWeaken : 0,
-    effect.critBurn ? 1 : 0,
-  ].filter(Boolean).length;
-  if (effect.critBurn || effect.eliteArmorIgnore || effect.eliteDamageBonus || effect.critHealRatio) return 12;
-  if (effectAxes >= 2) return 10;
-  if (effect.eliteCritChance || effect.postCombatHeal || effect.firstHitReduction || effect.enemyCritReduction || effect.thornsRatio || effect.firstHitWeaken < 1) return 8;
-  return 5;
+  const score =
+    (effect.bleedChance || 0) * 80
+    + (effect.poisonChance || 0) * 70
+    + (effect.firstHitReduction || 0) * 55
+    + (effect.thornsRatio || 0) * 85
+    + (effect.durabilityReduction || 0) * 60
+    + (effect.goldBonus || 0) * 70
+    + (effect.eliteCritChance || 0) * 100
+    + (effect.eliteDamageBonus || 0) * 90
+    + (effect.postCombatHeal || 0) * 90
+    + (effect.critHealRatio || 0) * 260
+    + (effect.enemyCritReduction || 0) * 140
+    + (effect.eliteArmorIgnore || 0) * 75
+    + (effect.firstHitWeaken < 1 ? (1 - effect.firstHitWeaken) * 60 : 0)
+    + (effect.critBurn ? 10 : 0);
+  return Math.max(5, Math.min(16, Number(score.toFixed(2))));
 }
 
 function createLootChoices(enemy, enemyId) {
