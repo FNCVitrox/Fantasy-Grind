@@ -1606,6 +1606,7 @@ function renderBestiaryList() {
         <strong>${tab.count}</strong>
       </button>`).join("")}
     </div>
+    ${renderBestiarySectionSummary()}
     <div class="bestiary-zone-tabs">
       ${availableZones.map(([id, zoneData]) => `<button class="${id === selectedBestiaryZone ? "active" : ""}" type="button" data-bestiary-zone="${id}">
         <strong>${escapeHtml(zoneDisplayName(id))}</strong>
@@ -1632,6 +1633,21 @@ function bestiaryTypeTabs() {
     { id: "zone", label: t("bestiary.tabZones", "Gebiete"), count: bestiaryZonesForType("zone").length },
     { id: "dungeon", label: t("bestiary.tabDungeons", "Dungeons"), count: bestiaryZonesForType("dungeon").length },
   ];
+}
+
+function renderBestiarySectionSummary() {
+  if (selectedBestiaryType !== "dungeon") return "";
+  const bossIds = bestiaryZonesForType("dungeon")
+    .flatMap(([, zone]) => zone.enemies)
+    .filter((id) => enemies[id]?.boss);
+  const firstWins = bossIds.filter((id) => bossFirstClearClaimed(id)).length;
+  const fixedDrops = bossIds.reduce((sum, id) => sum + (enemies[id]?.drops || []).length, 0);
+  const bossKills = normalizeCombatStats(state.combatStats).bossKills;
+  return `<section class="bestiary-section-summary" aria-label="${t("bestiary.dungeonProgress", "Dungeon-Fortschritt")}">
+    <div><span>${t("bestiary.firstWins", "Erste Siege")}</span><strong>${firstWins}/${bossIds.length}</strong></div>
+    <div><span>${t("bestiary.bossKills", "Boss-Siege")}</span><strong>${bossKills}</strong></div>
+    <div><span>${t("bestiary.fixedDropsShort", "Feste Drops")}</span><strong>${fixedDrops}</strong></div>
+  </section>`;
 }
 
 function updateBestiaryActiveCard() {

@@ -288,6 +288,44 @@
   font-variant-numeric: tabular-nums;
 }
 
+.bestiary-section-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.bestiary-section-summary div {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(216, 174, 75, 0.28);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(216, 174, 75, 0.1), rgba(52, 213, 216, 0.06)),
+    rgba(8, 18, 28, 0.78);
+}
+
+.bestiary-section-summary span,
+.bestiary-section-summary strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bestiary-section-summary span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.15;
+}
+
+.bestiary-section-summary strong {
+  color: var(--text);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
 .bestiary-zone-tabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
