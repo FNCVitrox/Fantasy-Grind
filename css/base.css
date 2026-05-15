@@ -909,6 +909,37 @@ h2 {
   display: block;
 }
 
+.enemy > span {
+  min-width: 0;
+}
+
+.enemy-card-extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.enemy-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 2px 7px;
+  border: 1px solid rgba(74, 113, 145, 0.72);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(7, 17, 27, 0.72);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.enemy-tag.first-clear {
+  border-color: rgba(216, 174, 75, 0.45);
+  color: var(--gold);
+}
+
 .quest-head {
   display: flex;
   align-items: start;

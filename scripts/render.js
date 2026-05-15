@@ -327,6 +327,7 @@ function itemStatText(item, labels = {}) {
 }
 
 function renderEnemies(stats = totalStats()) {
+  const bossRewardSignature = Array.isArray(state.defeatedBosses) ? state.defeatedBosses.join(",") : "";
   const signature = [
     currentLanguage(),
     selectedZone,
@@ -338,6 +339,7 @@ function renderEnemies(stats = totalStats()) {
     stats.critChance,
     stats.critDamage,
     zoneEncounterSignature(selectedZone),
+    bossRewardSignature,
   ].join("|");
   if (renderCache.enemies === signature) return;
   renderCache.enemies = signature;
@@ -348,11 +350,25 @@ function renderEnemies(stats = totalStats()) {
     const safeRarity = escapeToken(rarity, ["common", "rare", "epic", "legendary"], "common");
     const enemyType = enemy.boss ? ` · ${t("common.boss", "Boss")}` : enemy.elite ? ` · ${t("common.elite", "Elite")}` : "";
     const displayName = enemyDisplayName(enemy, id);
+    const extraMeta = renderEnemyCardMeta(enemy, id);
     return `<button class="enemy rarity-card rarity-${safeRarity} ${id === selectedEnemy ? "active" : ""}" type="button" data-enemy="${id}">
-      <span><strong>${escapeHtml(displayName)}</strong><p><span class="quality-${safeRarity}">${labelFor(rarityLabel, safeRarity)}</span> · ${t("common.level", "Level")} ${enemy.level}${enemyType} · ${enemy.xp} ${t("common.xp", "XP")}</p></span>
+      <span><strong>${escapeHtml(displayName)}</strong><p><span class="quality-${safeRarity}">${labelFor(rarityLabel, safeRarity)}</span> · ${t("common.level", "Level")} ${enemy.level}${enemyType} · ${enemy.xp} ${t("common.xp", "XP")}</p>${extraMeta}</span>
       <em class="risk ${riskLabelClass(risk)}">${riskLabel(risk)}</em>
     </button>`;
   }).join("");
+}
+
+function renderEnemyCardMeta(enemy, enemyId) {
+  if (!enemy?.boss) return "";
+  const firstClearLabel = bossFirstClearClaimed(enemy.baseId || enemyId)
+    ? t("bestiary.firstWinClaimedShort", "Erster Sieg geholt")
+    : t("bestiary.firstWinOpen", "Erster Sieg offen");
+  const dropCount = (enemy.drops || []).length;
+  const dropLabel = t("bestiary.fixedDropCount", "{count} feste Drops", { count: dropCount });
+  return `<span class="enemy-card-extra">
+    <small class="enemy-tag first-clear">${escapeHtml(firstClearLabel)}</small>
+    <small class="enemy-tag">${escapeHtml(dropLabel)}</small>
+  </span>`;
 }
 
 function renderQuestNotice() {

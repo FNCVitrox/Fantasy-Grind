@@ -560,6 +560,17 @@
     white-space: nowrap;
   }
 
+  .enemy-card-extra {
+    gap: 4px;
+    margin-top: 5px;
+  }
+
+  .enemy-tag {
+    min-height: 18px;
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+
   .risk {
     min-width: 78px;
     padding: 6px 9px;
