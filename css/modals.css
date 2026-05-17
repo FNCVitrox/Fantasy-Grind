@@ -288,6 +288,57 @@
   font-variant-numeric: tabular-nums;
 }
 
+.bestiary-section-head {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(52, 213, 216, 0.32);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(52, 213, 216, 0.12), transparent 56%),
+    rgba(8, 18, 28, 0.84);
+}
+
+.bestiary-section-head--dungeon {
+  border-color: rgba(216, 174, 75, 0.42);
+  background:
+    linear-gradient(135deg, rgba(216, 174, 75, 0.14), rgba(176, 137, 255, 0.08) 58%, transparent),
+    rgba(8, 18, 28, 0.86);
+}
+
+.bestiary-section-head div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.bestiary-section-head span {
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.bestiary-section-head strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bestiary-section-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
 .bestiary-section-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -302,6 +353,13 @@
   background:
     linear-gradient(135deg, rgba(216, 174, 75, 0.1), rgba(52, 213, 216, 0.06)),
     rgba(8, 18, 28, 0.78);
+}
+
+.bestiary-section-summary--zone div {
+  border-color: rgba(52, 213, 216, 0.26);
+  background:
+    linear-gradient(135deg, rgba(52, 213, 216, 0.09), rgba(216, 174, 75, 0.05)),
+    rgba(8, 18, 28, 0.76);
 }
 
 .bestiary-section-summary span,

@@ -1640,10 +1640,15 @@ function renderBestiaryList() {
     </div>
     ${renderBestiarySectionSummary()}
     <div class="bestiary-zone-tabs">
-      ${availableZones.map(([id, zoneData]) => `<button class="${id === selectedBestiaryZone ? "active" : ""}" type="button" data-bestiary-zone="${id}">
+      ${availableZones.map(([id, zoneData]) => {
+        const countLabel = selectedBestiaryType === "dungeon"
+          ? t("bestiary.bossCount", "{count} Bosse", { count: zoneData.enemies.length })
+          : t("bestiary.enemyCount", "{count} Gegner", { count: zoneData.enemies.length });
+        return `<button class="${id === selectedBestiaryZone ? "active" : ""}" type="button" data-bestiary-zone="${id}">
         <strong>${escapeHtml(zoneDisplayName(id))}</strong>
-        <span>${zoneData.enemies.length}</span>
-      </button>`).join("")}
+        <span>${escapeHtml(countLabel)}</span>
+      </button>`;
+      }).join("")}
     </div>
     ${entries.map(([id, enemy]) => {
       const completion = lootCompletion(id);
@@ -1668,18 +1673,55 @@ function bestiaryTypeTabs() {
 }
 
 function renderBestiarySectionSummary() {
-  if (selectedBestiaryType !== "dungeon") return "";
-  const bossIds = bestiaryZonesForType("dungeon")
-    .flatMap(([, zone]) => zone.enemies)
-    .filter((id) => enemies[id]?.boss);
-  const firstWins = bossIds.filter((id) => bossFirstClearClaimed(id)).length;
-  const fixedDrops = bossIds.reduce((sum, id) => sum + (enemies[id]?.drops || []).length, 0);
-  const bossKills = normalizeCombatStats(state.combatStats).bossKills;
-  return `<section class="bestiary-section-summary" aria-label="${t("bestiary.dungeonProgress", "Dungeon-Fortschritt")}">
-    <div><span>${t("bestiary.firstWins", "Erste Siege")}</span><strong>${firstWins}/${bossIds.length}</strong></div>
-    <div><span>${t("bestiary.bossKills", "Boss-Siege")}</span><strong>${bossKills}</strong></div>
-    <div><span>${t("bestiary.fixedDropsShort", "Feste Drops")}</span><strong>${fixedDrops}</strong></div>
+  const isDungeon = selectedBestiaryType === "dungeon";
+  const stats = bestiarySectionStats(selectedBestiaryType);
+  const title = isDungeon
+    ? t("bestiary.dungeonSectionTitle", "Dungeon-Bosse")
+    : t("bestiary.zoneSectionTitle", "Normale Gebiete");
+  const hint = isDungeon
+    ? t("bestiary.dungeonSectionHint", "Bossdaten, erste Siege und feste Drops.")
+    : t("bestiary.zoneSectionHint", "Gegner, Materialien und Beute aus offenen Gebieten.");
+  const summaryItems = isDungeon
+    ? [
+        [t("bestiary.firstWins", "Erste Siege"), `${stats.firstWins}/${stats.enemyCount}`],
+        [t("bestiary.bossKills", "Boss-Siege"), stats.bossKills],
+        [t("bestiary.fixedDropsShort", "Feste Drops"), stats.fixedDrops],
+      ]
+    : [
+        [t("bestiary.zones", "Gebiete"), stats.zoneCount],
+        [t("common.enemies", "Gegner"), stats.enemyCount],
+        [t("bestiary.finds", "Funde"), `${stats.lootFound}/${stats.lootTotal}`],
+      ];
+  return `<section class="bestiary-section-head bestiary-section-head--${isDungeon ? "dungeon" : "zone"}">
+    <div>
+      <span>${t("bestiary.sectionLabel", "Bereich")}</span>
+      <strong>${escapeHtml(title)}</strong>
+    </div>
+    <p>${escapeHtml(hint)}</p>
+  </section>
+  <section class="bestiary-section-summary bestiary-section-summary--${isDungeon ? "dungeon" : "zone"}" aria-label="${escapeAttr(title)}">
+    ${summaryItems.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong></div>`).join("")}
   </section>`;
+}
+
+function bestiarySectionStats(type) {
+  const zoneEntries = bestiaryZonesForType(type);
+  const enemyIds = zoneEntries.flatMap(([, zone]) => zone.enemies).filter((id) => enemies[id]);
+  const lootTotals = enemyIds.reduce((totals, id) => {
+    const completion = lootCompletion(id);
+    totals.found += completion.found;
+    totals.total += completion.total;
+    return totals;
+  }, { found: 0, total: 0 });
+  return {
+    zoneCount: zoneEntries.length,
+    enemyCount: enemyIds.length,
+    lootFound: lootTotals.found,
+    lootTotal: lootTotals.total,
+    firstWins: enemyIds.filter((id) => enemies[id]?.boss && bossFirstClearClaimed(id)).length,
+    bossKills: normalizeCombatStats(state.combatStats).bossKills,
+    fixedDrops: enemyIds.reduce((sum, id) => sum + (enemies[id]?.drops || []).length, 0),
+  };
 }
 
 function updateBestiaryActiveCard() {

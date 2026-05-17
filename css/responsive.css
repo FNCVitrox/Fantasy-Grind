@@ -826,6 +826,15 @@
     overflow: auto;
   }
 
+  .bestiary-section-head div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .bestiary-zone-tabs {
+    grid-template-columns: 1fr;
+  }
+
   .bestiary-selected-detail,
   .bestiary-detail {
     position: static;
