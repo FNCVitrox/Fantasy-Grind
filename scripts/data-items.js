@@ -65,6 +65,12 @@ const itemEffectCatalog = {
     eliteCritChance: 0.03,
     eliteDamageBonus: 0.04,
   },
+  openingCut: {
+    name: "Eröffnungsschnitt",
+    text: "Der erste Treffer im Kampf verursacht 10% mehr Schaden.",
+    slots: ["weapon", "ring", "necklace"],
+    firstStrikeBonus: 0.1,
+  },
   guardBlock: {
     name: "Wachblock",
     text: "Der erste Gegentreffer im Kampf wird um 15% reduziert.",
@@ -136,6 +142,13 @@ const itemEffectCatalog = {
     durabilityReduction: 0.06,
     goldBonus: 0.05,
   },
+  scavengerCharm: {
+    name: "Fundglanz",
+    text: "+5% Beutequalität und nach Siegen +4% Gold.",
+    slots: ["boots", "ring", "necklace"],
+    lootBonus: 0.05,
+    goldBonus: 0.04,
+  },
   royalPace: {
     name: "Königsschritt",
     text: "Haltbarkeitsverlust -10% und nach Siegen +8% Gold.",
@@ -155,6 +168,13 @@ const itemEffectCatalog = {
     slots: ["ring", "necklace"],
     eliteCritChance: 0.04,
     goldBonus: 0.06,
+  },
+  battleLesson: {
+    name: "Kampferfahrung",
+    text: "+6% XP nach Siegen und +2% Crit-Chance gegen Elite-Gegner und Bosse.",
+    slots: ["ring", "necklace"],
+    xpBonus: 0.06,
+    eliteCritChance: 0.02,
   },
   duelistMark: {
     name: "Duellzeichen",
@@ -214,6 +234,21 @@ const itemEffectCatalog = {
     text: "Kritische Treffer verursachen Brennen für 2 Runden.",
     slots: ["weapon", "ring", "necklace"],
     critBurn: true,
+  },
+  ashTempo: {
+    name: "Aschentakt",
+    text: "Der erste Treffer verursacht 8% mehr Schaden. Kritische Treffer verursachen Brennen.",
+    slots: ["weapon", "necklace"],
+    firstStrikeBonus: 0.08,
+    critBurn: true,
+  },
+  revenantSeal: {
+    name: "Wiedergängersiegel",
+    text: "Der erste Treffer schwächt den Gegenschlag. +5% XP nach Siegen und 2% Heilung nach Sieg.",
+    slots: ["ring", "necklace"],
+    firstHitWeaken: 0.92,
+    xpBonus: 0.05,
+    postCombatHeal: 0.02,
   },
   oathBreaker: {
     name: "Eidbrecher",

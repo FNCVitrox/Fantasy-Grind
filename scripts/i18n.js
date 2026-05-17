@@ -809,7 +809,18 @@ Object.assign(translations.de, {
     "itemEffect.pilgrimPace.name": "Pilgerschritt",
     "itemEffect.pilgrimPace.text": "Haltbarkeitsverlust -6% und nach Siegen +5% Gold.",
     "itemEffect.mendersThread.name": "Heilerfaden",
-    "itemEffect.mendersThread.text": "Kritische Treffer heilen 1% Leben. Nach einem Sieg heilt 2% Leben."
+    "itemEffect.mendersThread.text": "Kritische Treffer heilen 1% Leben. Nach einem Sieg heilt 2% Leben.",
+    "itemEffect.openingCut.name": "Eröffnungsschnitt",
+    "itemEffect.openingCut.text": "Der erste Treffer im Kampf verursacht 10% mehr Schaden.",
+    "itemEffect.scavengerCharm.name": "Fundglanz",
+    "itemEffect.scavengerCharm.text": "+5% Beutequalität und nach Siegen +4% Gold.",
+    "itemEffect.battleLesson.name": "Kampferfahrung",
+    "itemEffect.battleLesson.text": "+6% XP nach Siegen und +2% Crit-Chance gegen Elite-Gegner und Bosse.",
+    "itemEffect.ashTempo.name": "Aschentakt",
+    "itemEffect.ashTempo.text": "Der erste Treffer verursacht 8% mehr Schaden. Kritische Treffer verursachen Brennen.",
+    "itemEffect.revenantSeal.name": "Wiedergängersiegel",
+    "itemEffect.revenantSeal.text": "Der erste Treffer schwächt den Gegenschlag. +5% XP nach Siegen und 2% Heilung nach Sieg.",
+    "itemEffect.firstStrikeCombat": "Eröffnungsschnitt verstärkt den Treffer."
 });
 
 Object.assign(translations.de, {

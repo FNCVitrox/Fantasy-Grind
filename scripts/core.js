@@ -878,6 +878,9 @@ function itemEffectSummary(effects = equippedItemEffects()) {
     summary.eliteArmorIgnore = Math.max(summary.eliteArmorIgnore, effect.eliteArmorIgnore || 0);
     summary.firstHitWeaken = Math.min(summary.firstHitWeaken, effect.firstHitWeaken || 1);
     summary.critBurn = summary.critBurn || Boolean(effect.critBurn);
+    summary.firstStrikeBonus = Math.min(0.22, summary.firstStrikeBonus + (effect.firstStrikeBonus || 0));
+    summary.lootBonus = Math.min(0.16, summary.lootBonus + (effect.lootBonus || 0));
+    summary.xpBonus = Math.min(0.24, summary.xpBonus + (effect.xpBonus || 0));
     return summary;
   }, {
     bleedChance: 0,
@@ -894,6 +897,9 @@ function itemEffectSummary(effects = equippedItemEffects()) {
     eliteArmorIgnore: 0,
     firstHitWeaken: 1,
     critBurn: false,
+    firstStrikeBonus: 0,
+    lootBonus: 0,
+    xpBonus: 0,
   });
 }
 
@@ -1705,6 +1711,7 @@ async function fight() {
     enemyDots: [],
     guardBlockUsed: false,
     graveCurseUsed: false,
+    firstStrikeUsed: false,
     lastCounterRound: -99,
     lastExecuteRound: -99,
     combatEvent,
@@ -1801,6 +1808,12 @@ async function fight() {
       playerHit = abilityDamage(playerHit, fightState.playerDamageMultiplier);
       playerText += " Dein Angriff ist geschwächt.";
       fightState.playerDamageMultiplier = 1;
+    }
+
+    if (!fightState.firstStrikeUsed && effectSummary.firstStrikeBonus > 0) {
+      playerHit = abilityDamage(playerHit, 1 + effectSummary.firstStrikeBonus);
+      fightState.firstStrikeUsed = true;
+      playerText += ` ${t("itemEffect.firstStrikeCombat", "Eröffnungsschnitt verstärkt den Treffer.")}`;
     }
 
     if (!fightState.graveCurseUsed && effectSummary.firstHitWeaken < 1) {
@@ -2049,7 +2062,7 @@ async function fight() {
       const enchantStats = equippedEnchantmentSummary();
       const goldBonus = enchantStats.goldBonus + effectSummary.goldBonus + (combatEvent?.goldBonus || 0);
       const gold = Math.max(1, Math.floor(random(enemy.gold[0], enemy.gold[1]) * (1 + goldBonus)));
-      const xp = Math.max(1, Math.floor(enemy.xp * (1 + enchantStats.xpBonus)));
+      const xp = Math.max(1, Math.floor(enemy.xp * (1 + enchantStats.xpBonus + effectSummary.xpBonus)));
       state.gold += gold;
       gainXp(xp);
       await loadOptionalDataPack("drops");
@@ -2451,7 +2464,10 @@ function itemEffectScore(item) {
     + (effect.enemyCritReduction || 0) * 140
     + (effect.eliteArmorIgnore || 0) * 75
     + (effect.firstHitWeaken < 1 ? (1 - effect.firstHitWeaken) * 60 : 0)
-    + (effect.critBurn ? 10 : 0);
+    + (effect.critBurn ? 10 : 0)
+    + (effect.firstStrikeBonus || 0) * 75
+    + (effect.lootBonus || 0) * 60
+    + (effect.xpBonus || 0) * 45;
   return Math.max(5, Math.min(16, Number(score.toFixed(2))));
 }
 
@@ -2551,16 +2567,18 @@ function rollItemEffect(slot, quality, enemy = null) {
 
 function itemEffectPool(slot, quality, enemy = null) {
   const pool = [];
-  if (slot === "weapon") pool.push("bleedEdge", "venomEdge", "rendEdge", "huntingMark");
+  if (slot === "weapon") pool.push("bleedEdge", "venomEdge", "rendEdge", "huntingMark", "openingCut");
   if (["offhand", "chest"].includes(slot)) pool.push("guardBlock", "unbrokenOath", "thornGuard", "steadfastWard", "ironWard");
   if (slot === "pants") pool.push("unbrokenOath", "thornGuard", "steadfastWard", "ironWard");
   if (["pants", "boots"].includes(slot)) pool.push("steadyStep");
   if (slot === "boots") pool.push("wardedTread");
-  if (["boots", "ring", "necklace"].includes(slot)) pool.push("luckyPouch", "pilgrimPace");
-  if (["ring", "necklace"].includes(slot)) pool.push("eliteHunter", "trophyHunter", "echoHeal", "soulAnchor", "mendersThread", "huntingMark");
+  if (["boots", "ring", "necklace"].includes(slot)) pool.push("luckyPouch", "pilgrimPace", "scavengerCharm");
+  if (["ring", "necklace"].includes(slot)) pool.push("eliteHunter", "trophyHunter", "echoHeal", "soulAnchor", "mendersThread", "huntingMark", "openingCut", "battleLesson");
 
   if (quality === "epic" || quality === "legendary") {
     if (["weapon", "ring", "necklace"].includes(slot)) pool.push("duelistMark", "lifeSiphon");
+    if (["weapon", "necklace"].includes(slot)) pool.push("ashTempo");
+    if (["ring", "necklace"].includes(slot)) pool.push("revenantSeal");
     if (slot === "offhand") pool.push("soulAnchor");
   }
 
@@ -2685,8 +2703,9 @@ function rollQuality(enemy) {
   const roll = Math.random();
   const eliteBonus = enemy.elite ? 0.025 : 0;
   const dungeonBonus = enemy.tags.dungeon ? 0.015 : 0;
-  const enchantBonus = Math.min(0.08, equippedEnchantmentSummary().lootBonus || 0);
-  const bonus = eliteBonus + dungeonBonus + Math.min(0.025, enemy.level * 0.0013) + enchantBonus;
+  const progressionBonus = Math.min(0.08, equippedEnchantmentSummary().lootBonus || 0);
+  const itemBonus = Math.min(0.06, itemEffectSummary().lootBonus || 0);
+  const bonus = eliteBonus + dungeonBonus + Math.min(0.025, enemy.level * 0.0013) + progressionBonus + itemBonus;
 
   if (roll > 0.996 - bonus) return "legendary";
   if (roll > 0.965 - bonus) return "epic";
@@ -3705,6 +3724,7 @@ function expectedPlayerDamagePerRound(enemy, stats, effectSummary = itemEffectSu
   let baseHit = Math.max(1, stats.damage - Math.max(0, enemy.defense - effectArmorIgnore) * 1.08) * critMultiplier;
   if (enemy.elite || enemy.boss) baseHit *= 1 + enchantStats.bossDamage;
   if (enemy.elite || enemy.boss) baseHit *= 1 + effectSummary.eliteDamageBonus;
+  baseHit *= 1 + Math.min(0.08, (effectSummary.firstStrikeBonus || 0) * 0.4);
   baseHit *= playerAbilityDamageMultiplier(enemy);
   baseHit *= enemyAverageDamageTakenMultiplier(enemy, baseHit);
   baseHit *= enemyPlayerDamageDebuffMultiplier(enemy);
