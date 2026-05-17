@@ -251,6 +251,7 @@ function normalizeLoadedCollections(loaded) {
   loaded.defeatedBosses = Array.isArray(loaded.defeatedBosses)
     ? [...new Set(loaded.defeatedBosses)].filter((id) => enemies[id]?.boss)
     : [];
+  loaded.bossDropPity = normalizeBossDropPity(loaded.bossDropPity);
   loaded.pendingLoot = Array.isArray(loaded.pendingLoot) ? loaded.pendingLoot : [];
   loaded.lootQueue = Array.isArray(loaded.lootQueue) ? loaded.lootQueue : [];
   loaded.nextEncounters = plainObjectOrEmpty(loaded.nextEncounters);
@@ -264,6 +265,13 @@ function normalizeLoadedCollections(loaded) {
 
 function plainObjectOrEmpty(value) {
   return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function normalizeBossDropPity(value) {
+  const source = plainObjectOrEmpty(value);
+  return Object.fromEntries(Object.entries(source)
+    .filter(([id]) => enemies[id]?.boss)
+    .map(([id, count]) => [id, Math.max(0, Math.min(bossDropPityGoal, Math.floor(count || 0)))]));
 }
 
 function normalizeLoadedCharacter(loaded) {

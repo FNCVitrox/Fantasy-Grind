@@ -240,6 +240,7 @@ function defaultState() {
     pendingLoot: [],
     lootQueue: [],
     nextEncounters: {},
+    bossDropPity: {},
     inventory: [],
     lockedItems: [],
     materials: emptyMaterials(),
@@ -1190,6 +1191,38 @@ function maybeGrantBattleRenown(enemy) {
 
 function bossFirstClearClaimed(enemyId) {
   return Array.isArray(state.defeatedBosses) && state.defeatedBosses.includes(enemyId);
+}
+
+function bossDropPityCount(enemyId) {
+  if (!enemyId) return 0;
+  const count = Math.floor(state.bossDropPity?.[enemyId] || 0);
+  return Math.max(0, Math.min(bossDropPityGoal, count));
+}
+
+function bossDropPityReady(enemyId) {
+  return bossDropPityCount(enemyId) >= bossDropPityGoal;
+}
+
+function bossDropPityText(enemyId, mode = "long") {
+  const count = bossDropPityCount(enemyId);
+  if (bossDropPityReady(enemyId)) {
+    return t("bestiary.bossDropGuaranteedNext", "Nächster Sieg garantiert feste Bossbeute");
+  }
+  if (mode === "short") {
+    return t("bestiary.bossDropPityCount", "Beutedruck {count}/{target}", { count, target: bossDropPityGoal });
+  }
+  return t("bestiary.bossDropPityHint", "Beutedruck {count}/{target}: feste Bossbeute wird nach Pech garantiert.", { count, target: bossDropPityGoal });
+}
+
+function updateBossDropPity(enemy, enemyId, fixedDrops) {
+  if (!enemy?.boss) return;
+  const bossId = enemy.baseId || enemyId;
+  state.bossDropPity = state.bossDropPity && typeof state.bossDropPity === "object" ? state.bossDropPity : {};
+  if (fixedDrops.length) {
+    state.bossDropPity[bossId] = 0;
+    return;
+  }
+  state.bossDropPity[bossId] = Math.min(bossDropPityGoal, bossDropPityCount(bossId) + 1);
 }
 
 function bossFirstClearReward(enemy) {
@@ -2480,7 +2513,8 @@ function createLootChoices(enemy, enemyId) {
 }
 
 function addFixedDropChoices(choices, enemy, enemyId) {
-  const fixedDrops = (enemy.drops || []).filter((drop) => Math.random() <= drop.chance);
+  const fixedDrops = fixedDropRolls(enemy, enemyId);
+  updateBossDropPity(enemy, enemyId, fixedDrops);
   const availableIndexes = choices.map((_, index) => index);
   fixedDrops.forEach((drop) => {
     if (!availableIndexes.length) return;
@@ -2494,11 +2528,24 @@ function addFixedDropChoices(choices, enemy, enemyId) {
       fixed: true,
       sourceEnemy: enemyId,
     };
-    log(t("loot.rareChoiceLog", "Seltener Fund in der Beuteauswahl: {item} ({quality}).", {
+    const logKey = drop.guaranteed ? "loot.guaranteedBossDropLog" : "loot.rareChoiceLog";
+    const fallback = drop.guaranteed
+      ? "Beutedruck garantiert Bossbeute: {item} ({quality})."
+      : "Seltener Fund in der Beuteauswahl: {item} ({quality}).";
+    log(t(logKey, fallback, {
       item: itemDisplayName(specialItem, drop.id),
       quality: labelFor(qualityLabel, specialItem.quality),
     }), "drop");
   });
+}
+
+function fixedDropRolls(enemy, enemyId) {
+  const drops = enemy.drops || [];
+  const fixedDrops = drops.filter((drop) => Math.random() <= drop.chance);
+  if (!enemy?.boss || fixedDrops.length || !drops.length) return fixedDrops;
+  const bossId = enemy.baseId || enemyId;
+  if (!bossDropPityReady(bossId)) return fixedDrops;
+  return [{ ...drops[random(0, drops.length - 1)], guaranteed: true }];
 }
 
 function queueLootBatch(items) {

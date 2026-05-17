@@ -340,6 +340,7 @@ function renderEnemies(stats = totalStats()) {
     stats.critDamage,
     zoneEncounterSignature(selectedZone),
     bossRewardSignature,
+    bossDropPitySignature(),
   ].join("|");
   if (renderCache.enemies === signature) return;
   renderCache.enemies = signature;
@@ -365,9 +366,11 @@ function renderEnemyCardMeta(enemy, enemyId) {
     : t("bestiary.firstWinOpen", "Erster Sieg offen");
   const dropCount = (enemy.drops || []).length;
   const dropLabel = t("bestiary.fixedDropCount", "{count} feste Drops", { count: dropCount });
+  const pityLabel = bossDropPityText(enemy.baseId || enemyId, "short");
   return `<span class="enemy-card-extra">
     <small class="enemy-tag first-clear">${escapeHtml(firstClearLabel)}</small>
     <small class="enemy-tag">${escapeHtml(dropLabel)}</small>
+    <small class="enemy-tag">${escapeHtml(pityLabel)}</small>
   </span>`;
 }
 
@@ -488,7 +491,7 @@ function enemyRarity(enemy) {
 
 function renderSelectedEnemy() {
   const bossRewardSignature = Array.isArray(state.defeatedBosses) ? state.defeatedBosses.join(",") : "";
-  const signature = `${selectedEnemy}|${state.hp}|${state.maxHp}|${state.level}|${state.build}|${zoneEncounterSignature(selectedZone)}|${equipmentSignature()}|${bossRewardSignature}`;
+  const signature = `${selectedEnemy}|${state.hp}|${state.maxHp}|${state.level}|${state.build}|${zoneEncounterSignature(selectedZone)}|${equipmentSignature()}|${bossRewardSignature}|${bossDropPitySignature()}`;
   if (renderCache.selectedEnemy === signature) return;
   renderCache.selectedEnemy = signature;
   const enemy = getPreparedEncounter(selectedEnemy);
@@ -514,10 +517,19 @@ function renderSelectedEnemyMeta(enemy, enemyId = selectedEnemy) {
   }).join("");
   const claimed = bossFirstClearClaimed(enemy.baseId || enemyId);
   const reward = bossFirstClearRewardText(enemy);
+  const pity = bossDropPityText(enemy.baseId || enemyId);
   return `
     <span class="boss-meta-row"><b>${t("bestiary.bossLoot", "Bossbeute")}</b>${drops || `<span>${t("bestiary.noBossLoot", "Keine feste Bossbeute")}</span>`}</span>
+    <span class="boss-meta-row"><b>${t("bestiary.bossDropPity", "Beutedruck")}</b>${escapeHtml(pity)}</span>
     <span class="boss-meta-row ${claimed ? "claimed" : ""}"><b>${claimed ? t("bestiary.firstWinClaimed", "Erster Sieg geholt") : t("bestiary.firstWin", "Erster Sieg")}</b>${escapeHtml(reward || t("bestiary.noSpecialReward", "Keine Sonderbelohnung"))}</span>
   `;
+}
+
+function bossDropPitySignature() {
+  return Object.entries(state.bossDropPity || {})
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([id, count]) => `${id}:${count}`)
+    .join(",");
 }
 
 function resetBattleStageState() {
@@ -1781,6 +1793,7 @@ function bestiaryDetailSignature(enemyId, enemy, discovered) {
     enemyCriticalStats(enemy).critChance,
     enemyCriticalStats(enemy).critDamage,
     Array.isArray(state.defeatedBosses) ? state.defeatedBosses.join(",") : "",
+    bossDropPityCount(enemyId),
     (enemy.drops || []).map((drop) => `${drop.id}:${drop.chance}`).join(","),
     bossFirstClearRewardText(enemy),
     selectedBestiaryCategory,
@@ -1796,6 +1809,7 @@ function renderBossRewardPanel(enemyId, enemy) {
   if (!enemy?.boss) return "";
   const reward = bossFirstClearRewardText(enemy);
   const claimed = bossFirstClearClaimed(enemyId);
+  const pity = bossDropPityText(enemyId);
   const drops = (enemy.drops || []).map((drop) => {
     const item = getItem(drop.id);
     const quality = itemQuality(item);
@@ -1810,6 +1824,7 @@ function renderBossRewardPanel(enemyId, enemy) {
       <p class="eyebrow">${t("bestiary.dungeonReward", "Dungeon-Belohnung")}</p>
       <strong>${claimed ? t("bestiary.firstWinClaimed", "Erster Sieg bereits geholt") : t("bestiary.firstWin", "Erster Sieg")}</strong>
       <span>${escapeHtml(reward || t("bestiary.noSpecialReward", "Keine Sonderbelohnung"))}</span>
+      <span><b>${t("bestiary.bossDropPity", "Beutedruck")}:</b> ${escapeHtml(pity)}</span>
     </div>
     <div class="boss-reward-grid">
       ${drops || `<span>${t("bestiary.noBossLoot", "Keine feste Bossbeute")}</span>`}
