@@ -1198,6 +1198,7 @@ h2 {
 }
 
 .smith-avatar {
+  position: relative;
   width: 76px;
   height: 76px;
   border: 2px solid rgba(216, 174, 75, 0.72);
@@ -1205,9 +1206,43 @@ h2 {
   background:
     radial-gradient(circle at 35% 42%, #f3d279 0 6%, transparent 7%),
     radial-gradient(circle at 64% 42%, #f3d279 0 6%, transparent 7%),
-    linear-gradient(180deg, #7c8792 0 34%, #263240 35% 58%, #7b4a38 59%),
+    linear-gradient(90deg, transparent 0 42%, rgba(7, 17, 27, 0.78) 43% 57%, transparent 58%),
+    linear-gradient(180deg, #c4cbd4 0 24%, #7c8792 25% 34%, #263240 35% 58%, #7b4a38 59%),
     #17283a;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28), inset 0 -8px 0 rgba(0, 0, 0, 0.18);
+}
+
+.smith-avatar::before,
+.smith-avatar::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.smith-avatar::before {
+  left: 17px;
+  top: -10px;
+  width: 42px;
+  height: 24px;
+  border: 2px solid rgba(216, 174, 75, 0.76);
+  border-radius: 20px 20px 8px 8px;
+  background:
+    linear-gradient(90deg, transparent 0 42%, #222b35 43% 57%, transparent 58%),
+    linear-gradient(135deg, #eef2f7, #788696);
+}
+
+.smith-avatar::after {
+  right: -20px;
+  top: 14px;
+  width: 16px;
+  height: 58px;
+  border: 2px solid #d8ae4b;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 13%, #f0c04f 0 24%, transparent 25%),
+    linear-gradient(180deg, #654330, #201717);
+  transform: rotate(-22deg);
+  box-shadow: 0 0 16px rgba(216, 174, 75, 0.28);
 }
 
 .smith-choice-grid {
@@ -1260,11 +1295,12 @@ h2 {
   border: 2px solid rgba(166, 120, 194, 0.72);
   border-radius: 48% 48% 44% 44%;
   background:
+    radial-gradient(circle at 50% 18%, rgba(52, 213, 216, 0.45), transparent 16%),
     radial-gradient(circle at 36% 40%, #eaf6ee 0 5%, transparent 6%),
     radial-gradient(circle at 64% 40%, #eaf6ee 0 5%, transparent 6%),
-    linear-gradient(120deg, transparent 0 43%, rgba(103, 220, 206, 0.6) 44% 49%, transparent 50%),
-    linear-gradient(180deg, #d9e4d7 0 18%, #5f7986 19% 56%, #293045 57% 100%);
-  box-shadow: 0 12px 28px rgba(166, 120, 194, 0.18);
+    linear-gradient(120deg, transparent 0 37%, rgba(103, 220, 206, 0.62) 38% 43%, transparent 44% 56%, rgba(216, 178, 237, 0.5) 57% 62%, transparent 63%),
+    linear-gradient(180deg, #d9e4d7 0 18%, #5f7986 19% 48%, #3b254d 49% 100%);
+  box-shadow: 0 12px 28px rgba(166, 120, 194, 0.18), 0 0 24px rgba(52, 213, 216, 0.14);
 }
 
 .enchant-avatar::before,
@@ -1282,11 +1318,13 @@ h2 {
 .enchant-avatar::before {
   left: -16px;
   transform: rotate(-34deg);
+  box-shadow: -6px 14px 0 -7px rgba(52, 213, 216, 0.8);
 }
 
 .enchant-avatar::after {
   right: -16px;
   transform: rotate(34deg);
+  box-shadow: 18px 35px 0 -10px rgba(166, 120, 194, 0.82), 18px 35px 14px -10px rgba(166, 120, 194, 0.62);
 }
 
 .enchant-intro strong {

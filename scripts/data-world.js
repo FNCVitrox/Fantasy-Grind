@@ -144,7 +144,7 @@ const enemies = {
   },
   roadThief: {
     name: "Straßenräuber",
-    sprite: "enemy-bandit",
+    sprite: "enemy-bandit enemy-road-thief",
     level: 5,
     hp: 108,
     damage: [18, 28],
@@ -158,7 +158,7 @@ const enemies = {
   },
   ironHound: {
     name: "Eisenhund",
-    sprite: "enemy-wolf",
+    sprite: "enemy-wolf enemy-iron-hound",
     level: 8,
     hp: 168,
     damage: [27, 39],
@@ -186,7 +186,7 @@ const enemies = {
   },
   oldKnight: {
     name: "Alter Grenzritter",
-    sprite: "enemy-knight",
+    sprite: "enemy-knight enemy-old-knight",
     level: 10,
     hp: 210,
     damage: [34, 50],
@@ -202,7 +202,7 @@ const enemies = {
   },
   plagueCrow: {
     name: "Seuchenkrähe",
-    sprite: "enemy-acolyte",
+    sprite: "enemy-acolyte enemy-plague-crow",
     level: 10,
     hp: 205,
     damage: [35, 52],
@@ -216,7 +216,7 @@ const enemies = {
   },
   fieldWraith: {
     name: "Feldschemen",
-    sprite: "enemy-acolyte",
+    sprite: "enemy-acolyte enemy-field-wraith",
     level: 13,
     hp: 310,
     damage: [48, 70],
@@ -231,7 +231,7 @@ const enemies = {
   },
   ashMarauder: {
     name: "Aschenmarodeur",
-    sprite: "enemy-bandit",
+    sprite: "enemy-bandit enemy-ash-marauder",
     level: 15,
     hp: 380,
     damage: [60, 86],
@@ -245,7 +245,7 @@ const enemies = {
   },
   emberStalker: {
     name: "Glutpirscher",
-    sprite: "enemy-wolf",
+    sprite: "enemy-wolf enemy-ember-stalker",
     level: 17,
     hp: 470,
     damage: [72, 105],
@@ -259,7 +259,7 @@ const enemies = {
   },
   crownSentinel: {
     name: "Kronenwächter",
-    sprite: "enemy-knight",
+    sprite: "enemy-knight enemy-crown-sentinel",
     level: 19,
     hp: 620,
     damage: [88, 126],
@@ -293,7 +293,7 @@ const enemies = {
   },
   boneAcolyte: {
     name: "Knochenakolyth",
-    sprite: "enemy-acolyte",
+    sprite: "enemy-acolyte enemy-bone-acolyte",
     level: 12,
     hp: 350,
     damage: [48, 72],
@@ -311,7 +311,7 @@ const enemies = {
   },
   cryptBrute: {
     name: "Gruftschläger",
-    sprite: "enemy-brute",
+    sprite: "enemy-brute enemy-crypt-brute",
     level: 15,
     hp: 520,
     damage: [70, 104],
@@ -329,7 +329,7 @@ const enemies = {
   },
   chainWarden: {
     name: "Kettenaufseher",
-    sprite: "enemy-knight",
+    sprite: "enemy-knight enemy-chain-warden",
     level: 13,
     hp: 470,
     damage: [60, 88],
@@ -347,7 +347,7 @@ const enemies = {
   },
   oathForger: {
     name: "Eidschmied",
-    sprite: "enemy-brute",
+    sprite: "enemy-brute enemy-oath-forger",
     level: 16,
     hp: 720,
     damage: [82, 118],
@@ -365,7 +365,7 @@ const enemies = {
   },
   ironDuke: {
     name: "Herzog Eisenbruch",
-    sprite: "enemy-knight",
+    sprite: "enemy-knight enemy-iron-duke",
     level: 18,
     hp: 900,
     damage: [96, 138],
@@ -383,7 +383,7 @@ const enemies = {
   },
   emberPriest: {
     name: "Glutpriester",
-    sprite: "enemy-acolyte",
+    sprite: "enemy-acolyte enemy-ember-priest",
     level: 18,
     hp: 950,
     damage: [98, 142],
@@ -401,7 +401,7 @@ const enemies = {
   },
   crownBeast: {
     name: "Bestie der Krone",
-    sprite: "enemy-boar",
+    sprite: "enemy-boar enemy-crown-beast",
     level: 19,
     hp: 1250,
     damage: [108, 154],
@@ -419,7 +419,7 @@ const enemies = {
   },
   hollowChampion: {
     name: "Hohler Champion",
-    sprite: "enemy-champion",
+    sprite: "enemy-champion enemy-hollow-champion",
     level: 20,
     hp: 1250,
     damage: [112, 162],

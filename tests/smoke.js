@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
 const html = read("index.html");
+const css = ["css/base.css", "css/modals.css", "css/responsive.css"].map(read).join("\n");
 const dataScripts = [
   "scripts/data.js",
   "scripts/data-loader.js",
@@ -120,6 +121,16 @@ assert.strictEqual(vm.runInContext("enemies.wolf.name", context), "Waldwolf");
 assert.strictEqual(vm.runInContext("zones.meadow.enemies[0]", context), "wolf");
 assert(vm.runInContext("Object.values(zones).filter((zone) => zone.type === 'dungeon').every((zone) => zone.enemies.every((id) => enemies[id].boss))", context), "dungeons should contain boss enemies");
 assert(vm.runInContext("Object.values(enemies).flatMap((enemy) => enemy.drops).every((drop) => items[drop.id])", context), "all fixed enemy drops need item data");
+const enemySprites = JSON.parse(vm.runInContext("JSON.stringify(Object.values(enemies).map((enemy) => enemy.sprite))", context));
+assert.strictEqual(new Set(enemySprites).size, enemySprites.length, "enemy sprite class combinations should be unique");
+const spriteTokens = [...new Set(enemySprites.flatMap((sprite) => sprite.split(/\s+/)).filter(Boolean))];
+for (const token of spriteTokens) {
+  assert(css.includes(`.${token}`), `Missing CSS sprite class: ${token}`);
+}
+for (const build of ["tank", "damage", "bruiser"]) {
+  assert(css.includes(`.hero-build-${build}`), `Missing hero build sprite CSS: ${build}`);
+}
+assert(css.includes(".smith-avatar::before") && css.includes(".enchant-avatar::after"), "Borin and Mira avatars should have detailed CSS silhouettes");
 assert(vm.runInContext("state = defaultState(); questAvailable(getQuestById('wolves')) && !questAvailable(getQuestById('fields'))", context), "early quest board should only offer reachable quest targets");
 assert(vm.runInContext("state.level = 9; state.renown = 8; selectedZone = 'fields'; questAvailable(getQuestById('fields'))", context), "field quests should unlock when the field zone is selected");
 assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'wolf'; state.questBoard = ['wolves', 'rust', 'boars']; refreshQuestBoard(true); state.questBoard.length === 1 && state.questBoard[0] === 'wolves'", context), "wolf target should only show wolf-related quests");
