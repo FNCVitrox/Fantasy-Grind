@@ -754,6 +754,8 @@ function renderEquipmentDetails() {
 }
 
 function renderSmith() {
+  const modal = $("smithModal")?.querySelector(".smith-window");
+  if (modal) modal.classList.toggle("is-enchanting", smithView === "enchant");
   setText("smithEyebrow", smithView === "enchant" ? t("enchant.eyebrow", "Arkanistin der Grauwacht") : t("smith.eyebrow", "Zwergenmeister der Grauwacht"));
   setText("smithTitle", smithView === "enchant" ? t("enchant.title", "Mira Nachtfaden") : t("smith.title", "Borin Glutbart"));
   renderSmithMaterials();
@@ -1052,6 +1054,7 @@ function renderEnchantStatus() {
 function renderSmithHome() {
   const shellChanged = renderCachedHtml("smithHome", `smithHome:${currentLanguage()}|${renownRank().threshold}`, () => `
     ${renderSmithGreetingMarkup()}
+    ${renderStationFocus("smith")}
     <div class="smith-mastery" id="smithMastery"></div>
     <div class="smith-choice-grid">
       <button type="button" data-smith-view="upgrade">
@@ -1070,6 +1073,19 @@ function renderSmithHome() {
   `);
   if (shellChanged) elementCache.delete("smithMastery");
   renderSmithMastery();
+}
+
+function renderStationFocus(station) {
+  const prefix = station === "enchant" ? "enchant" : "smith";
+  const className = station === "enchant" ? "enchant-focus" : "smith-focus";
+  const chips = [1, 2, 3].map((index) =>
+    `<span>${escapeHtml(t(`${prefix}.focus.${index}`, index === 1 ? "Fokus" : ""))}</span>`
+  ).join("");
+  return `<div class="station-focus ${className}" aria-label="${escapeHtml(t(`${prefix}.focusLabel`, "Stationsfokus"))}">
+    <strong>${escapeHtml(t(`${prefix}.focusTitle`, "Fokus"))}</strong>
+    <p>${escapeHtml(t(`${prefix}.focusText`, ""))}</p>
+    <div>${chips}</div>
+  </div>`;
 }
 
 function renderSmithMastery() {
@@ -1325,7 +1341,7 @@ function renderSmithEnchant() {
   if (renderCache.enchantGrid === gridSignature) return;
   renderCache.enchantGrid = gridSignature;
 
-  $("enchantGrid").innerHTML = equipmentSlots.map((slot) => {
+  $("enchantGrid").innerHTML = `${renderStationFocus("enchant")}${equipmentSlots.map((slot) => {
     const itemId = state.equipment[slot];
     const item = getItem(itemId);
     if (!item) return "";
@@ -1361,7 +1377,7 @@ function renderSmithEnchant() {
       </div>
       <small>${full ? t("enchant.slotsFull", "Alle aktuellen Slots belegt.") : `${t("enchant.ritualCost", "Ritualkosten")}: ${costText}`}</small>
     </div>`;
-  }).join("");
+  }).join("")}`;
 }
 
 function renderSmithSalvage() {

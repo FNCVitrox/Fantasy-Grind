@@ -1027,6 +1027,10 @@ h2 {
   margin-bottom: 6px;
 }
 
+.smith-window.is-enchanting .modal-window-head {
+  border-color: rgba(166, 120, 194, 0.34);
+}
+
 .materials {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -1059,6 +1063,61 @@ h2 {
 .smith-greeting p {
   margin-top: 5px;
   color: var(--muted);
+}
+
+.station-focus {
+  display: grid;
+  gap: 7px;
+  padding: 12px 14px;
+  border: 1px solid rgba(216, 174, 75, 0.36);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(216, 174, 75, 0.1), transparent 46%),
+    #0a1521;
+}
+
+.station-focus strong {
+  color: var(--gold);
+  font-size: 17px;
+}
+
+.station-focus p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.station-focus div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.station-focus span {
+  min-height: 24px;
+  padding: 4px 9px;
+  border: 1px solid rgba(216, 174, 75, 0.32);
+  border-radius: 999px;
+  color: var(--text);
+  background: rgba(7, 17, 27, 0.74);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.enchant-focus {
+  margin-bottom: 10px;
+  border-color: rgba(166, 120, 194, 0.44);
+  background:
+    linear-gradient(90deg, rgba(166, 120, 194, 0.13), rgba(52, 213, 216, 0.06) 48%, transparent),
+    #0a1521;
+}
+
+.enchant-focus strong {
+  color: #d6b2ed;
+}
+
+.enchant-focus span {
+  border-color: rgba(166, 120, 194, 0.38);
 }
 
 .smith-mastery {
