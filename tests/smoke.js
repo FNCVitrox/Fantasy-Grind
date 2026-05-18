@@ -61,6 +61,10 @@ assert(
   !/render\(\);\s*save\(\);\s*window\.addEventListener\("beforeunload"/.test(read("scripts/events.js")),
   "startup should not immediately overwrite an unreadable stored save",
 );
+assert(
+  /if \(skipCombat\) break;[\s\S]*showBattleResult\(playerWon, enemyName, rounds, summary\);[\s\S]*waitResult\(skipCombat \? 850 : 1350\)/.test(read("scripts/events.js")),
+  "skip combat should still show the win/loss result before the battle stage resets",
+);
 
 const storage = {};
 const context = {
@@ -116,6 +120,10 @@ assert(
 assert(
   vm.runInContext("(() => { state = undefined; const brokenSave = { level: 1, hp: 0, maxHp: 0, gold: 0, equipment: null, customItems: null, materials: null, inventory: null, rareQuests: null }; const loaded = parseSavedState(JSON.stringify(brokenSave)); state = loaded; syncDerivedStats(); return loaded && state.maxHp > 0 && state.hp > 0 && state.equipment.weapon === 'trainingSword' && Array.isArray(state.inventory); })()", context),
   "partially corrupted saves should fall back to playable default runtime containers",
+);
+assert(
+  vm.runInContext("(() => { state = undefined; const oldSave = defaultState(); delete oldSave.activeQuests; oldSave.quests = { wolves: 3, ratguard: 1 }; const loaded = parseSavedState(JSON.stringify(oldSave)); return loaded.activeQuests.includes('wolves') && loaded.activeQuests.includes('ratguard'); })()", context),
+  "old saves without activeQuests should migrate progressed quests back into the active list",
 );
 assert.strictEqual(vm.runInContext("enemies.wolf.name", context), "Waldwolf");
 assert.strictEqual(vm.runInContext("zones.meadow.enemies[0]", context), "wolf");
@@ -251,6 +259,7 @@ assert(
 );
 assert(vm.runInContext("Object.values(materialDrops).flat().every((drop) => materialLabel[drop.id])", context), "all material drops need labels");
 assert(vm.runInContext("['boneAcolyte', 'cryptBrute', 'emberPriest', 'crownBeast', 'hollowChampion'].every((id) => materialDrops[id].some((drop) => drop.id === 'graveSeal'))", context), "late dungeon bosses should be able to drop grave seals for Mira mastery");
+assert(vm.runInContext("Object.entries(materialDrops).filter(([, drops]) => drops.some((drop) => drop.id === 'graveSeal')).every(([id, drops]) => (enemies[id]?.tags?.dungeon || enemies[id]?.tags?.ash) && drops.some((drop) => drop.id === 'graveSeal' && drop.max > 0))", context), "grave seals should only drop from fitting dungeon or ash enemies with a positive amount");
 assert(vm.runInContext("Object.keys(salvageValue({ slot: 'weapon', quality: 'rare', damage: 1, defense: 0, set: 'iron' })).includes('oathMark')", context));
 assert(vm.runInContext("normalizeMaterials({ hide: 2, fang: 3, iron: 4 }).leather === 2", context));
 assert.strictEqual(vm.runInContext("questRenownReward({ rarity: 'epic' })", context), 2);
@@ -301,6 +310,7 @@ assert(vm.runInContext("state = defaultState(); state.completedQuests = ['wolves
 assert(vm.runInContext("state = defaultState(); state.level = 17; state.renown = 30; selectedZone = 'ashgrounds'; state.questBoard = []; refreshQuestBoard(true); state.questBoard.length > 0 && !state.questBoard.includes('wolves') && state.questBoard.every((id) => questRelevantForCurrentZone(getQuestById(id)))", context), "late zones should not offer low-level starter quests");
 assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'wolf'; render = () => {}; renderLog = () => {}; state.questBoard = ['wolves']; acceptQuest('wolves'); state.activeQuests.includes('wolves') && !state.questBoard.includes('wolves')", context), "accepted quests should move from the board into active quests");
 assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'wolf'; render = () => {}; renderLog = () => {}; state.activeQuests = ['wolves']; state.quests.wolves = 4; state.questBoard = []; cancelQuest('wolves'); !state.activeQuests.includes('wolves') && !('wolves' in state.quests)", context), "active quests should be deletable from the quest list");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; const quest = { ...rareQuestTemplates.find((entry) => entry.key === 'dungeon'), id: 'rare-dungeon-smoke', rare: true, rewardItem: true }; state.rareQuests[quest.id] = quest; state.activeQuests = [quest.id]; state.quests[quest.id] = quest.needed - 1; const beforeGold = state.gold; updateQuestProgress(enemies.ratguard, 'ratguard'); return state.completedQuests.includes(quest.id) && !state.activeQuests.includes(quest.id) && state.gold === beforeGold + quest.rewardGold && state.pendingLoot.some((item) => item.sourceType === 'quest' && item.sourceQuest === quest.id); })()", context), "quest completion should grant rewards, remove active quests, and queue reward loot");
 assert(vm.runInContext("state = defaultState(); state.questBoard = ['wolves']; markQuestAsNew('wolves'); state.unseenQuests.includes('wolves')", context), "new quests should be tracked for UI badges");
 assert(vm.runInContext("forgetNewQuest('wolves'); !state.unseenQuests.includes('wolves')", context), "accepted or completed quests should clear their new marker");
 assert(vm.runInContext("state = defaultState(); state.completedQuests = ['wolves', 'rust', 'boars']; state.questBoard = []; refreshQuestBoard(true); state.unseenQuests.length > 0", context), "freshly refilled empty boards should glow as new quests");
@@ -328,6 +338,7 @@ assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 14; ma
 assert.strictEqual(vm.runInContext("state.enchanting.completed = ['unstableRunes']; maxEnchantSlotsForLevel()", context), 2);
 assert.strictEqual(vm.runInContext("state.enchanting.completed = ['unstableRunes', 'forbiddenLibrary']; maxEnchantSlotsForLevel()", context), 3);
 assert(vm.runInContext("(() => { state = defaultState(); state.level = 8; state.customItems.trainingSword = { ...items.trainingSword, id: 'trainingSword', enchantments: ['keenEdge', 'cruelMark', 'warSigil'] }; const item = getItem(state.equipment.weapon); return activeItemEnchantments(item).length === 1 && inactiveItemEnchantments(item).length === 2; })()", context), "Mira mastery should cap active enchantment slots while keeping later runes locked");
+assert(vm.runInContext("(() => { state = defaultState(); state.level = 8; state.customItems.trainingSword = { ...items.trainingSword, id: 'trainingSword', enchantments: ['keenEdge', 'cruelMark', 'warSigil'] }; const locked = equippedEnchantmentSummary(); state.enchanting.completed = ['unstableRunes', 'forbiddenLibrary']; const unlocked = equippedEnchantmentSummary(); return locked.critChance === 0.02 && locked.critDamage === 0 && locked.damage === 0 && unlocked.critDamage === 0.08 && unlocked.damage === 5; })()", context), "locked Mira runes should stay saved without counting into combat stats");
 assert(vm.runInContext("(() => { state.enchanting.completed = ['unstableRunes']; const item = getItem(state.equipment.weapon); return activeItemEnchantments(item).length === 2 && inactiveItemEnchantments(item).length === 1; })()", context), "Mira's first mastery should activate the second saved rune slot");
 assert(vm.runInContext("(() => { state.enchanting.completed = ['unstableRunes', 'forbiddenLibrary']; const item = getItem(state.equipment.weapon); return activeItemEnchantments(item).length === 3 && inactiveItemEnchantments(item).length === 0; })()", context), "Mira's second mastery should activate the third saved rune slot");
 assert(vm.runInContext("state = defaultState(); state.level = 12; state.renown = 10; state.customItems.trainingSword = { ...items.trainingSword, id: 'trainingSword', enchantments: ['keenEdge'] }; canStartEnchantMasteryMission(enchantMasteryRanks[0])", context), "Mira's first mastery mission should require level, renown and an enchanted equipped item");
