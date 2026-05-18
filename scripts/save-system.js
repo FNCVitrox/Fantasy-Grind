@@ -4,6 +4,7 @@ const saveDiagnostics = {
   failedLoads: [],
   lastParseError: "",
   startedWithStoredSave: false,
+  indexedDbMirror: "",
 };
 
 function load() {
@@ -364,12 +365,14 @@ function storageSet(key, value) {
   const windowStore = readWindowNameStore();
   windowStore[key] = value;
   writeWindowNameStore(windowStore);
+  mirrorSaveToIndexedDb(key, value);
 }
 
 function browserStorageStatus() {
   return {
     localStorage: testStorageStore("localStorage", typeof localStorage !== "undefined" ? localStorage : null),
     sessionStorage: testStorageStore("sessionStorage", typeof sessionStorage !== "undefined" ? sessionStorage : null),
+    indexedDB: testIndexedDbStore(),
     windowName: testWindowNameStore(),
     loadedFrom: saveDiagnostics.loadedFrom,
     recoveredFrom: saveDiagnostics.recoveredFrom,
@@ -412,6 +415,61 @@ function testWindowNameStore() {
   } catch (error) {
     return { label, ok: false, message: error?.message || "blockiert" };
   }
+}
+
+function indexedDbAvailable() {
+  return typeof indexedDB !== "undefined" && typeof indexedDB.open === "function";
+}
+
+function mirrorSaveToIndexedDb(key, value) {
+  if (!indexedDbAvailable()) {
+    saveDiagnostics.indexedDbMirror = "nicht verfuegbar";
+    return;
+  }
+
+  try {
+    const request = indexedDB.open(indexedDbName, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(indexedDbStoreName)) {
+        db.createObjectStore(indexedDbStoreName, { keyPath: "key" });
+      }
+    };
+    request.onsuccess = () => {
+      const db = request.result;
+      const transaction = db.transaction(indexedDbStoreName, "readwrite");
+      transaction.objectStore(indexedDbStoreName).put({
+        key,
+        value,
+        updatedAt: new Date().toISOString(),
+      });
+      transaction.oncomplete = () => {
+        saveDiagnostics.indexedDbMirror = "aktiv";
+        db.close();
+      };
+      transaction.onerror = () => {
+        saveDiagnostics.indexedDbMirror = transaction.error?.message || "Schreibfehler";
+        db.close();
+      };
+    };
+    request.onerror = () => {
+      saveDiagnostics.indexedDbMirror = request.error?.message || "blockiert";
+    };
+  } catch (error) {
+    saveDiagnostics.indexedDbMirror = error?.message || "blockiert";
+  }
+}
+
+function testIndexedDbStore() {
+  if (!indexedDbAvailable()) {
+    return { label: "IndexedDB", ok: false, message: "nicht verfuegbar" };
+  }
+
+  return {
+    label: "IndexedDB",
+    ok: true,
+    message: saveDiagnostics.indexedDbMirror || "verfuegbar",
+  };
 }
 
 function availableStorageStores() {

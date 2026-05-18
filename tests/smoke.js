@@ -295,6 +295,8 @@ vm.runInContext("state.gold = 123; save();", context);
 assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1"]).gold, 123);
 assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1-backup"]).gold, 123);
 assert(vm.runInContext("window.name.includes('fantasy-grind-save-v1')", context), "save should also be mirrored into window.name for preview reloads");
+assert(vm.runInContext("indexedDbName === 'FantasyGrindSaves' && indexedDbStoreName === 'saves'", context), "IndexedDB save mirror should use stable database names");
+assert(vm.runInContext("browserStorageStatus().indexedDB.label === 'IndexedDB' && browserStorageStatus().indexedDB.ok === false && saveDiagnostics.indexedDbMirror === 'nicht verfuegbar'", context), "IndexedDB mirror should fail softly when the browser API is unavailable");
 assert(vm.runInContext("browserStorageStatus().localStorage.ok", context), "storage diagnostics should confirm working localStorage");
 assert(vm.runInContext("parseSavedState('{broken') === null && saveDiagnostics.lastParseError.length > 0", context), "bad saves should expose a parse error for diagnostics");
 assert(
