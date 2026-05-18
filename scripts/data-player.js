@@ -37,6 +37,28 @@ const classCatalog = {
       bruiser: ["spellRush", "runeCrush", "wardCounter"],
     },
   },
+  rogue: {
+    name: "Schurke",
+    description: "Schnell, riskant und stark über Ausweichen und Finisher.",
+    statBonuses: {
+      damageMultiplier: 1.04,
+      defenseMultiplier: 0.94,
+      maxHpMultiplier: 0.94,
+      critChanceBonus: 0.05,
+      critDamageBonus: 0.22,
+    },
+    buildDescriptions: {
+      tank: "Überlebt durch Ausweichen und Blendtricks.",
+      damage: "Sehr hohe Crit-Fenster und starke Finisher.",
+      bruiser: "Kontert, heilt leicht und ignoriert Rüstung.",
+    },
+    abilities: ["adrenaline", "armorPiercer", "riposte"],
+    buildAbilities: {
+      tank: ["shadowVeil", "blindside", "lastTrick"],
+      damage: ["backstab", "dualCut", "finisher"],
+      bruiser: ["adrenaline", "armorPiercer", "riposte"],
+    },
+  },
 };
 
 const buildCatalog = {
@@ -144,5 +166,41 @@ const abilityCatalog = {
   wardCounter: {
     name: "Spiegelkonter",
     text: "Nach hartem Treffer: Konter mit 55% Schaden, höchstens alle 3 Runden.",
+  },
+  backstab: {
+    name: "Rückenstich",
+    text: "Jede 3. Runde: 168% Schaden.",
+  },
+  dualCut: {
+    name: "Doppelschnitt",
+    text: "Jede 4. Runde: ein zweiter Treffer mit 55% Schaden.",
+  },
+  finisher: {
+    name: "Finaler Stich",
+    text: "Unter 30% Gegnerleben: 160% Schaden, höchstens alle 2 Runden.",
+  },
+  shadowVeil: {
+    name: "Schattenmantel",
+    text: "Jede 4. Runde: nächster Gegentreffer -55%.",
+  },
+  blindside: {
+    name: "Blendwurf",
+    text: "Jede 3. Runde: Treffer und gegnerischer Schaden -25%.",
+  },
+  lastTrick: {
+    name: "Letzter Trick",
+    text: "Einmal unter 40% Leben: Heilung und kurze Schadensdämpfung.",
+  },
+  adrenaline: {
+    name: "Adrenalin",
+    text: "Einmal unter 45% Leben: heilt 15% Leben.",
+  },
+  armorPiercer: {
+    name: "Panzerstecher",
+    text: "Jede 3. Runde: 130% Schaden und ein Teil der Rüstung wird ignoriert.",
+  },
+  riposte: {
+    name: "Riposte",
+    text: "Nach hartem Treffer: Konter mit 60% Schaden, höchstens alle 3 Runden.",
   },
 };
