@@ -161,6 +161,11 @@ assert(vm.runInContext("state = defaultState(); renderStationFocus('smith').incl
 assert(vm.runInContext("state = defaultState(); renderStationFocus('enchant').includes('Runenrisiko') && renderStationFocus('enchant').includes('Arkane Slots')", context), "Mira station focus should describe rune risk and arcane slots");
 assert(vm.runInContext("state = defaultState(); state.language = 'en'; renderStationFocus('smith').includes('Reliable Craft') && renderStationFocus('enchant').includes('Rune Risk')", context), "station focus chips should translate to English");
 assert.strictEqual(vm.runInContext("eliteEncounterChance", context), 0.06);
+assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 20; combatRewardScale(enemies.wolf)", context), 0.35);
+assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 20; combatRewardScale(enemies.ratguard)", context), 0.6);
+assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 20; combatRewardScale(enemies.hollowChampion)", context), 1);
+assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 20; scaledCombatReward(100, enemies.wolf)", context), 35);
+assert.strictEqual(vm.runInContext("state = defaultState(); state.language = 'en'; t('combat.rewardScaledLog', 'x', { percent: 35 })", context), "Old enemies now give only 35% combat rewards.");
 assert.strictEqual(vm.runInContext("knownClassAbilities().length", context), 3);
 assert(vm.runInContext("(() => { state = defaultState(); state.language = 'en'; state.build = 'bruiser'; const text = knownClassAbilities().map(([id, ability]) => `${entityName('ability', id, ability.name)} ${entityText('ability', id, ability.text)}`).join(' | '); return text.includes('Battle Rush') && text.includes('Shatter') && text.includes('Counterblow') && !text.includes('Kampfrausch') && !text.includes('Zerschmettern') && !text.includes('Konterschlag'); })()", context), "bruiser abilities should render English names and descriptions");
 assert(vm.runInContext("state = defaultState(); state.build = 'tank'; const tankDamage = totalStats().damage; state.build = 'damage'; totalStats().damage > tankDamage", context), "damage build should deal more damage than tank");

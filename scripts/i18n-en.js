@@ -107,6 +107,7 @@ translations.en = {
         "combat.eventTone.clash": "Duel",
         "combat.eventTone.neutral": "Event",
         "combat.winLog": "Victory against {enemy} after {rounds} rounds. +{xp} XP, +{gold} Gold.",
+        "combat.rewardScaledLog": "Old enemies now give only {percent}% combat rewards.",
         "combat.lossLog": "Death against {enemy}. You lose {xp} XP, {gold} Gold and return to camp battered.",
         "combat.renownLog": "Your renown grows: +1 renown for defeating {enemy}.",
         "combat.enemyAbilityHit": "{enemy}: {ability} hits for {damage}.",

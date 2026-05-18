@@ -1709,6 +1709,19 @@ function triggeredEnemyAbility(enemy, rounds, playerHp, playerMaxHp, enemyHp) {
   }).find(Boolean);
 }
 
+function combatRewardScale(enemy) {
+  const levelGap = Math.max(0, state.level - Math.floor(enemy?.level || 0));
+  if (levelGap < 4) return 1;
+  if (enemy?.boss) return levelGap >= 8 ? 0.6 : 0.8;
+  if (levelGap >= 8) return 0.35;
+  if (levelGap >= 6) return 0.5;
+  return 0.75;
+}
+
+function scaledCombatReward(amount, enemy) {
+  return Math.max(1, Math.floor(amount * combatRewardScale(enemy)));
+}
+
 async function fight() {
   if (isFighting) return;
   const enemy = getPreparedEncounter(selectedEnemy);
@@ -2094,8 +2107,9 @@ async function fight() {
       state.hp = Math.max(1, playerHp);
       const enchantStats = equippedEnchantmentSummary();
       const goldBonus = enchantStats.goldBonus + effectSummary.goldBonus + (combatEvent?.goldBonus || 0);
-      const gold = Math.max(1, Math.floor(random(enemy.gold[0], enemy.gold[1]) * (1 + goldBonus)));
-      const xp = Math.max(1, Math.floor(enemy.xp * (1 + enchantStats.xpBonus + effectSummary.xpBonus)));
+      const rewardScale = combatRewardScale(enemy);
+      const gold = scaledCombatReward(Math.max(1, Math.floor(random(enemy.gold[0], enemy.gold[1]) * (1 + goldBonus))), enemy);
+      const xp = scaledCombatReward(Math.max(1, Math.floor(enemy.xp * (1 + enchantStats.xpBonus + effectSummary.xpBonus))), enemy);
       state.gold += gold;
       gainXp(xp);
       await loadOptionalDataPack("drops");
@@ -2111,6 +2125,11 @@ async function fight() {
       maybeDropRareQuest(enemy);
       refreshQuestBoard(false);
       log(t("combat.winLog", "Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.", { enemy: enemyName, rounds, xp, gold }), "good");
+      if (rewardScale < 1) {
+        log(t("combat.rewardScaledLog", "Alte Gegner geben nur noch {percent}% Kampfbelohnung.", {
+          percent: Math.round(rewardScale * 100),
+        }), "drop");
+      }
       if (firstClearReward) {
         log(`Erster Dungeon-Sieg: ${bossFirstClearRewardText(enemy)}.`, "drop");
       }
