@@ -928,15 +928,15 @@ function buildDescription(buildId) {
 }
 
 const classAbilityGroups = {
-  lastStand: ["lastStand", "lastSpark", "lastTrick"],
-  battleRush: ["battleRush", "spellRush", "adrenaline"],
-  armorBreak: ["shatter", "runeCrush", "armorPiercer"],
-  execute: ["execute", "spellRend", "finisher"],
-  heavy: ["heavyStrike", "arcaneBolt", "backstab"],
-  weaken: ["tauntingBlow", "frostAegis", "blindside"],
-  flurry: ["bladeFlurry", "emberNova", "dualCut"],
-  guard: ["shieldWall", "manaWard", "shadowVeil"],
-  counter: ["counterBlow", "wardCounter", "riposte"],
+  lastStand: ["lastStand", "lastSpark", "lastTrick", "survivalInstinct"],
+  battleRush: ["battleRush", "spellRush", "adrenaline", "hunterFocus"],
+  armorBreak: ["shatter", "runeCrush", "armorPiercer", "piercingArrow"],
+  execute: ["execute", "spellRend", "finisher", "heartpiercer"],
+  heavy: ["heavyStrike", "arcaneBolt", "backstab", "powerShot"],
+  weaken: ["tauntingBlow", "frostAegis", "blindside", "pinningShot"],
+  flurry: ["bladeFlurry", "emberNova", "dualCut", "rapidVolley"],
+  guard: ["shieldWall", "manaWard", "shadowVeil", "distanceGuard"],
+  counter: ["counterBlow", "wardCounter", "riposte", "snapShot"],
 };
 
 function knownClassAbilities() {
@@ -1884,13 +1884,13 @@ async function fight() {
     const heavyAbility = firstAbilityInGroup("heavy");
     const weakenAbility = firstAbilityInGroup("weaken");
     if (executeAbility && enemyHp <= enemy.hp * 0.3 && rounds - fightState.lastExecuteRound >= 2) {
-      const multiplier = executeAbility === "finisher" ? 1.6 : executeAbility === "spellRend" ? 1.55 : 1.5;
+      const multiplier = executeAbility === "finisher" ? 1.6 : ["spellRend", "heartpiercer"].includes(executeAbility) ? 1.55 : 1.5;
       playerHit = abilityDamage(basePlayerHit, multiplier);
       fightState.lastExecuteRound = rounds;
       playerAbilityId = executeAbility;
       playerText = `${abilityCombatName(executeAbility)} trifft für ${playerHit}.`;
     } else if (heavyAbility && rounds % 3 === 0) {
-      const multiplier = heavyAbility === "heavyStrike" ? 1.75 : heavyAbility === "arcaneBolt" ? 1.7 : 1.68;
+      const multiplier = heavyAbility === "heavyStrike" ? 1.75 : heavyAbility === "powerShot" ? 1.72 : heavyAbility === "arcaneBolt" ? 1.7 : 1.68;
       playerHit = abilityDamage(basePlayerHit, multiplier);
       playerAbilityId = heavyAbility;
       playerText = `${abilityCombatName(heavyAbility)} trifft für ${playerHit}.`;
@@ -2009,7 +2009,7 @@ async function fight() {
 
     const flurryAbility = firstAbilityInGroup("flurry");
     if (enemyHp > 0 && flurryAbility && rounds % 4 === 0) {
-      const multiplier = flurryAbility === "dualCut" ? 0.55 : flurryAbility === "emberNova" ? 0.5 : 0.45;
+      const multiplier = flurryAbility === "dualCut" ? 0.55 : ["emberNova", "rapidVolley"].includes(flurryAbility) ? 0.5 : 0.45;
       const flurryCrit = rollPlayerCritical(abilityDamage(basePlayerHit, multiplier), combatStats);
       const flurryHit = flurryCrit.damage;
       enemyHp -= flurryHit;
@@ -2112,7 +2112,7 @@ async function fight() {
       && rounds - fightState.lastCounterRound >= 3
     ) {
       const counterAbility = firstAbilityInGroup("counter");
-      const multiplier = counterAbility === "riposte" ? 0.6 : counterAbility === "wardCounter" ? 0.55 : 0.5;
+      const multiplier = counterAbility === "riposte" ? 0.6 : ["wardCounter", "snapShot"].includes(counterAbility) ? 0.55 : 0.5;
       const counterCrit = rollPlayerCritical(abilityDamage(basePlayerHit, multiplier), combatStats);
       const counterHit = counterCrit.damage;
       fightState.lastCounterRound = rounds;

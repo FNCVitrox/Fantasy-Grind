@@ -59,6 +59,28 @@ const classCatalog = {
       bruiser: ["adrenaline", "armorPiercer", "riposte"],
     },
   },
+  archer: {
+    name: "Bogenschütze",
+    description: "Präzise, beweglich und stark über sichere Trefferfenster.",
+    statBonuses: {
+      damageMultiplier: 1.06,
+      defenseMultiplier: 0.96,
+      maxHpMultiplier: 0.96,
+      critChanceBonus: 0.04,
+      critDamageBonus: 0.16,
+    },
+    buildDescriptions: {
+      tank: "Hält Abstand und kontrolliert Gegentreffer.",
+      damage: "Starke Schüsse und schnelle Salven.",
+      bruiser: "Jägerfokus mit Kontern und Rüstungsdruck.",
+    },
+    abilities: ["hunterFocus", "piercingArrow", "snapShot"],
+    buildAbilities: {
+      tank: ["distanceGuard", "pinningShot", "survivalInstinct"],
+      damage: ["powerShot", "rapidVolley", "heartpiercer"],
+      bruiser: ["hunterFocus", "piercingArrow", "snapShot"],
+    },
+  },
 };
 
 const buildCatalog = {
@@ -202,5 +224,41 @@ const abilityCatalog = {
   riposte: {
     name: "Riposte",
     text: "Nach hartem Treffer: Konter mit 60% Schaden, höchstens alle 3 Runden.",
+  },
+  powerShot: {
+    name: "Kraftschuss",
+    text: "Jede 3. Runde: 172% Schaden.",
+  },
+  rapidVolley: {
+    name: "Schnellfeuer",
+    text: "Jede 4. Runde: ein zweiter Treffer mit 50% Schaden.",
+  },
+  heartpiercer: {
+    name: "Herzsucher",
+    text: "Unter 30% Gegnerleben: 155% Schaden, höchstens alle 2 Runden.",
+  },
+  distanceGuard: {
+    name: "Distanzwache",
+    text: "Jede 4. Runde: nächster Gegentreffer -55%.",
+  },
+  pinningShot: {
+    name: "Festnageln",
+    text: "Jede 3. Runde: Treffer und gegnerischer Schaden -25%.",
+  },
+  survivalInstinct: {
+    name: "Überlebensinstinkt",
+    text: "Einmal unter 40% Leben: Heilung und kurze Schadensdämpfung.",
+  },
+  hunterFocus: {
+    name: "Jägerfokus",
+    text: "Einmal unter 45% Leben: heilt 15% Leben.",
+  },
+  piercingArrow: {
+    name: "Durchschlagspfeil",
+    text: "Jede 3. Runde: 130% Schaden und ein Teil der Rüstung wird ignoriert.",
+  },
+  snapShot: {
+    name: "Reaktionsschuss",
+    text: "Nach hartem Treffer: Konter mit 55% Schaden, höchstens alle 3 Runden.",
   },
 };
