@@ -736,15 +736,16 @@ function totalStats() {
   const enchantStats = equippedEnchantmentSummary();
   const setStats = activeSetBonusStats();
   const build = activeBuild();
+  const classStats = activeClass().statBonuses || {};
   const baseDamage = 7 + state.level * 2.25 + itemDamage + setStats.damage + enchantStats.damage;
   const baseDefense = 2 + state.level * 1.45 + itemDefense + setStats.defense + enchantStats.defense;
   const baseHp = 90 + state.level * 6.5 + setStats.maxHp + enchantStats.maxHp;
   return {
-    damage: Math.floor(baseDamage * (build.damageMultiplier || 1)),
-    defense: Math.floor(baseDefense * (build.defenseMultiplier || 1)),
-    maxHp: Math.floor(baseHp * (build.maxHpMultiplier || 1)),
-    critChance: Math.min(0.65, 0.05 + itemCritChance + enchantStats.critChance + (build.critChanceBonus || 0)),
-    critDamage: Math.min(3.2, 1.5 + itemCritDamage + enchantStats.critDamage + (build.critDamageBonus || 0)),
+    damage: Math.floor(baseDamage * (classStats.damageMultiplier || 1) * (build.damageMultiplier || 1)),
+    defense: Math.floor(baseDefense * (classStats.defenseMultiplier || 1) * (build.defenseMultiplier || 1)),
+    maxHp: Math.floor(baseHp * (classStats.maxHpMultiplier || 1) * (build.maxHpMultiplier || 1)),
+    critChance: Math.min(0.65, 0.05 + itemCritChance + enchantStats.critChance + (classStats.critChanceBonus || 0) + (build.critChanceBonus || 0)),
+    critDamage: Math.min(3.2, 1.5 + itemCritDamage + enchantStats.critDamage + (classStats.critDamageBonus || 0) + (build.critDamageBonus || 0)),
   };
 }
 
@@ -920,6 +921,12 @@ function activeBuild() {
   return buildCatalog[state.build] || buildCatalog.damage;
 }
 
+function buildDescription(buildId) {
+  const build = buildCatalog[buildId] || buildCatalog.damage;
+  const fallback = activeClass().buildDescriptions?.[buildId] || build.description;
+  return t(`classBuild.${state.characterClass}.${buildId}.text`, fallback);
+}
+
 function knownClassAbilities() {
   return activeBuildAbilityIds().map((id) => [id, abilityCatalog[id]]).filter(([, ability]) => ability);
 }
@@ -927,11 +934,26 @@ function knownClassAbilities() {
 function activeBuildAbilityIds() {
   const build = activeBuild();
   const active = activeClass();
-  return build.abilities || active.buildAbilities?.[state.build] || active.abilities || [];
+  return active.buildAbilities?.[state.build] || build.abilities || active.abilities || [];
 }
 
 function hasBuildAbility(id) {
   return activeBuildAbilityIds().includes(id);
+}
+
+function firstKnownAbility(ids) {
+  return ids.find((id) => hasBuildAbility(id)) || "";
+}
+
+function setCharacterClass(classId) {
+  if (!classCatalog[classId] || state.characterClass === classId) return;
+  const hpRatio = state.maxHp > 0 ? state.hp / state.maxHp : 1;
+  state.characterClass = classId;
+  syncDerivedStats();
+  state.hp = Math.max(1, Math.min(state.maxHp, Math.floor(state.maxHp * hpRatio)));
+  log(t("class.changed", "Klasse gewechselt: {class}.", { class: entityName("class", classId, classCatalog[classId].name) }), "drop");
+  save();
+  render();
 }
 
 function setBuild(buildId) {
@@ -1802,24 +1824,32 @@ async function fight() {
       if (enemyHp <= 0) break;
     }
 
-    if (!fightState.sustainUsed && hasBuildAbility("lastStand") && playerHp <= combatStats.maxHp * 0.4) {
+    const lastStandAbility = firstKnownAbility(["lastStand", "lastSpark"]);
+    const battleRushAbility = firstKnownAbility(["battleRush", "spellRush"]);
+    if (!fightState.sustainUsed && lastStandAbility && playerHp <= combatStats.maxHp * 0.4) {
       const heal = Math.min(combatStats.maxHp - playerHp, Math.max(8, Math.floor(combatStats.maxHp * 0.14)));
       if (heal > 0) {
         playerHp += heal;
         fightState.sustainUsed = true;
         fightState.nextEnemyDamageMultiplier = Math.min(fightState.nextEnemyDamageMultiplier, 0.85);
-        events.push({ round: rounds, actor: "hero", abilityId: "lastStand", damage: 0, text: `Letztes Aufbäumen heilt ${heal} Leben und festigt die Deckung.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
+        const text = lastStandAbility === "lastSpark"
+          ? `Letzter Funke heilt ${heal} Leben und legt einen Manaschleier.`
+          : `Letztes Aufbäumen heilt ${heal} Leben und festigt die Deckung.`;
+        events.push({ round: rounds, actor: "hero", abilityId: lastStandAbility, damage: 0, text, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
       }
-    } else if (!fightState.sustainUsed && hasBuildAbility("battleRush") && playerHp <= combatStats.maxHp * 0.45) {
-      const heal = Math.min(combatStats.maxHp - playerHp, Math.max(8, Math.floor(combatStats.maxHp * 0.18)));
+    } else if (!fightState.sustainUsed && battleRushAbility && playerHp <= combatStats.maxHp * 0.45) {
+      const healRatio = battleRushAbility === "spellRush" ? 0.16 : 0.18;
+      const heal = Math.min(combatStats.maxHp - playerHp, Math.max(8, Math.floor(combatStats.maxHp * healRatio)));
       if (heal > 0) {
         playerHp += heal;
         fightState.sustainUsed = true;
-        events.push({ round: rounds, actor: "hero", abilityId: "battleRush", damage: 0, text: `Kampfrausch heilt ${heal} Leben.`, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
+        const text = battleRushAbility === "spellRush" ? `Runenrausch heilt ${heal} Leben.` : `Kampfrausch heilt ${heal} Leben.`;
+        events.push({ round: rounds, actor: "hero", abilityId: battleRushAbility, damage: 0, text, playerHp: Math.max(0, playerHp), enemyHp: Math.max(0, enemyHp) });
       }
     }
 
-    const shatter = hasBuildAbility("shatter") && rounds % 3 === 0;
+    const shatterAbility = firstKnownAbility(["shatter", "runeCrush"]);
+    const shatter = shatterAbility && rounds % 3 === 0;
     const armorIgnore = shatter ? Math.floor(enemy.defense * 0.45) : 0;
     const effectArmorIgnore = (enemy.elite || enemy.boss) ? Math.floor(enemy.defense * effectSummary.eliteArmorIgnore) : 0;
     const effectiveDefense = Math.max(0, enemy.defense - armorIgnore - effectArmorIgnore);
@@ -1831,23 +1861,30 @@ async function fight() {
     let playerText = `Du triffst für ${playerHit}.`;
     let playerAbilityId = "";
 
-    if (hasBuildAbility("execute") && enemyHp <= enemy.hp * 0.3 && rounds - fightState.lastExecuteRound >= 2) {
-      playerHit = abilityDamage(basePlayerHit, 1.5);
+    const executeAbility = firstKnownAbility(["execute", "spellRend"]);
+    const heavyAbility = firstKnownAbility(["heavyStrike", "arcaneBolt"]);
+    const weakenAbility = firstKnownAbility(["tauntingBlow", "frostAegis"]);
+    if (executeAbility && enemyHp <= enemy.hp * 0.3 && rounds - fightState.lastExecuteRound >= 2) {
+      playerHit = abilityDamage(basePlayerHit, executeAbility === "spellRend" ? 1.55 : 1.5);
       fightState.lastExecuteRound = rounds;
-      playerAbilityId = "execute";
-      playerText = `Hinrichten trifft für ${playerHit}.`;
-    } else if (hasBuildAbility("heavyStrike") && rounds % 3 === 0) {
-      playerHit = abilityDamage(basePlayerHit, 1.75);
-      playerAbilityId = "heavyStrike";
-      playerText = `Schwerer Hieb trifft für ${playerHit}.`;
+      playerAbilityId = executeAbility;
+      playerText = executeAbility === "spellRend" ? `Risszauber trifft für ${playerHit}.` : `Hinrichten trifft für ${playerHit}.`;
+    } else if (heavyAbility && rounds % 3 === 0) {
+      playerHit = abilityDamage(basePlayerHit, heavyAbility === "arcaneBolt" ? 1.7 : 1.75);
+      playerAbilityId = heavyAbility;
+      playerText = heavyAbility === "arcaneBolt" ? `Arkaner Schlag trifft für ${playerHit}.` : `Schwerer Hieb trifft für ${playerHit}.`;
     } else if (shatter) {
       playerHit = abilityDamage(basePlayerHit, 1.3);
-      playerAbilityId = "shatter";
-      playerText = `Zerschmettern bricht die Deckung und trifft für ${playerHit}.`;
-    } else if (hasBuildAbility("tauntingBlow") && rounds % 3 === 0) {
+      playerAbilityId = shatterAbility;
+      playerText = shatterAbility === "runeCrush"
+        ? `Runenbruch reißt die Deckung auf und trifft für ${playerHit}.`
+        : `Zerschmettern bricht die Deckung und trifft für ${playerHit}.`;
+    } else if (weakenAbility && rounds % 3 === 0) {
       fightState.nextEnemyDamageMultiplier = Math.min(fightState.nextEnemyDamageMultiplier, 0.75);
-      playerAbilityId = "tauntingBlow";
-      playerText = `Spottender Schlag trifft für ${playerHit} und schwächt den Konter.`;
+      playerAbilityId = weakenAbility;
+      playerText = weakenAbility === "frostAegis"
+        ? `Frostaegis trifft für ${playerHit} und kühlt den Konter.`
+        : `Spottender Schlag trifft für ${playerHit} und schwächt den Konter.`;
     }
 
     if (fightState.playerDamageMultiplier < 1) {
@@ -1953,27 +1990,29 @@ async function fight() {
       });
     }
 
-    if (enemyHp > 0 && hasBuildAbility("bladeFlurry") && rounds % 4 === 0) {
-      const flurryCrit = rollPlayerCritical(abilityDamage(basePlayerHit, 0.45), combatStats);
+    const flurryAbility = firstKnownAbility(["bladeFlurry", "emberNova"]);
+    if (enemyHp > 0 && flurryAbility && rounds % 4 === 0) {
+      const flurryCrit = rollPlayerCritical(abilityDamage(basePlayerHit, flurryAbility === "emberNova" ? 0.5 : 0.45), combatStats);
       const flurryHit = flurryCrit.damage;
       enemyHp -= flurryHit;
       events.push({
         round: rounds,
         actor: "hero",
-        abilityId: "bladeFlurry",
+        abilityId: flurryAbility,
         damage: flurryHit,
         critical: flurryCrit.critical,
         enemyHp: Math.max(0, enemyHp),
         playerHp: Math.max(0, playerHp),
         text: flurryCrit.critical
-          ? `Klingenserie trifft zusätzlich kritisch für ${flurryHit}.`
-          : `Klingenserie trifft zusätzlich für ${flurryHit}.`,
+          ? `${flurryAbility === "emberNova" ? "Glutnova" : "Klingenserie"} trifft zusätzlich kritisch für ${flurryHit}.`
+          : `${flurryAbility === "emberNova" ? "Glutnova" : "Klingenserie"} trifft zusätzlich für ${flurryHit}.`,
       });
     }
 
     if (enemyHp <= 0) break;
 
-    const shieldWall = hasBuildAbility("shieldWall") && rounds % 4 === 0;
+    const guardAbility = firstKnownAbility(["shieldWall", "manaWard"]);
+    const shieldWall = guardAbility && rounds % 4 === 0;
     const enemyBaseHit = enemyBaseDamageAfterDefense(enemy, combatStats.defense);
     const enemyAbility = triggeredEnemyAbility(enemy, rounds, playerHp, combatStats.maxHp, enemyHp);
     const enemyDamageMultiplier = shieldWall
@@ -1994,7 +2033,9 @@ async function fight() {
     enemyHit = enemyCrit.damage;
     fightState.nextEnemyDamageMultiplier = 1;
     playerHp -= enemyHit;
-    let enemyText = shieldWall ? `Schildwall dämpft den Treffer auf ${enemyHit}.` : `${enemyName} trifft für ${enemyHit}.`;
+    let enemyText = shieldWall
+      ? `${guardAbility === "manaWard" ? "Manawall" : "Schildwall"} dämpft den Treffer auf ${enemyHit}.`
+      : `${enemyName} trifft für ${enemyHit}.`;
     if (enemyAbility) {
       const ability = enemyAbilityCatalog[enemyAbility.id];
       enemyText = t("combat.enemyAbilityHit", "{enemy}: {ability} trifft für {damage}.", {
@@ -2024,7 +2065,7 @@ async function fight() {
     events.push({
       round: rounds,
       actor: "enemy",
-      abilityId: shieldWall ? "shieldWall" : "",
+      abilityId: shieldWall ? guardAbility : "",
       damage: enemyHit,
       critical: enemyCrit.critical,
       enemyHp: Math.max(0, enemyHp),
@@ -2048,25 +2089,26 @@ async function fight() {
     if (
       playerHp > 0
       && enemyHp > 0
-      && hasBuildAbility("counterBlow")
+      && firstKnownAbility(["counterBlow", "wardCounter"])
       && (enemyCrit.critical || enemyBaseHit >= Math.max(10, combatStats.maxHp * 0.12))
       && rounds - fightState.lastCounterRound >= 3
     ) {
-      const counterCrit = rollPlayerCritical(abilityDamage(basePlayerHit, 0.5), combatStats);
+      const counterAbility = firstKnownAbility(["counterBlow", "wardCounter"]);
+      const counterCrit = rollPlayerCritical(abilityDamage(basePlayerHit, counterAbility === "wardCounter" ? 0.55 : 0.5), combatStats);
       const counterHit = counterCrit.damage;
       fightState.lastCounterRound = rounds;
       enemyHp -= counterHit;
       events.push({
         round: rounds,
         actor: "hero",
-        abilityId: "counterBlow",
+        abilityId: counterAbility,
         damage: counterHit,
         critical: counterCrit.critical,
         enemyHp: Math.max(0, enemyHp),
         playerHp: Math.max(0, playerHp),
         text: counterCrit.critical
-          ? `Konterschlag antwortet kritisch für ${counterHit}.`
-          : `Konterschlag antwortet für ${counterHit}.`,
+          ? `${counterAbility === "wardCounter" ? "Spiegelkonter" : "Konterschlag"} antwortet kritisch für ${counterHit}.`
+          : `${counterAbility === "wardCounter" ? "Spiegelkonter" : "Konterschlag"} antwortet für ${counterHit}.`,
       });
     }
   }
@@ -3803,14 +3845,14 @@ function expectedPlayerDamagePerRound(enemy, stats, effectSummary = itemEffectSu
 
 function playerAbilityDamageMultiplier(enemy) {
   let multiplier = 1;
-  if (hasBuildAbility("heavyStrike")) multiplier += 0.75 / 3;
-  if (hasBuildAbility("bladeFlurry")) multiplier += 0.45 / 4;
-  if (hasBuildAbility("execute")) multiplier += 0.15;
-  if (hasBuildAbility("shatter")) {
+  if (firstKnownAbility(["heavyStrike", "arcaneBolt"])) multiplier += 0.72 / 3;
+  if (firstKnownAbility(["bladeFlurry", "emberNova"])) multiplier += 0.48 / 4;
+  if (firstKnownAbility(["execute", "spellRend"])) multiplier += 0.15;
+  if (firstKnownAbility(["shatter", "runeCrush"])) {
     const armorValue = enemy.defense > 0 ? Math.min(0.25, enemy.defense / Math.max(12, enemy.defense + state.level * 3)) : 0;
     multiplier += (0.3 + armorValue) / 3;
   }
-  if (hasBuildAbility("counterBlow")) multiplier += 0.08;
+  if (firstKnownAbility(["counterBlow", "wardCounter"])) multiplier += 0.085;
   return multiplier;
 }
 
@@ -3942,19 +3984,19 @@ function enemyDotDamagePerRound(enemy) {
 
 function playerDefensiveAbilityMultiplier(stats) {
   let multiplier = 1;
-  if (hasBuildAbility("shieldWall")) multiplier *= 0.9;
-  if (hasBuildAbility("tauntingBlow")) multiplier *= 0.94;
-  if (hasBuildAbility("lastStand")) multiplier *= 0.93;
-  if (hasBuildAbility("battleRush")) multiplier *= 0.97;
+  if (firstKnownAbility(["shieldWall", "manaWard"])) multiplier *= 0.9;
+  if (firstKnownAbility(["tauntingBlow", "frostAegis"])) multiplier *= 0.94;
+  if (firstKnownAbility(["lastStand", "lastSpark"])) multiplier *= 0.93;
+  if (firstKnownAbility(["battleRush", "spellRush"])) multiplier *= 0.97;
   return multiplier;
 }
 
 function expectedPlayerEffectiveHp(enemy, stats, effectSummary = itemEffectSummary()) {
   const enchantStats = equippedEnchantmentSummary();
   let hp = Math.max(1, state.hp || stats.maxHp);
-  if (hasBuildAbility("battleRush")) hp += stats.maxHp * 0.18;
-  if (hasBuildAbility("lastStand")) hp += stats.maxHp * 0.14;
-  if (hasBuildAbility("shieldWall")) hp += stats.maxHp * 0.08;
+  if (firstKnownAbility(["battleRush", "spellRush"])) hp += stats.maxHp * 0.17;
+  if (firstKnownAbility(["lastStand", "lastSpark"])) hp += stats.maxHp * 0.14;
+  if (firstKnownAbility(["shieldWall", "manaWard"])) hp += stats.maxHp * 0.08;
   if (effectSummary.firstHitReduction > 0) hp += stats.maxHp * 0.04;
   if (effectSummary.postCombatHeal > 0) hp += stats.maxHp * Math.min(0.12, effectSummary.postCombatHeal);
   if (enchantStats.lowHpShield > 0) hp += stats.maxHp * Math.min(0.18, enchantStats.lowHpShield);

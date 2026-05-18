@@ -314,6 +314,10 @@ $("buildList").addEventListener("click", (event) => {
   const button = event.target.closest("[data-build]");
   if (button) setBuild(button.dataset.build);
 });
+$("classList").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-character-class]");
+  if (button) setCharacterClass(button.dataset.characterClass);
+});
 $("sellAllBtn").addEventListener("click", sellAllInventoryItems);
 $("salvageAllBtn").addEventListener("click", salvageAllInventoryItems);
 $("openBestiaryBtn").addEventListener("click", async () => {
@@ -418,6 +422,11 @@ $("equipmentModal").addEventListener("click", (event) => {
 });
 $("closePlayerStatsBtn").addEventListener("click", closePlayerStats);
 $("playerStatsDetails").addEventListener("click", (event) => {
+  const classButton = event.target.closest("[data-character-class]");
+  if (classButton) {
+    setCharacterClass(classButton.dataset.characterClass);
+    return;
+  }
   const button = event.target.closest("[data-build]");
   if (button) setBuild(button.dataset.build);
 });

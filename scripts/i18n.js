@@ -64,6 +64,7 @@ const translations = {
         "common.load": "laden",
         "main.equipment": "Ausrüstung",
         "main.belt": "Gürtel",
+        "main.class": "Klasse",
         "main.build": "Build",
         "main.abilities": "Fähigkeiten",
         "main.target": "Ziel",
@@ -77,6 +78,7 @@ const translations = {
         "main.setBonuses": "Set-Boni",
         "main.noSetBonus": "Kein aktiver Set-Bonus",
         "main.total": "Gesamt",
+        "class.changed": "Klasse gewechselt: {class}.",
         "build.changed": "Build gewechselt: {build}.",
         "combat.start": "Kampf starten",
         "combat.skip": "Skip",
@@ -232,6 +234,15 @@ const translations = {
         "material.graveSeal": "Grabessiegel",
         "material.crownAsh": "Kronenasche",
         "class.warrior.name": "Krieger",
+        "class.warrior.text": "Standhaft, direkt und stark mit Waffen.",
+        "class.mage.name": "Magier",
+        "class.mage.text": "Arkan, zerbrechlich und stark über Zauberfenster.",
+        "classBuild.warrior.tank.text": "Mehr Leben und Verteidigung. Schildwall ist stärker.",
+        "classBuild.warrior.damage.text": "Mehr Schaden, aber etwas weniger Leben.",
+        "classBuild.warrior.bruiser.text": "Ausgewogen. Kampfrausch heilt stärker.",
+        "classBuild.mage.tank.text": "Arkane Barrieren statt schwerer Rüstung.",
+        "classBuild.mage.damage.text": "Hohe Zauberspitzen, aber sehr verwundbar.",
+        "classBuild.mage.bruiser.text": "Runenfluss heilt und kontert mit Magie.",
         "build.tank.name": "Tank",
         "build.tank.text": "Mehr Leben und Verteidigung. Schildwall ist stärker.",
         "build.damage.name": "Schaden",
@@ -262,6 +273,24 @@ const translations = {
         "ability.crushingBlow.text": "Jede 3. Runde: 130% Schaden und ein Teil der Rüstung wird ignoriert.",
         "ability.counterStrike.name": "Konterschlag",
         "ability.counterStrike.text": "Nach hartem Treffer: Konter mit 50% Schaden, höchstens alle 3 Runden.",
+        "ability.arcaneBolt.name": "Arkaner Schlag",
+        "ability.arcaneBolt.text": "Jede 3. Runde: 170% Zauberschaden.",
+        "ability.emberNova.name": "Glutnova",
+        "ability.emberNova.text": "Jede 4. Runde: ein zweiter Treffer mit 50% Schaden.",
+        "ability.spellRend.name": "Risszauber",
+        "ability.spellRend.text": "Unter 30% Gegnerleben: 155% Schaden, höchstens alle 2 Runden.",
+        "ability.manaWard.name": "Manawall",
+        "ability.manaWard.text": "Jede 4. Runde: nächster Gegentreffer -55%.",
+        "ability.frostAegis.name": "Frostaegis",
+        "ability.frostAegis.text": "Jede 3. Runde: Treffer und gegnerischer Schaden -25%.",
+        "ability.lastSpark.name": "Letzter Funke",
+        "ability.lastSpark.text": "Einmal unter 40% Leben: Heilung und kurze Schadensdämpfung.",
+        "ability.spellRush.name": "Runenrausch",
+        "ability.spellRush.text": "Einmal unter 45% Leben: heilt 16% Leben.",
+        "ability.runeCrush.name": "Runenbruch",
+        "ability.runeCrush.text": "Jede 3. Runde: 130% Schaden und ein Teil der Rüstung wird ignoriert.",
+        "ability.wardCounter.name": "Spiegelkonter",
+        "ability.wardCounter.text": "Nach hartem Treffer: Konter mit 55% Schaden, höchstens alle 3 Runden.",
         "zone.normalZones": "Gebiete",
         "zone.dungeons": "Dungeons",
         "zone.switch": "Wechseln",
@@ -1229,8 +1258,9 @@ function applyStaticTranslations() {
     setStaticText(".character-status div:nth-child(1) span", "common.level");
     setStaticText(".character-status div:nth-child(2) span", "common.gold");
     setStaticText(".character-status div:nth-child(3) span", "common.renown");
-    setStaticText(".class-card > div:nth-child(1) h3", "main.build");
-    setStaticText(".class-card > div:nth-child(2) h3", "main.abilities");
+    setStaticText("#classSectionTitle", "main.class");
+    setStaticText("#buildSectionTitle", "main.build");
+    setStaticText("#abilitiesSectionTitle", "main.abilities");
     setStaticText(".equipment-belt .eyebrow", "main.equipment");
     setStaticText(".equipment-belt h2", "main.belt");
     setStaticText(".target-card .eyebrow", "main.target");

@@ -138,6 +138,7 @@ for (const token of spriteTokens) {
 for (const build of ["tank", "damage", "bruiser"]) {
   assert(css.includes(`.hero-build-${build}`), `Missing hero build sprite CSS: ${build}`);
 }
+assert(css.includes(".class-list"), "class selector should have dedicated layout CSS");
 assert(css.includes(".smith-avatar::before") && css.includes(".enchant-avatar::after"), "Borin and Mira avatars should have detailed CSS silhouettes");
 assert(vm.runInContext("state = defaultState(); questAvailable(getQuestById('wolves')) && !questAvailable(getQuestById('fields'))", context), "early quest board should only offer reachable quest targets");
 assert(vm.runInContext("state.level = 9; state.renown = 8; selectedZone = 'fields'; questAvailable(getQuestById('fields'))", context), "field quests should unlock when the field zone is selected");
@@ -167,6 +168,12 @@ assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 20; co
 assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 20; scaledCombatReward(100, enemies.wolf)", context), 35);
 assert.strictEqual(vm.runInContext("state = defaultState(); state.language = 'en'; t('combat.rewardScaledLog', 'x', { percent: 35 })", context), "Old enemies now give only 35% combat rewards.");
 assert.strictEqual(vm.runInContext("knownClassAbilities().length", context), 3);
+assert(vm.runInContext("classCatalog.mage && Object.keys(classCatalog.mage.buildAbilities).length === 3", context), "mage class should ship with three build paths");
+assert(vm.runInContext("state = defaultState(); state.characterClass = 'mage'; state.build = 'damage'; knownClassAbilities().map(([id]) => id).join(',') === 'arcaneBolt,emberNova,spellRend'", context), "mage damage build should expose spell damage abilities");
+assert(vm.runInContext("state = defaultState(); const warriorDamage = totalStats().damage; state.characterClass = 'mage'; totalStats().damage > warriorDamage && totalStats().maxHp < defaultState().maxHp", context), "mage class should trade health for spell pressure");
+assert(vm.runInContext("renderLog = () => {}; render = () => {}; state = defaultState(); syncDerivedStats(); state.hp = Math.floor(state.maxHp / 2); setCharacterClass('mage'); state.characterClass === 'mage' && state.hp < state.maxHp && state.hp >= Math.floor(state.maxHp / 2) - 1", context), "class changes should preserve current health ratio");
+assert(vm.runInContext("state = defaultState(); state.language = 'en'; state.characterClass = 'mage'; entityName('class', 'mage', classCatalog.mage.name) === 'Mage' && buildDescription('damage').includes('spell spikes') && entityName('ability', 'arcaneBolt', abilityCatalog.arcaneBolt.name) === 'Arcane Strike'", context), "mage class, build descriptions and abilities should translate to English");
+assert(vm.runInContext("state = defaultState(); state.characterClass = 'mage'; state.build = 'bruiser'; hasBuildAbility('wardCounter') && playerAbilityDamageMultiplier(enemies.wolf) > 1", context), "mage bruiser abilities should feed combat estimates");
 assert(vm.runInContext("(() => { state = defaultState(); state.language = 'en'; state.build = 'bruiser'; const text = knownClassAbilities().map(([id, ability]) => `${entityName('ability', id, ability.name)} ${entityText('ability', id, ability.text)}`).join(' | '); return text.includes('Battle Rush') && text.includes('Shatter') && text.includes('Counterblow') && !text.includes('Kampfrausch') && !text.includes('Zerschmettern') && !text.includes('Konterschlag'); })()", context), "bruiser abilities should render English names and descriptions");
 assert(vm.runInContext("state = defaultState(); state.build = 'tank'; const tankDamage = totalStats().damage; state.build = 'damage'; totalStats().damage > tankDamage", context), "damage build should deal more damage than tank");
 assert(vm.runInContext("state = defaultState(); state.build = 'damage'; totalStats().critChance > 0.1 && totalStats().critDamage > 1.7", context), "damage build should improve critical stats");

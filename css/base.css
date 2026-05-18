@@ -421,6 +421,10 @@ h2 {
   gap: 6px;
 }
 
+.class-list {
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+}
+
 .build-list button {
   min-height: 58px;
   display: grid;

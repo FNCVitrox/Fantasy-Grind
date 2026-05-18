@@ -2,11 +2,39 @@ const classCatalog = {
   warrior: {
     name: "Krieger",
     description: "Standhaft, direkt und stark mit Waffen.",
+    statBonuses: {},
+    buildDescriptions: {
+      tank: "Mehr Leben und Verteidigung. Schildwall ist stärker.",
+      damage: "Mehr Schaden, aber etwas weniger Leben.",
+      bruiser: "Ausgewogen. Kampfrausch heilt stärker.",
+    },
     abilities: ["battleRush", "shatter", "counterBlow"],
     buildAbilities: {
       tank: ["shieldWall", "tauntingBlow", "lastStand"],
       damage: ["heavyStrike", "bladeFlurry", "execute"],
       bruiser: ["battleRush", "shatter", "counterBlow"],
+    },
+  },
+  mage: {
+    name: "Magier",
+    description: "Arkan, zerbrechlich und stark über Zauberfenster.",
+    statBonuses: {
+      damageMultiplier: 1.08,
+      defenseMultiplier: 0.9,
+      maxHpMultiplier: 0.9,
+      critChanceBonus: 0.03,
+      critDamageBonus: 0.18,
+    },
+    buildDescriptions: {
+      tank: "Arkane Barrieren statt schwerer Rüstung.",
+      damage: "Hohe Zauberspitzen, aber sehr verwundbar.",
+      bruiser: "Runenfluss heilt und kontert mit Magie.",
+    },
+    abilities: ["spellRush", "runeCrush", "wardCounter"],
+    buildAbilities: {
+      tank: ["manaWard", "frostAegis", "lastSpark"],
+      damage: ["arcaneBolt", "emberNova", "spellRend"],
+      bruiser: ["spellRush", "runeCrush", "wardCounter"],
     },
   },
 };
@@ -80,5 +108,41 @@ const abilityCatalog = {
   counterBlow: {
     name: "Konterschlag",
     text: "Nach hartem Treffer: Konter mit 50% Schaden, höchstens alle 3 Runden.",
+  },
+  arcaneBolt: {
+    name: "Arkaner Schlag",
+    text: "Jede 3. Runde: 170% Zauberschaden.",
+  },
+  emberNova: {
+    name: "Glutnova",
+    text: "Jede 4. Runde: ein zweiter Treffer mit 50% Schaden.",
+  },
+  spellRend: {
+    name: "Risszauber",
+    text: "Unter 30% Gegnerleben: 155% Schaden, höchstens alle 2 Runden.",
+  },
+  manaWard: {
+    name: "Manawall",
+    text: "Jede 4. Runde: nächster Gegentreffer -55%.",
+  },
+  frostAegis: {
+    name: "Frostaegis",
+    text: "Jede 3. Runde: Treffer und gegnerischer Schaden -25%.",
+  },
+  lastSpark: {
+    name: "Letzter Funke",
+    text: "Einmal unter 40% Leben: Heilung und kurze Schadensdämpfung.",
+  },
+  spellRush: {
+    name: "Runenrausch",
+    text: "Einmal unter 45% Leben: heilt 16% Leben.",
+  },
+  runeCrush: {
+    name: "Runenbruch",
+    text: "Jede 3. Runde: 130% Schaden und ein Teil der Rüstung wird ignoriert.",
+  },
+  wardCounter: {
+    name: "Spiegelkonter",
+    text: "Nach hartem Treffer: Konter mit 55% Schaden, höchstens alle 3 Runden.",
   },
 };
