@@ -174,6 +174,8 @@ assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 20; co
 assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 20; combatRewardScale(enemies.hollowChampion)", context), 1);
 assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 20; scaledCombatReward(100, enemies.wolf)", context), 35);
 assert.strictEqual(vm.runInContext("state = defaultState(); state.language = 'en'; t('combat.rewardScaledLog', 'x', { percent: 35 })", context), "Old enemies now give only 35% combat rewards.");
+assert(vm.runInContext("state = defaultState(); state.level = 20; renderSelectedEnemyMeta(enemies.wolf).includes('35% XP/Gold')", context), "low-level enemies should show reduced rewards before combat");
+assert(vm.runInContext("state = defaultState(); state.level = 20; state.language = 'en'; renderSelectedEnemyMeta(enemies.wolf).includes('level gap')", context), "reduced reward hint should translate to English");
 assert.strictEqual(vm.runInContext("knownClassAbilities().length", context), 3);
 assert(vm.runInContext("['warrior', 'mage', 'rogue', 'archer'].every((id) => classCatalog[id] && Object.keys(classCatalog[id].buildAbilities).length === 3)", context), "playable classes should ship with three build paths");
 assert(vm.runInContext("state = defaultState(); state.characterClass = 'mage'; state.build = 'damage'; knownClassAbilities().map(([id]) => id).join(',') === 'arcaneBolt,emberNova,spellRend'", context), "mage damage build should expose spell damage abilities");

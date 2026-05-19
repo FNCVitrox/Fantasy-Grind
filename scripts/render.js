@@ -543,7 +543,8 @@ function renderSelectedEnemy() {
 }
 
 function renderSelectedEnemyMeta(enemy, enemyId = selectedEnemy) {
-  if (!enemy?.boss) return "";
+  const rewardScaleMeta = renderRewardScaleMeta(enemy);
+  if (!enemy?.boss) return rewardScaleMeta;
   const drops = (enemy.drops || []).map((drop) => {
     const item = getItem(drop.id);
     const quality = itemQuality(item);
@@ -553,10 +554,18 @@ function renderSelectedEnemyMeta(enemy, enemyId = selectedEnemy) {
   const reward = bossFirstClearRewardText(enemy);
   const pity = bossDropPityText(enemy.baseId || enemyId);
   return `
+    ${rewardScaleMeta}
     <span class="boss-meta-row"><b>${t("bestiary.bossLoot", "Bossbeute")}</b>${drops || `<span>${t("bestiary.noBossLoot", "Keine feste Bossbeute")}</span>`}</span>
     <span class="boss-meta-row"><b>${t("bestiary.bossDropPity", "Beutedruck")}</b>${escapeHtml(pity)}</span>
     <span class="boss-meta-row ${claimed ? "claimed" : ""}"><b>${claimed ? t("bestiary.firstWinClaimed", "Erster Sieg geholt") : t("bestiary.firstWin", "Erster Sieg")}</b>${escapeHtml(reward || t("bestiary.noSpecialReward", "Keine Sonderbelohnung"))}</span>
   `;
+}
+
+function renderRewardScaleMeta(enemy) {
+  const scale = combatRewardScale(enemy);
+  if (scale >= 1) return "";
+  const percent = Math.round(scale * 100);
+  return `<span class="target-meta-row reward-scaled"><b>${t("combat.rewardScale", "Belohnung")}</b>${escapeHtml(t("combat.rewardScaleText", "{percent}% XP/Gold wegen Levelabstand.", { percent }))}</span>`;
 }
 
 function bossDropPitySignature() {

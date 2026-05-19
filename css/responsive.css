@@ -509,6 +509,7 @@
     width: 100%;
   }
 
+  .target-meta-row,
   .boss-meta-row {
     gap: 4px;
     font-size: 11px;

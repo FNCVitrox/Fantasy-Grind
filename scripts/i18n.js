@@ -121,6 +121,8 @@ const translations = {
         "combat.eventTone.neutral": "Event",
         "combat.winLog": "Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.",
         "combat.rewardScaledLog": "Alte Gegner geben nur noch {percent}% Kampfbelohnung.",
+        "combat.rewardScale": "Belohnung",
+        "combat.rewardScaleText": "{percent}% XP/Gold wegen Levelabstand.",
         "combat.lossLog": "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.",
         "combat.renownLog": "Dein Ruf wächst: +1 Ruhm für den Sieg gegen {enemy}.",
         "combat.enemyAbilityHit": "{enemy}: {ability} trifft für {damage}.",

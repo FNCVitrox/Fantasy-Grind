@@ -2669,6 +2669,7 @@ button.drop-row span:last-child {
   cursor: not-allowed;
 }
 
+.target-meta-row,
 .boss-meta-row {
   display: flex;
   flex-wrap: wrap;
@@ -2678,8 +2679,17 @@ button.drop-row span:last-child {
   font-size: 12px;
 }
 
+.target-meta-row b,
 .boss-meta-row b {
   color: var(--gold);
+}
+
+.target-meta-row.reward-scaled {
+  color: #f3b08a;
+}
+
+.target-meta-row.reward-scaled b {
+  color: #f2c14e;
 }
 
 .boss-meta-row.claimed b {
