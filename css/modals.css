@@ -2635,6 +2635,40 @@ button.drop-row span:last-child {
   display: none;
 }
 
+.combat-mode-toggle {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(78px, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(74, 113, 145, 0.66);
+  border-radius: 8px;
+  background: rgba(7, 17, 27, 0.68);
+}
+
+.combat-mode-toggle button {
+  min-height: 34px;
+  padding: 5px 10px;
+  border-color: transparent;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.combat-mode-toggle button.active {
+  color: var(--text);
+  border-color: rgba(242, 193, 78, 0.55);
+  background:
+    linear-gradient(90deg, rgba(242, 193, 78, 0.14), rgba(52, 213, 216, 0.08)),
+    rgba(18, 40, 60, 0.92);
+}
+
+.combat-mode-toggle button:disabled {
+  opacity: 0.68;
+  cursor: not-allowed;
+}
+
 .boss-meta-row {
   display: flex;
   flex-wrap: wrap;

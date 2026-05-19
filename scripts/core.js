@@ -16,6 +16,7 @@ let selectedBestiaryItemKey = "";
 let logExpanded = false;
 let smithView = "home";
 let combatWatchdog = 0;
+let manualCombatStep = null;
 let bestiarySearchFrame = 0;
 const preparedCombatEvents = new Map();
 const tooltipItemCache = new Map();
@@ -272,6 +273,7 @@ function defaultState() {
       selectedEnemy: "wolf",
       selectedBestiaryZone: "meadow",
       selectedBestiaryEnemy: "wolf",
+      combatMode: "auto",
     },
     balanceVersion: 4,
     log: [t("log.start", "Du erreichst das Lager Grauwacht. Der Grind beginnt langsam.")],
@@ -1765,6 +1767,40 @@ function scaledCombatReward(amount, enemy) {
   return Math.max(1, Math.floor(amount * combatRewardScale(enemy)));
 }
 
+function combatMode() {
+  return state?.ui?.combatMode === "manual" ? "manual" : "auto";
+}
+
+function isManualCombatMode() {
+  return combatMode() === "manual";
+}
+
+function setCombatMode(mode) {
+  if (isFighting) return;
+  const nextMode = mode === "manual" ? "manual" : "auto";
+  state.ui = { ...(state.ui || {}), combatMode: nextMode };
+  save();
+  renderCombatPanel();
+}
+
+function waitManualCombatStep() {
+  return new Promise((resolve) => {
+    manualCombatStep = { resolve };
+  });
+}
+
+function advanceManualCombat() {
+  if (!manualCombatStep) return false;
+  const { resolve } = manualCombatStep;
+  manualCombatStep = null;
+  resolve();
+  return true;
+}
+
+function clearManualCombatStep() {
+  manualCombatStep = null;
+}
+
 async function fight() {
   if (isFighting) return;
   const enemy = getPreparedEncounter(selectedEnemy);
@@ -1782,6 +1818,7 @@ async function fight() {
   }
 
   resetCombatLog();
+  const manualMode = isManualCombatMode();
   let playerHp = state.hp;
   let enemyHp = enemy.hp;
   const stats = totalStats();
@@ -2151,15 +2188,20 @@ async function fight() {
   skipCombat = false;
   setBattleEnemyVisual(enemy);
   setControlsDisabled(true);
-  $("fightBtn").textContent = "Skip";
+  $("fightBtn").textContent = manualMode ? t("combat.nextStep", "Nächster Schritt") : t("combat.skip", "Skip");
   $("fightBtn").disabled = false;
-  armCombatWatchdog(25000);
+  if (!manualMode) armCombatWatchdog(25000);
   try {
-    await playCombatAnimation(enemy, events, playerHp > 0, {
+    const animationOptions = {
       playerStartHp: state.hp,
       playerMaxHp: stats.maxHp,
       enemyMaxHp: enemy.hp,
-    });
+    };
+    if (manualMode) {
+      await playManualCombatAnimation(enemy, events, playerHp > 0, animationOptions);
+    } else {
+      await playCombatAnimation(enemy, events, playerHp > 0, animationOptions);
+    }
     setCombatLog(enemy, events, playerHp > 0, rounds);
 
     damageEquippedItems(enemy);
@@ -2211,6 +2253,7 @@ async function fight() {
     log("Der Kampfabschluss hatte einen Fehler, wurde aber sauber freigegeben.", "bad");
   } finally {
     clearCombatWatchdog();
+    clearManualCombatStep();
     isFighting = false;
     skipCombat = false;
     setControlsDisabled(false);
@@ -2248,7 +2291,7 @@ function forceUnlockCombat(message) {
 }
 
 function resetFightButton() {
-  $("fightBtn").textContent = "Kampf starten";
+  $("fightBtn").textContent = t("combat.start", "Kampf starten");
   $("fightBtn").disabled = state.pendingLoot.length > 0;
 }
 

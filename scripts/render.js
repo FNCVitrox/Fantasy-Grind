@@ -64,8 +64,26 @@ function renderOpenModals(stats = totalStats()) {
 function renderCombatPanel() {
   renderCombatLogSummary();
   renderLog();
-  setText("fightBtn", isFighting ? (skipCombat ? t("combat.skipping", "Überspringe...") : t("combat.skip", "Skip")) : t("combat.start", "Kampf starten"));
-  setDisabled("fightBtn", isFighting ? skipCombat : state.pendingLoot.length > 0);
+  renderCombatModeToggle();
+  const manualMode = isManualCombatMode();
+  const fightText = isFighting
+    ? manualMode ? t("combat.nextStep", "Nächster Schritt") : (skipCombat ? t("combat.skipping", "Überspringe...") : t("combat.skip", "Skip"))
+    : t("combat.start", "Kampf starten");
+  setText("fightBtn", fightText);
+  setDisabled("fightBtn", isFighting ? (!manualMode && skipCombat) : state.pendingLoot.length > 0);
+}
+
+function renderCombatModeToggle() {
+  document.querySelectorAll("[data-combat-mode]").forEach((button) => {
+    const active = button.dataset.combatMode === combatMode();
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+    button.disabled = isFighting;
+    const labelKey = button.dataset.combatMode === "manual" ? "combat.modeManual" : "combat.modeAuto";
+    const fallback = button.dataset.combatMode === "manual" ? "Manuell" : "Auto";
+    const label = t(labelKey, fallback);
+    if (button.textContent !== label) button.textContent = label;
+  });
 }
 
 function setText(id, value) {

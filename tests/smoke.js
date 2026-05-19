@@ -65,6 +65,10 @@ assert(
   /if \(skipCombat\) break;[\s\S]*showBattleResult\(playerWon, enemyName, rounds, summary\);[\s\S]*waitResult\(skipCombat \? 850 : 1350\)/.test(read("scripts/events.js")),
   "skip combat should still show the win/loss result before the battle stage resets",
 );
+assert(html.includes('id="combatModeToggle"') && html.includes('data-combat-mode="manual"'), "combat mode toggle should expose a manual mode button");
+assert(css.includes(".combat-mode-toggle"), "combat mode toggle should have stable styling");
+assert(/if \(manualMode\) \{[\s\S]*playManualCombatAnimation/.test(read("scripts/core.js")), "manual combat mode should use the step animation path");
+assert(/isManualCombatMode\(\)[\s\S]*advanceManualCombat\(\)/.test(read("scripts/events.js")), "fight button should advance manual combat while fighting");
 
 const storage = {};
 const context = {
@@ -108,6 +112,9 @@ assert(htmlAssetVersions.length > 0 && htmlAssetVersions.every((version) => vers
 assert(html.includes(`Alpha v${assetVersionInCode}`), "visible version badge should match assetVersion");
 assert.strictEqual(context.defaultState().level, 1);
 assert.strictEqual(context.defaultState().build, "damage");
+assert.strictEqual(context.defaultState().ui.combatMode, "auto");
+assert.strictEqual(vm.runInContext("normalizeSavedUi({ combatMode: 'manual' }).combatMode", context), "manual");
+assert.strictEqual(vm.runInContext("normalizeSavedUi({ combatMode: 'slow' }).combatMode", context), "auto");
 assert.strictEqual(vm.runInContext("zoneRangeText('meadow')", context), "Level 1-6");
 assert.strictEqual(vm.runInContext("zoneRangeText('ironhold')", context), "Level 13-18");
 assert.strictEqual(vm.runInContext("state = defaultState(); state.language = 'en'; t('nav.smith')", context), "Smith");

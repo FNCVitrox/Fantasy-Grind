@@ -291,11 +291,13 @@ function normalizeSavedUi(ui = {}) {
   const bestiaryZoneId = zones[ui.selectedBestiaryZone] ? ui.selectedBestiaryZone : selectedZoneId;
   const bestiaryEnemies = zones[bestiaryZoneId]?.enemies || zoneEnemies;
   const bestiaryEnemyId = bestiaryEnemies.includes(ui.selectedBestiaryEnemy) ? ui.selectedBestiaryEnemy : bestiaryEnemies[0];
+  const combatMode = ui.combatMode === "manual" ? "manual" : "auto";
   return {
     selectedZone: selectedZoneId,
     selectedEnemy: selectedEnemyId,
     selectedBestiaryZone: bestiaryZoneId,
     selectedBestiaryEnemy: bestiaryEnemyId,
+    combatMode,
   };
 }
 
@@ -305,6 +307,7 @@ function syncUiState() {
     selectedEnemy,
     selectedBestiaryZone,
     selectedBestiaryEnemy,
+    combatMode: state.ui?.combatMode,
   });
 }
 

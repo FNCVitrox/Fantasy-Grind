@@ -267,6 +267,10 @@ $("salvageList").addEventListener("click", (event) => {
 
 $("fightBtn").addEventListener("click", () => {
   if (isFighting) {
+    if (isManualCombatMode()) {
+      advanceManualCombat();
+      return;
+    }
     skipCombat = true;
     $("battleText").textContent = t("combat.skippingBattle", "Kampf wird übersprungen...");
     $("fightBtn").textContent = t("combat.skipping", "Überspringe...");
@@ -276,6 +280,11 @@ $("fightBtn").addEventListener("click", () => {
   }
 
   fight();
+});
+
+$("combatModeToggle").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-combat-mode]");
+  if (button) setCombatMode(button.dataset.combatMode);
 });
 
 function setMobileMenuOpen(isOpen) {
@@ -633,16 +642,7 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
   const visibleEvents = events.slice(0, 14);
   for (const event of visibleEvents) {
     if (skipCombat) break;
-    const eventClass = combatEventClass(event);
-    const attackClass = event.combatEventId ? "" : event.actor === "hero" ? "hero-attacks enemy-hit" : "enemy-attacks hero-hit";
-    const side = event.actor === "hero" ? "right" : "left";
-    setBattleStageClass(stage, `${attackClass} ${eventClass}`, activeCombatEvent);
-    $("battleText").textContent = event.text || (event.actor === "hero"
-      ? t("combat.heroHit", "Du triffst für {damage}.", { damage: event.damage })
-      : t("combat.enemyHit", "{enemy} trifft für {damage}.", { enemy: enemyName, damage: event.damage }));
-    updateBattleHealth(event.playerHp, playerMaxHp, event.enemyHp, enemyMaxHp);
-    highlightAbilityUse(event.abilityId);
-    if (event.damage > 0) spawnDamage(event.damage, side, event.critical);
+    showCombatAnimationEvent(stage, event, activeCombatEvent, enemyName, playerMaxHp, enemyMaxHp);
     await waitCombat(470);
     setBattleStageClass(stage, "", activeCombatEvent);
     await waitCombat(110);
@@ -664,6 +664,64 @@ async function playCombatAnimation(enemy, events, playerWon, combatHealth = {}) 
   showBattleResult(playerWon, enemyName, rounds, summary);
   await waitResult(skipCombat ? 850 : 1350);
   hideBattleResult();
+}
+
+async function playManualCombatAnimation(enemy, events, playerWon, combatHealth = {}) {
+  const stage = $("battleStage");
+  const enemyName = enemyDisplayName(enemy, enemy.baseId || selectedEnemy);
+  const playerMaxHp = combatHealth.playerMaxHp || state.maxHp;
+  const enemyMaxHp = combatHealth.enemyMaxHp || enemy.hp;
+  const startPlayerHp = combatHealth.playerStartHp ?? state.hp;
+  const rounds = Math.max(0, ...events.map((event) => event.round || 0));
+  const summary = combatAnimationSummary(events);
+  const activeCombatEvent = events.find((event) => event.combatEventId);
+  hideBattleResult();
+  renderBattleEventBadge(activeCombatEvent);
+  updateBattleHealth(startPlayerHp, playerMaxHp, enemyMaxHp, enemyMaxHp);
+  $("battleText").textContent = t("combat.manualReady", "Manueller Kampf bereit.");
+  $("fightBtn").textContent = t("combat.nextStep", "Nächster Schritt");
+  stage.classList.remove("victory", "defeat", "hero-attacks", "enemy-attacks", "hero-hit", "enemy-hit", "critical-event", "effect-event", "heal-event");
+  setBattleStageClass(stage, "", activeCombatEvent);
+  await waitManualCombatStep();
+
+  const visibleEvents = events.slice(0, 24);
+  for (const event of visibleEvents) {
+    showCombatAnimationEvent(stage, event, activeCombatEvent, enemyName, playerMaxHp, enemyMaxHp);
+    await waitManualCombatStep();
+    setBattleStageClass(stage, "", activeCombatEvent);
+  }
+
+  if (events.length > visibleEvents.length) {
+    $("battleText").textContent = t("combat.manualLongFight", "Der Kampf zieht sich weiter. Zeige den Abschluss.");
+    $("fightBtn").textContent = t("combat.showResult", "Abschluss anzeigen");
+    await waitManualCombatStep();
+  }
+
+  const finalEvent = events[events.length - 1];
+  if (finalEvent) {
+    updateBattleHealth(finalEvent.playerHp, playerMaxHp, finalEvent.enemyHp, enemyMaxHp);
+  }
+
+  hideBattleEventBadge();
+  stage.className = "battle-stage";
+  stage.classList.add(playerWon ? "victory" : "defeat");
+  showBattleResult(playerWon, enemyName, rounds, summary);
+  $("fightBtn").textContent = t("combat.finishStep", "Abschließen");
+  await waitManualCombatStep();
+  hideBattleResult();
+}
+
+function showCombatAnimationEvent(stage, event, activeCombatEvent, enemyName, playerMaxHp, enemyMaxHp) {
+  const eventClass = combatEventClass(event);
+  const attackClass = event.combatEventId ? "" : event.actor === "hero" ? "hero-attacks enemy-hit" : "enemy-attacks hero-hit";
+  const side = event.actor === "hero" ? "right" : "left";
+  setBattleStageClass(stage, `${attackClass} ${eventClass}`, activeCombatEvent);
+  $("battleText").textContent = event.text || (event.actor === "hero"
+    ? t("combat.heroHit", "Du triffst für {damage}.", { damage: event.damage })
+    : t("combat.enemyHit", "{enemy} trifft für {damage}.", { enemy: enemyName, damage: event.damage }));
+  updateBattleHealth(event.playerHp, playerMaxHp, event.enemyHp, enemyMaxHp);
+  highlightAbilityUse(event.abilityId);
+  if (event.damage > 0) spawnDamage(event.damage, side, event.critical);
 }
 
 function setBattleStageClass(stage, classNames = "", activeCombatEvent = null) {

@@ -505,6 +505,10 @@
     gap: 4px;
   }
 
+  .combat-mode-toggle {
+    width: 100%;
+  }
+
   .boss-meta-row {
     gap: 4px;
     font-size: 11px;
