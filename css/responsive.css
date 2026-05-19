@@ -290,7 +290,6 @@
 
   .character-panel > h2,
   .character-panel > .character-status,
-  .character-panel > .xp-overview,
   .character-panel > .class-card {
     display: none;
   }
@@ -632,6 +631,7 @@
   .enchant-card,
   .enchant-intro,
   .equipment-detail-grid,
+  .class-choice-list,
   .player-stats-hero,
   .player-progress-grid,
   .player-stat-grid,

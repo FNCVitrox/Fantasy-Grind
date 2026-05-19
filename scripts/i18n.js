@@ -73,6 +73,7 @@ const translations = {
         "main.defense": "Verteidigung",
         "main.durability": "Haltbarkeit",
         "main.playerStats": "Spielerwerte",
+        "main.changeClass": "Klasse wechseln",
         "main.currentStats": "Aktuelle Werte",
         "main.buildBonus": "Build-Bonus",
         "main.setBonuses": "Set-Boni",
@@ -1335,13 +1336,14 @@ function applyStaticTranslations() {
     setStaticText("#repairTitle", "equipment.repairTitle");
     setStaticText("#equipmentTitle", "equipment.wornTitle");
     setStaticText("#playerStatsTitle", "main.playerStats");
+    setStaticText("#classModalTitle", "main.changeClass");
+    setStaticText("#openPlayerStatsBtn", "main.playerStats");
     setStaticText("#logTitle", "log.title");
     setStaticText("#combatLogEyebrow", "combat.log");
     setStaticText("#combatLogTitle", "combat.lastFight");
     setStaticText(".character-status div:nth-child(1) span", "common.level");
     setStaticText(".character-status div:nth-child(2) span", "common.gold");
     setStaticText(".character-status div:nth-child(3) span", "common.renown");
-    setStaticText("#classSectionTitle", "main.class");
     setStaticText("#buildSectionTitle", "main.build");
     setStaticText("#abilitiesSectionTitle", "main.abilities");
     setStaticText(".equipment-belt .eyebrow", "main.equipment");
@@ -1364,6 +1366,7 @@ function applyStaticTranslations() {
     setStaticText("#repairModal .eyebrow", "smith.repair");
     setStaticText("#equipmentModal .eyebrow", "main.equipment");
     setStaticText("#playerStatsModal .eyebrow", "common.character");
+    setStaticText("#classModal .eyebrow", "common.character");
     setStaticText("#logModal .eyebrow", "log.eyebrow");
     setStaticText("#combatLogModal .eyebrow", "combat.log");
     setStaticText("#exportSaveTopBtn strong", "save.download");
@@ -1381,6 +1384,7 @@ function applyStaticTranslations() {
     setStaticText("[data-smith-view='home']", "common.back");
     setCloseButtons();
     setStaticAria("#languageToggleBtn", "language.aria");
+    setStaticAria("#openClassModalBtn", "main.changeClass");
 }
 
 function setDocumentTitle() {

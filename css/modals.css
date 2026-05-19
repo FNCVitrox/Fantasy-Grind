@@ -3155,6 +3155,10 @@ button.drop-row span:last-child {
   width: min(820px, 100%);
 }
 
+.class-choice-window {
+  width: min(620px, 100%);
+}
+
 .zone-window {
   width: min(900px, 100%);
 }
@@ -3283,6 +3287,39 @@ button.drop-row span:last-child {
 .player-build-options small {
   color: var(--muted);
   font-size: 12px;
+  line-height: 1.25;
+}
+
+.class-choice-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.class-choice-list button {
+  min-height: 92px;
+  display: grid;
+  gap: 5px;
+  align-content: center;
+  padding: 12px;
+  text-align: left;
+}
+
+.class-choice-list button.active {
+  border-color: var(--gold);
+  background:
+    linear-gradient(135deg, rgba(216, 174, 75, 0.16), rgba(52, 213, 216, 0.08)),
+    rgba(12, 23, 35, 0.96);
+}
+
+.class-choice-list strong {
+  color: var(--text);
+  font-size: 17px;
+}
+
+.class-choice-list span {
+  color: var(--muted);
+  font-size: 13px;
   line-height: 1.25;
 }
 

@@ -70,6 +70,9 @@ assert(css.includes(".combat-mode-toggle"), "combat mode toggle should have stab
 assert(html.includes('id="combatActions"'), "combat UI should expose RPG action buttons");
 assert(html.includes('class="combat-command-main"') && html.includes('class="combat-command-top"'), "combat UI should use a dedicated command dock layout");
 assert(!html.includes('id="selectedEnemyMeta"') && !html.includes('id="selectedEnemyName"'), "combat command dock should not duplicate target details");
+assert(html.includes('id="openClassModalBtn"') && html.includes('id="classChoiceList"'), "character portrait should open a dedicated class chooser");
+assert(!html.includes('id="classList"'), "class chooser should not remain as a permanent sidebar list");
+assert(/renderClassChoices\(\);[\s\S]*openModal\("classModal"\)/.test(read("scripts/events.js")), "portrait class button should render and open the class modal");
 assert(/manualMode \? await waitForCombatAction\(\) : chooseAutoCombatAction/.test(read("scripts/core.js")), "manual and auto combat should share the same action loop");
 assert(/requestCombatAction\(button\.dataset\.combatAction\)/.test(read("scripts/events.js")), "combat action buttons should feed manual combat choices");
 assert(css.includes("grid-template-rows: auto minmax(0, 1fr)") && css.includes(".combat-command-main"), "combat command dock should stack controls above full-width actions");

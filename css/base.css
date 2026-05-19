@@ -405,6 +405,12 @@ h2 {
   background: #0c1723;
 }
 
+.character-stats-button {
+  min-height: 38px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
 .class-card {
   display: grid;
   gap: 8px;

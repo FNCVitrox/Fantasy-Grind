@@ -69,6 +69,7 @@ translations.en = {
         "main.defense": "Defense",
         "main.durability": "Durability",
         "main.playerStats": "Player Stats",
+        "main.changeClass": "Change Class",
         "main.currentStats": "Current Stats",
         "main.buildBonus": "Build Bonus",
         "main.setBonuses": "Set Bonuses",

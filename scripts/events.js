@@ -317,6 +317,10 @@ window.addEventListener("keydown", (event) => {
 
 $("languageToggleBtn").addEventListener("click", toggleLanguage);
 $("restBtn").addEventListener("click", rest);
+$("openClassModalBtn").addEventListener("click", () => {
+  renderClassChoices();
+  openModal("classModal");
+});
 $("openPlayerStatsBtn").addEventListener("click", () => {
   renderPlayerStatsDetails();
   openModal("playerStatsModal");
@@ -325,9 +329,11 @@ $("buildList").addEventListener("click", (event) => {
   const button = event.target.closest("[data-build]");
   if (button) setBuild(button.dataset.build);
 });
-$("classList").addEventListener("click", (event) => {
+$("classChoiceList").addEventListener("click", (event) => {
   const button = event.target.closest("[data-character-class]");
-  if (button) setCharacterClass(button.dataset.characterClass);
+  if (!button) return;
+  setCharacterClass(button.dataset.characterClass);
+  closeClassModal();
 });
 $("sellAllBtn").addEventListener("click", sellAllInventoryItems);
 $("salvageAllBtn").addEventListener("click", salvageAllInventoryItems);
@@ -433,16 +439,15 @@ $("equipmentModal").addEventListener("click", (event) => {
 });
 $("closePlayerStatsBtn").addEventListener("click", closePlayerStats);
 $("playerStatsDetails").addEventListener("click", (event) => {
-  const classButton = event.target.closest("[data-character-class]");
-  if (classButton) {
-    setCharacterClass(classButton.dataset.characterClass);
-    return;
-  }
   const button = event.target.closest("[data-build]");
   if (button) setBuild(button.dataset.build);
 });
 $("playerStatsModal").addEventListener("click", (event) => {
   if (event.target.id === "playerStatsModal") closePlayerStats();
+});
+$("closeClassModalBtn").addEventListener("click", closeClassModal);
+$("classModal").addEventListener("click", (event) => {
+  if (event.target.id === "classModal") closeClassModal();
 });
 $("openSaveMenuBtn").addEventListener("click", () => {
   renderSaveSummary();
@@ -511,6 +516,10 @@ function closeEquipment() {
 
 function closePlayerStats() {
   closeModal("playerStatsModal");
+}
+
+function closeClassModal() {
+  closeModal("classModal");
 }
 
 function closeSave() {
@@ -583,7 +592,9 @@ function setControlsDisabled(disabled) {
     if (button.id === "closeRepairBtn") return;
     if (button.id === "closeEquipmentBtn") return;
     if (button.id === "openPlayerStatsBtn") return;
+    if (button.id === "openClassModalBtn") return;
     if (button.id === "closePlayerStatsBtn") return;
+    if (button.id === "closeClassModalBtn") return;
     if (button.id === "fightBtn") return;
     if (button.dataset.combatAction !== undefined) return;
     if (button.id === "openBestiaryBtn") return;

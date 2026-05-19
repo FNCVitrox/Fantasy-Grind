@@ -207,12 +207,7 @@ function renderClassPanel() {
   const signature = `${currentLanguage()}|${state.characterClass}|${state.build}`;
   if (renderCache.classPanel === signature) return;
   renderCache.classPanel = signature;
-  $("classList").innerHTML = Object.entries(classCatalog).map(([id, character]) => `
-    <button class="${state.characterClass === id ? "active" : ""}" type="button" data-character-class="${id}">
-      <strong>${escapeHtml(entityName("class", id, character.name))}</strong>
-      <span>${escapeHtml(entityText("class", id, character.description || ""))}</span>
-    </button>
-  `).join("");
+  renderClassChoices();
   $("buildList").innerHTML = Object.entries(buildCatalog).map(([id, build]) => `
     <button class="${state.build === id ? "active" : ""}" type="button" data-build="${id}">
       <strong>${escapeHtml(entityName("build", id, build.name))}</strong>
@@ -224,6 +219,17 @@ function renderClassPanel() {
       <strong>${escapeHtml(entityName("ability", id, ability.name))}</strong>
       <span>${escapeHtml(entityText("ability", id, ability.text))}</span>
     </div>
+  `).join("");
+}
+
+function renderClassChoices() {
+  const list = $("classChoiceList");
+  if (!list) return;
+  list.innerHTML = Object.entries(classCatalog).map(([id, character]) => `
+    <button class="${state.characterClass === id ? "active" : ""}" type="button" data-character-class="${id}">
+      <strong>${escapeHtml(entityName("class", id, character.name))}</strong>
+      <span>${escapeHtml(entityText("class", id, character.description || ""))}</span>
+    </button>
   `).join("");
 }
 
@@ -281,15 +287,6 @@ function renderPlayerStatsDetails(stats = totalStats()) {
       </div>
     </section>
     <section class="player-build-switch" aria-label="${t("main.build", "Build")}">
-      <strong>${t("main.class", "Klasse")}</strong>
-      <div class="player-build-options">
-        ${Object.entries(classCatalog).map(([id, character]) => `
-          <button class="${state.characterClass === id ? "active" : ""}" type="button" data-character-class="${id}">
-            <span>${escapeHtml(entityName("class", id, character.name))}</span>
-            <small>${escapeHtml(entityText("class", id, character.description || ""))}</small>
-          </button>
-        `).join("")}
-      </div>
       <strong>${t("main.build", "Build")}</strong>
       <div class="player-build-options">
         ${Object.entries(buildCatalog).map(([id, option]) => `
