@@ -200,10 +200,10 @@ function renderMap() {
 
 function renderClassPanel() {
   const className = entityName("class", state.characterClass, activeClass().name);
-  const buildName = entityName("build", state.build, activeBuild().name);
+  const activeBuildName = buildName(state.build);
   setText("className", className);
   setText("characterSummaryName", className);
-  setText("characterBuildSummary", buildName);
+  setText("characterBuildSummary", activeBuildName);
   const icon = $("characterClassIcon");
   if (icon) icon.className = classIconClass(state.characterClass);
   const signature = `${currentLanguage()}|${state.characterClass}|${state.build}`;
@@ -212,7 +212,7 @@ function renderClassPanel() {
   renderClassChoices();
   $("buildList").innerHTML = Object.entries(buildCatalog).map(([id, build]) => `
     <button class="${state.build === id ? "active" : ""}" type="button" data-build="${id}">
-      <strong>${escapeHtml(entityName("build", id, build.name))}</strong>
+      <strong>${escapeHtml(buildName(id))}</strong>
       <span>${escapeHtml(buildDescription(id))}</span>
     </button>
   `).join("");
@@ -287,12 +287,12 @@ function renderPlayerStatsDetails(stats = totalStats()) {
     .map(({ id, count }) => `<span>${escapeHtml(setDisplayName(id))} · ${count} ${t("common.pieces", "Teile")}</span>`)
     .join("");
   const className = entityName("class", state.characterClass, activeClass().name);
-  const buildName = entityName("build", state.build, build.name);
+  const activeBuildName = buildName(state.build);
 
   $("playerStatsDetails").innerHTML = `
     <section class="player-stats-hero">
       <div>
-        <p class="eyebrow">${escapeHtml(className)} · ${escapeHtml(buildName)}</p>
+        <p class="eyebrow">${escapeHtml(className)} · ${escapeHtml(activeBuildName)}</p>
         <h3>${t("common.level", "Level")} ${state.level}</h3>
       </div>
       <div class="player-stat-currency">
@@ -305,7 +305,7 @@ function renderPlayerStatsDetails(stats = totalStats()) {
       <div class="player-build-options">
         ${Object.entries(buildCatalog).map(([id, option]) => `
           <button class="${state.build === id ? "active" : ""}" type="button" data-build="${id}">
-            <span>${escapeHtml(entityName("build", id, option.name))}</span>
+            <span>${escapeHtml(buildName(id))}</span>
             <small>${escapeHtml(buildDescription(id))}</small>
           </button>
         `).join("")}

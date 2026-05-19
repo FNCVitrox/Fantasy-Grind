@@ -925,6 +925,13 @@ function activeBuild() {
   return buildCatalog[state.build] || buildCatalog.damage;
 }
 
+function buildName(buildId, classId = state.characterClass) {
+  const build = buildCatalog[buildId] || buildCatalog.damage;
+  const active = classCatalog[classId] || classCatalog.warrior;
+  const fallback = active.buildNames?.[buildId] || build.name;
+  return t(`classBuild.${classId}.${buildId}.name`, fallback);
+}
+
 function buildDescription(buildId) {
   const build = buildCatalog[buildId] || buildCatalog.damage;
   const fallback = activeClass().buildDescriptions?.[buildId] || build.description;
@@ -975,7 +982,7 @@ const combatAbilityCosts = [2, 3, 4];
 const combatAbilityCooldowns = [1, 2, 3];
 const classResourceConfig = {
   warrior: { label: "Wut", max: 6, attackGain: 1, defendGain: 2, hitGain: 1 },
-  mage: { label: "Mana", max: 7, attackGain: 2, defendGain: 2, turnGain: 1 },
+  mage: { label: "Mana", max: 6, attackGain: 2, defendGain: 2, turnGain: 1 },
   rogue: { label: "List", max: 6, attackGain: 1, defendGain: 2, critGain: 1 },
   archer: { label: "Fokus", max: 6, attackGain: 1, defendGain: 3 },
 };
@@ -996,7 +1003,7 @@ function combatAbilitySlots() {
     abilityId,
     index,
     unlockLevel: combatAbilityUnlockLevels[index] || 10,
-    cost: combatAbilityCosts[index] || 4,
+    cost: abilityCatalog[abilityId]?.cost || combatAbilityCosts[index] || 4,
     cooldown: combatAbilityCooldowns[index] || 2,
   }));
 }
@@ -1085,7 +1092,7 @@ function setBuild(buildId) {
   state.build = buildId;
   syncDerivedStats();
   state.hp = Math.max(1, Math.min(state.maxHp, Math.round(state.maxHp * hpRatio)));
-  log(t("build.changed", "Build gewechselt: {build}.", { build: entityName("build", buildId, buildCatalog[buildId].name) }), "drop");
+  log(t("build.changed", "Build gewechselt: {build}.", { build: buildName(buildId) }), "drop");
   save();
   render();
 }
