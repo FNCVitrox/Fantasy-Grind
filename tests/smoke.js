@@ -67,8 +67,9 @@ assert(
 );
 assert(html.includes('id="combatModeToggle"') && html.includes('data-combat-mode="manual"'), "combat mode toggle should expose a manual mode button");
 assert(css.includes(".combat-mode-toggle"), "combat mode toggle should have stable styling");
-assert(/if \(manualMode\) \{[\s\S]*playManualCombatAnimation/.test(read("scripts/core.js")), "manual combat mode should use the step animation path");
-assert(/isManualCombatMode\(\)[\s\S]*advanceManualCombat\(\)/.test(read("scripts/events.js")), "fight button should advance manual combat while fighting");
+assert(html.includes('id="combatActions"'), "combat UI should expose RPG action buttons");
+assert(/manualMode \? await waitForCombatAction\(\) : chooseAutoCombatAction/.test(read("scripts/core.js")), "manual and auto combat should share the same action loop");
+assert(/requestCombatAction\(button\.dataset\.combatAction\)/.test(read("scripts/events.js")), "combat action buttons should feed manual combat choices");
 
 const storage = {};
 const context = {
@@ -115,6 +116,8 @@ assert.strictEqual(context.defaultState().build, "damage");
 assert.strictEqual(context.defaultState().ui.combatMode, "auto");
 assert.strictEqual(vm.runInContext("normalizeSavedUi({ combatMode: 'manual' }).combatMode", context), "manual");
 assert.strictEqual(vm.runInContext("normalizeSavedUi({ combatMode: 'slow' }).combatMode", context), "auto");
+assert.strictEqual(vm.runInContext("state = defaultState(); state.characterClass = 'warrior'; classResource().label", context), "Wut");
+assert.strictEqual(vm.runInContext("state = defaultState(); state.language = 'en'; state.characterClass = 'rogue'; classResource().label", context), "Cunning");
 assert.strictEqual(vm.runInContext("zoneRangeText('meadow')", context), "Level 1-6");
 assert.strictEqual(vm.runInContext("zoneRangeText('ironhold')", context), "Level 13-18");
 assert.strictEqual(vm.runInContext("state = defaultState(); state.language = 'en'; t('nav.smith')", context), "Smith");
@@ -192,6 +195,9 @@ assert(vm.runInContext("state = defaultState(); state.characterClass = 'mage'; s
 assert(vm.runInContext("state = defaultState(); state.characterClass = 'rogue'; state.build = 'bruiser'; hasBuildAbility('riposte') && playerAbilityDamageMultiplier(enemies.wolf) > 1", context), "rogue bruiser abilities should feed combat estimates");
 assert(vm.runInContext("state = defaultState(); state.characterClass = 'archer'; state.build = 'bruiser'; hasBuildAbility('snapShot') && playerAbilityDamageMultiplier(enemies.wolf) > 1", context), "archer bruiser abilities should feed combat estimates");
 assert(vm.runInContext("(() => { state = defaultState(); state.language = 'en'; state.build = 'bruiser'; const text = knownClassAbilities().map(([id, ability]) => `${entityName('ability', id, ability.name)} ${entityText('ability', id, ability.text)}`).join(' | '); return text.includes('Battle Rush') && text.includes('Shatter') && text.includes('Counterblow') && !text.includes('Kampfrausch') && !text.includes('Zerschmettern') && !text.includes('Konterschlag'); })()", context), "bruiser abilities should render English names and descriptions");
+assert(vm.runInContext("state = defaultState(); state.level = 1; combatActionList({ awaitingPlayerAction: true, resource: 0, maxResource: 6, cooldowns: {} }).filter((action) => action.type === 'ability').every((action) => action.disabledReason.includes('Level'))", context), "abilities should unlock through level progression");
+assert(vm.runInContext("state = defaultState(); state.level = 10; const actions = combatActionList({ awaitingPlayerAction: true, resource: 6, maxResource: 6, cooldowns: {} }); actions.some((action) => action.id === 'attack' && !action.disabled) && actions.filter((action) => action.type === 'ability' && !action.disabled).length === 3", context), "level 10 manual combat should expose attack and three usable abilities with enough resource");
+assert(vm.runInContext("state = defaultState(); state.level = 10; const combat = { awaitingPlayerAction: false, resource: 6, maxResource: 6, cooldowns: {}, playerHp: 100, combatStats: { maxHp: 100 }, enemyHp: 20, enemy: enemies.wolf }; chooseAutoCombatAction(combat).type === 'ability' && combat.awaitingPlayerAction === false", context), "auto combat should choose from the same actions without stealing manual turn state");
 assert(vm.runInContext("state = defaultState(); state.build = 'tank'; const tankDamage = totalStats().damage; state.build = 'damage'; totalStats().damage > tankDamage", context), "damage build should deal more damage than tank");
 assert(vm.runInContext("state = defaultState(); state.build = 'damage'; totalStats().critChance > 0.1 && totalStats().critDamage > 1.7", context), "damage build should improve critical stats");
 assert.strictEqual(

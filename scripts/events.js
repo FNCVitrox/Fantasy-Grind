@@ -267,10 +267,7 @@ $("salvageList").addEventListener("click", (event) => {
 
 $("fightBtn").addEventListener("click", () => {
   if (isFighting) {
-    if (isManualCombatMode()) {
-      advanceManualCombat();
-      return;
-    }
+    if (isManualCombatMode()) return;
     skipCombat = true;
     $("battleText").textContent = t("combat.skippingBattle", "Kampf wird übersprungen...");
     $("fightBtn").textContent = t("combat.skipping", "Überspringe...");
@@ -280,6 +277,11 @@ $("fightBtn").addEventListener("click", () => {
   }
 
   fight();
+});
+
+$("combatActions").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-combat-action]");
+  if (button) requestCombatAction(button.dataset.combatAction);
 });
 
 $("combatModeToggle").addEventListener("click", (event) => {
@@ -583,6 +585,7 @@ function setControlsDisabled(disabled) {
     if (button.id === "openPlayerStatsBtn") return;
     if (button.id === "closePlayerStatsBtn") return;
     if (button.id === "fightBtn") return;
+    if (button.dataset.combatAction !== undefined) return;
     if (button.id === "openBestiaryBtn") return;
     if (button.id === "closeBestiaryBtn") return;
     if (button.id === "openZoneBtn") return;

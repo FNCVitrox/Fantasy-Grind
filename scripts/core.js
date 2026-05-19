@@ -17,6 +17,8 @@ let logExpanded = false;
 let smithView = "home";
 let combatWatchdog = 0;
 let manualCombatStep = null;
+let activeCombatState = null;
+let pendingCombatAction = null;
 let bestiarySearchFrame = 0;
 const preparedCombatEvents = new Map();
 const tooltipItemCache = new Map();
@@ -968,6 +970,104 @@ function abilityCombatName(abilityId) {
   return entityName("ability", abilityId, ability?.name || abilityId);
 }
 
+const combatAbilityUnlockLevels = [3, 6, 10];
+const combatAbilityCosts = [2, 3, 4];
+const combatAbilityCooldowns = [1, 2, 3];
+const classResourceConfig = {
+  warrior: { label: "Wut", max: 6, attackGain: 1, defendGain: 2, hitGain: 1 },
+  mage: { label: "Mana", max: 7, attackGain: 2, defendGain: 2, turnGain: 1 },
+  rogue: { label: "List", max: 6, attackGain: 1, defendGain: 2, critGain: 1 },
+  archer: { label: "Fokus", max: 6, attackGain: 1, defendGain: 3 },
+};
+
+function classResource() {
+  const fallback = classResourceConfig.warrior;
+  const config = classResourceConfig[state.characterClass] || fallback;
+  return {
+    ...config,
+    label: t(`classResource.${state.characterClass}`, config.label),
+  };
+}
+
+function combatAbilitySlots() {
+  return activeBuildAbilityIds().slice(0, 3).map((abilityId, index) => ({
+    id: `ability${index + 1}`,
+    type: "ability",
+    abilityId,
+    index,
+    unlockLevel: combatAbilityUnlockLevels[index] || 10,
+    cost: combatAbilityCosts[index] || 4,
+    cooldown: combatAbilityCooldowns[index] || 2,
+  }));
+}
+
+function combatActionList(combat = activeCombatState) {
+  const resource = classResource();
+  const cooldowns = combat?.cooldowns || {};
+  const currentResource = combat?.resource ?? 0;
+  const playerTurn = Boolean(combat?.awaitingPlayerAction);
+  const abilityActions = combatAbilitySlots().map((slot) => {
+    const ability = abilityCatalog[slot.abilityId];
+    const unlocked = state.level >= slot.unlockLevel;
+    const cooldown = cooldowns[slot.abilityId] || 0;
+    const disabledReason = !unlocked
+      ? t("combat.unlocksAt", "Level {level}", { level: slot.unlockLevel })
+      : cooldown > 0
+        ? t("combat.cooldownShort", "{turns}R", { turns: cooldown })
+        : currentResource < slot.cost
+          ? t("combat.needResource", "{amount} {resource}", { amount: slot.cost, resource: resource.label })
+          : "";
+    return {
+      ...slot,
+      label: ability ? entityName("ability", slot.abilityId, ability.name) : t("combat.ability", "Fähigkeit"),
+      detail: unlocked
+        ? t("combat.actionCost", "{cost} {resource}", { cost: slot.cost, resource: resource.label })
+        : t("combat.unlocksAt", "Level {level}", { level: slot.unlockLevel }),
+      disabled: !playerTurn || Boolean(disabledReason),
+      disabledReason,
+    };
+  });
+  return [
+    {
+      id: "attack",
+      type: "attack",
+      label: t("combat.actionAttack", "Angriff"),
+      detail: t("combat.actionAttackHint", "+{amount} {resource}", { amount: resource.attackGain || 1, resource: resource.label }),
+      disabled: !playerTurn,
+      disabledReason: "",
+    },
+    {
+      id: "defend",
+      type: "defend",
+      label: t("combat.actionDefend", "Verteidigen"),
+      detail: t("combat.actionDefendHint", "-50% Treffer, +{amount} {resource}", { amount: resource.defendGain || 2, resource: resource.label }),
+      disabled: !playerTurn,
+      disabledReason: "",
+    },
+    ...abilityActions,
+  ];
+}
+
+function requestCombatAction(actionId) {
+  if (!pendingCombatAction) return false;
+  const action = combatActionList(activeCombatState).find((entry) => entry.id === actionId && !entry.disabled);
+  if (!action) return false;
+  const resolve = pendingCombatAction;
+  pendingCombatAction = null;
+  if (activeCombatState) activeCombatState.awaitingPlayerAction = false;
+  renderCombatPanel();
+  resolve(action);
+  return true;
+}
+
+function waitForCombatAction() {
+  return new Promise((resolve) => {
+    pendingCombatAction = resolve;
+    if (activeCombatState) activeCombatState.awaitingPlayerAction = true;
+    renderCombatPanel();
+  });
+}
+
 function setCharacterClass(classId) {
   if (!classCatalog[classId] || state.characterClass === classId) return;
   const hpRatio = state.maxHp > 0 ? state.hp / state.maxHp : 1;
@@ -1802,7 +1902,7 @@ function clearManualCombatStep() {
   manualCombatStep = null;
 }
 
-async function fight() {
+async function legacyFight() {
   if (isFighting) return;
   const enemy = getPreparedEncounter(selectedEnemy);
   const enemyName = enemyDisplayName(enemy, enemy.baseId || selectedEnemy);
@@ -2263,6 +2363,400 @@ async function fight() {
     save();
     safeRender();
   }
+}
+
+async function fight() {
+  if (isFighting) return;
+  const enemy = getPreparedEncounter(selectedEnemy);
+  const enemyName = enemyDisplayName(enemy, enemy.baseId || selectedEnemy);
+  syncDerivedStats();
+
+  if (state.hp <= 0) {
+    log(t("combat.cannotFight", "Du bist kampfunfähig. Raste zuerst im Lager."), "bad");
+    return;
+  }
+
+  if (state.pendingLoot.length) {
+    log(t("combat.pickLootFirst", "Wähle zuerst deine Beute aus dem letzten Kampf."), "drop");
+    return;
+  }
+
+  resetCombatLog();
+  isFighting = true;
+  skipCombat = false;
+  setBattleEnemyVisual(enemy);
+  setControlsDisabled(true);
+  if (!isManualCombatMode()) armCombatWatchdog(30000);
+
+  const combat = createActionCombat(enemy);
+  activeCombatState = combat;
+  renderCombatPanel();
+  hideBattleResult();
+  renderBattleEventBadge(combat.preparedEventEntry);
+  updateBattleHealth(combat.playerHp, combat.combatStats.maxHp, combat.enemyHp, enemy.hp);
+  $("battleText").textContent = isManualCombatMode()
+    ? t("combat.manualReady", "Wähle deine Aktion.")
+    : t("combat.autoReady", "Auto-Kampf läuft.");
+
+  try {
+    await runActionCombat(combat, isManualCombatMode());
+    await finishActionCombat(combat);
+  } catch (error) {
+    console.error(error);
+    log(t("combat.finishError", "Der Kampfabschluss hatte einen Fehler, wurde aber sauber freigegeben."), "bad");
+  } finally {
+    clearCombatWatchdog();
+    clearManualCombatStep();
+    pendingCombatAction = null;
+    activeCombatState = null;
+    isFighting = false;
+    skipCombat = false;
+    setControlsDisabled(false);
+    resetFightButton();
+    prepareNextEncounter(enemy.baseId || selectedEnemy);
+    save();
+    safeRender();
+  }
+}
+
+function createActionCombat(enemy) {
+  const stats = totalStats();
+  const effectSummary = itemEffectSummary();
+  const enchantStats = equippedEnchantmentSummary();
+  const combatStats = combatStatsWithItemEffects(stats, enemy, effectSummary);
+  const combatEvent = consumePreparedCombatEvent(enemy, enemy.baseId || selectedEnemy);
+  const preparedEventEntry = combatEventAnimationEntry(combatEvent, enemy, state.hp);
+  const resource = classResource();
+  return {
+    enemy,
+    enemyName: enemyDisplayName(enemy, enemy.baseId || selectedEnemy),
+    playerHp: state.hp,
+    enemyHp: enemy.hp,
+    rounds: 0,
+    resource: Math.min(resource.max, state.level >= 3 ? 1 : 0),
+    maxResource: resource.max,
+    cooldowns: {},
+    awaitingPlayerAction: false,
+    playerGuard: 1,
+    playerDamageMultiplier: 1,
+    playerDots: [],
+    enemyDots: [],
+    events: preparedEventEntry ? [preparedEventEntry] : [],
+    combatEvent,
+    preparedEventEntry,
+    stats,
+    effectSummary,
+    enchantStats,
+    combatStats,
+    lastActionId: "",
+  };
+}
+
+async function runActionCombat(combat, manualMode) {
+  await waitCombat(manualMode ? 80 : 260);
+  while (combat.playerHp > 0 && combat.enemyHp > 0 && combat.rounds < 80) {
+    combat.rounds += 1;
+    reduceCombatCooldowns(combat);
+    gainCombatResource(combat, classResource().turnGain || 0);
+    renderCombatPanel();
+
+    if (await applyCombatDots(combat, "player")) break;
+    if (await applyCombatDots(combat, "enemy")) break;
+
+    const action = manualMode ? await waitForCombatAction() : chooseAutoCombatAction(combat);
+    combat.lastActionId = action.id;
+    await executePlayerCombatAction(combat, action);
+    if (combat.enemyHp <= 0 || combat.playerHp <= 0) break;
+    await executeEnemyCombatAction(combat);
+  }
+}
+
+async function applyCombatDots(combat, target) {
+  const dots = target === "player" ? combat.playerDots : combat.enemyDots;
+  if (!dots.length) return false;
+  const damage = dots.reduce((sum, dot) => sum + dot.damage, 0);
+  const names = [...new Set(dots.map((dot) => dot.name))].join(", ");
+  if (target === "player") {
+    combat.playerHp -= damage;
+    combat.playerDots = dots.map((dot) => ({ ...dot, turns: dot.turns - 1 })).filter((dot) => dot.turns > 0);
+  } else {
+    combat.enemyHp -= damage;
+    combat.enemyDots = dots.map((dot) => ({ ...dot, turns: dot.turns - 1 })).filter((dot) => dot.turns > 0);
+  }
+  await pushCombatEvent(combat, {
+    round: combat.rounds,
+    actor: target === "player" ? "enemy" : "hero",
+    damage,
+    text: t("combat.dotDamage", "{effect} verursacht {damage} Schaden.", { effect: names, damage }),
+  });
+  return combat.playerHp <= 0 || combat.enemyHp <= 0;
+}
+
+function chooseAutoCombatAction(combat) {
+  const wasAwaiting = combat.awaitingPlayerAction;
+  combat.awaitingPlayerAction = true;
+  const actions = combatActionList(combat);
+  combat.awaitingPlayerAction = wasAwaiting;
+  const readyAbilities = actions.filter((action) => action.type === "ability" && !action.disabled);
+  const lowHp = combat.playerHp <= combat.combatStats.maxHp * 0.38;
+  const defensive = readyAbilities.find((action) => ["guard", "lastStand", "battleRush", "weaken", "counter"].includes(abilityCombatGroup(action.abilityId)));
+  if (lowHp && defensive) return defensive;
+  if (lowHp && actions.find((action) => action.id === "defend")) return actions.find((action) => action.id === "defend");
+  const execute = readyAbilities.find((action) => abilityCombatGroup(action.abilityId) === "execute" && combat.enemyHp <= combat.enemy.hp * 0.35);
+  if (execute) return execute;
+  if (readyAbilities.length) return readyAbilities[readyAbilities.length - 1];
+  if (combat.playerHp <= combat.combatStats.maxHp * 0.55 && combat.resource < combat.maxResource) return actions.find((action) => action.id === "defend");
+  return actions.find((action) => action.id === "attack");
+}
+
+function reduceCombatCooldowns(combat) {
+  Object.keys(combat.cooldowns).forEach((id) => {
+    combat.cooldowns[id] = Math.max(0, (combat.cooldowns[id] || 0) - 1);
+    if (combat.cooldowns[id] <= 0) delete combat.cooldowns[id];
+  });
+}
+
+function gainCombatResource(combat, amount) {
+  if (!amount) return;
+  combat.resource = Math.max(0, Math.min(combat.maxResource, combat.resource + amount));
+}
+
+async function executePlayerCombatAction(combat, action) {
+  if (action.type === "defend") {
+    combat.playerGuard = 0.5;
+    gainCombatResource(combat, classResource().defendGain || 2);
+    await pushCombatEvent(combat, {
+      round: combat.rounds,
+      actor: "hero",
+      damage: 0,
+      text: t("combat.defendText", "Du gehst in Deckung und sammelst {resource}.", { resource: classResource().label }),
+    });
+    return;
+  }
+
+  let hit = playerBaseActionHit(combat);
+  let text = t("combat.heroHit", "Du triffst für {damage}.", { damage: hit });
+  let abilityId = "";
+  if (action.type === "ability") {
+    abilityId = action.abilityId;
+    const result = applyPlayerAbilityAction(combat, action, hit);
+    hit = result.hit;
+    text = result.text;
+  } else {
+    gainCombatResource(combat, classResource().attackGain || 1);
+  }
+
+  if (combat.playerDamageMultiplier < 1) {
+    hit = abilityDamage(hit, combat.playerDamageMultiplier);
+    combat.playerDamageMultiplier = 1;
+  }
+  const defense = enemyDamageTakenMultiplier(combat.enemy, combat.enemyHp, combat.rounds, hit);
+  if (defense.multiplier < 1) {
+    hit = abilityDamage(hit, defense.multiplier);
+    if (defense.defensive.length) {
+      await pushCombatEvent(combat, {
+        round: combat.rounds,
+        actor: "enemy",
+        damage: 0,
+        text: `${combat.enemyName} nutzt ${defense.defensive.join(" + ")}.`,
+      });
+    }
+  }
+  const crit = rollPlayerCritical(hit, combat.combatStats);
+  hit = crit.damage;
+  if (crit.critical) {
+    text = criticalText(text, hit);
+    gainCombatResource(combat, classResource().critGain || 0);
+  }
+  combat.enemyHp -= hit;
+  await pushCombatEvent(combat, {
+    round: combat.rounds,
+    actor: "hero",
+    abilityId,
+    damage: hit,
+    critical: crit.critical,
+    text,
+  });
+  applyItemActionEffects(combat, crit.critical);
+}
+
+function playerBaseActionHit(combat) {
+  const armorIgnore = (combat.enemy.elite || combat.enemy.boss) ? Math.floor(combat.enemy.defense * combat.effectSummary.eliteArmorIgnore) : 0;
+  const effectiveDefense = Math.max(0, combat.enemy.defense - armorIgnore);
+  let hit = Math.max(1, random(combat.combatStats.damage - 4, combat.combatStats.damage + 3) - Math.floor(effectiveDefense * 1.08));
+  if (combat.combatEvent?.playerDamageBonus) hit = Math.max(1, Math.floor(hit * (1 + combat.combatEvent.playerDamageBonus)));
+  if (combat.enemy.elite || combat.enemy.boss) hit = Math.max(1, Math.floor(hit * (1 + combat.enchantStats.bossDamage + combat.effectSummary.eliteDamageBonus)));
+  if (combat.effectSummary.firstStrikeBonus > 0 && !combat.firstStrikeUsed) {
+    hit = abilityDamage(hit, 1 + combat.effectSummary.firstStrikeBonus);
+    combat.firstStrikeUsed = true;
+  }
+  return hit;
+}
+
+function applyPlayerAbilityAction(combat, action, baseHit) {
+  combat.resource = Math.max(0, combat.resource - action.cost);
+  combat.cooldowns[action.abilityId] = action.cooldown;
+  const group = abilityCombatGroup(action.abilityId);
+  const name = abilityCombatName(action.abilityId);
+  if (group === "guard") {
+    combat.playerGuard = 0.42;
+    return { hit: abilityDamage(baseHit, 0.9), text: t("combat.abilityGuardText", "{ability} stärkt deine Deckung und trifft für {damage}.", { ability: name, damage: abilityDamage(baseHit, 0.9) }) };
+  }
+  if (group === "lastStand" || group === "battleRush") {
+    const healRatio = group === "lastStand" ? 0.16 : 0.14;
+    const heal = Math.min(combat.combatStats.maxHp - combat.playerHp, Math.max(6, Math.floor(combat.combatStats.maxHp * healRatio)));
+    combat.playerHp += Math.max(0, heal);
+    combat.playerGuard = Math.min(combat.playerGuard, 0.82);
+    return { hit: abilityDamage(baseHit, 0.85), text: t("combat.abilityHealText", "{ability} heilt {heal} Leben und trifft für {damage}.", { ability: name, heal, damage: abilityDamage(baseHit, 0.85) }) };
+  }
+  if (group === "weaken") {
+    combat.nextEnemyDamageMultiplier = Math.min(combat.nextEnemyDamageMultiplier || 1, 0.75);
+    return { hit: abilityDamage(baseHit, 1.05), text: t("combat.abilityWeakenText", "{ability} schwächt den Gegner und trifft für {damage}.", { ability: name, damage: abilityDamage(baseHit, 1.05) }) };
+  }
+  if (group === "armorBreak") {
+    return { hit: abilityDamage(baseHit + Math.floor(combat.enemy.defense * 0.32), 1.25), text: t("combat.abilityArmorText", "{ability} bricht Rüstung und trifft für {damage}.", { ability: name, damage: abilityDamage(baseHit + Math.floor(combat.enemy.defense * 0.32), 1.25) }) };
+  }
+  if (group === "flurry") {
+    return { hit: abilityDamage(baseHit, 1.42), text: t("combat.abilityFlurryText", "{ability} setzt eine schnelle Serie für {damage}.", { ability: name, damage: abilityDamage(baseHit, 1.42) }) };
+  }
+  if (group === "execute") {
+    const multiplier = combat.enemyHp <= combat.enemy.hp * 0.35 ? 1.8 : 1.35;
+    return { hit: abilityDamage(baseHit, multiplier), text: t("combat.abilityExecuteText", "{ability} sucht die Schwachstelle und trifft für {damage}.", { ability: name, damage: abilityDamage(baseHit, multiplier) }) };
+  }
+  if (group === "counter") {
+    combat.playerGuard = 0.75;
+    return { hit: abilityDamage(baseHit, 1.28), text: t("combat.abilityCounterText", "{ability} bereitet einen Konter vor und trifft für {damage}.", { ability: name, damage: abilityDamage(baseHit, 1.28) }) };
+  }
+  return { hit: abilityDamage(baseHit, 1.65), text: t("combat.abilityHeavyText", "{ability} trifft schwer für {damage}.", { ability: name, damage: abilityDamage(baseHit, 1.65) }) };
+}
+
+function abilityCombatGroup(abilityId) {
+  return Object.entries(classAbilityGroups).find(([, ids]) => ids.includes(abilityId))?.[0] || "heavy";
+}
+
+function applyItemActionEffects(combat, critical) {
+  if (combat.enemyHp <= 0) return;
+  if (combat.effectSummary.bleedChance > 0 && Math.random() < Math.min(0.32, combat.effectSummary.bleedChance)) {
+    combat.enemyDots.push({ name: "Blutung", damage: Math.max(1, Math.ceil(combat.combatStats.damage * 0.14)), turns: 2 });
+  }
+  if (combat.effectSummary.poisonChance > 0 && Math.random() < Math.min(0.3, combat.effectSummary.poisonChance)) {
+    combat.enemyDots.push({ name: "Gift", damage: Math.max(1, Math.ceil(combat.combatStats.damage * 0.1)), turns: 3 });
+  }
+  if (critical && combat.effectSummary.critHealRatio > 0) {
+    combat.playerHp += Math.min(combat.combatStats.maxHp - combat.playerHp, Math.max(1, Math.floor(combat.combatStats.maxHp * combat.effectSummary.critHealRatio)));
+  }
+}
+
+async function executeEnemyCombatAction(combat) {
+  const enemyBaseHit = enemyBaseDamageAfterDefense(combat.enemy, combat.combatStats.defense);
+  const enemyAbility = triggeredEnemyAbility(combat.enemy, combat.rounds, combat.playerHp, combat.combatStats.maxHp, combat.enemyHp);
+  const passiveMultiplier = enemyDamagePassiveMultiplier(combat.enemy, combat.enemyHp);
+  const abilityMultiplier = enemyAbility?.damageMultiplier || 1;
+  let multiplier = (combat.nextEnemyDamageMultiplier || 1) * combat.playerGuard * abilityMultiplier * passiveMultiplier;
+  if (combat.combatEvent?.enemyDamageBonus) multiplier *= 1 + combat.combatEvent.enemyDamageBonus;
+  let hit = Math.max(1, Math.floor(enemyBaseHit * multiplier));
+  hit = Math.max(1, Math.floor(hit * (1 - Math.min(0.35, combat.enchantStats.damageReduction))));
+  const crit = rollEnemyCritical(hit, combat.enemy, combat.effectSummary);
+  hit = crit.damage;
+  combat.playerHp -= hit;
+  gainCombatResource(combat, classResource().hitGain || 0);
+  combat.playerGuard = 1;
+  combat.nextEnemyDamageMultiplier = 1;
+  let text = enemyAbility
+    ? t("combat.enemyAbilityHit", "{enemy}: {ability} trifft für {damage}.", {
+      enemy: combat.enemyName,
+      ability: enemyAbilityDisplayName(enemyAbilityCatalog[enemyAbility.id], enemyAbility.id),
+      damage: hit,
+    })
+    : t("combat.enemyHit", "{enemy} trifft für {damage}.", { enemy: combat.enemyName, damage: hit });
+  if (enemyAbility?.playerDamageMultiplier) combat.playerDamageMultiplier = Math.min(combat.playerDamageMultiplier, enemyAbility.playerDamageMultiplier);
+  if (enemyAbility?.dot) combat.playerDots.push(enemyAbility.dot);
+  if (enemyAbility?.healRatio || enemyAbility?.healFlatRatio) {
+    const healBase = enemyAbility.healRatio ? hit * enemyAbility.healRatio : combat.enemy.hp * enemyAbility.healFlatRatio;
+    combat.enemyHp += Math.min(combat.enemy.hp - combat.enemyHp, Math.max(1, Math.floor(healBase * enemyHealMultiplier(combat.enemy, combat.enemyHp))));
+  }
+  if (crit.critical) text = criticalText(text, hit);
+  await pushCombatEvent(combat, {
+    round: combat.rounds,
+    actor: "enemy",
+    damage: hit,
+    critical: crit.critical,
+    text,
+  });
+}
+
+async function pushCombatEvent(combat, event) {
+  const fullEvent = {
+    ...event,
+    playerHp: Math.max(0, combat.playerHp),
+    enemyHp: Math.max(0, combat.enemyHp),
+  };
+  combat.events.push(fullEvent);
+  updateBattleHealth(fullEvent.playerHp, combat.combatStats.maxHp, fullEvent.enemyHp, combat.enemy.hp);
+  showCombatAnimationEvent($("battleStage"), fullEvent, combat.preparedEventEntry, combat.enemyName, combat.combatStats.maxHp, combat.enemy.hp);
+  renderCombatPanel();
+  await waitCombat(isManualCombatMode() ? 180 : 420);
+  setBattleStageClass($("battleStage"), "", combat.preparedEventEntry);
+}
+
+async function finishActionCombat(combat) {
+  if (combat.playerHp > 0 && combat.effectSummary.postCombatHeal > 0) {
+    const heal = Math.min(combat.combatStats.maxHp - combat.playerHp, Math.max(1, Math.floor(combat.combatStats.maxHp * Math.min(0.18, combat.effectSummary.postCombatHeal))));
+    combat.playerHp += heal;
+  }
+  hideBattleEventBadge();
+  $("battleStage").className = "battle-stage";
+  $("battleStage").classList.add(combat.playerHp > 0 ? "victory" : "defeat");
+  showBattleResult(combat.playerHp > 0, combat.enemyName, combat.rounds, combatAnimationSummary(combat.events));
+  await waitResult(900);
+  hideBattleResult();
+  setCombatLog(combat.enemy, combat.events, combat.playerHp > 0, combat.rounds);
+  damageEquippedItems(combat.enemy);
+  if (combat.playerHp > 0) {
+    await loadOptionalDataPack("drops");
+    grantActionCombatRewards(combat);
+  } else {
+    applyActionCombatLoss(combat);
+  }
+}
+
+function grantActionCombatRewards(combat) {
+  state.hp = Math.max(1, combat.playerHp);
+  const goldBonus = combat.enchantStats.goldBonus + combat.effectSummary.goldBonus + (combat.combatEvent?.goldBonus || 0);
+  const rewardScale = combatRewardScale(combat.enemy);
+  const gold = scaledCombatReward(Math.max(1, Math.floor(random(combat.enemy.gold[0], combat.enemy.gold[1]) * (1 + goldBonus))), combat.enemy);
+  const xp = scaledCombatReward(Math.max(1, Math.floor(combat.enemy.xp * (1 + combat.enchantStats.xpBonus + combat.effectSummary.xpBonus))), combat.enemy);
+  state.gold += gold;
+  gainXp(xp);
+  grantMaterials(combat.enemy.baseId || selectedEnemy, combat.enemy.eliteVariant);
+  createLootChoices(combat.enemy, combat.enemy.baseId || selectedEnemy);
+  state.combatStats = normalizeCombatStats(state.combatStats);
+  state.combatStats.wins += 1;
+  recordSmithMasteryBattle(combat.enemy);
+  recordEnchantMasteryBattle(combat.enemy);
+  updateQuestProgress(combat.enemy, combat.enemy.baseId || selectedEnemy);
+  maybeGrantBattleRenown(combat.enemy);
+  const firstClearReward = grantBossFirstClear(combat.enemy, combat.enemy.baseId || selectedEnemy);
+  maybeDropRareQuest(combat.enemy);
+  refreshQuestBoard(false);
+  log(t("combat.winLog", "Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.", { enemy: combat.enemyName, rounds: combat.rounds, xp, gold }), "good");
+  if (rewardScale < 1) {
+    log(t("combat.rewardScaledLog", "Alte Gegner geben nur noch {percent}% Kampfbelohnung.", { percent: Math.round(rewardScale * 100) }), "drop");
+  }
+  if (firstClearReward) log(`Erster Dungeon-Sieg: ${bossFirstClearRewardText(combat.enemy)}.`, "drop");
+  if (combat.enemy.boss) remindSaveBackup("du hast einen Dungeon-Boss besiegt.");
+  notifyReadyAchievements();
+}
+
+function applyActionCombatLoss(combat) {
+  const xpLoss = Math.min(state.xp, Math.ceil(xpForLevel(state.level) * 0.1));
+  const goldLoss = Math.min(state.gold, Math.ceil(14 + state.level * 6));
+  state.xp -= xpLoss;
+  state.gold -= goldLoss;
+  state.deaths += 1;
+  state.hp = Math.max(1, Math.floor(state.maxHp * 0.35));
+  damageEquippedItems(combat.enemy, 2);
+  log(t("combat.lossLog", "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.", { enemy: combat.enemyName, xp: xpLoss, gold: goldLoss }), "bad");
 }
 
 function armCombatWatchdog(ms) {

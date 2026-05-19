@@ -2701,6 +2701,68 @@ button.drop-row span:last-child {
   cursor: not-allowed;
 }
 
+.combat-actions {
+  flex: 1 1 100%;
+  display: grid;
+  gap: 8px;
+  min-width: min(100%, 520px);
+}
+
+.combat-resource {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 9px;
+  border: 1px solid rgba(242, 193, 78, 0.3);
+  border-radius: 8px;
+  color: var(--gold);
+  background: rgba(7, 17, 27, 0.7);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.combat-action-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(92px, 1fr));
+  gap: 6px;
+}
+
+.combat-action {
+  display: grid;
+  gap: 2px;
+  min-height: 48px;
+  padding: 7px 9px;
+  border-color: rgba(74, 113, 145, 0.72);
+  border-radius: 8px;
+  background: rgba(14, 31, 47, 0.94);
+  text-align: left;
+}
+
+.combat-action strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.combat-action span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.combat-action:not(:disabled):hover,
+.combat-action:not(:disabled):focus-visible {
+  border-color: rgba(52, 213, 216, 0.78);
+  background: rgba(20, 46, 68, 0.98);
+  transform: translateY(-1px);
+}
+
+.combat-action.locked,
+.combat-action:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
 .target-meta-row,
 .boss-meta-row {
   display: flex;

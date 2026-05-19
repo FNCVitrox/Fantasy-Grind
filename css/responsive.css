@@ -521,6 +521,18 @@
     width: 100%;
   }
 
+  .combat-actions {
+    width: 100%;
+  }
+
+  .combat-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .combat-action {
+    min-height: 54px;
+  }
+
   .target-meta-row,
   .boss-meta-row {
     gap: 4px;

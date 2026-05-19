@@ -65,12 +65,13 @@ function renderCombatPanel() {
   renderCombatLogSummary();
   renderLog();
   renderCombatModeToggle();
+  renderCombatActions();
   const manualMode = isManualCombatMode();
   const fightText = isFighting
-    ? manualMode ? t("combat.nextStep", "Nächster Schritt") : (skipCombat ? t("combat.skipping", "Überspringe...") : t("combat.skip", "Skip"))
+    ? manualMode ? t("combat.inProgress", "Kampf läuft") : (skipCombat ? t("combat.skipping", "Überspringe...") : t("combat.skip", "Skip"))
     : t("combat.start", "Kampf starten");
   setText("fightBtn", fightText);
-  setDisabled("fightBtn", isFighting ? (!manualMode && skipCombat) : state.pendingLoot.length > 0);
+  setDisabled("fightBtn", isFighting ? (manualMode || skipCombat) : state.pendingLoot.length > 0);
 }
 
 function renderCombatModeToggle() {
@@ -84,6 +85,42 @@ function renderCombatModeToggle() {
     const label = t(labelKey, fallback);
     if (button.textContent !== label) button.textContent = label;
   });
+}
+
+function renderCombatActions() {
+  const container = $("combatActions");
+  if (!container) return;
+  const resource = classResource();
+  const resourceValue = activeCombatState ? activeCombatState.resource : 0;
+  const maxResource = activeCombatState ? activeCombatState.maxResource : resource.max;
+  const actions = combatActionList(activeCombatState);
+  const signature = [
+    currentLanguage(),
+    state.characterClass,
+    state.build,
+    state.level,
+    isFighting ? 1 : 0,
+    activeCombatState?.awaitingPlayerAction ? 1 : 0,
+    resourceValue,
+    maxResource,
+    actions.map((action) => `${action.id}:${action.disabled ? 1 : 0}:${action.disabledReason || ""}`).join("|"),
+  ].join(";");
+  if (renderCache.combatActions === signature) return;
+  renderCache.combatActions = signature;
+  container.innerHTML = `
+    <div class="combat-resource">
+      <span>${escapeHtml(resource.label)}</span>
+      <strong>${resourceValue}/${maxResource}</strong>
+    </div>
+    <div class="combat-action-grid">
+      ${actions.map((action) => `
+        <button class="combat-action ${action.disabled ? "locked" : ""}" type="button" data-combat-action="${escapeAttr(action.id)}" ${action.disabled ? "disabled" : ""}>
+          <strong>${escapeHtml(action.label)}</strong>
+          <span>${escapeHtml(action.disabledReason || action.detail || "")}</span>
+        </button>
+      `).join("")}
+    </div>
+  `;
 }
 
 function setText(id, value) {
