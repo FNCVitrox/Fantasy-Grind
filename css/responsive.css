@@ -259,6 +259,10 @@
     width: 50px;
   }
 
+  .character-panel .portrait .class-portrait-icon {
+    width: 50px;
+  }
+
   .portrait-summary {
     display: grid;
     gap: 1px;
@@ -880,12 +884,20 @@
     width: min(42%, 128px);
   }
 
+  .portrait .class-portrait-icon {
+    width: min(42%, 128px);
+  }
+
   .character-panel .portrait {
     min-height: 62px;
     padding: 7px 9px;
   }
 
   .character-panel .portrait svg {
+    width: 46px;
+  }
+
+  .character-panel .portrait .class-portrait-icon {
     width: 46px;
   }
 
@@ -1042,5 +1054,24 @@
   .inventory-actions,
   .loot-actions {
     gap: 6px;
+  }
+
+  .inventory-item {
+    gap: 7px;
+  }
+
+  .inventory-item-head {
+    align-items: center;
+  }
+
+  .inventory-item-meta span {
+    min-height: 20px;
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+
+  .inventory-item .loot-compare {
+    max-height: 72px;
+    overflow: auto;
   }
 }

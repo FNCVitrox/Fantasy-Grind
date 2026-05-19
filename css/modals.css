@@ -3299,10 +3299,15 @@ button.drop-row span:last-child {
 .class-choice-list button {
   min-height: 92px;
   display: grid;
-  gap: 5px;
-  align-content: center;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
   padding: 12px;
   text-align: left;
+}
+
+.class-choice-list .class-portrait-icon {
+  width: 58px;
 }
 
 .class-choice-list button.active {
@@ -3312,12 +3317,18 @@ button.drop-row span:last-child {
     rgba(12, 23, 35, 0.96);
 }
 
+.class-choice-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
 .class-choice-list strong {
   color: var(--text);
   font-size: 17px;
 }
 
-.class-choice-list span {
+.class-choice-copy span {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.25;

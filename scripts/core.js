@@ -2498,15 +2498,18 @@ function chooseAutoCombatAction(combat) {
   const actions = combatActionList(combat);
   combat.awaitingPlayerAction = wasAwaiting;
   const readyAbilities = actions.filter((action) => action.type === "ability" && !action.disabled);
+  const attack = actions.find((action) => action.id === "attack");
+  const defend = actions.find((action) => action.id === "defend");
+  const canDefend = defend && combat.lastActionId !== "defend" && combat.resource < combat.maxResource;
   const lowHp = combat.playerHp <= combat.combatStats.maxHp * 0.38;
   const defensive = readyAbilities.find((action) => ["guard", "lastStand", "battleRush", "weaken", "counter"].includes(abilityCombatGroup(action.abilityId)));
   if (lowHp && defensive) return defensive;
-  if (lowHp && actions.find((action) => action.id === "defend")) return actions.find((action) => action.id === "defend");
   const execute = readyAbilities.find((action) => abilityCombatGroup(action.abilityId) === "execute" && combat.enemyHp <= combat.enemy.hp * 0.35);
   if (execute) return execute;
+  if (lowHp && canDefend) return defend;
   if (readyAbilities.length) return readyAbilities[readyAbilities.length - 1];
-  if (combat.playerHp <= combat.combatStats.maxHp * 0.55 && combat.resource < combat.maxResource) return actions.find((action) => action.id === "defend");
-  return actions.find((action) => action.id === "attack");
+  if (combat.playerHp <= combat.combatStats.maxHp * 0.55 && canDefend) return defend;
+  return attack || defend;
 }
 
 function reduceCombatCooldowns(combat) {

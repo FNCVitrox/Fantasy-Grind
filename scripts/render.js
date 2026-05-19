@@ -204,6 +204,8 @@ function renderClassPanel() {
   setText("className", className);
   setText("characterSummaryName", className);
   setText("characterBuildSummary", buildName);
+  const icon = $("characterClassIcon");
+  if (icon) icon.className = classIconClass(state.characterClass);
   const signature = `${currentLanguage()}|${state.characterClass}|${state.build}`;
   if (renderCache.classPanel === signature) return;
   renderCache.classPanel = signature;
@@ -227,10 +229,22 @@ function renderClassChoices() {
   if (!list) return;
   list.innerHTML = Object.entries(classCatalog).map(([id, character]) => `
     <button class="${state.characterClass === id ? "active" : ""}" type="button" data-character-class="${id}">
-      <strong>${escapeHtml(entityName("class", id, character.name))}</strong>
-      <span>${escapeHtml(entityText("class", id, character.description || ""))}</span>
+      ${classIconMarkup(id)}
+      <span class="class-choice-copy">
+        <strong>${escapeHtml(entityName("class", id, character.name))}</strong>
+        <span>${escapeHtml(entityText("class", id, character.description || ""))}</span>
+      </span>
     </button>
   `).join("");
+}
+
+function classIconMarkup(classId) {
+  return `<span class="${classIconClass(classId)}" aria-hidden="true"><span class="class-icon-mark"></span><span class="class-icon-tool"></span></span>`;
+}
+
+function classIconClass(classId) {
+  const safeClass = escapeToken(classId, Object.keys(classCatalog), "warrior");
+  return `class-portrait-icon class-icon-${safeClass}`;
 }
 
 function renderPlayerStatsDetails(stats = totalStats()) {
@@ -1493,11 +1507,15 @@ function renderInventoryItemCard(itemId, index) {
       <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
       ${locked ? `<span class="lock-note">${t("merchant.lockedItem", "Geschützt")}</span>` : ""}
     </div>
-    <p>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("common.value", "Wert")} ${sellValue(item)} ${t("common.gold", "Gold")}</p>
+    <div class="inventory-item-meta">
+      <span>${labelFor(slotLabel, slot)}</span>
+      <span class="quality-${quality}">${labelFor(qualityLabel, quality)}</span>
+      <span>${sellValue(item)} ${t("common.gold", "Gold")}</span>
+      <span>${itemDurability(itemId)}%</span>
+    </div>
     ${item.set ? `<p class="set-line">${escapeHtml(setDisplayName(item.set))}</p>` : ""}
-    ${statText ? `<p>${statText}</p>` : ""}
+    ${statText ? `<p class="inventory-stat-line">${statText}</p>` : ""}
     ${enchantText ? `<p>${enchantText}</p>` : ""}
-    <p>${t("main.durability", "Haltbarkeit")}: ${itemDurability(itemId)}%</p>
     <div class="loot-compare compact">
       ${renderCompareSpans(compare, 3)}
     </div>
