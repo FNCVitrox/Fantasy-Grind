@@ -69,9 +69,10 @@ assert(html.includes('id="combatModeToggle"') && html.includes('data-combat-mode
 assert(css.includes(".combat-mode-toggle"), "combat mode toggle should have stable styling");
 assert(html.includes('id="combatActions"'), "combat UI should expose RPG action buttons");
 assert(html.includes('class="combat-command-main"') && html.includes('class="combat-command-top"'), "combat UI should use a dedicated command dock layout");
+assert(!html.includes('id="selectedEnemyMeta"') && !html.includes('id="selectedEnemyName"'), "combat command dock should not duplicate target details");
 assert(/manualMode \? await waitForCombatAction\(\) : chooseAutoCombatAction/.test(read("scripts/core.js")), "manual and auto combat should share the same action loop");
 assert(/requestCombatAction\(button\.dataset\.combatAction\)/.test(read("scripts/events.js")), "combat action buttons should feed manual combat choices");
-assert(css.includes("grid-template-columns: minmax(220px, 300px) minmax(0, 1fr)") && css.includes(".combat-command-main"), "combat command dock should separate target and actions on desktop");
+assert(css.includes("grid-template-rows: auto minmax(0, 1fr)") && css.includes(".combat-command-main"), "combat command dock should stack controls above full-width actions");
 assert(css.includes(".combat-card {\r\n    position: sticky") || css.includes(".combat-card {\n    position: sticky"), "mobile combat command dock should stay reachable");
 
 const storage = {};
@@ -180,8 +181,6 @@ assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 20; co
 assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 20; combatRewardScale(enemies.hollowChampion)", context), 1);
 assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 20; scaledCombatReward(100, enemies.wolf)", context), 35);
 assert.strictEqual(vm.runInContext("state = defaultState(); state.language = 'en'; t('combat.rewardScaledLog', 'x', { percent: 35 })", context), "Old enemies now give only 35% combat rewards.");
-assert(vm.runInContext("state = defaultState(); state.level = 20; renderSelectedEnemyMeta(enemies.wolf).includes('35% XP/Gold')", context), "low-level enemies should show reduced rewards before combat");
-assert(vm.runInContext("state = defaultState(); state.level = 20; state.language = 'en'; renderSelectedEnemyMeta(enemies.wolf).includes('level gap')", context), "reduced reward hint should translate to English");
 assert.strictEqual(vm.runInContext("knownClassAbilities().length", context), 3);
 assert(vm.runInContext("['warrior', 'mage', 'rogue', 'archer'].every((id) => classCatalog[id] && Object.keys(classCatalog[id].buildAbilities).length === 3)", context), "playable classes should ship with three build paths");
 assert(vm.runInContext("state = defaultState(); state.characterClass = 'mage'; state.build = 'damage'; knownClassAbilities().map(([id]) => id).join(',') === 'arcaneBolt,emberNova,spellRend'", context), "mage damage build should expose spell damage abilities");
@@ -233,8 +232,8 @@ assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; stat
 assert(vm.runInContext("(() => { const loaded = { ...defaultState(), bossDropPity: { ratguard: 99, wolf: 2 } }; normalizeLoadedCollections(loaded); return loaded.bossDropPity.ratguard === bossDropPityGoal && !('wolf' in loaded.bossDropPity); })()", context), "boss drop pity save data should normalize to known bosses");
 assert(vm.runInContext("state = defaultState(); const reward = grantBossFirstClear(enemies.ratguard, 'ratguard'); reward && state.defeatedBosses.includes('ratguard') && state.renown === reward.renown && state.gold === 20 + reward.gold", context), "first boss clear should grant one-time rewards");
 assert(vm.runInContext("const beforeGold = state.gold; grantBossFirstClear(enemies.ratguard, 'ratguard') === null && state.gold === beforeGold", context), "first boss clear should not pay twice");
-assert(vm.runInContext("state = defaultState(); renderSelectedEnemyMeta(enemies.ratguard, 'ratguard').includes('Bossbeute') && renderSelectedEnemyMeta(enemies.ratguard, 'ratguard').includes('Erster Sieg')", context), "boss target panel should show loot and first-clear rewards");
-assert(vm.runInContext("state = defaultState(); state.bossDropPity.ratguard = bossDropPityGoal; renderSelectedEnemyMeta(enemies.ratguard, 'ratguard').includes('Nächster Sieg garantiert') && renderBossRewardPanel('ratguard', enemies.ratguard).includes('Nächster Sieg garantiert')", context), "boss UI should show guaranteed boss loot state");
+assert(vm.runInContext("state = defaultState(); renderBossRewardPanel('ratguard', enemies.ratguard).includes('Bossbeute') && renderBossRewardPanel('ratguard', enemies.ratguard).includes('Erster Sieg')", context), "boss reward panel should show loot and first-clear rewards");
+assert(vm.runInContext("state = defaultState(); state.bossDropPity.ratguard = bossDropPityGoal; renderBossRewardPanel('ratguard', enemies.ratguard).includes('Nächster Sieg garantiert')", context), "boss UI should show guaranteed boss loot state");
 assert(vm.runInContext("state = defaultState(); renderEnemyCardMeta(enemies.ratguard, 'ratguard').includes('Erster Sieg offen') && renderEnemyCardMeta(enemies.ratguard, 'ratguard').includes('feste Drops')", context), "boss enemy cards should summarize first-clear and fixed drops");
 assert(vm.runInContext("state = defaultState(); state.defeatedBosses = ['ratguard']; renderEnemyCardMeta(enemies.ratguard, 'ratguard').includes('Erster Sieg geholt')", context), "boss enemy card first-clear state should update after the reward is claimed");
 assert(vm.runInContext("rollItemEffect('weapon', 'legendary', enemies.crownBoar) && itemEffectPool('weapon', 'legendary', enemies.crownBoar).includes(rollItemEffect('weapon', 'legendary', enemies.crownBoar))", context), "legendary generated items should be able to roll valid effects");
