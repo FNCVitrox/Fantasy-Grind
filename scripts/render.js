@@ -164,8 +164,13 @@ function renderCachedList(id, signature, items, emptyHtmlFactory, itemHtmlFactor
 
 function renderHeroBuildVisual() {
   const build = ["tank", "damage", "bruiser"].includes(state.build) ? state.build : "bruiser";
-  const className = `combatant hero-sprite hero-build-${build}`;
+  const characterClass = Object.prototype.hasOwnProperty.call(classCatalog, state.characterClass) ? state.characterClass : "warrior";
+  const className = `combatant hero-sprite hero-class-${characterClass} hero-build-${build}`;
   if ($("heroSprite").className !== className) $("heroSprite").className = className;
+  const heroName = entityName("class", characterClass, classCatalog[characterClass].name);
+  setText("heroSpriteName", heroName);
+  const health = $("heroSprite")?.querySelector(".hero-health");
+  if (health) health.setAttribute("aria-label", `${heroName} ${t("common.health", "Leben")}`);
 }
 
 function itemQuality(item) {

@@ -158,6 +158,13 @@ for (const token of spriteTokens) {
 for (const build of ["tank", "damage", "bruiser"]) {
   assert(css.includes(`.hero-build-${build}`), `Missing hero build sprite CSS: ${build}`);
 }
+for (const classId of ["warrior", "mage", "rogue", "archer"]) {
+  assert(css.includes(`.hero-class-${classId}`), `Missing hero class sprite CSS: ${classId}`);
+  for (const build of ["tank", "damage", "bruiser"]) {
+    assert(css.includes(`.hero-class-${classId}.hero-build-${build}`), `Missing class/build sprite CSS: ${classId}/${build}`);
+  }
+}
+assert(read("scripts/render.js").includes("hero-class-${characterClass}") && read("scripts/render.js").includes("heroSpriteName"), "combat hero sprite should follow the selected class and update its label");
 assert(css.includes(".class-list"), "class selector should have dedicated layout CSS");
 assert(css.includes(".smith-avatar::before") && css.includes(".enchant-avatar::after"), "Borin and Mira avatars should have detailed CSS silhouettes");
 assert(vm.runInContext("state = defaultState(); questAvailable(getQuestById('wolves')) && !questAvailable(getQuestById('fields'))", context), "early quest board should only offer reachable quest targets");

@@ -1594,6 +1594,380 @@ button.drop-row span:last-child {
   background: #b68460;
 }
 
+.hero-class-warrior .hero-body {
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22));
+}
+
+.hero-class-warrior.hero-build-tank .hero-body {
+  box-shadow: inset 0 0 0 3px rgba(216, 174, 75, 0.12), 0 0 22px rgba(73, 182, 255, 0.14);
+}
+
+.hero-class-warrior.hero-build-damage .hero-body {
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.24)) saturate(1.08);
+}
+
+.hero-class-warrior.hero-build-bruiser .hero-body {
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22)) contrast(1.04);
+}
+
+.hero-class-mage .hero-body {
+  width: 68px;
+  height: 92px;
+  border-radius: 28px 28px 18px 18px;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(183, 126, 236, 0.42), transparent 21%),
+    linear-gradient(110deg, rgba(201, 232, 255, 0.2) 0 22%, transparent 23% 64%, rgba(63, 214, 220, 0.35) 65% 70%, transparent 71%),
+    linear-gradient(135deg, #2d214f, #111521 54%, #1d4151 55%);
+  border-color: #b77eec;
+  box-shadow: 0 0 24px rgba(183, 126, 236, 0.28), inset 0 0 18px rgba(63, 214, 220, 0.1);
+}
+
+.hero-class-mage .hero-body::before {
+  left: 18px;
+  top: 30px;
+  width: 34px;
+  height: 9px;
+  background: rgba(255, 217, 111, 0.9);
+  box-shadow: 0 20px 0 -5px rgba(183, 126, 236, 0.45);
+}
+
+.hero-class-mage .hero-body::after {
+  left: 22px;
+  bottom: -10px;
+  width: 26px;
+  height: 16px;
+  border-radius: 0 0 14px 14px;
+  background: linear-gradient(90deg, #161b31, #081018);
+}
+
+.hero-class-mage .hero-helm {
+  left: 9px;
+  top: -20px;
+  width: 50px;
+  height: 38px;
+  border-radius: 26px 26px 12px 12px;
+  background: linear-gradient(135deg, #55408b, #18243c);
+  border-color: #d0a7ff;
+}
+
+.hero-class-mage .hero-helm::before {
+  left: 16px;
+  top: 13px;
+  width: 22px;
+  height: 6px;
+  background: linear-gradient(90deg, #ffe07f, #75e9ff);
+  box-shadow: 0 0 10px rgba(117, 233, 255, 0.65);
+}
+
+.hero-class-mage .hero-shield {
+  left: -18px;
+  top: 34px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, #fff3b0, #3fd6dc 48%, #3a2567 72%);
+  border-color: #9ee8ff;
+  box-shadow: 0 0 18px rgba(63, 214, 220, 0.52);
+}
+
+.hero-class-mage .hero-shield::after {
+  inset: -7px;
+  border: 2px solid rgba(183, 126, 236, 0.36);
+  border-radius: 50%;
+}
+
+.hero-class-mage .hero-sword {
+  right: -28px;
+  top: -16px;
+  width: 9px;
+  height: 96px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe07f, #75e9ff 26%, #49306d 27% 100%);
+  transform: rotate(-13deg);
+  filter: drop-shadow(0 0 10px rgba(117, 233, 255, 0.48));
+}
+
+.hero-class-mage .hero-sword::after {
+  left: -8px;
+  top: -6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff3b0, #b77eec 58%, transparent 62%);
+}
+
+.hero-class-mage.hero-build-tank .hero-body {
+  background:
+    radial-gradient(circle at 50% 24%, rgba(116, 173, 224, 0.46), transparent 22%),
+    linear-gradient(135deg, #d9f4ff, #2c5d76 43%, #182943 44%);
+  border-color: #9ee8ff;
+  box-shadow: 0 0 24px rgba(116, 173, 224, 0.34), inset 0 0 22px rgba(201, 232, 255, 0.14);
+}
+
+.hero-class-mage.hero-build-tank .hero-helm {
+  background: linear-gradient(135deg, #d9f4ff, #4a76a4);
+  border-color: #c9e8ff;
+}
+
+.hero-class-mage.hero-build-tank .hero-shield {
+  width: 34px;
+  height: 34px;
+  background: radial-gradient(circle, #f8fbff, #74ade0 54%, #1c3552 74%);
+}
+
+.hero-class-mage.hero-build-damage .hero-body {
+  background:
+    radial-gradient(circle at 50% 22%, rgba(255, 192, 79, 0.5), transparent 21%),
+    linear-gradient(135deg, #52202b, #1c1422 52%, #ef646b 53% 58%, #381019 59%);
+  border-color: #f0c04f;
+  box-shadow: 0 0 28px rgba(239, 100, 107, 0.34);
+}
+
+.hero-class-mage.hero-build-damage .hero-sword {
+  background: linear-gradient(180deg, #fff3b0, #f0c04f 28%, #8b1e2d 29% 100%);
+  filter: drop-shadow(0 0 12px rgba(240, 192, 79, 0.62));
+}
+
+.hero-class-mage.hero-build-bruiser .hero-body {
+  background:
+    radial-gradient(circle at 50% 24%, rgba(183, 126, 236, 0.5), transparent 22%),
+    linear-gradient(135deg, #341d4a, #0c1018 52%, #5c2d7a 53%);
+  border-color: #b77eec;
+}
+
+.hero-class-rogue .hero-body {
+  width: 62px;
+  height: 88px;
+  border-radius: 28px 28px 12px 12px;
+  background:
+    linear-gradient(125deg, rgba(63, 214, 163, 0.34) 0 14%, transparent 15% 62%, rgba(5, 11, 18, 0.55) 63%),
+    linear-gradient(135deg, #1e3943, #0e1721 48%, #284331 49%);
+  border-color: #3fd6a3;
+  box-shadow: 0 0 20px rgba(63, 214, 163, 0.18);
+}
+
+.hero-class-rogue .hero-body::before {
+  left: 15px;
+  top: 28px;
+  width: 34px;
+  height: 9px;
+  background: rgba(5, 11, 18, 0.88);
+  box-shadow: 0 20px 0 -5px rgba(63, 214, 163, 0.42);
+}
+
+.hero-class-rogue .hero-body::after {
+  left: 22px;
+  bottom: -9px;
+  width: 20px;
+  height: 15px;
+  border-radius: 0 0 10px 10px;
+  background: #071019;
+}
+
+.hero-class-rogue .hero-helm {
+  left: 10px;
+  top: -15px;
+  width: 42px;
+  height: 31px;
+  border-radius: 18px 18px 10px 10px;
+  background: linear-gradient(135deg, #263d4a, #081018);
+  border-color: #3fd6a3;
+}
+
+.hero-class-rogue .hero-helm::before {
+  left: 9px;
+  top: 11px;
+  width: 25px;
+  height: 5px;
+  background: linear-gradient(90deg, #071019 0 42%, transparent 43% 52%, #071019 53%);
+}
+
+.hero-class-rogue .hero-shield {
+  left: -15px;
+  top: 39px;
+  width: 16px;
+  height: 42px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #d9f4ff, #3fd6a3 38%, #0b1721 39%);
+  border-color: #75e9ff;
+  transform: rotate(35deg);
+}
+
+.hero-class-rogue .hero-shield::after {
+  display: none;
+}
+
+.hero-class-rogue .hero-sword {
+  right: -21px;
+  top: 13px;
+  width: 8px;
+  height: 62px;
+  background: linear-gradient(180deg, #e8edf4, #7c8792 62%, #4f312c 63%);
+  transform: rotate(38deg);
+}
+
+.hero-class-rogue .hero-sword::after {
+  left: -8px;
+  top: 31px;
+  width: 24px;
+  background: #3fd6a3;
+}
+
+.hero-class-rogue.hero-build-tank .hero-body {
+  background:
+    linear-gradient(135deg, #203247, #0a121c 50%, #30465f 51%);
+  border-color: #74ade0;
+  box-shadow: 0 0 22px rgba(116, 173, 224, 0.22);
+}
+
+.hero-class-rogue.hero-build-tank .hero-shield {
+  width: 22px;
+  height: 52px;
+  background: linear-gradient(180deg, #9ee8ff, #375879 42%, #09131f 43%);
+}
+
+.hero-class-rogue.hero-build-damage .hero-body {
+  background:
+    linear-gradient(122deg, rgba(239, 100, 107, 0.36) 0 16%, transparent 17% 62%, rgba(5, 11, 18, 0.6) 63%),
+    linear-gradient(135deg, #3b1623, #101018 48%, #3fd6a3 49%);
+  border-color: #ef646b;
+}
+
+.hero-class-rogue.hero-build-damage .hero-sword {
+  height: 72px;
+  filter: drop-shadow(0 0 9px rgba(239, 100, 107, 0.44));
+}
+
+.hero-class-rogue.hero-build-bruiser .hero-body {
+  background:
+    linear-gradient(125deg, rgba(185, 85, 72, 0.3) 0 16%, transparent 17% 62%, rgba(5, 11, 18, 0.54) 63%),
+    linear-gradient(135deg, #17332c, #0a1218 48%, #40283a 49%);
+  border-color: #b77eec;
+}
+
+.hero-class-archer .hero-body {
+  width: 66px;
+  height: 88px;
+  border-radius: 28px 28px 14px 14px;
+  background:
+    linear-gradient(110deg, transparent 0 38%, rgba(216, 174, 75, 0.38) 39% 45%, transparent 46%),
+    linear-gradient(135deg, #526145, #17211f 50%, #2d4b61 51%);
+  border-color: #74ade0;
+  box-shadow: 0 0 20px rgba(116, 173, 224, 0.2);
+}
+
+.hero-class-archer .hero-body::before {
+  left: 15px;
+  top: 29px;
+  width: 36px;
+  height: 9px;
+  background: rgba(5, 11, 18, 0.86);
+  box-shadow: 0 20px 0 -5px rgba(240, 192, 79, 0.42);
+}
+
+.hero-class-archer .hero-body::after {
+  left: 23px;
+  bottom: -10px;
+  width: 22px;
+  height: 16px;
+  border-radius: 0 0 12px 12px;
+  background: #111821;
+}
+
+.hero-class-archer .hero-helm {
+  left: 10px;
+  top: -16px;
+  width: 46px;
+  height: 33px;
+  border-radius: 22px 22px 9px 9px;
+  background: linear-gradient(135deg, #526145, #1b2b2c);
+  border-color: #d8ae4b;
+}
+
+.hero-class-archer .hero-helm::before {
+  left: 11px;
+  top: 12px;
+  width: 24px;
+  height: 5px;
+  background: rgba(5, 11, 18, 0.84);
+}
+
+.hero-class-archer .hero-shield {
+  left: -25px;
+  top: 10px;
+  width: 40px;
+  height: 82px;
+  border: 4px solid #d8ae4b;
+  border-left-color: transparent;
+  border-radius: 50%;
+  background: transparent;
+  transform: rotate(8deg);
+}
+
+.hero-class-archer .hero-shield::after {
+  left: 15px;
+  top: 10px;
+  width: 2px;
+  height: 62px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(232, 237, 244, 0.86);
+}
+
+.hero-class-archer .hero-sword {
+  right: -18px;
+  top: 12px;
+  width: 7px;
+  height: 78px;
+  background: linear-gradient(180deg, #f5f7fb, #d8ae4b 10%, #7c4b32 11% 100%);
+  transform: rotate(-58deg);
+  filter: drop-shadow(0 0 8px rgba(216, 174, 75, 0.3));
+}
+
+.hero-class-archer .hero-sword::after {
+  left: -14px;
+  top: 13px;
+  width: 28px;
+  height: 5px;
+  background: #e8edf4;
+  clip-path: polygon(0 50%, 78% 0, 100% 50%, 78% 100%);
+}
+
+.hero-class-archer.hero-build-tank .hero-body {
+  background:
+    linear-gradient(135deg, #315549, #12211f 50%, #263c2e 51%);
+  border-color: #3fd6a3;
+}
+
+.hero-class-archer.hero-build-tank .hero-shield {
+  border-color: #3fd6a3;
+  border-left-color: transparent;
+}
+
+.hero-class-archer.hero-build-damage .hero-body {
+  background:
+    linear-gradient(110deg, transparent 0 38%, rgba(240, 192, 79, 0.58) 39% 45%, transparent 46%),
+    linear-gradient(135deg, #4f3f24, #111821 50%, #243f63 51%);
+  border-color: #f0c04f;
+  box-shadow: 0 0 24px rgba(240, 192, 79, 0.24);
+}
+
+.hero-class-archer.hero-build-damage .hero-sword {
+  height: 88px;
+  filter: drop-shadow(0 0 12px rgba(240, 192, 79, 0.48));
+}
+
+.hero-class-archer.hero-build-bruiser .hero-body {
+  background:
+    linear-gradient(110deg, transparent 0 37%, rgba(116, 173, 224, 0.44) 38% 46%, transparent 47%),
+    linear-gradient(135deg, #23394a, #111821 50%, #315549 51%);
+  border-color: #75e9ff;
+}
+
+.hero-class-archer.hero-build-bruiser .hero-sword {
+  width: 10px;
+}
+
 .enemy-body {
   border-radius: 46% 46% 36% 36%;
   background: linear-gradient(135deg, #5a6b3d, #232b25 65%);
