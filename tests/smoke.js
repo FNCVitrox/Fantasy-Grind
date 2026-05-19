@@ -68,8 +68,11 @@ assert(
 assert(html.includes('id="combatModeToggle"') && html.includes('data-combat-mode="manual"'), "combat mode toggle should expose a manual mode button");
 assert(css.includes(".combat-mode-toggle"), "combat mode toggle should have stable styling");
 assert(html.includes('id="combatActions"'), "combat UI should expose RPG action buttons");
+assert(html.includes('class="combat-command-main"') && html.includes('class="combat-command-top"'), "combat UI should use a dedicated command dock layout");
 assert(/manualMode \? await waitForCombatAction\(\) : chooseAutoCombatAction/.test(read("scripts/core.js")), "manual and auto combat should share the same action loop");
 assert(/requestCombatAction\(button\.dataset\.combatAction\)/.test(read("scripts/events.js")), "combat action buttons should feed manual combat choices");
+assert(css.includes("grid-template-columns: minmax(220px, 300px) minmax(0, 1fr)") && css.includes(".combat-command-main"), "combat command dock should separate target and actions on desktop");
+assert(css.includes(".combat-card {\r\n    position: sticky") || css.includes(".combat-card {\n    position: sticky"), "mobile combat command dock should stay reachable");
 
 const storage = {};
 const context = {

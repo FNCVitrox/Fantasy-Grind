@@ -2620,33 +2620,41 @@ button.drop-row span:last-child {
 }
 
 .combat-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 14px;
-  min-height: 74px;
-  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 12px;
+  min-height: 126px;
+  padding: 12px;
   background:
-    linear-gradient(90deg, rgba(242, 193, 78, 0.1), transparent 24%),
-    linear-gradient(90deg, rgba(52, 213, 216, 0.08), transparent 46%),
+    linear-gradient(90deg, rgba(242, 193, 78, 0.12), transparent 18%),
+    linear-gradient(120deg, rgba(52, 213, 216, 0.09), transparent 52%),
     #0c1723;
   border: 1px solid var(--line);
   border-radius: 8px;
+  box-shadow: inset 0 0 28px rgba(52, 213, 216, 0.04);
 }
 
 .target-command {
   position: relative;
   display: grid;
-  gap: 2px;
-  padding-left: 22px;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px 12px 10px 24px;
+  border: 1px solid rgba(74, 113, 145, 0.42);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(63, 214, 163, 0.08), transparent 58%),
+    rgba(7, 17, 27, 0.56);
 }
 
 .target-sigil {
   position: absolute;
-  left: 0;
-  top: 7px;
-  width: 10px;
-  height: 38px;
+  left: 9px;
+  top: 12px;
+  width: 7px;
+  height: 42px;
   border-radius: 99px;
   background: linear-gradient(180deg, var(--gold), rgba(52, 213, 216, 0.72));
   box-shadow: 0 0 18px rgba(242, 193, 78, 0.24);
@@ -2654,17 +2662,36 @@ button.drop-row span:last-child {
 
 .target-command h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
+  line-height: 1.02;
+  overflow-wrap: anywhere;
 }
 
 .target-command #selectedEnemyMeta {
-  display: grid;
-  gap: 6px;
-  margin: 4px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 3px 0 0;
+  max-height: 74px;
+  overflow: hidden;
 }
 
 .target-command #selectedEnemyMeta[hidden] {
   display: none;
+}
+
+.combat-command-main {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+}
+
+.combat-command-top {
+  display: grid;
+  grid-template-columns: minmax(168px, 230px) minmax(160px, 240px);
+  gap: 8px;
+  align-items: stretch;
 }
 
 .combat-mode-toggle {
@@ -2702,10 +2729,9 @@ button.drop-row span:last-child {
 }
 
 .combat-actions {
-  flex: 1 1 100%;
   display: grid;
   gap: 8px;
-  min-width: min(100%, 520px);
+  min-width: 0;
 }
 
 .combat-resource {
@@ -2723,7 +2749,7 @@ button.drop-row span:last-child {
 
 .combat-action-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(92px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -2734,8 +2760,10 @@ button.drop-row span:last-child {
   padding: 7px 9px;
   border-color: rgba(74, 113, 145, 0.72);
   border-radius: 8px;
-  background: rgba(14, 31, 47, 0.94);
-  text-align: left;
+  background:
+    linear-gradient(180deg, rgba(73, 182, 255, 0.08), transparent),
+    rgba(14, 31, 47, 0.94);
+  text-align: center;
 }
 
 .combat-action strong {
@@ -2765,12 +2793,18 @@ button.drop-row span:last-child {
 
 .target-meta-row,
 .boss-meta-row {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
+  min-height: 22px;
+  padding: 2px 7px;
+  border: 1px solid rgba(74, 113, 145, 0.42);
+  border-radius: 999px;
   color: var(--muted);
+  background: rgba(7, 17, 27, 0.7);
   font-size: 12px;
+  line-height: 1.15;
 }
 
 .target-meta-row b,
@@ -2870,6 +2904,11 @@ button.drop-row span:last-child {
   border-color: #49b6ff;
   font-weight: 800;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.combat-command-top .primary {
+  width: 100%;
+  min-height: 44px;
 }
 
 .primary:hover,
