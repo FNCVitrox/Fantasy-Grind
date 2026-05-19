@@ -1590,6 +1590,7 @@ function combatEventAnimationEntry(combatEvent, enemy, playerHp) {
     text: combatEventLogText(combatEvent),
     combatEventId: combatEvent.id,
     combatEventName: combatEventName(combatEvent),
+    combatEventText: combatEventText(combatEvent),
     combatEventTone: combatEventTone(combatEvent),
   };
 }

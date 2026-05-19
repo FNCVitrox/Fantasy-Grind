@@ -1139,7 +1139,7 @@ button.drop-row span:last-child {
   max-width: min(360px, calc(100% - 220px));
   min-height: 34px;
   padding: 6px 12px;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid rgba(109, 149, 184, 0.46);
   border-radius: 999px;
   background:
@@ -1149,6 +1149,38 @@ button.drop-row span:last-child {
   color: var(--text);
   transform: translateX(-50%);
   animation: battle-event-pop 260ms ease-out both;
+}
+
+.battle-event-badge::after {
+  position: absolute;
+  z-index: 9;
+  top: calc(100% + 8px);
+  left: 50%;
+  width: min(340px, calc(100vw - 48px));
+  padding: 9px 11px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 56%),
+    rgba(7, 17, 27, 0.98);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.42);
+  color: var(--text);
+  content: attr(data-event-description);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  text-align: left;
+  transform: translate(-50%, -4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+  white-space: normal;
+}
+
+.battle-event-badge:hover::after,
+.battle-event-badge:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .battle-event-badge[hidden] {

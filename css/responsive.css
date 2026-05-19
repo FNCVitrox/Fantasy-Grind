@@ -419,6 +419,18 @@
     animation: none;
   }
 
+  .battle-event-badge::after {
+    right: 0;
+    left: auto;
+    width: min(280px, calc(100vw - 32px));
+    transform: translate(0, -4px);
+  }
+
+  .battle-event-badge:hover::after,
+  .battle-event-badge:focus-visible::after {
+    transform: translate(0, 0);
+  }
+
   .battle-event-badge span {
     font-size: 9px;
   }

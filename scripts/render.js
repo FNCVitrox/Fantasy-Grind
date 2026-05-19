@@ -592,8 +592,11 @@ function renderBattleEventBadge(event) {
     return;
   }
   const tone = event.combatEventTone || "neutral";
+  const description = event.combatEventText || event.text || "";
   badge.className = `battle-event-badge ${tone}`;
   badge.hidden = false;
+  badge.dataset.eventDescription = description;
+  badge.title = description;
   const stage = $("battleStage");
   if (stage && !isFighting) stage.className = `battle-stage event-tone-${tone}`;
   $("battleEventLabel").textContent = t(`combat.eventTone.${tone}`, "Event");
@@ -605,6 +608,8 @@ function hideBattleEventBadge() {
   if (!badge) return;
   badge.hidden = true;
   badge.className = "battle-event-badge";
+  delete badge.dataset.eventDescription;
+  badge.removeAttribute("title");
   const stage = $("battleStage");
   if (stage && !isFighting) stage.className = "battle-stage";
 }
