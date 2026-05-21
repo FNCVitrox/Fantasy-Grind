@@ -458,6 +458,7 @@ $("saveModal").addEventListener("click", (event) => {
   if (event.target.id === "saveModal") closeSave();
 });
 $("exportSaveTopBtn").addEventListener("click", exportSave);
+$("newGameTopBtn").addEventListener("click", startNewGame);
 $("importSaveTopBtn").addEventListener("click", importSave);
 $("saveFileInput").addEventListener("change", importSaveFile);
 
@@ -546,6 +547,20 @@ function importSave() {
   const input = $("saveFileInput");
   input.value = "";
   input.click();
+}
+
+function startNewGame() {
+  const message = t(
+    "save.newRunConfirm",
+    "Wirklich von vorne anfangen? Dein aktueller Browser-Spielstand wird überschrieben. Lade vorher eine Sicherung herunter, wenn du ihn behalten willst.",
+  );
+  const confirmed = typeof window.confirm !== "function" || window.confirm(message);
+  if (!confirmed) return;
+
+  resetSaveData();
+  closeSave();
+  setControlsDisabled(false);
+  render();
 }
 
 function importSaveFile(event) {

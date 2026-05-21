@@ -86,6 +86,8 @@ assert(/manualMode \? await waitForCombatAction\(\) : chooseAutoCombatAction/.te
 assert(/requestCombatAction\(button\.dataset\.combatAction\)/.test(read("scripts/events.js")), "combat action buttons should feed manual combat choices");
 assert(css.includes("grid-template-rows: auto minmax(0, 1fr)") && css.includes(".combat-command-main"), "combat command dock should stack controls above full-width actions");
 assert(css.includes(".combat-card {\r\n    position: sticky") || css.includes(".combat-card {\n    position: sticky"), "mobile combat command dock should stay reachable");
+assert(html.includes('id="newGameTopBtn"') && css.includes(".save-actions .danger-action"), "save menu should expose a distinct new game action");
+assert(/newGameTopBtn"\)\.addEventListener\("click", startNewGame\)/.test(read("scripts/events.js")), "new game button should be wired through the save menu");
 
 const storage = {};
 const context = {
@@ -94,6 +96,9 @@ const context = {
     getItem: (key) => storage[key] || null,
     setItem: (key, value) => {
       storage[key] = String(value);
+    },
+    removeItem: (key) => {
+      delete storage[key];
     },
   },
   document: {
@@ -130,6 +135,10 @@ assert(html.includes(`Alpha v${assetVersionInCode}`), "visible version badge sho
 assert.strictEqual(context.defaultState().level, 1);
 assert.strictEqual(context.defaultState().build, "damage");
 assert.strictEqual(context.defaultState().ui.combatMode, "auto");
+assert(
+  vm.runInContext("(() => { state = defaultState(); state.language = 'en'; state.level = 12; state.gold = 999; storageSet(saveKey, JSON.stringify(state)); storageSet(savePreviousKey, JSON.stringify({ level: 9 })); resetSaveData(); const saved = JSON.parse(storageGet(saveKey)); return state.level === 1 && state.gold === 20 && state.language === 'en' && saved.level === 1 && !storageGet(savePreviousKey); })()", context),
+  "new game reset should clear previous saves, preserve language and store a fresh level 1 save",
+);
 assert.strictEqual(vm.runInContext("normalizeSavedUi({ combatMode: 'manual' }).combatMode", context), "manual");
 assert.strictEqual(vm.runInContext("normalizeSavedUi({ combatMode: 'slow' }).combatMode", context), "auto");
 assert.strictEqual(vm.runInContext("state = defaultState(); state.characterClass = 'warrior'; classResource().label", context), "Wut");

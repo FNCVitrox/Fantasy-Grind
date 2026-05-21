@@ -3385,7 +3385,7 @@ button.drop-row span:last-child {
 
 .save-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -3401,6 +3401,16 @@ button.drop-row span:last-child {
 .save-actions strong {
   color: var(--text);
   font-size: 16px;
+}
+
+.save-actions .danger-action {
+  border-color: rgba(255, 110, 105, 0.55);
+  background: linear-gradient(135deg, rgba(255, 110, 105, 0.14), rgba(16, 27, 40, 0.92));
+}
+
+.save-actions .danger-action:hover {
+  border-color: rgba(255, 142, 133, 0.8);
+  box-shadow: 0 0 0 1px rgba(255, 110, 105, 0.14), 0 14px 28px rgba(255, 70, 60, 0.12);
 }
 
 .save-actions span,

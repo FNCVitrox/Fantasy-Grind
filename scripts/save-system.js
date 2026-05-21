@@ -154,6 +154,39 @@ function importSaveData(raw) {
   return true;
 }
 
+function resetSaveData() {
+  const preservedLanguage = currentLanguage();
+  for (const key of [saveKey, saveBackupKey, savePreviousKey]) {
+    storageRemove(key);
+  }
+
+  state = defaultState();
+  state.language = preservedLanguage;
+  state.log = [t("save.newRunLog", "Neuer Spielstand begonnen.")];
+  state.combatLog = [];
+  restoreUiSelection();
+  syncDerivedStats();
+
+  isFighting = false;
+  skipCombat = false;
+  manualCombatStep = null;
+  activeCombatState = null;
+  pendingCombatAction = null;
+  if (typeof clearCombatWatchdog === "function") clearCombatWatchdog();
+
+  saveDiagnostics.loadedFrom = t("save.newGame", "Neuer Spielstand");
+  saveDiagnostics.recoveredFrom = "";
+  saveDiagnostics.failedLoads = [];
+  saveDiagnostics.lastParseError = "";
+  saveDiagnostics.startedWithStoredSave = false;
+  Object.keys(renderCache).forEach((key) => {
+    delete renderCache[key];
+  });
+
+  save();
+  return state;
+}
+
 function parseSavedState(raw) {
   try {
     const parsed = normalizeSavedText(JSON.parse(raw));
@@ -496,6 +529,24 @@ function storageSet(key, value) {
   mirrorSaveToIndexedDb(key, value);
 }
 
+function storageRemove(key) {
+  const stores = availableStorageStores();
+  for (const store of stores) {
+    try {
+      if (typeof store.removeItem === "function") store.removeItem(key);
+    } catch {
+      // Continue with the next fallback store.
+    }
+  }
+
+  const windowStore = readWindowNameStore();
+  if (Object.prototype.hasOwnProperty.call(windowStore, key)) {
+    delete windowStore[key];
+    writeWindowNameStore(windowStore);
+  }
+  deleteSaveFromIndexedDb(key);
+}
+
 function browserStorageStatus() {
   return {
     localStorage: testStorageStore("localStorage", typeof localStorage !== "undefined" ? localStorage : null),
@@ -585,6 +636,27 @@ function mirrorSaveToIndexedDb(key, value) {
     };
   } catch (error) {
     saveDiagnostics.indexedDbMirror = error?.message || "blockiert";
+  }
+}
+
+function deleteSaveFromIndexedDb(key) {
+  if (!indexedDbAvailable()) return;
+
+  try {
+    const request = indexedDB.open(indexedDbName, 1);
+    request.onsuccess = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(indexedDbStoreName)) {
+        db.close();
+        return;
+      }
+      const transaction = db.transaction(indexedDbStoreName, "readwrite");
+      transaction.objectStore(indexedDbStoreName).delete(key);
+      transaction.oncomplete = () => db.close();
+      transaction.onerror = () => db.close();
+    };
+  } catch {
+    // IndexedDB is only a mirror; local reset must still work without it.
   }
 }
 

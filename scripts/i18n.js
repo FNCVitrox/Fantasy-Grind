@@ -567,6 +567,10 @@ const translations = {
         "save.download": "Spielstand herunterladen",
         "save.load": "Spielstand laden",
         "save.downloadText": "Speichert deinen Fortschritt als JSON-Datei.",
+        "save.newRun": "Von Anfang an spielen",
+        "save.newRunText": "Setzt den Fortschritt zurück und startet einen frischen Spielstand.",
+        "save.newRunConfirm": "Wirklich von vorne anfangen? Dein aktueller Browser-Spielstand wird überschrieben. Lade vorher eine Sicherung herunter, wenn du ihn behalten willst.",
+        "save.newRunLog": "Neuer Spielstand begonnen.",
         "save.loadText": "Lädt eine zuvor heruntergeladene JSON-Datei.",
         "save.last": "Letzte Sicherung",
         "save.notDownloaded": "Noch nicht heruntergeladen",
@@ -1383,6 +1387,8 @@ function applyStaticTranslations() {
     setStaticText("#combatLogModal .eyebrow", "combat.log");
     setStaticText("#exportSaveTopBtn strong", "save.download");
     setStaticText("#exportSaveTopBtn span", "save.downloadText");
+    setStaticText("#newGameTopBtn strong", "save.newRun");
+    setStaticText("#newGameTopBtn span", "save.newRunText");
     setStaticText("#importSaveTopBtn strong", "save.load");
     setStaticText("#importSaveTopBtn span", "save.loadText");
     setStaticText(".save-hint", "save.help");
