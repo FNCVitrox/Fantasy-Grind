@@ -205,7 +205,7 @@ function boundedInteger(value, fallback, min, max) {
 }
 
 function normalizeLoadedQuests(loaded, parsed) {
-  loaded.quests = loaded.quests && typeof loaded.quests === "object" ? loaded.quests : {};
+  loaded.quests = normalizeQuestProgress(loaded.quests);
   loaded.rareQuests = normalizeLoadedRareQuests(loaded.rareQuests);
   loaded.completedQuests = (loaded.completedQuests || []).filter((id) => {
     const quest = getLoadedQuestById(loaded, id);
@@ -233,7 +233,48 @@ function normalizeLoadedQuests(loaded, parsed) {
 
 function normalizeLoadedRareQuests(rareQuests) {
   if (!rareQuests || typeof rareQuests !== "object" || Array.isArray(rareQuests)) return {};
-  return rareQuests;
+  return Object.fromEntries(Object.entries(rareQuests)
+    .map(([id, quest]) => normalizeLoadedRareQuest(id, quest))
+    .filter(Boolean));
+}
+
+function normalizeLoadedRareQuest(id, quest) {
+  const questId = safeSaveId(id, "");
+  if (!questId || !quest || typeof quest !== "object" || Array.isArray(quest)) return null;
+  const target = safeQuestTarget(quest.target);
+  const enemyIds = Array.isArray(quest.enemyIds)
+    ? uniqueQuestIds(quest.enemyIds.filter((enemyId) => enemies[enemyId]))
+    : [];
+  const normalized = {
+    id: questId,
+    key: safeSaveId(quest.key, target),
+    name: safeSaveText(quest.name, "Seltene Quest", 80),
+    rarity: safeRarity(quest.rarity, quest.rare ? "legendary" : "epic"),
+    repeatable: quest.repeatable !== false,
+    rare: true,
+    text: safeSaveText(quest.text, "Erfülle den seltenen Auftrag.", 220),
+    target,
+    needed: boundedInteger(quest.needed, 1, 1, 99),
+    rewardXp: boundedInteger(quest.rewardXp, 0, 0, 999999),
+    rewardGold: boundedInteger(quest.rewardGold, 0, 0, 999999),
+    rewardItem: Boolean(quest.rewardItem),
+  };
+  if (enemyIds.length) normalized.enemyIds = enemyIds;
+  if (equipmentSlots.includes(quest.slot)) normalized.slot = quest.slot;
+  return [questId, normalized];
+}
+
+function normalizeQuestProgress(quests) {
+  if (!quests || typeof quests !== "object" || Array.isArray(quests)) return {};
+  return Object.fromEntries(Object.entries(quests)
+    .filter(([id]) => safeSaveId(id, ""))
+    .map(([id, value]) => [id, boundedInteger(value, 0, 0, 999999)]));
+}
+
+function safeQuestTarget(target) {
+  return ["wolf", "rust", "elite", "enemy", "dungeon", "bandit", "field", "ash"].includes(target)
+    ? target
+    : "enemy";
 }
 
 function getLoadedQuestById(loaded, questId) {
@@ -246,22 +287,106 @@ function isLoadedQuestCompletedPermanent(loaded, questId) {
 }
 
 function normalizeLoadedCollections(loaded) {
-  loaded.customItems = plainObjectOrEmpty(loaded.customItems);
+  loaded.customItems = normalizeSavedItemMap(loaded.customItems);
   loaded.itemDurability = plainObjectOrEmpty(loaded.itemDurability);
-  loaded.discoveredLoot = plainObjectOrEmpty(loaded.discoveredLoot);
+  loaded.discoveredLoot = normalizeDiscoveredLoot(loaded.discoveredLoot);
   loaded.defeatedBosses = Array.isArray(loaded.defeatedBosses)
     ? [...new Set(loaded.defeatedBosses)].filter((id) => enemies[id]?.boss)
     : [];
   loaded.bossDropPity = normalizeBossDropPity(loaded.bossDropPity);
-  loaded.pendingLoot = Array.isArray(loaded.pendingLoot) ? loaded.pendingLoot : [];
-  loaded.lootQueue = Array.isArray(loaded.lootQueue) ? loaded.lootQueue : [];
+  loaded.pendingLoot = normalizeSavedItemList(loaded.pendingLoot, "pending-loot");
+  loaded.lootQueue = Array.isArray(loaded.lootQueue)
+    ? loaded.lootQueue.map((items, index) => normalizeSavedItemList(items, `queued-loot-${index}`)).filter((items) => items.length)
+    : [];
   loaded.nextEncounters = plainObjectOrEmpty(loaded.nextEncounters);
-  loaded.inventory = Array.isArray(loaded.inventory) ? loaded.inventory : [];
+  loaded.inventory = Array.isArray(loaded.inventory)
+    ? uniqueSaveIds(loaded.inventory).filter((id) => items[id] || loaded.customItems[id])
+    : [];
   loaded.lockedItems = Array.isArray(loaded.lockedItems)
-    ? [...new Set(loaded.lockedItems)].filter((id) => loaded.inventory.includes(id))
+    ? uniqueSaveIds(loaded.lockedItems).filter((id) => loaded.inventory.includes(id))
     : [];
   loaded.log = Array.isArray(loaded.log) ? loaded.log : defaultState().log;
   loaded.lastSaveExportAt = loaded.lastSaveExportAt || "";
+}
+
+function normalizeSavedItemMap(value) {
+  const source = plainObjectOrEmpty(value);
+  return Object.fromEntries(Object.entries(source)
+    .map(([id, item]) => {
+      const itemId = safeSaveId(id, "");
+      if (!itemId) return null;
+      const normalized = normalizeSavedItem(item, itemId);
+      return normalized ? [itemId, { ...normalized, id: itemId }] : null;
+    })
+    .filter(Boolean));
+}
+
+function normalizeSavedItemList(value, fallbackPrefix) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item, index) => normalizeSavedItem(item, `${fallbackPrefix}-${index}`))
+    .filter(Boolean);
+}
+
+function normalizeDiscoveredLoot(value) {
+  const source = plainObjectOrEmpty(value);
+  return Object.fromEntries(Object.entries(source)
+    .filter(([enemyId]) => enemies[enemyId])
+    .map(([enemyId, drops]) => [
+      enemyId,
+      Object.fromEntries(Object.entries(plainObjectOrEmpty(drops))
+        .map(([key, item], index) => {
+          const normalized = normalizeSavedItem(item, `discovered-${enemyId}-${index}`);
+          return normalized ? [safeSaveText(key, `drop-${index}`, 180), normalized] : null;
+        })
+        .filter(Boolean)),
+    ]));
+}
+
+function normalizeSavedItem(item, fallbackId) {
+  if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+  const normalized = { ...item };
+  normalized.id = safeSaveId(normalized.id, fallbackId);
+  normalized.name = safeSaveText(normalized.name, "", 90);
+  normalized.slot = equipmentSlots.includes(normalized.slot) ? normalized.slot : "ring";
+  normalized.quality = safeRarity(normalized.quality, "common");
+  normalized.damage = boundedInteger(normalized.damage, 0, 0, 9999);
+  normalized.defense = boundedInteger(normalized.defense, 0, 0, 9999);
+  normalized.critChance = safePercent(normalized.critChance);
+  normalized.critDamage = safePercent(normalized.critDamage);
+  normalized.durability = boundedInteger(normalized.durability, 100, 0, 100);
+  normalized.upgrade = boundedInteger(normalized.upgrade, 0, 0, 99);
+  normalized.enchantments = normalizeItemEnchantments(normalized);
+  if (!itemEffectCatalog[normalized.effect]?.slots?.includes(normalized.slot)) delete normalized.effect;
+  if (!setBonuses[normalized.set]) delete normalized.set;
+  if (!["quest"].includes(normalized.sourceType)) delete normalized.sourceType;
+  if (normalized.sourceEnemy && !enemies[normalized.sourceEnemy]) delete normalized.sourceEnemy;
+  if (normalized.sourceQuest) normalized.sourceQuest = safeSaveId(normalized.sourceQuest, "");
+  normalizeItemSlot(normalized);
+  return normalized;
+}
+
+function safeRarity(value, fallback = "common") {
+  return ["common", "rare", "epic", "legendary"].includes(value) ? value : fallback;
+}
+
+function safePercent(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 0;
+  return Math.max(0, Math.min(5, Math.round(number * 100) / 100));
+}
+
+function uniqueSaveIds(ids) {
+  return [...new Set(ids.map((id) => safeSaveId(id, "")).filter(Boolean))];
+}
+
+function safeSaveId(value, fallback) {
+  const text = typeof value === "string" ? value : "";
+  return /^[a-zA-Z0-9_-]{1,96}$/.test(text) ? text : fallback;
+}
+
+function safeSaveText(value, fallback = "", maxLength = 160) {
+  return typeof value === "string" ? value.slice(0, maxLength) : fallback;
 }
 
 function plainObjectOrEmpty(value) {

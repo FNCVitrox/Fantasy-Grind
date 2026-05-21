@@ -6,7 +6,7 @@ Aktueller Stand: spielbarer Alpha-Prototyp.
 
 ## Version
 
-Alpha v0.8.83
+Alpha v0.8.116
 
 ## Spielen
 
@@ -44,6 +44,16 @@ Der sicherste Weg ist die Sicherungsdatei:
 4. Spaeter ueber `Spielstand laden` wieder importieren.
 
 Der Browser versucht den Fortschritt zusaetzlich lokal zu speichern. Das ist bequem, aber nicht garantiert. Besonders GitHub-Preview-Links, private Browserfenster, geloeschte Website-Daten oder ein anderer Browser koennen den lokalen Speicher leer wirken lassen.
+
+## Security und Datenschutz
+
+Fantasy Grind ist eine statische GitHub-Pages-Webseite ohne Accounts, Backend, Datenbank oder API-Keys. Spielstaende bleiben lokal im Browser oder in einer freiwillig heruntergeladenen JSON-Datei.
+
+- Importierte Spielstaende werden normalisiert, bevor sie gerendert oder gespeichert werden.
+- Manipulierte Save-Daten duerfen kein HTML oder JavaScript ausfuehren.
+- Es werden keine Secrets oder Serverdaten benoetigt.
+- Teile Save-Dateien nur, wenn du den enthaltenen Spielfortschritt weitergeben moechtest.
+- Private Dateien wie `.env`, lokale IDE-Daten, Logs, Builds und Test-Spielstaende gehoeren nicht ins Repository.
 
 ## Was aktuell spielbar ist
 

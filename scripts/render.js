@@ -1588,7 +1588,7 @@ function renderActiveQuestCard(quest) {
   return `<div class="quest rarity-card rarity-${rarity} ${done ? "done" : ""}">
     <div class="quest-head">
       <strong><span class="quality-${rarity}">${labelFor(rarityLabel, rarity)}</span> · ${escapeHtml(questDisplayName(quest))}</strong>
-      <button class="quest-delete" type="button" data-cancel-quest="${quest.id}">${t("quest.delete", "Löschen")}</button>
+      <button class="quest-delete" type="button" data-cancel-quest="${escapeAttr(quest.id)}">${t("quest.delete", "Löschen")}</button>
     </div>
     <p>${escapeHtml(questDisplayText(quest))}</p>
     <p>${done ? t("quest.completed", "Abgeschlossen") : `${value}/${quest.needed}`} · ${t("common.reward", "Belohnung")}: ${quest.rewardXp} ${t("common.xp", "XP")}, ${quest.rewardGold} ${t("common.gold", "Gold")}, ${questRenownReward(quest)} ${t("common.renown", "Ruhm")}</p>
@@ -1650,7 +1650,7 @@ function renderQuestOfferCard(quest) {
   const levelRange = questLevelForCurrentEnemy(quest);
   const button = active
       ? `<button type="button" disabled>${t("quest.accepted", "Angenommen")}</button>`
-      : `<button type="button" data-accept-quest="${quest.id}">${t("quest.accept", "Quest annehmen")}</button>`;
+      : `<button type="button" data-accept-quest="${escapeAttr(quest.id)}">${t("quest.accept", "Quest annehmen")}</button>`;
 
   const rarity = escapeToken(quest.rarity || (quest.rare ? "legendary" : "common"), ["common", "rare", "epic", "legendary"], "common");
   return `<div class="quest-offer rarity-card rarity-${rarity} ${active ? "active" : ""} ${quest.rare ? "rare" : ""} ${isNew ? "new" : ""}">
@@ -2298,7 +2298,7 @@ function cacheTooltipItem(item) {
 function cacheSetTooltip(setId) {
   const key = `set:${setId}`;
   tooltipItemCache.set(key, { tooltipType: "set", setId });
-  return key;
+  return escapeAttr(key);
 }
 
 function renderSetTooltip(setId) {

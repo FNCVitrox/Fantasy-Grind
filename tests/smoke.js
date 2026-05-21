@@ -8,6 +8,7 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
 const html = read("index.html");
 const css = ["css/base.css", "css/modals.css", "css/responsive.css"].map(read).join("\n");
+const gitignore = read(".gitignore");
 const dataScripts = [
   "scripts/data.js",
   "scripts/data-loader.js",
@@ -30,6 +31,12 @@ const scripts = [
 ].map(read);
 
 assert(!/[Ã�]/.test(html), "index.html still contains likely mojibake characters");
+
+assert(html.includes("Content-Security-Policy") && html.includes("script-src 'self'") && html.includes("object-src 'none'"), "index.html should ship a restrictive static CSP");
+assert(!/https?:\/\//.test(html + read("scripts/data-loader.js")), "runtime HTML and data-pack loader should not depend on external assets");
+for (const ignored of ["node_modules/", ".vs/", ".env", "*.log", "Fantasy-Grind-Testsave-*.json"]) {
+  assert(gitignore.includes(ignored), `.gitignore should ignore ${ignored}`);
+}
 
 const htmlIds = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
 const dynamicIds = new Set(["bestiaryDetail", "bestiarySearch", "smithGreeting", "smithGreetingText", "smithMastery", "battleResult"]);
@@ -185,6 +192,71 @@ assert(vm.runInContext("state = defaultState(); state.inventory = ['rustBlade'];
 assert(vm.runInContext("state = defaultState(); state.inventory = ['rustBlade']; lockInventoryItem('rustBlade'); renderInventoryItemCard('rustBlade', 0).includes('data-lock') && renderMerchantItemRow('rustBlade', 0).includes('disabled')", context), "inventory and merchant rows should expose protected item controls");
 assert(vm.runInContext("state = defaultState(); state.inventory = ['rustBlade']; lockInventoryItem('rustBlade'); const card = renderInventoryItemCard('rustBlade', 0); card.includes('inventory-item-head') && card.includes('class=\"lock-note\"') && !card.includes('<p class=\"lock-note\"')", context), "protected inventory status should render inside the item header without adding a card row");
 assert(vm.runInContext("(() => { state = defaultState(); state.inventory = ['rustBlade']; const card = renderInventoryItemCard('rustBlade', 0); return card.includes('inventory-item-meta') && card.includes('inventory-stat-line'); })()", context), "inventory item cards should expose compact mobile-friendly metadata");
+assert(vm.runInContext(`(() => {
+  const payload = {
+    ...defaultState(),
+    rareQuests: {
+      'rare-safe-1': {
+        name: '<img src=x onerror=globalThis.__xss=1>',
+        rarity: 'legendary',
+        rare: true,
+        text: '<script>globalThis.__xss=1</script>',
+        target: 'enemy',
+        enemyIds: ['wolf'],
+        needed: '<img src=x>',
+        rewardXp: '<svg onload=globalThis.__xss=1>',
+        rewardGold: '<img src=x>',
+        rewardItem: true,
+        slot: 'weapon'
+      },
+      'evil" onclick="globalThis.__xss=1': {
+        name: 'bad',
+        text: 'bad',
+        target: 'enemy',
+        needed: 1,
+        rewardXp: 1,
+        rewardGold: 1
+      }
+    },
+    activeQuests: ['rare-safe-1', 'evil" onclick="globalThis.__xss=1'],
+    quests: { 'rare-safe-1': '<script>1</script>' },
+    customItems: {
+      'safe-item': {
+        id: 'safe-item',
+        name: '<img src=x onerror=globalThis.__xss=1>',
+        slot: 'weapon',
+        quality: 'rare',
+        damage: 11,
+        durability: '"><img src=x onerror=globalThis.__xss=1>',
+        effect: 'javascript:alert(1)',
+        set: '"><script>'
+      }
+    },
+    inventory: ['safe-item'],
+    pendingLoot: [{
+      id: 'loot-safe',
+      name: '<script>globalThis.__xss=1</script>',
+      slot: 'weapon',
+      quality: 'rare',
+      damage: 7,
+      durability: '"><img src=x onerror=globalThis.__xss=1>'
+    }]
+  };
+  const loaded = parseSavedState(JSON.stringify(payload));
+  state = loaded;
+  const quest = getQuestById('rare-safe-1');
+  const rendered = [
+    renderActiveQuestCard(quest),
+    renderInventoryItemCard('safe-item', 0),
+    renderLootCard(state.pendingLoot[0], 0)
+  ].join('\\n');
+  return loaded
+    && !loaded.rareQuests['evil" onclick="globalThis.__xss=1']
+    && loaded.pendingLoot[0].durability === 100
+    && !/<script|<img|onclick=|javascript:/i.test(rendered)
+    && rendered.includes('&lt;img src=x onerror=globalThis.__xss=1&gt;')
+    && rendered.includes('&lt;script&gt;globalThis.__xss=1&lt;/script&gt;');
+})()`, context), "malicious imported save payloads should be normalized and escaped before rendering");
 assert(vm.runInContext("(() => { state = defaultState(); const before = smithMasterySignature(); state.xp += 10; return before === smithMasterySignature(); })()", context), "smith mastery cache should ignore unrelated xp-only changes");
 assert(vm.runInContext("state = defaultState(); renderStationFocus('smith').includes('Verlässliches Handwerk') && renderStationFocus('smith').includes('Reparatur')", context), "Borin station focus should describe reliable smith craft");
 assert(vm.runInContext("state = defaultState(); renderStationFocus('enchant').includes('Runenrisiko') && renderStationFocus('enchant').includes('Arkane Slots')", context), "Mira station focus should describe rune risk and arcane slots");
