@@ -3294,9 +3294,14 @@ button.drop-row span:last-child {
   pointer-events: none;
 }
 
-.rarity-card.upgrade-frame > * {
+.rarity-card.upgrade-frame > :not(.equipment-hover-detail) {
   position: relative;
   z-index: 1;
+}
+
+.rarity-card.upgrade-frame > .equipment-hover-detail {
+  position: absolute;
+  z-index: 90;
 }
 
 .rarity-card.upgrade-frame-forged {

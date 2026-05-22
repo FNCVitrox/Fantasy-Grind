@@ -186,6 +186,7 @@ assert(css.includes(".smith-avatar::before") && css.includes(".enchant-avatar::a
 for (const frame of ["forged", "ember", "runic", "oath", "masterwork"]) {
   assert(css.includes(`.upgrade-frame-${frame}`), `Missing upgraded item frame CSS: ${frame}`);
 }
+assert(css.includes(".upgrade-frame > :not(.equipment-hover-detail)") && css.includes(".upgrade-frame > .equipment-hover-detail"), "upgraded item frames should not pull equipment hover details into layout");
 assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 1 })", context), "upgrade-frame upgrade-frame-forged");
 assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 5 })", context), "upgrade-frame upgrade-frame-ember");
 assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 10 })", context), "upgrade-frame upgrade-frame-runic");
