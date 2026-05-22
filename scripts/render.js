@@ -761,6 +761,26 @@ function enchantingSignature() {
   ].join("|");
 }
 
+function itemUpgradeFrameClass(item) {
+  const upgrade = Math.max(0, Math.floor(item?.upgrade || 0));
+  if (!upgrade) return "";
+  if (upgrade >= 20) return "upgrade-frame upgrade-frame-masterwork";
+  if (upgrade >= 15) return "upgrade-frame upgrade-frame-oath";
+  if (upgrade >= 10) return "upgrade-frame upgrade-frame-runic";
+  if (upgrade >= 5) return "upgrade-frame upgrade-frame-ember";
+  return "upgrade-frame upgrade-frame-forged";
+}
+
+function itemUpgradeFrameName(item) {
+  const upgrade = Math.max(0, Math.floor(item?.upgrade || 0));
+  if (!upgrade) return "";
+  if (upgrade >= 20) return t("upgradeFrame.masterwork", "Meisterwerk-Aura");
+  if (upgrade >= 15) return t("upgradeFrame.oath", "Eidsiegel-Rand");
+  if (upgrade >= 10) return t("upgradeFrame.runic", "Runenfassung");
+  if (upgrade >= 5) return t("upgradeFrame.ember", "Glutrand");
+  return t("upgradeFrame.forged", "Geschmiedete Kante");
+}
+
 function renderEquipment() {
   const signature = `${currentLanguage()}|${equipmentSignature()}|${state.level}|${state.renown}`;
   if (renderCache.equipment === signature) {
@@ -784,7 +804,7 @@ function renderEquipment() {
     const setName = item.set ? setDisplayName(item.set) : "";
     const statText = itemStatText(item);
     const enchantText = itemEnchantmentsText(item);
-    return `<button class="equipment-chip rarity-card rarity-${quality}" type="button" data-open-equipment>
+    return `<button class="equipment-chip rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}" type="button" data-open-equipment>
       <strong>${labelFor(slotLabel, slot)}</strong>
       <span class="quality-${quality}">${escapeHtml(itemName)}</span>
       <small>${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</small>
@@ -792,6 +812,7 @@ function renderEquipment() {
       <span class="equipment-hover-detail" aria-hidden="true">
         <b class="quality-${quality}">${escapeHtml(itemName)}</b>
         <em>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</em>
+        ${itemUpgradeFrameName(item) ? `<em>${itemUpgradeFrameName(item)}</em>` : ""}
         ${statText ? `<em>${statText}</em>` : ""}
         ${enchantText ? `<em>${enchantText}</em>` : ""}
         <em>${t("main.durability", "Haltbarkeit")}: ${durability}%</em>
@@ -821,7 +842,7 @@ function renderEquipmentDetails() {
     const quality = itemQuality(item);
     const statText = itemStatText(item);
     const enchantText = itemEnchantmentsText(item);
-    return `<div class="slot rarity-card rarity-${quality}">
+    return `<div class="slot rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
       <strong>${labelFor(slotLabel, slot)}</strong>
       <p class="quality-${quality}">${escapeHtml(itemDisplayName(item, id))} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</p>
       ${item.set ? `<p class="set-line set-hover-row"><span>${escapeHtml(setDisplayName(item.set))}</span><span class="tooltip-source" data-set-tooltip-key="${setKey}"></span></p>` : ""}
@@ -1355,7 +1376,7 @@ function renderSmithUpgrade() {
     const costHtml = maxed
       ? `<p>${hardMaxed ? t("smith.masterworkDone", "Meisterarbeit vollendet") : t("smith.missionNeeded", "Meisterauftrag nötig")}</p><p class="smith-material-cost">${hardMaxed ? t("smith.noFurtherBinding", "Borin kann dieses Stück nicht weiter binden.") : t("smith.unlockNextLimit", "Schalte das nächste globale Limit frei.")}</p>`
       : `<p>${cost.gold} ${t("common.gold", "Gold")}${discountText}</p><p class="smith-material-cost">${materialText}</p>`;
-    return `<div class="smith-card rarity-card rarity-${quality}">
+    return `<div class="smith-card rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
       <div class="smith-item-main">
         <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</span></strong>
         <p>+${item.upgrade || 0}/${limit}${statText ? ` · ${statText}` : ""} · ${t("main.durability", "Haltbarkeit")} ${itemDurability(itemId)}%</p>
@@ -1438,7 +1459,7 @@ function renderSmithEnchant() {
     const lockedText = inactiveEnchantments.length
       ? `<br><span class="muted">${t("enchant.lockedRunes", "Gesperrt bis höhere Bindung")}: ${inactiveEnchantments.map((enchantment) => escapeHtml(enchantmentDisplayName(enchantment))).join(", ")}</span>`
       : "";
-    return `<div class="enchant-card rarity-card rarity-${quality}">
+    return `<div class="enchant-card rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
       <div>
         <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</span></strong>
         <p>${labelFor(qualityLabel, quality)} · Slots ${Math.min(savedEnchantments.length, slotLimit)}/${slotLimit}${inactiveEnchantments.length ? ` · ${inactiveEnchantments.length} ${t("enchant.locked", "gesperrt")}` : ""}</p>
@@ -1473,7 +1494,7 @@ function renderSmithSalvage() {
         const slot = itemSlot(item);
         const materials = Object.entries(salvageValue(item)).map(([id, amount]) => `${amount} ${labelFor(materialLabel, id)}`).join(" · ");
         const bonusChance = Math.round(renownSalvageBonusChance(item) * 100);
-        return `<div class="salvage-row rarity-card rarity-${quality}">
+        return `<div class="salvage-row rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
           <span><strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong><small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${materials}${bonusChance ? ` · ${bonusChance}% ${t("smith.bonus", "Bonus")}` : ""}</small></span>
           <button type="button" data-salvage="${index}">${t("smith.salvage", "Zerlegen")}</button>
         </div>`;
@@ -1507,7 +1528,7 @@ function renderInventoryItemCard(itemId, index) {
   const statText = itemStatText(item);
   const enchantText = itemEnchantmentsText(item);
   const locked = isInventoryItemLocked(itemId);
-  return `<div class="inventory-item rarity-card rarity-${quality} ${locked ? "item-locked" : ""}">
+  return `<div class="inventory-item rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)} ${locked ? "item-locked" : ""}">
     <div class="inventory-item-head">
       <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
       ${locked ? `<span class="lock-note">${t("merchant.lockedItem", "Geschützt")}</span>` : ""}
@@ -1557,7 +1578,7 @@ function renderMerchantItemRow(itemId, index) {
   const quality = itemQuality(item);
   const slot = itemSlot(item);
   const locked = isInventoryItemLocked(itemId);
-  return `<div class="merchant-row rarity-card rarity-${quality} ${locked ? "item-locked" : ""}">
+  return `<div class="merchant-row rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)} ${locked ? "item-locked" : ""}">
     <span>
       <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
       <small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${itemDurability(itemId)}%${locked ? ` · ${t("merchant.lockedItem", "Geschützt")}` : ""}</small>
@@ -2324,7 +2345,7 @@ function renderItemTooltip(item) {
   const isEquipped = equippedId && getItem(equippedId) === item;
   const durabilityLine = isEquipped ? `<span>${t("main.durability", "Haltbarkeit")}: ${itemDurability(equippedId)}%</span>` : "";
   const repairLine = isEquipped ? `<span>${t("equipment.repair", "Reparatur")}: ${repairCostForSlot(slot)} ${t("common.gold", "Gold")}</span>` : "";
-  const upgradeLine = item.upgrade ? `<span>${t("equipment.upgrade", "Verbesserung")}: +${item.upgrade}</span>` : "";
+  const upgradeLine = item.upgrade ? `<span>${t("equipment.upgrade", "Verbesserung")}: +${item.upgrade} · ${itemUpgradeFrameName(item)}</span>` : "";
   const statText = itemStatText(item);
   const enchantText = itemEnchantmentsText(item);
   return `<div class="item-tooltip">
@@ -2548,7 +2569,7 @@ function renderRepairRow(slot) {
   const disabled = cost === 0 || state.gold < cost ? "disabled" : "";
   const label = cost === 0 ? t("equipment.fullyRepaired", "Vollständig") : `${cost} ${t("common.gold", "Gold")}`;
   const quality = itemQuality(item);
-  return `<div class="repair-row rarity-card rarity-${quality}">
+  return `<div class="repair-row rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
     <div>
       <strong class="quality-${quality}">${labelFor(slotLabel, slot)} · ${escapeHtml(itemDisplayName(item, state.equipment[slot]))}</strong>
       <p>${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${durability}% · ${t("equipment.repair", "Reparatur")}: ${cost} ${t("common.gold", "Gold")}</p>

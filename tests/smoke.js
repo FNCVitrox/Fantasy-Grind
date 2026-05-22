@@ -183,6 +183,15 @@ for (const classId of ["warrior", "mage", "rogue", "archer"]) {
 assert(read("scripts/render.js").includes("hero-class-${characterClass}") && read("scripts/render.js").includes("heroSpriteName"), "combat hero sprite should follow the selected class and update its label");
 assert(css.includes(".class-list"), "class selector should have dedicated layout CSS");
 assert(css.includes(".smith-avatar::before") && css.includes(".enchant-avatar::after"), "Borin and Mira avatars should have detailed CSS silhouettes");
+for (const frame of ["forged", "ember", "runic", "oath", "masterwork"]) {
+  assert(css.includes(`.upgrade-frame-${frame}`), `Missing upgraded item frame CSS: ${frame}`);
+}
+assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 1 })", context), "upgrade-frame upgrade-frame-forged");
+assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 5 })", context), "upgrade-frame upgrade-frame-ember");
+assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 10 })", context), "upgrade-frame upgrade-frame-runic");
+assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 15 })", context), "upgrade-frame upgrade-frame-oath");
+assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 20 })", context), "upgrade-frame upgrade-frame-masterwork");
+assert(vm.runInContext("state = defaultState(); state.customItems.frameTest = { ...items.trainingSword, id: 'frameTest', upgrade: 10, name: 'Übungsschwert +10' }; state.inventory = ['frameTest']; renderInventoryItemCard('frameTest', 0).includes('upgrade-frame-runic')", context), "upgraded item cards should render special upgrade frames");
 assert(vm.runInContext("state = defaultState(); questAvailable(getQuestById('wolves')) && !questAvailable(getQuestById('fields'))", context), "early quest board should only offer reachable quest targets");
 assert(vm.runInContext("state.level = 9; state.renown = 8; selectedZone = 'fields'; questAvailable(getQuestById('fields'))", context), "field quests should unlock when the field zone is selected");
 assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'wolf'; state.questBoard = ['wolves', 'rust', 'boars']; refreshQuestBoard(true); state.questBoard.length === 1 && state.questBoard[0] === 'wolves'", context), "wolf target should only show wolf-related quests");
