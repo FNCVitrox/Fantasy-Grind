@@ -124,6 +124,7 @@ assert(html.includes('id="characterClassIcon"') && css.includes(".class-icon-war
 assert(read("scripts/render.js").includes("classIconMarkup(id)") && read("scripts/render.js").includes("classIconClass(state.characterClass)"), "class chooser and portrait should use dynamic class icons");
 assert(/manualMode \? await waitForCombatAction\(\) : chooseAutoCombatAction/.test(read("scripts/core.js")), "manual and auto combat should share the same action loop");
 assert(/requestCombatAction\(button\.dataset\.combatAction\)/.test(read("scripts/events.js")), "combat action buttons should feed manual combat choices");
+assert(read("scripts/render.js").includes("combat-resource-${resourceClass}") && ["warrior", "mage", "rogue", "archer"].every((id) => css.includes(`.combat-resource-${id}`)), "combat resource meter should visually follow the selected class");
 assert(css.includes("grid-template-rows: auto minmax(0, 1fr)") && css.includes(".combat-command-main"), "combat command dock should stack controls above full-width actions");
 assert(css.includes(".combat-card {\r\n    position: sticky") || css.includes(".combat-card {\n    position: sticky"), "mobile combat command dock should stay reachable");
 assert(html.includes('id="newGameTopBtn"') && css.includes(".save-actions .danger-action"), "save menu should expose a distinct new game action");

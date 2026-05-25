@@ -91,6 +91,7 @@ function renderCombatActions() {
   const container = $("combatActions");
   if (!container) return;
   const resource = classResource();
+  const resourceClass = escapeToken(state.characterClass, Object.keys(classCatalog), "warrior");
   const resourceValue = activeCombatState ? activeCombatState.resource : 0;
   const maxResource = activeCombatState ? activeCombatState.maxResource : resource.max;
   const actions = combatActionList(activeCombatState);
@@ -108,7 +109,7 @@ function renderCombatActions() {
   if (renderCache.combatActions === signature) return;
   renderCache.combatActions = signature;
   container.innerHTML = `
-    <div class="combat-resource">
+    <div class="combat-resource combat-resource-${resourceClass}">
       <span>${escapeHtml(resource.label)}</span>
       <strong>${resourceValue}/${maxResource}</strong>
     </div>

@@ -3066,16 +3066,40 @@ button.drop-row span:last-child {
 }
 
 .combat-resource {
+  --resource-color: var(--gold);
+  --resource-glow: rgba(242, 193, 78, 0.18);
   display: flex;
   justify-content: space-between;
   gap: 10px;
   padding: 6px 9px;
-  border: 1px solid rgba(242, 193, 78, 0.3);
+  border: 1px solid color-mix(in srgb, var(--resource-color) 48%, transparent);
   border-radius: 8px;
-  color: var(--gold);
-  background: rgba(7, 17, 27, 0.7);
+  color: var(--resource-color);
+  background:
+    linear-gradient(90deg, var(--resource-glow), transparent 56%),
+    rgba(7, 17, 27, 0.76);
   font-size: 12px;
   font-weight: 900;
+}
+
+.combat-resource-warrior {
+  --resource-color: #f2c14e;
+  --resource-glow: rgba(185, 85, 72, 0.24);
+}
+
+.combat-resource-mage {
+  --resource-color: #75e9ff;
+  --resource-glow: rgba(183, 126, 236, 0.26);
+}
+
+.combat-resource-rogue {
+  --resource-color: #7cf08a;
+  --resource-glow: rgba(63, 214, 163, 0.22);
+}
+
+.combat-resource-archer {
+  --resource-color: #d8ae4b;
+  --resource-glow: rgba(116, 173, 224, 0.24);
 }
 
 .combat-action-grid {
