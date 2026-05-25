@@ -1,7 +1,40 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
-const assert = require("assert");
+const nodeAssert = require("assert");
+
+let currentSuite = "bootstrap";
+let assertionCount = 0;
+const suiteStats = new Map();
+
+function suite(name) {
+  currentSuite = name;
+  if (!suiteStats.has(name)) suiteStats.set(name, 0);
+}
+
+function recordAssertion() {
+  assertionCount += 1;
+  suiteStats.set(currentSuite, (suiteStats.get(currentSuite) || 0) + 1);
+}
+
+function scopedMessage(message) {
+  return `[${currentSuite}] ${message || "assertion failed"}`;
+}
+
+function assert(value, message) {
+  recordAssertion();
+  nodeAssert(value, scopedMessage(message));
+}
+
+assert.strictEqual = (actual, expected, message) => {
+  recordAssertion();
+  nodeAssert.strictEqual(actual, expected, scopedMessage(message || `expected ${actual} to equal ${expected}`));
+};
+
+assert.deepStrictEqual = (actual, expected, message) => {
+  recordAssertion();
+  nodeAssert.deepStrictEqual(actual, expected, scopedMessage(message || "deep equality failed"));
+};
 
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
@@ -29,6 +62,8 @@ const scripts = [
   "scripts/data-achievements.js",
   "scripts/data-drops.js",
 ].map(read);
+
+suite("static project hygiene");
 
 assert(!/[Ã�]/.test(html), "index.html still contains likely mojibake characters");
 
@@ -64,6 +99,9 @@ assert.deepStrictEqual(scriptOrder, [
   "scripts/render-loot.js",
   "scripts/events.js",
 ]);
+
+suite("static UI wiring");
+
 assert(
   !/render\(\);\s*save\(\);\s*window\.addEventListener\("beforeunload"/.test(read("scripts/events.js")),
   "startup should not immediately overwrite an unreadable stored save",
@@ -88,6 +126,8 @@ assert(css.includes("grid-template-rows: auto minmax(0, 1fr)") && css.includes("
 assert(css.includes(".combat-card {\r\n    position: sticky") || css.includes(".combat-card {\n    position: sticky"), "mobile combat command dock should stay reachable");
 assert(html.includes('id="newGameTopBtn"') && css.includes(".save-actions .danger-action"), "save menu should expose a distinct new game action");
 assert(/newGameTopBtn"\)\.addEventListener\("click", startNewGame\)/.test(read("scripts/events.js")), "new game button should be wired through the save menu");
+
+suite("runtime harness boot");
 
 const storage = {};
 const context = {
@@ -128,6 +168,9 @@ for (const source of scripts) {
 
 assert.strictEqual(typeof context.defaultState, "function");
 assert.strictEqual(typeof context.renderBestiaryItemDetail, "function");
+
+suite("save defaults and migrations");
+
 const assetVersionInCode = vm.runInContext("assetVersion", context);
 const htmlAssetVersions = [...html.matchAll(/\?v=([^"]+)/g)].map((match) => match[1]);
 assert(htmlAssetVersions.length > 0 && htmlAssetVersions.every((version) => version === assetVersionInCode), "HTML asset versions should match assetVersion for cache busting");
@@ -165,6 +208,9 @@ assert.strictEqual(vm.runInContext("enemies.wolf.name", context), "Waldwolf");
 assert.strictEqual(vm.runInContext("zones.meadow.enemies[0]", context), "wolf");
 assert(vm.runInContext("Object.values(zones).filter((zone) => zone.type === 'dungeon').every((zone) => zone.enemies.every((id) => enemies[id].boss))", context), "dungeons should contain boss enemies");
 assert(vm.runInContext("Object.values(enemies).flatMap((enemy) => enemy.drops).every((drop) => items[drop.id])", context), "all fixed enemy drops need item data");
+
+suite("sprite and visual class contracts");
+
 const enemySprites = JSON.parse(vm.runInContext("JSON.stringify(Object.values(enemies).map((enemy) => enemy.sprite))", context));
 assert.strictEqual(new Set(enemySprites).size, enemySprites.length, "enemy sprite class combinations should be unique");
 const spriteTokens = [...new Set(enemySprites.flatMap((sprite) => sprite.split(/\s+/)).filter(Boolean))];
@@ -193,6 +239,9 @@ assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 10 })", con
 assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 15 })", context), "upgrade-frame upgrade-frame-oath");
 assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 20 })", context), "upgrade-frame upgrade-frame-masterwork");
 assert(vm.runInContext("state = defaultState(); state.customItems.frameTest = { ...items.trainingSword, id: 'frameTest', upgrade: 10, name: 'Übungsschwert +10' }; state.inventory = ['frameTest']; renderInventoryItemCard('frameTest', 0).includes('upgrade-frame-runic')", context), "upgraded item cards should render special upgrade frames");
+
+suite("quest board and inventory flows");
+
 assert(vm.runInContext("state = defaultState(); questAvailable(getQuestById('wolves')) && !questAvailable(getQuestById('fields'))", context), "early quest board should only offer reachable quest targets");
 assert(vm.runInContext("state.level = 9; state.renown = 8; selectedZone = 'fields'; questAvailable(getQuestById('fields'))", context), "field quests should unlock when the field zone is selected");
 assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'wolf'; state.questBoard = ['wolves', 'rust', 'boars']; refreshQuestBoard(true); state.questBoard.length === 1 && state.questBoard[0] === 'wolves'", context), "wolf target should only show wolf-related quests");
@@ -276,6 +325,9 @@ assert(vm.runInContext(`(() => {
     && rendered.includes('&lt;img src=x onerror=globalThis.__xss=1&gt;')
     && rendered.includes('&lt;script&gt;globalThis.__xss=1&lt;/script&gt;');
 })()`, context), "malicious imported save payloads should be normalized and escaped before rendering");
+
+suite("stations and combat balance");
+
 assert(vm.runInContext("(() => { state = defaultState(); const before = smithMasterySignature(); state.xp += 10; return before === smithMasterySignature(); })()", context), "smith mastery cache should ignore unrelated xp-only changes");
 assert(vm.runInContext("state = defaultState(); renderStationFocus('smith').includes('Verlässliches Handwerk') && renderStationFocus('smith').includes('Reparatur')", context), "Borin station focus should describe reliable smith craft");
 assert(vm.runInContext("state = defaultState(); renderStationFocus('enchant').includes('Runenrisiko') && renderStationFocus('enchant').includes('Arkane Slots')", context), "Mira station focus should describe rune risk and arcane slots");
@@ -326,6 +378,9 @@ assert(vm.runInContext("Object.values(items).every((item) => { const copy = norm
 assert(vm.runInContext("Object.values(items).every((item) => itemScore(item) <= itemBalanceBudget(item) + 0.001)", context), "fixed items should stay inside their rarity balance budget");
 assert(vm.runInContext("(() => { const order = ['common', 'rare', 'epic', 'legendary']; return equipmentSlots.every((slot) => { const byQuality = order.map((quality) => Object.values(items).filter((item) => item.slot === slot && item.quality === quality).map(itemScore)); for (let i = 0; i < byQuality.length - 1; i += 1) { if (!byQuality[i].length || !byQuality[i + 1].length) continue; if (Math.max(...byQuality[i]) > Math.max(...byQuality[i + 1])) return false; } return true; }); })()", context), "higher rarity fixed items should not be weaker than lower rarity peaks in the same slot");
 assert(vm.runInContext("(() => { const order = ['common', 'rare', 'epic', 'legendary']; return lootSlots.every((slot) => order.every((quality, index) => { if (index === 0) return true; const previous = itemStatCap(slot, order[index - 1]); const current = itemStatCap(slot, quality); return current.damage >= previous.damage && current.defense >= previous.defense; })); })()", context), "generated item stat caps should grow by rarity");
+
+suite("item effects and boss loot");
+
 assert(vm.runInContext("Object.values(items).every((item) => !item.effect || itemEffectCatalog[item.effect]?.slots?.includes(item.slot))", context), "fixed item effects should exist and fit their slots");
 assert(vm.runInContext("Object.values(itemEffectCatalog).every((effect) => effect.slots.every((slot) => equipmentSlots.includes(slot)))", context), "all item effects should target known equipment slots");
 assert(vm.runInContext("['huntingMark', 'ironWard', 'pilgrimPace', 'mendersThread', 'openingCut', 'scavengerCharm', 'battleLesson', 'ashTempo', 'revenantSeal'].every((id) => itemEffectCatalog[id])", context), "expanded item effect package should be registered");
@@ -435,6 +490,9 @@ assert(
     > vm.runInContext("itemStatCap('weapon', 'common').damage", context),
   "legendary weapon floor should be stronger than common weapon cap",
 );
+
+suite("save storage and quest completion");
+
 vm.runInContext("state.gold = 123; save();", context);
 assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1"]).gold, 123);
 assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1-backup"]).gold, 123);
@@ -454,8 +512,8 @@ assert(vm.runInContext("state = defaultState(); const exported = JSON.parse(expo
 assert(vm.runInContext("/\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}/.test(saveFileName())", context), "save filename should include date and time");
 assert(vm.runInContext("state.log = []; remindSaveBackup('Testmoment.'); state.log[0].startsWith('Tipp: Spielstand herunterladen')", context), "important moments should create a save reminder");
 assert(vm.runInContext("const cachedSave = storageGet(saveKey); localStorage = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } }; storageGet(saveKey) === cachedSave", context), "window.name fallback should load when localStorage is blocked");
-assert(vm.runInContext("exportSaveData().includes('Fantasy Grind')", context));
-assert(vm.runInContext("state.gold = 0; restCost()", context) > 0);
+assert(vm.runInContext("(() => { state = defaultState(); const exported = JSON.parse(exportSaveData()); return exported.game === 'Fantasy Grind' && exported.version === saveExportVersion && exported.save.level === 1; })()", context), "exported save data should include game id, export version and save payload");
+assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 1; state.gold = 0; restCost()", context), 10, "level 1 rest cost should stay explicit even when the player has no gold");
 assert(vm.runInContext("render = () => {}; state = defaultState(); state.hp = 10; state.gold = 0; rest(); state.hp === state.maxHp && state.gold === 0", context), "resting without gold should heal without charging hidden costs");
 assert(vm.runInContext("state = defaultState(); state.completedQuests = ['wolves', 'rust', 'boars']; state.questBoard = []; refreshQuestBoard(true); state.questBoard.length > 0 && state.questBoard.every((id) => questAvailable(getQuestById(id)))", context), "repeatable standard quests should refill the board after completion");
 assert(vm.runInContext("state = defaultState(); state.level = 17; state.renown = 30; selectedZone = 'ashgrounds'; state.questBoard = []; refreshQuestBoard(true); state.questBoard.length > 0 && !state.questBoard.includes('wolves') && state.questBoard.every((id) => questRelevantForCurrentZone(getQuestById(id)))", context), "late zones should not offer low-level starter quests");
@@ -484,6 +542,9 @@ assert(vm.runInContext("(() => { function clone(id) { return { ...items[id], id 
 assert(vm.runInContext("state = defaultState(); const rows = renderAllBestiaryRows('wolf', enemies.wolf); rows.includes('Unbekannt') && rows.includes('Chance') && rows.includes('Ring des Rudels')", context), "bestiary should reveal drop names and chances while locking undiscovered details");
 assert(!vm.runInContext("state = defaultState(); renderAllBestiaryRows('wolf', enemies.wolf).includes('1x')", context), "bestiary rows should not show found counts");
 assert.strictEqual(vm.runInContext("state = defaultState(); maxEnchantSlotsForLevel()", context), 0);
+
+suite("Mira mastery and achievements");
+
 assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 8; maxEnchantSlotsForLevel()", context), 1);
 assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 14; maxEnchantSlotsForLevel()", context), 1);
 assert.strictEqual(vm.runInContext("state.enchanting.completed = ['unstableRunes']; maxEnchantSlotsForLevel()", context), 2);
@@ -512,4 +573,9 @@ assert(vm.runInContext("claimAchievement('firstElite'); state.renown === 1 && st
 assert(vm.runInContext("state = defaultState(); state.level = 8; state.gold = 999; state.materials.shard = 99; state.materials.moonDust = 99; render = () => {}; renderLog = () => {}; enchantEquipped('weapon', 'offense'); state.combatStats.itemsEnchanted === 1 && achievementProgress(achievementById('firstEnchant')).ready", context), "enchanting should progress achievement counters");
 assert(vm.runInContext("state = defaultState(); state.inventory = ['rustBlade', 'wolfRing']; render = () => {}; renderLog = () => {}; salvageAllInventoryItems(); state.combatStats.itemsSalvaged === 2", context), "bulk salvage should progress achievement counters");
 
-console.log("Smoke test passed");
+assert(assertionCount >= 200, "smoke suite should keep broad behavioral coverage instead of becoming a hollow pass");
+
+const suiteSummary = [...suiteStats.entries()]
+  .map(([name, count]) => `${name}: ${count}`)
+  .join("; ");
+console.log(`Smoke test passed (${assertionCount} assertions across ${suiteStats.size} suites). ${suiteSummary}`);
