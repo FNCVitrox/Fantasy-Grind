@@ -2764,7 +2764,7 @@ function applyActionCombatLoss(combat) {
   state.xp -= xpLoss;
   state.gold -= goldLoss;
   state.deaths += 1;
-  state.hp = Math.max(1, Math.floor(state.maxHp * 0.35));
+  state.hp = state.maxHp;
   damageEquippedItems(combat.enemy, 2);
   log(t("combat.lossLog", "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.", { enemy: combat.enemyName, xp: xpLoss, gold: goldLoss }), "bad");
 }
