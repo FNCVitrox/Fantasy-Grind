@@ -115,6 +115,9 @@ assert(css.includes(".combat-mode-toggle"), "combat mode toggle should have stab
 assert(html.includes('id="combatActions"'), "combat UI should expose RPG action buttons");
 assert(html.includes('class="combat-command-main"') && html.includes('class="combat-command-top"'), "combat UI should use a dedicated command dock layout");
 assert(!html.includes('id="selectedEnemyMeta"') && !html.includes('id="selectedEnemyName"'), "combat command dock should not duplicate target details");
+assert(html.includes('id="studioSplash"') && html.includes("Nemurenai Game Studio") && html.includes("./assets/nemurenai-logo-transparent.png"), "startup should show the local Nemurenai studio splash");
+assert(fs.existsSync(path.join(root, "assets", "nemurenai-logo-transparent.png")), "Nemurenai splash logo should be checked in as a local asset");
+assert(css.includes(".studio-splash") && read("scripts/events.js").includes("scheduleStudioSplashHide()"), "studio splash should be styled and dismissed after boot");
 assert(css.includes(".inventory-window {\r\n    display: grid") || css.includes(".inventory-window {\n    display: grid"), "mobile inventory modal should use a fixed header and internal scroll grid");
 assert(css.includes(".inventory-actions {\r\n    grid-template-columns: repeat(2, minmax(0, 1fr))") || css.includes(".inventory-actions {\n    grid-template-columns: repeat(2, minmax(0, 1fr))"), "mobile inventory actions should stay compact in two columns");
 assert(html.includes('id="openClassModalBtn"') && html.includes('id="classChoiceList"'), "character portrait should open a dedicated class chooser");

@@ -467,8 +467,33 @@ window.addEventListener("beforeunload", save);
 window.addEventListener("scroll", hideFloatingTooltip, { passive: true, capture: true });
 
 async function bootGame() {
+  setupStudioSplash();
   await ensureLanguagePack(currentLanguage());
   render();
+  scheduleStudioSplashHide();
+}
+
+function setupStudioSplash() {
+  const splash = $("studioSplash");
+  if (!splash) return;
+  splash.addEventListener("click", hideStudioSplash, { once: true });
+  splash.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" || event.key === "Enter" || event.key === " ") hideStudioSplash();
+  });
+}
+
+function scheduleStudioSplashHide() {
+  const splash = $("studioSplash");
+  if (!splash) return;
+  const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  window.setTimeout(hideStudioSplash, reducedMotion ? 450 : 1500);
+}
+
+function hideStudioSplash() {
+  const splash = $("studioSplash");
+  if (!splash || splash.classList.contains("is-hidden")) return;
+  splash.classList.add("is-hidden");
+  window.setTimeout(() => splash.remove(), 520);
 }
 
 function closeBestiary() {
