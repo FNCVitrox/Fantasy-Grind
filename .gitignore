@@ -21,6 +21,11 @@ desktop.ini
 FantasyGrindProject.docx
 FantasyGrind_MVP_Konzept.md
 Fantasy-Grind-Testsave-*.json
+Fantasy-Grind-Level-*.json
+Fantasy-Grind-Export-*.json
 *Testsave*.json
 *Spielstand*.json
 *Save*.json
+*.save.json
+debug-*.json
+profile-*.json
