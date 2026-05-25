@@ -115,6 +115,8 @@ assert(css.includes(".combat-mode-toggle"), "combat mode toggle should have stab
 assert(html.includes('id="combatActions"'), "combat UI should expose RPG action buttons");
 assert(html.includes('class="combat-command-main"') && html.includes('class="combat-command-top"'), "combat UI should use a dedicated command dock layout");
 assert(!html.includes('id="selectedEnemyMeta"') && !html.includes('id="selectedEnemyName"'), "combat command dock should not duplicate target details");
+assert(css.includes(".inventory-window {\r\n    display: grid") || css.includes(".inventory-window {\n    display: grid"), "mobile inventory modal should use a fixed header and internal scroll grid");
+assert(css.includes(".inventory-actions {\r\n    grid-template-columns: repeat(2, minmax(0, 1fr))") || css.includes(".inventory-actions {\n    grid-template-columns: repeat(2, minmax(0, 1fr))"), "mobile inventory actions should stay compact in two columns");
 assert(html.includes('id="openClassModalBtn"') && html.includes('id="classChoiceList"'), "character portrait should open a dedicated class chooser");
 assert(!html.includes('id="classList"'), "class chooser should not remain as a permanent sidebar list");
 assert(/renderClassChoices\(\);[\s\S]*openModal\("classModal"\)/.test(read("scripts/events.js")), "portrait class button should render and open the class modal");

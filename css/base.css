@@ -1196,6 +1196,15 @@ h2 {
   width: min(980px, 100%);
 }
 
+.inventory-window .modal-window-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin: -18px -18px 12px;
+  padding: 18px 18px 10px;
+  background: linear-gradient(180deg, #17283a 76%, rgba(23, 40, 58, 0));
+}
+
 .inventory-window .inventory {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

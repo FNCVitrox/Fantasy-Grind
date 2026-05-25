@@ -699,6 +699,41 @@
     width: min(100%, calc(100vw - 18px));
   }
 
+  .inventory-window {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .inventory-window .modal-window-head {
+    margin: -12px -12px 8px;
+    padding: 12px 12px 9px;
+  }
+
+  .inventory-summary {
+    position: sticky;
+    top: 62px;
+    z-index: 2;
+    margin: 0 -4px 8px;
+    padding: 8px;
+    border: 1px solid rgba(109, 149, 184, 0.28);
+    border-radius: 10px;
+    background: rgba(8, 18, 29, 0.96);
+  }
+
+  .inventory-summary > div {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .inventory-window .inventory {
+    max-height: none;
+    min-height: 0;
+    padding-right: 0;
+    overflow-y: auto;
+  }
+
   .quest-board {
     gap: 8px;
   }
@@ -1058,20 +1093,57 @@
 
   .inventory-item {
     gap: 7px;
+    min-height: 0;
   }
 
   .inventory-item-head {
     align-items: center;
   }
 
-  .inventory-item-meta span {
-    min-height: 20px;
+  .inventory-item-head strong {
+    white-space: normal;
+    line-height: 1.12;
+  }
+
+  .lock-note {
+    max-width: 38%;
+    min-height: 21px;
     padding: 2px 6px;
     font-size: 10px;
   }
 
+  .inventory-item-meta {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .inventory-item-meta span {
+    display: grid;
+    place-items: center;
+    min-height: 20px;
+    padding: 2px 6px;
+    font-size: 10px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .inventory-stat-line,
+  .inventory-item .set-line,
+  .inventory-item p {
+    line-height: 1.22;
+  }
+
   .inventory-item .loot-compare {
-    max-height: 72px;
+    max-height: 64px;
     overflow: auto;
+  }
+
+  .inventory-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inventory-actions button {
+    min-height: 38px;
   }
 }
