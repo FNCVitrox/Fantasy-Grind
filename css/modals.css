@@ -3334,6 +3334,11 @@ button.drop-row span:last-child {
   z-index: 1;
 }
 
+.equipment-chip.upgrade-frame > strong,
+.equipment-chip.upgrade-frame > small:last-of-type {
+  padding-inline: 8px;
+}
+
 .rarity-card.upgrade-frame > .equipment-hover-detail {
   position: absolute;
   z-index: 90;

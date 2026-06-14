@@ -330,7 +330,7 @@
   .equipment-chip {
     min-width: 0;
     min-height: 68px;
-    padding: 8px 9px;
+    padding: 11px 10px 10px 12px;
     overflow: hidden;
   }
 
@@ -1036,7 +1036,7 @@
 
   .equipment-chip {
     min-height: 62px;
-    padding: 7px;
+    padding: 9px 8px 8px 10px;
   }
 
   .battle-stage {
