@@ -775,10 +775,10 @@ function itemUpgradeFrameClass(item) {
 function itemUpgradeFrameName(item) {
   const upgrade = Math.max(0, Math.floor(item?.upgrade || 0));
   if (!upgrade) return "";
-  if (upgrade >= 20) return t("upgradeFrame.masterwork", "Meisterwerk-Aura");
-  if (upgrade >= 15) return t("upgradeFrame.oath", "Eidsiegel-Rand");
-  if (upgrade >= 10) return t("upgradeFrame.runic", "Runenfassung");
-  if (upgrade >= 5) return t("upgradeFrame.ember", "Glutrand");
+  if (upgrade >= 20) return t("upgradeFrame.masterwork", "Diamantfassung");
+  if (upgrade >= 15) return t("upgradeFrame.oath", "Bluteid-Rahmen");
+  if (upgrade >= 10) return t("upgradeFrame.runic", "Smaragdfassung");
+  if (upgrade >= 5) return t("upgradeFrame.ember", "Goldverzierung");
   return t("upgradeFrame.forged", "Geschmiedete Kante");
 }
 

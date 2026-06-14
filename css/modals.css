@@ -3293,28 +3293,39 @@ button.drop-row span:last-child {
 }
 
 .rarity-card.upgrade-frame {
-  --upgrade-frame: rgba(210, 226, 234, 0.72);
-  --upgrade-frame-soft: rgba(210, 226, 234, 0.14);
-  --upgrade-frame-accent: rgba(255, 255, 255, 0.22);
+  --upgrade-frame: rgba(194, 207, 216, 0.72);
+  --upgrade-frame-inner: rgba(225, 235, 240, 0.18);
+  --upgrade-frame-metal: rgba(225, 235, 240, 0.54);
+  --upgrade-frame-jewel: rgba(255, 255, 255, 0.72);
+  --upgrade-frame-glow: rgba(194, 207, 216, 0.16);
   border-color: var(--upgrade-frame);
-  box-shadow: inset 0 0 0 1px var(--upgrade-frame-soft);
+  box-shadow: inset 0 0 0 1px var(--upgrade-frame-inner);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.rarity-card.upgrade-frame::before {
+  width: 0;
+  opacity: 0;
 }
 
 .rarity-card.upgrade-frame::after {
   content: "";
   position: absolute;
-  inset: 5px;
+  inset: 3px;
   z-index: 0;
   border-radius: 4px;
+  border: 1px solid var(--upgrade-frame-inner);
   background:
-    linear-gradient(90deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 0 0 / 18px 2px no-repeat,
-    linear-gradient(90deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 100% 0 / 18px 2px no-repeat,
-    linear-gradient(90deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 0 100% / 18px 2px no-repeat,
-    linear-gradient(90deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 100% 100% / 18px 2px no-repeat,
-    linear-gradient(180deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 0 0 / 2px 18px no-repeat,
-    linear-gradient(180deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 100% 0 / 2px 18px no-repeat,
-    linear-gradient(180deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 0 100% / 2px 18px no-repeat,
-    linear-gradient(180deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 100% 100% / 2px 18px no-repeat;
+    radial-gradient(circle at 8px 8px, var(--upgrade-frame-jewel) 0 2px, transparent 3px),
+    radial-gradient(circle at calc(100% - 8px) 8px, var(--upgrade-frame-jewel) 0 2px, transparent 3px),
+    radial-gradient(circle at 8px calc(100% - 8px), var(--upgrade-frame-jewel) 0 2px, transparent 3px),
+    radial-gradient(circle at calc(100% - 8px) calc(100% - 8px), var(--upgrade-frame-jewel) 0 2px, transparent 3px),
+    linear-gradient(135deg, var(--upgrade-frame-metal) 0 7px, transparent 8px) 0 0 / 22px 22px no-repeat,
+    linear-gradient(225deg, var(--upgrade-frame-metal) 0 7px, transparent 8px) 100% 0 / 22px 22px no-repeat,
+    linear-gradient(45deg, var(--upgrade-frame-metal) 0 7px, transparent 8px) 0 100% / 22px 22px no-repeat,
+    linear-gradient(315deg, var(--upgrade-frame-metal) 0 7px, transparent 8px) 100% 100% / 22px 22px no-repeat;
   pointer-events: none;
 }
 
@@ -3328,66 +3339,58 @@ button.drop-row span:last-child {
   z-index: 90;
 }
 
+.rarity-card.upgrade-frame:hover,
+.rarity-card.upgrade-frame:focus-visible {
+  border-color: var(--upgrade-frame-jewel);
+  box-shadow:
+    inset 0 0 0 1px var(--upgrade-frame-inner),
+    0 0 10px var(--upgrade-frame-glow);
+}
+
 .rarity-card.upgrade-frame-forged {
-  --upgrade-frame: rgba(183, 199, 207, 0.86);
-  --upgrade-frame-soft: rgba(183, 199, 207, 0.16);
-  --upgrade-frame-accent: rgba(235, 244, 247, 0.28);
+  --upgrade-frame: rgba(157, 174, 184, 0.76);
+  --upgrade-frame-inner: rgba(209, 221, 227, 0.14);
+  --upgrade-frame-metal: rgba(209, 221, 227, 0.42);
+  --upgrade-frame-jewel: rgba(232, 240, 244, 0.62);
+  --upgrade-frame-glow: rgba(172, 190, 200, 0.12);
 }
 
 .rarity-card.upgrade-frame-ember {
-  --upgrade-frame: rgba(235, 196, 88, 0.94);
-  --upgrade-frame-soft: rgba(235, 196, 88, 0.18);
-  --upgrade-frame-accent: rgba(255, 226, 142, 0.44);
+  --upgrade-frame: rgba(211, 164, 48, 0.92);
+  --upgrade-frame-inner: rgba(255, 223, 132, 0.2);
+  --upgrade-frame-metal: rgba(237, 194, 84, 0.72);
+  --upgrade-frame-jewel: rgba(255, 231, 158, 0.88);
+  --upgrade-frame-glow: rgba(225, 181, 70, 0.18);
 }
 
 .rarity-card.upgrade-frame-runic {
-  --upgrade-frame: rgba(57, 214, 166, 0.92);
-  --upgrade-frame-soft: rgba(57, 214, 166, 0.16);
-  --upgrade-frame-accent: rgba(145, 255, 220, 0.42);
-  box-shadow: inset 0 0 0 1px rgba(57, 214, 166, 0.18);
-}
-
-.rarity-card.upgrade-frame-runic::after {
-  inset: 4px;
-  border: 1px solid rgba(57, 214, 166, 0.2);
-  background:
-    radial-gradient(circle, rgba(145, 255, 220, 0.5) 0 2px, transparent 3px) 8px 0 / 34px 100% repeat-x,
-    linear-gradient(90deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 0 0 / 18px 2px no-repeat,
-    linear-gradient(90deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 100% 100% / 18px 2px no-repeat;
+  --upgrade-frame: rgba(31, 165, 125, 0.94);
+  --upgrade-frame-inner: rgba(82, 220, 174, 0.2);
+  --upgrade-frame-metal: rgba(214, 174, 73, 0.7);
+  --upgrade-frame-jewel: rgba(110, 235, 190, 0.9);
+  --upgrade-frame-glow: rgba(37, 190, 145, 0.18);
 }
 
 .rarity-card.upgrade-frame-oath {
-  --upgrade-frame: rgba(219, 76, 72, 0.95);
-  --upgrade-frame-soft: rgba(219, 76, 72, 0.16);
-  --upgrade-frame-accent: rgba(241, 200, 91, 0.52);
-  box-shadow: inset 0 0 0 1px rgba(241, 200, 91, 0.18);
-}
-
-.rarity-card.upgrade-frame-oath::after {
-  inset: 4px;
-  background:
-    radial-gradient(circle, rgba(241, 200, 91, 0.7) 0 2px, transparent 3px) 0 0 / 28px 4px repeat-x,
-    radial-gradient(circle, rgba(241, 200, 91, 0.55) 0 2px, transparent 3px) 0 100% / 28px 4px repeat-x,
-    linear-gradient(90deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 0 0 / 22px 2px no-repeat,
-    linear-gradient(90deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 100% 0 / 22px 2px no-repeat,
-    linear-gradient(90deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 0 100% / 22px 2px no-repeat,
-    linear-gradient(90deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 100% 100% / 22px 2px no-repeat;
+  --upgrade-frame: rgba(166, 43, 50, 0.96);
+  --upgrade-frame-inner: rgba(225, 79, 79, 0.18);
+  --upgrade-frame-metal: rgba(232, 184, 67, 0.8);
+  --upgrade-frame-jewel: rgba(255, 218, 119, 0.92);
+  --upgrade-frame-glow: rgba(184, 50, 55, 0.2);
+  box-shadow:
+    inset 0 0 0 1px var(--upgrade-frame-inner),
+    inset 0 0 0 3px rgba(104, 20, 27, 0.2);
 }
 
 .rarity-card.upgrade-frame-masterwork {
-  --upgrade-frame: rgba(197, 238, 255, 0.96);
-  --upgrade-frame-soft: rgba(197, 238, 255, 0.18);
-  --upgrade-frame-accent: rgba(255, 255, 255, 0.62);
-  box-shadow: inset 0 0 0 1px rgba(138, 218, 255, 0.2), 0 0 14px rgba(197, 238, 255, 0.1);
-}
-
-.rarity-card.upgrade-frame-masterwork::after {
-  inset: 4px;
-  background:
-    linear-gradient(45deg, rgba(197, 238, 255, 0.7) 0 5px, transparent 6px) 0 0 / 24px 24px repeat-x,
-    linear-gradient(225deg, rgba(197, 238, 255, 0.5) 0 5px, transparent 6px) 0 100% / 24px 24px repeat-x,
-    linear-gradient(90deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 0 0 / 20px 2px no-repeat,
-    linear-gradient(90deg, var(--upgrade-frame-accent), var(--upgrade-frame-accent)) 100% 100% / 20px 2px no-repeat;
+  --upgrade-frame: rgba(181, 226, 239, 0.98);
+  --upgrade-frame-inner: rgba(226, 249, 255, 0.3);
+  --upgrade-frame-metal: rgba(226, 249, 255, 0.88);
+  --upgrade-frame-jewel: rgba(255, 255, 255, 0.98);
+  --upgrade-frame-glow: rgba(158, 222, 240, 0.22);
+  box-shadow:
+    inset 0 0 0 1px var(--upgrade-frame-inner),
+    0 0 0 1px rgba(112, 183, 213, 0.18);
 }
 
 .quest.done {
