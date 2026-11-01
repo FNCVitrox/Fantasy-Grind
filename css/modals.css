@@ -4075,3 +4075,64 @@ button.drop-row span:last-child {
   background: linear-gradient(135deg, #8f8f96, #141316);
   border-color: #e07a4a;
 }
+
+/* Endgame: Paragon und Turm (Punkt 13) */
+.paragon-panel {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(176, 137, 255, 0.45);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(176, 137, 255, 0.12), transparent 60%), var(--panel-deep);
+}
+
+.paragon-panel.is-locked span,
+.paragon-head span,
+.paragon-tower,
+.paragon-stat small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.paragon-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.paragon-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 6px;
+}
+
+.paragon-stat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.paragon-stat b {
+  color: var(--purple);
+}
+
+.paragon-stat button {
+  min-width: 32px;
+  min-height: 30px;
+  padding: 2px 8px;
+}
+
+.enemy-tower-warden .enemy-body {
+  background: linear-gradient(135deg, #8a7fb0, #3d3566 54%, #17132b 100%);
+  border-color: var(--purple);
+}
+
+.enemy-tower-warden .enemy-body::before {
+  background: linear-gradient(135deg, #a99ad6, #241e40);
+  border-color: var(--purple);
+}

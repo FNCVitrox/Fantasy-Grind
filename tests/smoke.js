@@ -223,6 +223,8 @@ assert(/function hideFloatingTooltip\(\) \{[\s\S]{0,300}if \(!tooltip\.classList
     .filter((key) => !(key in enContext.translations.en))));
   assert.deepStrictEqual(missing, [], "every smith greeting should have an English translation");
 }
+// Gegnerfähigkeiten in Kampftexten laufen über ihre Übersetzung, nicht über feste deutsche Namen.
+assert(!/defensive\.push\("/.test(read("scripts/combat.js")), "enemy ability names in combat texts should be translated");
 // Sprache: keine festen Texte ohne Übersetzung (Punkt 2 im Arbeitsplan).
 {
   const i18nContext = { console, window: {}, document: {} };
@@ -357,6 +359,13 @@ assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 20 })", con
 assert(vm.runInContext("state = defaultState(); state.customItems.frameTest = { ...items.trainingSword, id: 'frameTest', upgrade: 10, name: 'Übungsschwert +10' }; state.inventory = ['frameTest']; renderInventoryItemCard('frameTest', 0).includes('upgrade-frame-runic')", context), "upgraded item cards should render special upgrade frames");
 
 suite("quest board and inventory flows");
+// Endgame (Punkt 13): Paragon und Endloser Turm
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.level = 20; const renown = state.renown; gainXp(paragonXpNeeded(0) + 10); return state.paragon.level === 1 && state.paragon.unspent === 1 && state.paragon.xp === 10 && state.renown > renown; })()", context), "XP after level 20 should grant paragon levels and still renown");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.level = 20; state.paragon = normalizeParagon({ level: 30, unspent: 30 }); const before = totalStats().damage; for (let i = 0; i < 30; i += 1) spendParagonPoint('might'); return state.paragon.points.might === 25 && state.paragon.unspent === 5 && totalStats().damage > before; })()", context), "paragon points should raise stats and stop at the cap");
+assert(vm.runInContext("(() => { const p = normalizeParagon({ level: 2, unspent: 9, points: { might: 99, guard: -3 } }); return p.points.might === 25 && p.points.guard === 0 && p.unspent === 0; })()", context), "paragon data from saves should be sanitized");
+assert(vm.runInContext("(() => { state = defaultState(); state.tower = { floor: 6, best: 5 }; const scaled = getPreparedEncounter('towerWarden'); return scaled.towerFloor === 6 && scaled.hp > enemies.towerWarden.hp && scaled.xp > enemies.towerWarden.xp && enemyDisplayName(scaled, 'towerWarden').includes('6'); })()", context), "tower warden should scale with the current floor");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.tower = { floor: 5, best: 4 }; const gold = state.gold; onTowerVictory(); return state.tower.floor === 6 && state.tower.best === 5 && state.gold > gold; })()", context), "tower victories should advance floors and pay milestone treasure every 5 floors");
+assert(vm.runInContext("zones.tower.unlock.level === 20 && zones.tower.enemies.includes('towerWarden')", context), "the endless tower should unlock at level 20");
 // Mehr Gegner (Punkt 12): jedes Level 1-20 hat mindestens 2 passende Gegner (2 Level darunter bis 1 Level darüber) in offenen Gebieten.
 assert(vm.runInContext("(() => { const open = [...new Set(Object.values(zones).filter((zone) => zone.type === 'zone').flatMap((zone) => zone.enemies))]; return Array.from({ length: 20 }, (_, index) => index + 1).every((level) => open.filter((id) => enemies[id].level >= level - 2 && enemies[id].level <= level + 1).length >= 2); })()", context), "every level should have at least two fitting enemies");
 assert(vm.runInContext("Object.values(zones).filter((zone) => zone.type === 'zone').every((zone) => zone.enemies.length >= 5)", context), "every open zone should have at least five enemies");

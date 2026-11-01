@@ -6,6 +6,7 @@ const items = {
   travelBoots: { name: "Reisestiefel", slot: "boots", quality: "common", damage: 0, defense: 1 },
   twineNecklace: { name: "Kordelhalskette", slot: "necklace", quality: "common", damage: 1, defense: 0, critDamage: 0.04 },
   copperRing: { name: "Kupferring", slot: "ring", quality: "common", damage: 2, defense: 0, critChance: 0.01 },
+  towerSigil: { name: "Turmsiegel", slot: "necklace", quality: "legendary", damage: 12, defense: 4, critChance: 0.04, critDamage: 0.16, set: "ashen", effect: "eliteHunter" },
   poacherKnife: { name: "Wilddieb-Dolch", slot: "weapon", quality: "rare", damage: 6, defense: 0, critChance: 0.03, set: "wolf", effect: "bleedEdge" },
   bogPelt: { name: "Moorpelz", slot: "chest", quality: "rare", damage: 0, defense: 8, set: "wolf", effect: "thornGuard" },
   brigandBoots: { name: "Wegelagerer-Stiefel", slot: "boots", quality: "rare", damage: 0, defense: 9, set: "iron", effect: "steadyStep" },

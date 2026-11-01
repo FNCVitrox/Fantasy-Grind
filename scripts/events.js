@@ -52,6 +52,11 @@ $("smithHome").addEventListener("click", (event) => {
   if (event.target.closest("[data-expand-inventory]")) expandInventory();
 });
 
+$("playerStatsDetails").addEventListener("click", (event) => {
+  const spend = event.target.closest("[data-paragon-spend]");
+  if (spend) spendParagonPoint(spend.dataset.paragonSpend);
+});
+
 $("lootChoices").addEventListener("click", (event) => {
   const equipLoot = event.target.closest("[data-equip-loot]");
   if (equipLoot) {

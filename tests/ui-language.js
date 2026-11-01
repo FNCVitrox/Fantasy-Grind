@@ -42,6 +42,9 @@ await p.evaluate(()=>{closeModal('smithModal');state.enchanting=normalizeEnchant
 await p.evaluate(()=>{state.enchanting=normalizeEnchanting({...state.enchanting,active:null});render();});await scan('enchant-mastery-requirements');
 await p.evaluate(()=>{document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));$('openBestiaryBtn').click();render();document.querySelector('[data-bestiary]')?.click();});await p.waitForTimeout(150);await scan('bestiary-enemy');
 await p.evaluate(()=>document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id)));
+// Bosskampf mit Passiv-Fähigkeiten: Kampflog muss in der gewählten Sprache sein
+await p.evaluate(async()=>{document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));state.level=20;state.renown=60;syncDerivedStats();for(const [z,e] of [['ironhold','ironDuke'],['ashcathedral','hollowChampion'],['tower','towerWarden']]){state.hp=state.maxHp;state.pendingLoot=[];closeModal('lootModal');ui.selectedZone=z;ui.selectedEnemy=e;const pr=fight();ui.skipCombat=true;await pr;}state.pendingLoot=[];closeModal('lootModal');$('openCombatLogBtn')?.click()||openModal('combatLogModal');render();});await p.waitForTimeout(150);await scan('boss-combatlog');
+await p.evaluate(()=>document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id)));
 await p.evaluate(()=>{showBattleResult(true,enemyDisplayName(enemies.wolf,'wolf'),3,{criticals:2,effects:2});});await scan('battle-result-win');
 await p.evaluate(()=>{showBattleResult(false,enemyDisplayName(enemies.wolf,'wolf'),1,{criticals:1,effects:1});});await scan('battle-result-loss');
 await p.evaluate(()=>hideBattleResult());

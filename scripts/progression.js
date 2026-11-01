@@ -4,6 +4,7 @@
 function gainXp(amount) {
   if (state.level >= 20) {
     state.renown += Math.max(1, Math.floor(amount / 30));
+    gainParagonXp(amount);
     return;
   }
 
@@ -587,3 +588,99 @@ function notifyReadyAchievements() {
     : t("achievements.readyManyLog", "{count} neue Erfolge sind bereit.", { count: unseenReady.length }),
   "drop");
 }
+
+// --- Endgame (Punkt 13): Paragon-Stufen und Endloser Turm ---
+
+function defaultParagon() {
+  return { level: 0, xp: 0, unspent: 0, points: { might: 0, guard: 0, vitality: 0, fortune: 0 } };
+}
+
+function normalizeParagon(paragon) {
+  const source = paragon && typeof paragon === "object" ? paragon : {};
+  const whole = (value) => (Number.isFinite(value) && value > 0 ? Math.floor(value) : 0);
+  const points = Object.fromEntries(Object.entries(paragonStats).map(([id, config]) => [id, Math.min(config.max, whole(source.points?.[id]))]));
+  const level = whole(source.level);
+  const spent = Object.values(points).reduce((sum, value) => sum + value, 0);
+  return { level, xp: whole(source.xp), unspent: Math.max(0, Math.min(whole(source.unspent), level - spent)), points };
+}
+
+function paragonXpNeeded(level = state.paragon?.level || 0) {
+  return 20000 + level * 1500;
+}
+
+function gainParagonXp(amount) {
+  state.paragon = normalizeParagon(state.paragon);
+  state.paragon.xp += Math.max(0, Math.floor(amount));
+  while (state.paragon.xp >= paragonXpNeeded(state.paragon.level)) {
+    state.paragon.xp -= paragonXpNeeded(state.paragon.level);
+    state.paragon.level += 1;
+    state.paragon.unspent += 1;
+    const reached = state.paragon.level;
+    log(() => t("paragon.levelUpLog", "Paragon-Stufe {level} erreicht. Ein neuer Punkt wartet in den Spielerwerten.", { level: reached }), "good");
+    remindSaveBackup(() => t("save.backupParagonReason", "du hast eine Paragon-Stufe erreicht."));
+  }
+}
+
+function spendParagonPoint(statId) {
+  state.paragon = normalizeParagon(state.paragon);
+  const config = paragonStats[statId];
+  if (!config || state.paragon.unspent <= 0 || state.paragon.points[statId] >= config.max) return false;
+  state.paragon.points[statId] += 1;
+  state.paragon.unspent -= 1;
+  syncDerivedStats();
+  save();
+  render();
+  return true;
+}
+
+// Prozentuale Boni aus Paragon-Punkten (z. B. 0.1 = +10 %).
+function paragonBonuses() {
+  const paragon = normalizeParagon(state?.paragon);
+  const bonus = (id) => paragon.points[id] * paragonStats[id].perPoint;
+  return { damage: bonus("might"), defense: bonus("guard"), maxHp: bonus("vitality"), gold: bonus("fortune") };
+}
+
+function defaultTower() {
+  return { floor: 1, best: 0 };
+}
+
+function normalizeTower(tower) {
+  const source = tower && typeof tower === "object" ? tower : {};
+  const floor = Number.isFinite(source.floor) && source.floor >= 1 ? Math.floor(source.floor) : 1;
+  const best = Number.isFinite(source.best) && source.best > 0 ? Math.floor(source.best) : 0;
+  return { floor, best: Math.max(best, floor - 1) };
+}
+
+// Turmwächter wird pro Stockwerk stärker; Belohnungen wachsen etwas schneller als die Gefahr.
+function scaleTowerEnemy(base, floor = normalizeTower(state.tower).floor) {
+  const step = Math.max(0, floor - 1);
+  const power = 1 + step * 0.07;
+  const reward = 1 + step * 0.1;
+  return {
+    ...base,
+    hp: Math.round(base.hp * power),
+    damage: base.damage.map((value) => Math.round(value * power)),
+    defense: Math.round(base.defense * (1 + step * 0.04)),
+    xp: Math.round(base.xp * reward),
+    gold: base.gold.map((value) => Math.round(value * reward)),
+    towerFloor: floor,
+  };
+}
+
+function onTowerVictory() {
+  state.tower = normalizeTower(state.tower);
+  const cleared = state.tower.floor;
+  state.tower.best = Math.max(state.tower.best, cleared);
+  state.tower.floor = cleared + 1;
+  if (cleared % 5 === 0) {
+    const renown = 2;
+    const gold = 150 * (cleared / 5);
+    state.renown += renown;
+    state.gold += gold;
+    log(() => t("tower.milestoneLog", "Stockwerk {floor} bezwungen! Turmschatz: +{gold} Gold, +{renown} Ruhm.", { floor: cleared, gold, renown }), "drop");
+    remindSaveBackup(() => t("save.backupTowerReason", "du hast einen Turm-Meilenstein erreicht."));
+  } else {
+    log(() => t("tower.floorLog", "Stockwerk {floor} bezwungen. Weiter nach oben!", { floor: cleared }), "good");
+  }
+}
+

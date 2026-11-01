@@ -7,6 +7,7 @@ materialDrops = {
   plagueWitch: [{ id: "bone", min: 1, max: 2 }, { id: "moonDust", min: 0, max: 1 }, { id: "shadowResin", min: 1, max: 1 }],
   cinderHound: [{ id: "sinew", min: 1, max: 2 }, { id: "emberCore", min: 0, max: 1 }],
   ashenWarlord: [{ id: "oathSteel", min: 1, max: 2 }, { id: "emberCore", min: 1, max: 1 }, { id: "crownAsh", min: 0, max: 1 }],
+  towerWarden: [{ id: "oathSteel", min: 1, max: 2 }, { id: "emberCore", min: 0, max: 1 }, { id: "crownAsh", min: 0, max: 1 }],
   wolf: [{ id: "leather", min: 1, max: 2 }, { id: "sinew", min: 0, max: 1 }],
   bandit: [{ id: "scrap", min: 1, max: 2 }, { id: "cloth", min: 0, max: 1 }, { id: "shard", min: 0, max: 1 }],
   boar: [{ id: "leather", min: 2, max: 3 }, { id: "sinew", min: 1, max: 2 }, { id: "emberCore", min: 0, max: 1 }],

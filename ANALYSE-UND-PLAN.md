@@ -248,12 +248,21 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Damit der Kampf-Button am Laptop sichtbar bleibt, ist die Gegnerliste bei breiter Mittelspalte jetzt zweispaltig, mit kompakten Karten: Name und Risiko oben, Details darunter.
     - Absicherung: Tests für die Abdeckung (jedes Level mindestens 2) und für mindestens 5 Gegner pro Gebiet.
 
-- [ ] **13. Endgame nach Level 20**
+- [x] **13. Endgame nach Level 20** ✅ erledigt in v0.8.136
   - Wie:
     - **Paragon-Level:** XP nach Level 20 geben Paragon-Punkte, die man in kleine Werte investieren kann.
     - **Endlos-Turm:** Stockwerke mit steigender Skalierung, Bestenliste lokal.
     - **Wöchentliche Herausforderungen:** zum Beispiel feste Modifikatoren pro Woche.
   - Fertig wenn: Nach Level 20 gibt es mindestens 2 Fortschrittsziele, die weiter belohnen.
+  - Ergebnis:
+    - **Paragon:** XP nach Level 20 geben weiterhin Ruhm und zusätzlich Paragon-Stufen (20'000 XP, pro Stufe +1'500). Jede Stufe bringt einen Punkt für Macht (+2 % Schaden), Wehr (+2 % Verteidigung), Lebenskraft (+3 % Leben) oder Glück (+3 % Gold), je höchstens 25. Verteilt werden die Punkte im Spielerwerte-Fenster.
+    - **Endloser Turm** (ab Level 20, 30 Ruhm):
+      - Der Turmwächter wird pro Stockwerk stärker (+7 % Leben und Schaden), die Belohnung wächst schneller (+10 %).
+      - Alle 5 Stockwerke gibt es einen Turmschatz (Gold und Ruhm), dazu einen Rekord.
+      - Ausserdem: eine Unikat-Kette (Turmsiegel), eine Erstsieg-Belohnung und eine Quest.
+    - Schwierigkeit geprüft: Stockwerk 1 entspricht etwa dem stärksten normalen Gegner. Ein Level-20-Charakter mit Schmied-Upgrades gewinnt 8 von 8.
+    - Mitbehoben: 19 Gegnerfähigkeiten standen in Kampftexten fest auf Deutsch („nutzt Zweite Phase“).
+    - Absicherung: 6 Endgame-Tests, ein statischer Test gegen feste Fähigkeitsnamen und ein Bosskampf im Sprach-Browsertest.
 
 - [ ] **14. Idle-/Offline-Fortschritt**
   - Wo: Neues Modul `scripts/idle.js`, Zeitstempel im State
@@ -361,7 +370,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 |---|---|---|
 | 1 – Bugs | 1–5 | 5/5 ✅ |
 | 2 – Code | 6–10 | 5/5 ✅ |
-| 3 – Gameplay | 11–15 | 2/5 |
+| 3 – Gameplay | 11–15 | 3/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |
 | 5 – Inhalt | 22–24 | 0/3 |
 | 6 – Steam | 25–28 | 0/4 |

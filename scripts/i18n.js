@@ -536,6 +536,32 @@ const translations = {
         "enemy.bandit.name": "Wegräuber",
         "enemy.roadThief.name": "Straßenräuber",
         "enemy.ironHound.name": "Eisenhund",
+        "item.towerSigil.name": "Turmsiegel",
+        "paragon.levelUpLog": "Paragon-Stufe {level} erreicht. Ein neuer Punkt wartet in den Spielerwerten.",
+        "save.backupParagonReason": "du hast eine Paragon-Stufe erreicht.",
+        "save.backupTowerReason": "du hast einen Turm-Meilenstein erreicht.",
+        "tower.milestoneLog": "Stockwerk {floor} bezwungen! Turmschatz: +{gold} Gold, +{renown} Ruhm.",
+        "tower.floorLog": "Stockwerk {floor} bezwungen. Weiter nach oben!",
+        "tower.enemyName": "{enemy} · Stockwerk {floor}",
+        "tower.record": "Rekord: Stockwerk {best}",
+        "tower.nextMilestone": "Schatz bei Stockwerk {floor}",
+        "paragon.title": "Paragon",
+        "paragon.locked": "Ab Level 20: weitere XP geben Paragon-Stufen und Punkte für dauerhafte Boni.",
+        "paragon.spendAria": "Punkt in {stat} setzen",
+        "paragon.levelLabel": "Paragon-Stufe {level}",
+        "paragon.unspent": "{count} Punkte frei",
+        "paragon.unspent.one": "1 Punkt frei",
+        "paragon.noPoints": "Keine freien Punkte",
+        "paragon.xp": "Paragon-XP",
+        "paragon.might": "Macht (Schaden)",
+        "paragon.guard": "Wehr (Verteidigung)",
+        "paragon.vitality": "Lebenskraft (Leben)",
+        "paragon.fortune": "Glück (Gold)",
+        "paragon.towerRecord": "Endloser Turm: Rekord Stockwerk {best}, nächstes Stockwerk {floor}",
+        "enemy.towerWarden.name": "Turmwächter",
+        "zone.tower.name": "Endloser Turm",
+        "quest.towerClimb.name": "Stufe um Stufe",
+        "quest.towerClimb.text": "Bezwinge 5 Turmwächter im Endlosen Turm.",
         "quest.bogWolf.name": "Heulen im Moor",
         "quest.bogWolf.text": "Jage 8 Moorwölfe im Grauwacht-Wald.",
         "enemy.poacher.name": "Wilddieb",
@@ -1355,7 +1381,8 @@ function entityText(group, id, fallback = id) {
 function enemyDisplayName(enemy, enemyId = "") {
     const id = enemyId || enemy?.baseId || enemyIdFor(enemy);
     const baseName = entityName("enemy", id, enemy?.name || id);
-    return enemy?.eliteVariant ? t("enemy.eliteName", "Elite-{enemy}", { enemy: baseName }) : baseName;
+    const name = enemy?.eliteVariant ? t("enemy.eliteName", "Elite-{enemy}", { enemy: baseName }) : baseName;
+    return enemy?.towerFloor ? t("tower.enemyName", "{enemy} · Stockwerk {floor}", { enemy: name, floor: enemy.towerFloor }) : name;
 }
 
 function enemyIdFor(enemy) {

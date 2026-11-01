@@ -253,6 +253,46 @@ function classIconClass(classId) {
   return `class-portrait-icon class-icon-${safeClass}`;
 }
 
+// Endgame-Bereich (Punkt 13): Paragon-Stufe, Punkte verteilen, Turm-Rekord.
+function renderParagonSection() {
+  const paragon = normalizeParagon(state.paragon);
+  const tower = normalizeTower(state.tower);
+  if (state.level < 20) {
+    return `<section class="paragon-panel is-locked">
+      <strong>${t("paragon.title", "Paragon")}</strong>
+      <span>${t("paragon.locked", "Ab Level 20: weitere XP geben Paragon-Stufen und Punkte für dauerhafte Boni.")}</span>
+    </section>`;
+  }
+  const needed = paragonXpNeeded(paragon.level);
+  const percent = Math.max(2, Math.min(100, (paragon.xp / needed) * 100));
+  const statRow = (id, label, perPoint) => {
+    const value = paragon.points[id];
+    const max = paragonStats[id].max;
+    const canSpend = paragon.unspent > 0 && value < max;
+    return `<div class="paragon-stat">
+      <span>${escapeHtml(label)}</span>
+      <b>+${Math.round(value * perPoint * 100)}%</b>
+      <small>${value}/${max}</small>
+      <button type="button" data-paragon-spend="${id}" ${canSpend ? "" : "disabled"} aria-label="${escapeAttr(t("paragon.spendAria", "Punkt in {stat} setzen", { stat: label }))}">+</button>
+    </div>`;
+  };
+  return `<section class="paragon-panel">
+    <div class="paragon-head">
+      <strong>${t("paragon.levelLabel", "Paragon-Stufe {level}", { level: paragon.level })}</strong>
+      <span>${paragon.unspent ? t("paragon.unspent", "{count} Punkte frei", { count: paragon.unspent }) : t("paragon.noPoints", "Keine freien Punkte")}</span>
+    </div>
+    <div class="bar-label"><span>${t("paragon.xp", "Paragon-XP")}</span><b>${paragon.xp}/${needed}</b></div>
+    <div class="bar xp"><span style="width:${percent}%"></span></div>
+    <div class="paragon-stats">
+      ${statRow("might", t("paragon.might", "Macht (Schaden)"), paragonStats.might.perPoint)}
+      ${statRow("guard", t("paragon.guard", "Wehr (Verteidigung)"), paragonStats.guard.perPoint)}
+      ${statRow("vitality", t("paragon.vitality", "Lebenskraft (Leben)"), paragonStats.vitality.perPoint)}
+      ${statRow("fortune", t("paragon.fortune", "Glück (Gold)"), paragonStats.fortune.perPoint)}
+    </div>
+    <span class="paragon-tower">${t("paragon.towerRecord", "Endloser Turm: Rekord Stockwerk {best}, nächstes Stockwerk {floor}", { best: tower.best, floor: tower.floor })}</span>
+  </section>`;
+}
+
 function renderPlayerStatsDetails(stats = totalStats()) {
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
   const durabilityAverage = equippedDurabilityAverage();
@@ -275,6 +315,8 @@ function renderPlayerStatsDetails(stats = totalStats()) {
     stats.critChance,
     stats.critDamage,
     durabilityAverage,
+    JSON.stringify(state.paragon || {}),
+    JSON.stringify(state.tower || {}),
     setStats.damage,
     setStats.defense,
     setStats.maxHp,
@@ -335,6 +377,7 @@ function renderPlayerStatsDetails(stats = totalStats()) {
       ${renderPlayerStat(t("stat.critChance", "Crit Chance"), formatPercent(stats.critChance))}
       ${renderPlayerStat(t("stat.critDamage", "Crit Damage"), formatPercent(stats.critDamage))}
     </section>
+    ${renderParagonSection()}
     <section class="player-stat-sources">
       <div>
         <strong>${t("main.buildBonus", "Build-Bonus")}</strong>
@@ -441,6 +484,13 @@ function renderEnemies(stats = totalStats()) {
 }
 
 function renderEnemyCardMeta(enemy, enemyId) {
+  if (enemy?.towerFloor) {
+    const tower = normalizeTower(state.tower);
+    return `<span class="enemy-card-extra">
+    <small class="enemy-tag first-clear">${escapeHtml(t("tower.record", "Rekord: Stockwerk {best}", { best: tower.best }))}</small>
+    <small class="enemy-tag">${escapeHtml(t("tower.nextMilestone", "Schatz bei Stockwerk {floor}", { floor: Math.ceil(tower.floor / 5) * 5 }))}</small>
+  </span>`;
+  }
   if (!enemy?.boss) return "";
   const firstClearLabel = bossFirstClearClaimed(enemy.baseId || enemyId)
     ? t("bestiary.firstWinClaimedShort", "Erster Sieg geholt")
@@ -661,7 +711,7 @@ function zoneUnlockSignature() {
 
 function zoneEncounterSignature(zoneId) {
   return (zones[zoneId]?.enemies || [])
-    .map((id) => `${id}:${state.nextEncounters[id]?.elite ? 1 : 0}`)
+    .map((id) => `${id}:${state.nextEncounters[id]?.elite ? 1 : 0}${id === "towerWarden" ? `:${normalizeTower(state.tower).floor}` : ""}`)
     .join(",");
 }
 
