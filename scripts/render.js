@@ -71,7 +71,39 @@ function renderCombatPanel() {
     ? manualMode ? t("combat.inProgress", "Kampf läuft") : (ui.skipCombat ? t("combat.skipping", "Überspringe...") : t("combat.skip", "Skip"))
     : t("combat.start", "Kampf starten");
   setText("fightBtn", fightText);
-  setDisabled("fightBtn", ui.isFighting ? (manualMode || ui.skipCombat) : state.pendingLoot.length > 0);
+  setDisabled("fightBtn", ui.autoFarm || (ui.isFighting ? (manualMode || ui.skipCombat) : state.pendingLoot.length > 0));
+  renderAutoFarmControls(manualMode);
+}
+
+function renderAutoFarmControls(manualMode = isManualCombatMode()) {
+  const button = $("autoFarmBtn");
+  if (!button) return;
+  button.textContent = ui.autoFarm ? t("autoFarm.stop", "Auto-Farmen stoppen") : t("autoFarm.start", "Auto-Farmen");
+  button.classList.toggle("is-on", ui.autoFarm);
+  button.setAttribute("aria-pressed", ui.autoFarm ? "true" : "false");
+  button.disabled = !ui.autoFarm && (manualMode || ui.isFighting);
+  button.title = manualMode ? t("autoFarm.manualHint", "Auto-Farmen gibt es nur im Auto-Kampf.") : t("autoFarm.hint", "Kämpft automatisch weiter und rastet unter der eingestellten Lebensgrenze.");
+  const select = $("autoFarmRest");
+  if (select) select.value = String(normalizeSettings(state.settings).autoFarmRestPercent);
+}
+
+function renderOfflineSummary(result) {
+  const materials = Object.entries(result.materials || {})
+    .map(([id, amount]) => `<span>${amount} ${labelFor(materialLabel, id)}</span>`)
+    .join("");
+  $("offlineSummary").innerHTML = `
+    <p>${escapeHtml(t("offline.intro", "Deine Gefährten haben in {duration} gegen {enemy} weitergekämpft.", {
+      duration: formatDuration(result.countedMs),
+      enemy: enemyDisplayName(enemies[result.enemyId], result.enemyId),
+    }))}${result.capped ? ` ${escapeHtml(t("offline.capped", "(höchstens 8 Stunden werden gezählt)"))}` : ""}</p>
+    <div class="offline-stats">
+      <div><span>${t("offline.wins", "Siege")}</span><strong>${result.wins}/${result.fights}</strong></div>
+      <div><span>${t("common.xp", "XP")}</span><strong>+${result.xp}</strong></div>
+      <div><span>${t("common.gold", "Gold")}</span><strong>+${result.gold}</strong></div>
+      ${result.levelsGained ? `<div><span>${t("common.level", "Level")}</span><strong>+${result.levelsGained}</strong></div>` : ""}
+    </div>
+    ${materials ? `<div class="offline-materials">${materials}</div>` : ""}
+    <p class="offline-hint">${escapeHtml(t("offline.hint", "Offline gibt es die halbe Ausbeute und keine Items. Aktiv spielen lohnt sich mehr."))}</p>`;
 }
 
 function renderCombatModeToggle() {

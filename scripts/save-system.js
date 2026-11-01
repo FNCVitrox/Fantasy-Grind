@@ -109,8 +109,13 @@ const saveTiming = {
 function save(options = {}) {
   cancelQueuedSave();
   syncUiState();
-  const next = JSON.stringify(state);
+  let next = JSON.stringify(state);
   const now = Date.now();
+  // Zeitstempel für den Offline-Fortschritt nur aktualisieren, wenn ohnehin geschrieben wird (oder beim Verlassen).
+  if (next !== saveTiming.lastSavedJson || options.touch) {
+    state.lastActiveAt = now;
+    next = JSON.stringify(state);
+  }
   const backupDue = options.backup || saveTiming.backupRequested || !saveTiming.lastBackupAt || now - saveTiming.lastBackupAt >= saveTiming.backupIntervalMs;
   if (next !== saveTiming.lastSavedJson) {
     storageSet(saveKey, next);
@@ -421,6 +426,7 @@ function normalizeLoadedCollections(loaded) {
     : [];
   loaded.inventoryCapacity = normalizeInventoryCapacity(loaded.inventoryCapacity);
   loaded.paragon = normalizeParagon(loaded.paragon);
+  loaded.lastActiveAt = Number.isFinite(loaded.lastActiveAt) && loaded.lastActiveAt > 0 ? loaded.lastActiveAt : 0;
   loaded.tower = normalizeTower(loaded.tower);
   loaded.settings = normalizeSettings(loaded.settings);
   loaded.log = Array.isArray(loaded.log) ? loaded.log.map(normalizeLogEntry).filter(Boolean).slice(0, 40) : defaultState().log;

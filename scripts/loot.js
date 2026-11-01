@@ -241,18 +241,24 @@ function queueLootBatch(items) {
 // --- Einstellungen, Rucksack-Limit und Auto-Loot (Punkt 11) ---
 
 function defaultSettings() {
-  return { autoLoot: false, autoSellCommon: false };
+  return { autoLoot: false, autoSellCommon: false, autoFarmRestPercent: 50 };
 }
 
 function normalizeSettings(settings) {
   const source = settings && typeof settings === "object" ? settings : {};
   const defaults = defaultSettings();
-  return Object.fromEntries(Object.keys(defaults).map((key) => [key, typeof source[key] === "boolean" ? source[key] : defaults[key]]));
+  return Object.fromEntries(Object.keys(defaults).map((key) => {
+    if (typeof defaults[key] === "number") {
+      const value = Number(source[key]);
+      return [key, Number.isFinite(value) ? Math.min(90, Math.max(10, Math.round(value))) : defaults[key]];
+    }
+    return [key, typeof source[key] === "boolean" ? source[key] : defaults[key]];
+  }));
 }
 
 function toggleSetting(key) {
   state.settings = normalizeSettings(state.settings);
-  if (!(key in state.settings)) return;
+  if (typeof state.settings[key] !== "boolean") return;
   state.settings[key] = !state.settings[key];
   if (key === "autoLoot" && state.settings.autoLoot && state.pendingLoot.length) resolveAutoLoot();
   save();

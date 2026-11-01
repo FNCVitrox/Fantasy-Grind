@@ -39,7 +39,7 @@ assert.deepStrictEqual = (actual, expected, message) => {
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 // Spiellogik ist auf mehrere Dateien verteilt; statische Prüfungen durchsuchen alle zusammen.
-const logicFiles = ["scripts/combat.js", "scripts/combat-risk.js", "scripts/loot.js", "scripts/smith.js", "scripts/arcanist.js", "scripts/progression.js", "scripts/core.js"];
+const logicFiles = ["scripts/combat.js", "scripts/combat-risk.js", "scripts/loot.js", "scripts/smith.js", "scripts/arcanist.js", "scripts/idle.js", "scripts/progression.js", "scripts/core.js"];
 const readLogic = () => logicFiles.map(read).join("\n");
 
 const html = read("index.html");
@@ -64,6 +64,7 @@ const scripts = [
   "scripts/loot.js",
   "scripts/smith.js",
   "scripts/arcanist.js",
+  "scripts/idle.js",
   "scripts/progression.js",
   "scripts/core.js",
   "scripts/render.js",
@@ -108,6 +109,7 @@ assert.deepStrictEqual(scriptOrder, [
   "scripts/loot.js",
   "scripts/smith.js",
   "scripts/arcanist.js",
+  "scripts/idle.js",
   "scripts/progression.js",
   "scripts/core.js",
   "scripts/render.js",
@@ -359,6 +361,13 @@ assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 20 })", con
 assert(vm.runInContext("state = defaultState(); state.customItems.frameTest = { ...items.trainingSword, id: 'frameTest', upgrade: 10, name: 'Übungsschwert +10' }; state.inventory = ['frameTest']; renderInventoryItemCard('frameTest', 0).includes('upgrade-frame-runic')", context), "upgraded item cards should render special upgrade frames");
 
 suite("quest board and inventory flows");
+// Offline-Fortschritt und Auto-Farmen (Punkt 14)
+assert(vm.runInContext("(() => { state = defaultState(); ui.selectedZone = 'meadow'; ui.selectedEnemy = 'wolf'; return calculateOfflineProgress(4 * 60 * 1000) === null && calculateOfflineProgress(NaN) === null; })()", context), "offline progress should need at least 5 minutes away");
+assert(vm.runInContext("(() => { state = defaultState(); state.level = 3; syncDerivedStats(); ui.selectedZone = 'meadow'; ui.selectedEnemy = 'wolf'; const hour = calculateOfflineProgress(60 * 60 * 1000); const day = calculateOfflineProgress(24 * 60 * 60 * 1000); return hour.fights === 450 && hour.wins > 0 && hour.wins <= hour.fights && hour.xp <= hour.wins * enemies.wolf.xp * 0.5 && day.capped && day.fights === 3600; })()", context), "offline progress should count fights per time, cap at 8 hours and give half yield");
+assert(vm.runInContext("(() => { state = defaultState(); state.level = 16; state.renown = 40; ui.selectedZone = 'ironhold'; ui.selectedEnemy = 'ironDuke'; const id = offlineFarmEnemyId(); return !enemies[id].boss && enemies[id].level <= 17; })()", context), "offline farming should never farm bosses");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; ui.selectedZone = 'meadow'; ui.selectedEnemy = 'wolf'; const gold = state.gold; const result = calculateOfflineProgress(2 * 60 * 60 * 1000); applyOfflineProgress(result); return state.gold === gold + result.gold && (state.xp > 0 || state.level > 1); })()", context), "applying offline progress should grant gold and XP");
+assert(vm.runInContext("(() => { state = defaultState(); ui.selectedZone = 'meadow'; ui.autoFarmLosses = 0; state.pendingLoot = [{ id: 'x', slot: 'ring' }]; state.settings.autoLoot = false; const loot = autoFarmStopReason() === 'loot'; state.settings.autoLoot = true; const ok = autoFarmStopReason() === ''; ui.autoFarmLosses = 3; const losses = autoFarmStopReason() === 'losses'; ui.autoFarmLosses = 0; state.pendingLoot = []; return loot && ok && losses; })()", context), "auto-farm should stop on waiting loot (without auto-loot) and after 3 defeats");
+assert(vm.runInContext("(() => { const s = normalizeSettings({ autoFarmRestPercent: 500 }); const t = normalizeSettings({ autoFarmRestPercent: 'x' }); return s.autoFarmRestPercent === 90 && t.autoFarmRestPercent === 50; })()", context), "auto-farm rest threshold should be clamped");
 // Endgame (Punkt 13): Paragon und Endloser Turm
 assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.level = 20; const renown = state.renown; gainXp(paragonXpNeeded(0) + 10); return state.paragon.level === 1 && state.paragon.unspent === 1 && state.paragon.xp === 10 && state.renown > renown; })()", context), "XP after level 20 should grant paragon levels and still renown");
 assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.level = 20; state.paragon = normalizeParagon({ level: 30, unspent: 30 }); const before = totalStats().damage; for (let i = 0; i < 30; i += 1) spendParagonPoint('might'); return state.paragon.points.might === 25 && state.paragon.unspent === 5 && totalStats().damage > before; })()", context), "paragon points should raise stats and stop at the cap");
@@ -640,7 +649,7 @@ assert(vm.runInContext("(() => { const original = localStorage.setItem; const ke
 assert(vm.runInContext("(() => { state.gold = 200; saveWithBackup(); state.gold = 201; requestSaveBackup(); save(); return JSON.parse(localStorage.getItem(saveBackupKey)).gold === 201 && JSON.parse(localStorage.getItem(savePreviousKey)).gold === 200; })()", context), "important moments should rotate backup and previous backup");
 assert(vm.runInContext("(() => { state.gold = 300; saveWithBackup(); saveTiming.lastBackupAt -= saveTiming.backupIntervalMs; state.gold = 301; save(); return JSON.parse(localStorage.getItem(saveBackupKey)).gold === 301; })()", context), "backup should refresh after the backup interval");
 assert(vm.runInContext("(() => { state.gold = 400; queueSave(); queueSave(); const pending = Boolean(saveTiming.pendingTimer) && JSON.parse(localStorage.getItem(saveKey)).gold !== 400; flushQueuedSave(); return pending && !saveTiming.pendingTimer && JSON.parse(localStorage.getItem(saveKey)).gold === 400; })()", context), "queued saves should bundle and flush on demand");
-assert(read("scripts/events.js").includes('window.addEventListener("pagehide", () => save());') && read("scripts/events.js").includes('document.visibilityState === "hidden"'), "pending saves should be written when the page is hidden or closed");
+assert(read("scripts/events.js").includes('window.addEventListener("pagehide", () => save({ touch: true }));') && read("scripts/events.js").includes('document.visibilityState === "hidden"'), "pending saves should be written when the page is hidden or closed");
 assert(vm.runInContext("window.name.includes('fantasy-grind-save-v1')", context), "save should also be mirrored into window.name for preview reloads");
 assert(vm.runInContext("indexedDbName === 'FantasyGrindSaves' && indexedDbStoreName === 'saves'", context), "IndexedDB save mirror should use stable database names");
 assert(vm.runInContext("browserStorageStatus().indexedDB.label === 'IndexedDB' && browserStorageStatus().indexedDB.ok === false && saveDiagnostics.indexedDbMirror === 'nicht verfuegbar'", context), "IndexedDB mirror should fail softly when the browser API is unavailable");

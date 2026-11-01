@@ -4136,3 +4136,76 @@ button.drop-row span:last-child {
   background: linear-gradient(135deg, #a99ad6, #241e40);
   border-color: var(--purple);
 }
+
+/* Auto-Farmen und Offline-Ertrag (Punkt 14) */
+.auto-farm-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.auto-farm-button.is-on {
+  border-color: var(--green);
+  background: rgba(63, 214, 163, 0.16);
+}
+
+.auto-farm-rest {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.auto-farm-rest select {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-deep);
+  color: var(--text);
+}
+
+.offline-window {
+  width: min(560px, 100%);
+}
+
+.offline-summary {
+  display: grid;
+  gap: 12px;
+}
+
+.offline-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.offline-stats div {
+  display: grid;
+  gap: 2px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-deep);
+}
+
+.offline-stats span,
+.offline-hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.offline-materials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.offline-materials span {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 13px;
+}

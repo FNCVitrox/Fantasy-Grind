@@ -264,13 +264,25 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Mitbehoben: 19 Gegnerfähigkeiten standen in Kampftexten fest auf Deutsch („nutzt Zweite Phase“).
     - Absicherung: 6 Endgame-Tests, ein statischer Test gegen feste Fähigkeitsnamen und ein Bosskampf im Sprach-Browsertest.
 
-- [ ] **14. Idle-/Offline-Fortschritt**
+- [x] **14. Idle-/Offline-Fortschritt** ✅ erledigt in v0.8.137
   - Wo: Neues Modul `scripts/idle.js`, Zeitstempel im State
   - Wie:
     - Beim Öffnen die Zeit seit dem letzten Spielen berechnen und Kämpfe gegen den gewählten Gegner simulieren (vereinfacht, ohne Animation, maximal 8 Stunden).
     - Ein Begrüssungs-Fenster zeigt den Ertrag.
     - Zusätzlich „Auto-Farmen“: Kämpfe laufen in Schleife, bis die Lebenspunkte unter einem einstellbaren Prozentsatz liegen, dann wird automatisch gerastet.
   - Fertig wenn: Nach 1 Stunde Pause gibt es einen plausiblen Ertrag, und Auto-Farmen stoppt sicher bei wenig Leben.
+  - Ergebnis:
+    - **Offline-Ertrag** (neues Modul `idle.js`):
+      - Ab 5 Minuten Pause, höchstens 8 Stunden gezählt.
+      - Gerechnet wird mit einem Kampf pro 8 Sekunden gegen den gewählten Gegner, nie gegen Bosse oder den Turm (dann der stärkste passende normale Gegner).
+      - Die Siegchance kommt aus der Risiko-Einschätzung. Die Ausbeute ist halb so hoch wie aktiv: XP, Gold, Material, keine Items.
+      - Ein Begrüssungsfenster zeigt den Ertrag.
+      - Der Zeitstempel wird nur beim ohnehin nötigen Speichern oder beim Verlassen der Seite geschrieben.
+    - **Auto-Farmen:** Ein Knopf neben „Kampf starten“ mit der Rast-Schwelle 30/50/70 %. Unter der Schwelle wird automatisch gerastet. Gestoppt wird sicher bei wartender Beute ohne Auto-Loot, bei Ausrüstung unter 10 %, nach 3 Niederlagen in Folge oder bei einem gesperrten Gebiet. Im manuellen Kampf ist Auto-Farmen nicht verfügbar.
+    - Geprüft:
+      - 2 Stunden Pause ergaben einen Ertrag samt Fenster, ein erneutes Laden direkt danach keinen zweiten.
+      - Auto-Farmen: 19 Siege in 9 Sekunden, automatisch gerastet, Stopp per Knopf.
+    - Absicherung: 6 Logik-Tests und ein Auto-Farmen-Test in `npm run test:ui`.
 
 - [ ] **15. Balancing prüfen**
   - Wie: Ein Skript `tests/balance-sim.js` simuliert mit Node einen Spieler von Level 1–20, inklusive Quests, Loot und Rasten. Es gibt Kämpfe pro Level, Tode und Gold aus.
@@ -370,7 +382,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 |---|---|---|
 | 1 – Bugs | 1–5 | 5/5 ✅ |
 | 2 – Code | 6–10 | 5/5 ✅ |
-| 3 – Gameplay | 11–15 | 3/5 |
+| 3 – Gameplay | 11–15 | 4/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |
 | 5 – Inhalt | 22–24 | 0/3 |
 | 6 – Steam | 25–28 | 0/4 |

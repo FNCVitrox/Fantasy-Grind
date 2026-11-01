@@ -2,7 +2,7 @@ const saveKey = "fantasy-grind-save-v1";
 const saveBackupKey = `${saveKey}-backup`;
 const savePreviousKey = `${saveKey}-previous`;
 const saveExportVersion = 1;
-const assetVersion = "0.8.136";
+const assetVersion = "0.8.137";
 const bossDropPityGoal = 3;
 const indexedDbName = "FantasyGrindSaves";
 const indexedDbStoreName = "saves";
@@ -37,6 +37,8 @@ const ui = {
   activeCombatState: null,
   pendingCombatAction: null,
   battleResultTimer: 0,
+  autoFarm: false,
+  autoFarmLosses: 0,
   // Tooltips
   tooltipFrame: 0,
   pendingTooltipEvent: null,

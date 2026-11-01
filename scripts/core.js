@@ -3,6 +3,12 @@
 const inventoryBaseCapacity = 60;
 const inventoryMaxCapacity = 120;
 const inventoryExpandStep = 10;
+// Offline-Fortschritt und Auto-Farmen (Punkt 14)
+const offlineMinMs = 5 * 60 * 1000;
+const offlineMaxMs = 8 * 60 * 60 * 1000;
+const offlineSecondsPerFight = 8;
+const offlineEfficiency = 0.5;
+const autoFarmDelayMs = 450;
 // Paragon-Punkte nach Level 20 (Punkt 13): maximal 25 pro Wert, Bonus pro Punkt.
 const paragonStats = {
   might: { max: 25, perPoint: 0.02 },
@@ -237,6 +243,7 @@ function defaultState() {
     lockedItems: [],
     inventoryCapacity: inventoryBaseCapacity,
     paragon: defaultParagon(),
+    lastActiveAt: 0,
     tower: defaultTower(),
     settings: defaultSettings(),
     materials: emptyMaterials(),

@@ -57,6 +57,10 @@ $("playerStatsDetails").addEventListener("click", (event) => {
   if (spend) spendParagonPoint(spend.dataset.paragonSpend);
 });
 
+$("autoFarmBtn").addEventListener("click", toggleAutoFarm);
+$("autoFarmRest").addEventListener("change", (event) => setAutoFarmRestPercent(event.target.value));
+$("closeOfflineBtn").addEventListener("click", () => closeModal("offlineModal"));
+
 $("lootChoices").addEventListener("click", (event) => {
   const equipLoot = event.target.closest("[data-equip-loot]");
   if (equipLoot) {
@@ -481,10 +485,11 @@ $("saveFileInput").addEventListener("change", importSaveFile);
 
 void bootGame();
 // Offenen Speichervorgang beim Verlassen sofort schreiben (pagehide/visibilitychange greifen auch auf dem Handy).
-window.addEventListener("beforeunload", () => save());
-window.addEventListener("pagehide", () => save());
+window.addEventListener("beforeunload", () => save({ touch: true }));
+window.addEventListener("pagehide", () => save({ touch: true }));
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") save();
+  if (document.visibilityState === "hidden") save({ touch: true });
+  if (document.visibilityState === "visible") checkOfflineProgress();
 });
 window.addEventListener("scroll", hideFloatingTooltip, { passive: true, capture: true });
 
@@ -495,6 +500,7 @@ async function bootGame() {
   scheduleStudioSplashHide();
   // Englisch im Hintergrund nachladen, damit neue Log-Einträge sofort in beiden Sprachen gespeichert werden.
   void ensureLanguagePack("en");
+  checkOfflineProgress();
 }
 
 function setupStudioSplash() {
@@ -647,6 +653,8 @@ function closeModal(id) {
 function setControlsDisabled(disabled) {
   document.querySelectorAll("button").forEach((button) => {
     if (button.id === "openSaveMenuBtn") return;
+    if (button.id === "autoFarmBtn") return;
+    if (button.id === "closeOfflineBtn") return;
     if (button.id === "languageToggleBtn") return;
     if (button.id === "exportSaveTopBtn") return;
     if (button.id === "importSaveTopBtn") return;
