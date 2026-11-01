@@ -1850,7 +1850,7 @@ function renderBestiaryDetail() {
         <h2>${escapeHtml(enemyDisplayName(detailEnemy, ui.selectedBestiaryEnemy))}</h2>
       </div>
     </div>
-    <p>${t("common.level", "Level")} ${detailEnemy.level}${detailEnemy.boss ? ` · ${t("common.boss", "Boss")}` : detailEnemy.elite ? ` · ${t("common.elite", "Elite")}` : ""} · ${detailEnemy.hp} ${t("main.life", "Leben")} · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} ${t("main.damage", "Schaden")} · ${detailEnemy.defense} ${t("main.defense", "Rüstung")} · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)} · Quest-Schriftrolle ${formatChance(rareQuestDropChance(detailEnemy))}</p>
+    <p>${t("common.level", "Level")} ${detailEnemy.level}${detailEnemy.boss ? ` · ${t("common.boss", "Boss")}` : detailEnemy.elite ? ` · ${t("common.elite", "Elite")}` : ""} · ${detailEnemy.hp} ${t("main.life", "Leben")} · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} ${t("main.damage", "Schaden")} · ${detailEnemy.defense} ${t("main.defense", "Rüstung")} · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)} · ${t("bestiary.questScrollChance", "Quest-Schriftrolle {chance}", { chance: formatChance(rareQuestDropChance(detailEnemy)) })}</p>
     ${renderBossRewardPanel(ui.selectedBestiaryEnemy, detailEnemy)}
     ${renderEnemyAbilities(detailEnemy)}
     <h3>${t("bestiary.collection", "Sammlung {found}/{total}", lootCompletion(ui.selectedBestiaryEnemy))}</h3>
@@ -2458,6 +2458,9 @@ function applyTooltipPosition(event) {
 
 function hideFloatingTooltip() {
   const tooltip = $("floatingTooltip");
+  // Wird bei jedem Scroll-Ereignis aufgerufen: ohne offenen Tooltip nichts anfassen,
+  // sonst muss der Browser bei jedem Scroll-Schritt Stil und Layout neu berechnen.
+  if (!tooltip.classList.contains("open") && !ui.tooltipFrame && !ui.activeTooltipKey) return;
   if (ui.tooltipFrame) {
     cancelAnimationFrame(ui.tooltipFrame);
     ui.tooltipFrame = 0;

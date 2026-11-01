@@ -4,8 +4,8 @@
 let chromium;try{({chromium}=require('playwright'))}catch(e){console.log('Playwright fehlt: npm i -D playwright && npx playwright install chromium');process.exit(0)}
 const INDEX=require('url').pathToFileURL(require('path').resolve(__dirname,'..','index.html')).href;
 async function runLanguage(LANG){
-const DE=/\b(und|der|die|das|ist|nicht|mit|für|noch|keine?|einen?|wird|werden|bei|ohne|auch|zurück|Gebiet|Gebiete|Wechseln|Schließen|Leben|Lager|Gegner|Beute|Ruhm|erreicht|Kampf|Sieg|Tod|Ausrüstung|Spielstand|Händler|Schmied|Erfolge|Rucksack|Runden|Wähle|kostenlos|Stufe|verbessern|Zerlegen|Verkaufen|Schaden|Verteidigung|Haltbarkeit|Seltenheit|Gewöhnlich|Selten|Episch|Legendär|Quest-Tafel|aktiv|Belohnung|benötigt|Benötigt|gesperrt|Fähigkeit|Fähigkeiten|Gold-Kosten|Kosten)\b|[äöüßÄÖÜ]/;
-const EN=/\b(the|and|with|your|you|of|Backpack|Close|Choose|Equip|Player Stats|Camp|Bestiary|Merchant|Smith|Achievements|Save|Language|Health|Defense|Attack|Damage|Common|Rare|Epic|Legendary|enemies|Enemies|Requires|Zone|Zones|Quest Board|Start fight|Ready|Easy|Deadly|Abilities|Equipment|Belt|Renown|free|Open|Sell|Protect|Repair|Upgrade)\b/;
+const DE=/\b(und|der|die|das|ist|nicht|mit|für|noch|keine?|einen?|wird|werden|bei|ohne|auch|zurück|Gebiet|Gebiete|Wechseln|Schließen|Leben|Lager|Gegner|Beute|Ruhm|erreicht|Kampf|Sieg|Tod|Ausrüstung|Spielstand|Händler|Schmied|Erfolge|Rucksack|Runden|Wähle|kostenlos|Stufe|verbessern|Zerlegen|Verkaufen|Schaden|Verteidigung|Haltbarkeit|Seltenheit|Gewöhnlich|Selten|Episch|Legendär|Quest-Tafel|aktiv|Belohnung|benötigt|Benötigt|gesperrt|Fähigkeit|Fähigkeiten|Gold-Kosten|Kosten|Schriftrolle|Opferstück|besiegt|vertraut|ausgerüstetes|verzaubertes)\b|[äöüßÄÖÜ]/;
+const EN=/\b(the|and|with|your|you|of|Backpack|Close|Choose|Equip|Player Stats|Camp|Bestiary|Merchant|Smith|Achievements|Save|Language|Health|Defense|Attack|Damage|Common|Rare|Epic|Legendary|enemies|Enemies|Requires|Zone|Zones|Quest Board|Start fight|Ready|Easy|Deadly|Abilities|Equipment|Belt|Renown|free|Open|Sell|Protect|Repair)\b/;
 const RX=LANG==='en'?DE:EN;
 // Eigennamen, die in beiden Sprachen gleich bleiben dürfen
 const ALLOW=[/Borin Glutbart/,/Mira Nachtfaden/,/Nemurenai/,/Fantasy Grind/];
@@ -35,6 +35,13 @@ const btn={zoneModal:'openZoneBtn',bestiaryModal:'openBestiaryBtn',inventoryModa
 for(const id of ids){await p.evaluate(({id,b})=>{document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));if(b&&$(b))$(b).click();else openModal(id);render();},{id,b:btn[id]});await p.waitForTimeout(250);await scan(id);}
 // Kampf ausführen und erneut prüfen (Kampftexte, Log)
 await p.evaluate(async()=>{document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));ui.selectedZone='meadow';ui.selectedEnemy='wolf';state.level=15;syncDerivedStats();state.hp=state.maxHp;const pr=fight();ui.skipCombat=true;await pr;});await p.waitForTimeout(300);await scan('after-fight');
+// Meisteraufträge (Bedingungen und Ziele) von Schmied und Mira sowie Gegner-Details im Bestiarium
+await p.evaluate(()=>{document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));state.level=20;state.renown=80;state.smithMastery=normalizeSmithMastery({...state.smithMastery,discovered:true,active:smithMasteryRanks[1]?.id||smithMasteryRanks[0].id});$('openSmithBtn').click();ui.smithView='home';render();});await p.waitForTimeout(150);await scan('smith-mastery');
+await p.evaluate(()=>{state.smithMastery=normalizeSmithMastery({...state.smithMastery,active:null});render();});await scan('smith-mastery-requirements');
+await p.evaluate(()=>{closeModal('smithModal');state.enchanting=normalizeEnchanting({...state.enchanting,discovered:true,unlockedSeen:true,active:enchantMasteryRanks[0].id});$('openEnchantBtn')?.click();render();});await p.waitForTimeout(150);await scan('enchant-mastery');
+await p.evaluate(()=>{state.enchanting=normalizeEnchanting({...state.enchanting,active:null});render();});await scan('enchant-mastery-requirements');
+await p.evaluate(()=>{document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));$('openBestiaryBtn').click();render();document.querySelector('[data-bestiary]')?.click();});await p.waitForTimeout(150);await scan('bestiary-enemy');
+await p.evaluate(()=>document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id)));
 await p.evaluate(()=>{showBattleResult(true,enemyDisplayName(enemies.wolf,'wolf'),3,{criticals:2,effects:2});});await scan('battle-result-win');
 await p.evaluate(()=>{showBattleResult(false,enemyDisplayName(enemies.wolf,'wolf'),1,{criticals:1,effects:1});});await scan('battle-result-loss');
 await p.evaluate(()=>hideBattleResult());

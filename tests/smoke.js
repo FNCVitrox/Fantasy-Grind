@@ -198,6 +198,18 @@ assert(/if \(ui.skipCombat\) \{[\s\S]{0,120}hideBattleResultLater\(/.test(readLo
   assert.deepStrictEqual(unusedClasses, [], "every CSS class should be used in index.html or the scripts");
   assert(/--panel-dark: #0c1723;[\s\S]*--gold-soft: #d8ae4b;/.test(css) && !/#0c1723/.test(css.replace(/--panel-dark: #0c1723;/, "")), "repeated colors should come from CSS variables");
 }
+// Scrollen bleibt flüssig: der Scroll-Listener fasst den Tooltip nur an, wenn er offen ist.
+assert(/function hideFloatingTooltip\(\) \{[\s\S]{0,300}if \(!tooltip\.classList\.contains\("open"\) && !ui\.tooltipFrame && !ui\.activeTooltipKey\) return;/.test(read("scripts/render.js")), "hiding a closed tooltip on scroll should be a no-op");
+// Anzeige-Texte in der Spiellogik (label: ...) laufen über t(); erlaubt sind nur sprachneutrale Wörter.
+{
+  // Wut/Mana/List/Fokus sind Daten-Fallbacks, die classResource() über t(`classResource.<klasse>`) übersetzt.
+  const neutral = new Set(["Gold", "Set", "Slots", "CRIT", "Crit", "Wut", "Mana", "List", "Fokus"]);
+  const rawLabels = logicFiles.flatMap((file) => [...read(file).matchAll(/label:\s*(["`])([^"`]*)\1/g)]
+    .map((match) => match[2])
+    .filter((text) => /[A-Za-zÄÖÜäöüß]{3,}/.test(text.replace(/\$\{[^}]*\}/g, "")) && !neutral.has(text.trim()))
+    .map((text) => `${file}: ${text}`));
+  assert.deepStrictEqual(rawLabels, [], "UI labels in game logic should be translated with t()");
+}
 // Sprache: keine festen Texte ohne Übersetzung (Punkt 2 im Arbeitsplan).
 {
   const i18nContext = { console, window: {}, document: {} };
