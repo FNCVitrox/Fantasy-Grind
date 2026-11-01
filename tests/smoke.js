@@ -132,6 +132,13 @@ assert(css.includes("grid-template-rows: auto minmax(0, 1fr)") && css.includes("
 assert(css.includes(".combat-card {\r\n    position: sticky") || css.includes(".combat-card {\n    position: sticky"), "mobile combat command dock should stay reachable");
 assert(html.includes('id="newGameTopBtn"') && css.includes(".save-actions .danger-action"), "save menu should expose a distinct new game action");
 assert(/newGameTopBtn"\)\.addEventListener\("click", startNewGame\)/.test(read("scripts/events.js")), "new game button should be wired through the save menu");
+// Modals dürfen auf keinem Bildschirm breiter/höher als der freie Platz werden (Punkt 1 im Arbeitsplan).
+assert(/\.modal-overlay > \.modal-window \{\s*min-width: 0;\s*max-width: 100%;\s*max-height: 100%;/.test(css), "modal windows should be capped to the overlay's free space");
+assert(/\.modal-overlay \{[\s\S]*?--modal-pad: 18px;[\s\S]*?env\(safe-area-inset-left/.test(css), "modal overlay should own the edge padding and respect safe areas");
+assert(!/\.modal-window \{\s*width: calc\(100vw/.test(css), "modal windows should not use raw 100vw widths that ignore overlay padding");
+assert(!/\.inventory-item \.loot-compare \{\s*max-height/.test(css), "inventory compare box should not become a nested scroll box on mobile");
+assert(/\.inventory \{[\s\S]*?grid-auto-rows: max-content;/.test(css), "inventory cards should keep their full height inside the scrolling list");
+assert(!/grid-template-rows: 112px 54px 92px/.test(css), "loot card rows should grow instead of clipping stat rows");
 
 suite("runtime harness boot");
 
