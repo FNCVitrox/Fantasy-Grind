@@ -1,4 +1,12 @@
 materialDrops = {
+  poacher: [{ id: "leather", min: 1, max: 2 }, { id: "cloth", min: 0, max: 1 }],
+  bogWolf: [{ id: "leather", min: 1, max: 3 }, { id: "sinew", min: 1, max: 1 }],
+  crossbowBrigand: [{ id: "scrap", min: 1, max: 3 }, { id: "cloth", min: 1, max: 2 }, { id: "shard", min: 0, max: 1 }],
+  mercenaryCaptain: [{ id: "scrap", min: 2, max: 3 }, { id: "chain", min: 0, max: 1 }, { id: "oathSteel", min: 0, max: 1 }],
+  bogGhoul: [{ id: "bone", min: 1, max: 2 }, { id: "shadowResin", min: 0, max: 1 }],
+  plagueWitch: [{ id: "bone", min: 1, max: 2 }, { id: "moonDust", min: 0, max: 1 }, { id: "shadowResin", min: 1, max: 1 }],
+  cinderHound: [{ id: "sinew", min: 1, max: 2 }, { id: "emberCore", min: 0, max: 1 }],
+  ashenWarlord: [{ id: "oathSteel", min: 1, max: 2 }, { id: "emberCore", min: 1, max: 1 }, { id: "crownAsh", min: 0, max: 1 }],
   wolf: [{ id: "leather", min: 1, max: 2 }, { id: "sinew", min: 0, max: 1 }],
   bandit: [{ id: "scrap", min: 1, max: 2 }, { id: "cloth", min: 0, max: 1 }, { id: "shard", min: 0, max: 1 }],
   boar: [{ id: "leather", min: 2, max: 3 }, { id: "sinew", min: 1, max: 2 }, { id: "emberCore", min: 0, max: 1 }],

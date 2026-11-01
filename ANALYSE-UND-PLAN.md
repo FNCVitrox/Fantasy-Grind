@@ -232,10 +232,21 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Mitbehoben: 3 Schmied-Begrüssungen hatten keinen englischen Text.
     - Absicherung: 8 Logik-Tests, ein Test für alle Schmied-Begrüssungen und der 100-Kämpfe-Test in `npm run test:ui`.
 
-- [ ] **12. Mehr Gegner pro Gebiet**
+- [x] **12. Mehr Gegner pro Gebiet** ✅ erledigt in v0.8.135
   - Wo: `scripts/data-world.js`, `scripts/data-drops.js`, `scripts/i18n-en.js`
   - Wie: Pro Gebiet von 3 auf 5–6 Gegner erweitern, also etwa 12 neue Gegner. Jeder bekommt eine eigene Fähigkeit aus `enemyAbilityCatalog` oder eine neue, dazu eine Loot-Tabelle, Drops und einen Bestiarium-Eintrag.
   - Fertig wenn: Jedes Level von 1–20 hat mindestens 2 passende Gegner, und das Bestiarium zeigt alle an.
+  - Ergebnis:
+    - 8 neue Gegner, damit hat jedes offene Gebiet 5 statt 3:
+      - Wilddieb (2) und Moorwolf (4) im Wald
+      - Armbrust-Wegelagerer (7) und Söldnerhauptmann (9, Elite) auf der Räuberstraße
+      - Moorghul (11) und Seuchenhexe (14, Elite) in den Feldern
+      - Aschenhund (16) und Aschen-Kriegsherr (20, Elite) im Aschengrund
+    - Jeder Gegner hat Fähigkeiten, Material-Drops, eine Unikat-Beute, eine eigene Farbvariante und Namen in DE und EN. Dazu kommen 5 neue Quests.
+    - Abdeckung: Vorher hatten die Level 1, 13 und 20 nur einen passenden Gegner. Jetzt hat jedes Level 2–5 (Gegner 2 Level darunter bis 1 Level darüber).
+    - Balance geprüft: Die Belohnung im Verhältnis zur Stärke liegt bei allen neuen Gegnern genau zwischen ihren Nachbarn. Die neuen Unikate bestehen den Item-Budget-Test.
+    - Damit der Kampf-Button am Laptop sichtbar bleibt, ist die Gegnerliste bei breiter Mittelspalte jetzt zweispaltig, mit kompakten Karten: Name und Risiko oben, Details darunter.
+    - Absicherung: Tests für die Abdeckung (jedes Level mindestens 2) und für mindestens 5 Gegner pro Gebiet.
 
 - [ ] **13. Endgame nach Level 20**
   - Wie:
@@ -350,7 +361,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 |---|---|---|
 | 1 – Bugs | 1–5 | 5/5 ✅ |
 | 2 – Code | 6–10 | 5/5 ✅ |
-| 3 – Gameplay | 11–15 | 1/5 |
+| 3 – Gameplay | 11–15 | 2/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |
 | 5 – Inhalt | 22–24 | 0/3 |
 | 6 – Steam | 25–28 | 0/4 |
