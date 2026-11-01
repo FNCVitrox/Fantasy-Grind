@@ -802,10 +802,11 @@ function combatAnimationSummary(events) {
 function showBattleResult(playerWon, enemyName, rounds = 0, summary = {}) {
   $("battleText").textContent = playerWon ? t("combat.victory", "Sieg") : t("combat.defeat", "Niederlage");
   $("battleResultTitle").textContent = playerWon ? t("combat.resultWin", "Sieg!") : t("combat.resultLose", "Niederlage");
+  clearBattleResultTimer();
   const detail = [
-    rounds ? `${rounds} ${rounds === 1 ? "Runde" : "Runden"}` : "",
-    summary.criticals ? `${summary.criticals} Crit${summary.criticals === 1 ? "" : "s"}` : "",
-    summary.effects ? `${summary.effects} Effekt${summary.effects === 1 ? "" : "e"}` : "",
+    rounds ? t("combat.roundsCount", "{count} Runden", { count: rounds }) : "",
+    summary.criticals ? t(summary.criticals === 1 ? "combat.summaryCrit" : "combat.summaryCrits", "{count} Crits", { count: summary.criticals }) : "",
+    summary.effects ? t(summary.effects === 1 ? "combat.summaryEffect" : "combat.summaryEffects", "{count} Effekte", { count: summary.effects }) : "",
   ].filter(Boolean).join(" · ");
   const baseText = playerWon
     ? t("combat.enemyDefeated", "{enemy} ist besiegt. Beute wird gesichert.", { enemy: enemyName })
@@ -814,10 +815,29 @@ function showBattleResult(playerWon, enemyName, rounds = 0, summary = {}) {
   $("battleResult").className = `battle-result show ${playerWon ? "win" : "loss"}`;
 }
 
+let battleResultTimer = 0;
+
+function clearBattleResultTimer() {
+  if (!battleResultTimer) return;
+  window.clearTimeout(battleResultTimer);
+  battleResultTimer = 0;
+}
+
 function hideBattleResult() {
+  clearBattleResultTimer();
   const result = $("battleResult");
   if (!result) return;
   result.className = "battle-result";
+}
+
+// Banner bleibt sichtbar, ohne den Spielablauf zu blockieren (z. B. nach "Überspringen").
+function hideBattleResultLater(ms) {
+  clearBattleResultTimer();
+  battleResultTimer = window.setTimeout(() => {
+    battleResultTimer = 0;
+    hideBattleResult();
+    if (typeof resetBattleStageState === "function") resetBattleStageState();
+  }, ms);
 }
 
 function highlightAbilityUse(abilityId) {

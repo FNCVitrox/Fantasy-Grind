@@ -142,6 +142,8 @@ assert(!/grid-template-rows: 112px 54px 92px/.test(css), "loot card rows should 
 // Ausrüstungsleiste passt sich dem Platz an statt 7 feste Spalten zu quetschen (Punkt 3 im Arbeitsplan).
 assert(/\.equipment-belt \{[\s\S]*?container-type: inline-size;/.test(css) && /@container \(min-width: 640px\)[\s\S]*?repeat\(7, minmax\(0, 1fr\)\)/.test(css), "equipment belt should switch between 4 and 7 columns via container query");
 assert(read("scripts/render.js").includes('title="${escapeAttr(itemName)}"') && read("scripts/render.js").includes("equipment-durability-bar"), "equipment chips should expose full item names as tooltip and show a durability bar");
+// Überspringen blockiert nicht mehr auf die Ergebnis-Anzeige (Punkt 4 im Arbeitsplan).
+assert(/if \(skipCombat\) \{[\s\S]{0,120}hideBattleResultLater\(/.test(read("scripts/core.js")), "skipped fights should not wait for the result banner");
 // Sprache: keine festen Texte ohne Übersetzung (Punkt 2 im Arbeitsplan).
 {
   const i18nContext = { console, window: {}, document: {} };

@@ -2738,8 +2738,13 @@ async function finishActionCombat(combat) {
   $("battleStage").className = "battle-stage";
   $("battleStage").classList.add(combat.playerHp > 0 ? "victory" : "defeat");
   showBattleResult(combat.playerHp > 0, combat.enemyName, combat.rounds, combatAnimationSummary(combat.events));
-  await waitResult(900);
-  hideBattleResult();
+  if (skipCombat) {
+    // Übersprungen: sofort weiter, Ergebnis-Banner blendet sich nebenher aus.
+    hideBattleResultLater(1100);
+  } else {
+    await waitResult(900);
+    hideBattleResult();
+  }
   setCombatLog(combat.enemy, combat.events, combat.playerHp > 0, combat.rounds);
   damageEquippedItems(combat.enemy);
   if (combat.playerHp > 0) {

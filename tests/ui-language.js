@@ -35,6 +35,9 @@ const btn={zoneModal:'openZoneBtn',bestiaryModal:'openBestiaryBtn',inventoryModa
 for(const id of ids){await p.evaluate(({id,b})=>{document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));if(b&&$(b))$(b).click();else openModal(id);render();},{id,b:btn[id]});await p.waitForTimeout(250);await scan(id);}
 // Kampf ausführen und erneut prüfen (Kampftexte, Log)
 await p.evaluate(async()=>{document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));selectedZone='meadow';selectedEnemy='wolf';state.level=15;syncDerivedStats();state.hp=state.maxHp;const pr=fight();skipCombat=true;await pr;});await p.waitForTimeout(300);await scan('after-fight');
+await p.evaluate(()=>{showBattleResult(true,enemyDisplayName(enemies.wolf,'wolf'),3,{criticals:2,effects:2});});await scan('battle-result-win');
+await p.evaluate(()=>{showBattleResult(false,enemyDisplayName(enemies.wolf,'wolf'),1,{criticals:1,effects:1});});await scan('battle-result-loss');
+await p.evaluate(()=>hideBattleResult());
 await p.evaluate(()=>{$('openLogBtn')?.click();render();});await p.waitForTimeout(200);await scan('log-after-fight');
 await p.evaluate(()=>{closeModal('logModal');$('openCombatLogBtn')?.click();render();});await p.waitForTimeout(200);await scan('combatlog');
 const miss=await p.evaluate(()=>[...window.__miss.entries()]);for(const [k,v] of miss)console.log('Fehlender englischer Key:',k,'('+v+')');

@@ -779,6 +779,8 @@ translations.en = {
         "combat.firstClearLog": "First dungeon clear: {reward}.",
         "combat.autoUnlockLog": "The fight was released automatically.",
         "log.balanceRework": "Balance reworked: item stats now follow clearer roles per equipment slot.",
+        "combat.roundsCount": "{count} rounds",
+        "combat.roundsCount.one": "1 round",
         "combat.victoryAgainst.one": "Victory against {enemy} after 1 round.",
         "combat.defeatAgainst.one": "Defeat against {enemy} after 1 round.",
         "combat.winLog.one": "Victory against {enemy} after 1 round. +{xp} XP, +{gold} Gold.",

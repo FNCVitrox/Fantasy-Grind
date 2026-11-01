@@ -598,6 +598,8 @@ function bossDropPitySignature() {
 
 function resetBattleStageState() {
   if (isFighting) return;
+  // Ergebnis-Banner nach "Überspringen" noch sichtbar lassen; der Timer setzt die Bühne danach zurück.
+  if (typeof battleResultTimer !== "undefined" && battleResultTimer) return;
   const stage = $("battleStage");
   if (stage.className !== "battle-stage") stage.className = "battle-stage";
   stage.querySelectorAll(".damage-number").forEach((number) => number.remove());

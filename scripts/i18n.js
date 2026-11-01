@@ -783,6 +783,8 @@ const translations = {
         "combat.firstClearLog": "Erster Dungeon-Sieg: {reward}.",
         "combat.autoUnlockLog": "Der Kampf wurde automatisch freigegeben.",
         "log.balanceRework": "Balance überarbeitet: Item-Stats folgen klareren Rollen pro Ausrüstungsslot.",
+        "combat.roundsCount": "{count} Runden",
+        "combat.roundsCount.one": "1 Runde",
         "combat.victoryAgainst.one": "Sieg gegen {enemy} nach 1 Runde.",
         "combat.defeatAgainst.one": "Niederlage gegen {enemy} nach 1 Runde.",
         "combat.winLog.one": "Sieg gegen {enemy} nach 1 Runde. +{xp} XP, +{gold} Gold.",

@@ -101,10 +101,16 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Nebeneffekte: Der Kampf-Button liegt bei 1366/1440 px höher als vorher, auf dem Handy ist die Leiste 38 % kürzer (439 → 272 px).
     - Absicherung: `tests/ui-layout.js` mit den längsten Item-Namen, 14 Bildschirmgrössen und beiden Sprachen. Geprüft werden: nichts abgeschnitten, Kampf-Button ab 1280×768 sichtbar, kein Überlauf.
 
-- [ ] **4. „Überspringen“ wirklich sofort**
+- [x] **4. „Überspringen“ wirklich sofort** ✅ erledigt in v0.8.125
   - Wo: `scripts/core.js` → `finishActionCombat` (`await waitResult(900)`), dazu alle Wartezeiten in `pushCombatEvent`
   - Wie: Ist `skipCombat` aktiv, die Wartezeiten auf 0 setzen und die Ergebnis-Animation nur kurz einblenden (150 ms).
   - Fertig wenn: Ein übersprungener Kampf dauert unter 250 ms.
+  - Ergebnis:
+    - Vom Klick auf „Überspringen“ bis zum Kampfende vergehen jetzt 29–57 ms (vorher 930–960 ms).
+    - Das Sieg-/Niederlage-Banner bleibt rund 1 s sichtbar, blockiert aber nicht mehr.
+    - Der normale Kampf ohne Überspringen ist unverändert.
+    - Mitbehoben: Das Ergebnis-Banner zeigte „Runde/Runden“ und „Effekt/e“ fest auf Deutsch.
+    - Absicherung: `tests/ui-combat.js` misst 10 übersprungene Kämpfe über den echten Button und prüft das Banner. Der Sprach-Test prüft jetzt auch das Banner.
 
 - [ ] **5. Version an einer Stelle pflegen**
   - Wo: `scripts/data.js` (`assetVersion`), `index.html` (`?v=`), `README.md`
@@ -275,7 +281,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 
 | Phase | Punkte | Erledigt |
 |---|---|---|
-| 1 – Bugs | 1–5 | 3/5 |
+| 1 – Bugs | 1–5 | 4/5 |
 | 2 – Code | 6–10 | 0/5 |
 | 3 – Gameplay | 11–15 | 0/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |
