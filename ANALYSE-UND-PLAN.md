@@ -88,10 +88,18 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
       - `npm test` prüft, dass jedes `aria-label` einen Key hat, dass jeder Key in DE und EN existiert und dass kein `log()` mit festem Text vorkommt.
       - `npm run test:ui` scannt alle Fenster in beiden Sprachen.
 
-- [ ] **3. Abgeschnittene Ausrüstungs-Slots (Desktop)**
+- [x] **3. Abgeschnittene Ausrüstungs-Slots (Desktop)** ✅ erledigt in v0.8.124
   - Wo: `css/base.css` (Equipment-Leiste), `scripts/render.js` (`renderEquipment`)
   - Wie: Die Leiste ab ~1100 px als 2-zeiliges Grid (4+4) statt 8 schmaler Spalten. Den vollen Slot-Namen zeigen, den Item-Namen mit `text-overflow: ellipsis` und `title`-Tooltip kürzen.
   - Fertig wenn: Bei 1280 und 1440 px sind Slot-Namen vollständig lesbar.
+  - Ergebnis:
+    - Zwischen 1061 und rund 1550 px waren die Slots nur 32–86 px breit.
+    - Neu passt sich die Leiste dem Platz an (Container Query): 7 Slots in einer Reihe ab 640 px Leistenbreite, sonst 4 + 3.
+    - Die Überschrift ist ein Etikett auf dem Rahmen und kostet keine eigene Zeile.
+    - Kompakte Slots: Slot-Name, Item-Name und farbiger Haltbarkeitsbalken. Details gibt es beim Drüberfahren, sehr breite Bildschirme zeigen zusätzlich Textzeilen.
+    - Lange Item-Namen werden mit „…“ gekürzt, der volle Name steht im Tooltip.
+    - Nebeneffekte: Der Kampf-Button liegt bei 1366/1440 px höher als vorher, auf dem Handy ist die Leiste 38 % kürzer (439 → 272 px).
+    - Absicherung: `tests/ui-layout.js` mit den längsten Item-Namen, 14 Bildschirmgrössen und beiden Sprachen. Geprüft werden: nichts abgeschnitten, Kampf-Button ab 1280×768 sichtbar, kein Überlauf.
 
 - [ ] **4. „Überspringen“ wirklich sofort**
   - Wo: `scripts/core.js` → `finishActionCombat` (`await waitResult(900)`), dazu alle Wartezeiten in `pushCombatEvent`
@@ -267,7 +275,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 
 | Phase | Punkte | Erledigt |
 |---|---|---|
-| 1 – Bugs | 1–5 | 2/5 |
+| 1 – Bugs | 1–5 | 3/5 |
 | 2 – Code | 6–10 | 0/5 |
 | 3 – Gameplay | 11–15 | 0/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |

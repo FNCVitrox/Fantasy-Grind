@@ -807,9 +807,10 @@ function renderEquipment() {
     const enchantText = itemEnchantmentsText(item);
     return `<button class="equipment-chip rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}" type="button" data-open-equipment>
       <strong>${labelFor(slotLabel, slot)}</strong>
-      <span class="quality-${quality}">${escapeHtml(itemName)}</span>
+      <span class="quality-${quality}" title="${escapeAttr(itemName)}">${escapeHtml(itemName)}</span>
       <small>${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</small>
       <small class="${durability <= 25 ? "durability-low" : ""}">${durability}% · ${repairCost} ${t("common.gold", "Gold")}</small>
+      <i class="equipment-durability-bar${durability <= 25 ? " is-low" : durability <= 60 ? " is-mid" : ""}" title="${escapeAttr(`${t("main.durability", "Haltbarkeit")}: ${durability}%`)}"><b style="width:${Math.max(0, Math.min(100, durability))}%"></b></i>
       <span class="equipment-hover-detail" aria-hidden="true">
         <b class="quality-${quality}">${escapeHtml(itemName)}</b>
         <em>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</em>

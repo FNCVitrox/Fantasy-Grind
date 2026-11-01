@@ -11,10 +11,6 @@
     grid-template-columns: 1fr;
   }
 
-  .equipment-belt .equipment {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .topbar {
     align-items: flex-start;
     flex-direction: column;
@@ -312,9 +308,10 @@
     max-width: none;
     min-width: 0;
     gap: 12px;
-    padding: 10px;
+    padding: 14px 10px 10px;
     border-radius: 10px;
-    overflow: hidden;
+    /* sichtbar lassen, damit das Etikett auf dem Rahmen nicht abgeschnitten wird */
+    overflow: visible;
   }
 
   .equipment-belt h2 {

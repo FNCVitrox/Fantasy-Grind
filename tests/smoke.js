@@ -139,6 +139,9 @@ assert(!/\.modal-window \{\s*width: calc\(100vw/.test(css), "modal windows shoul
 assert(!/\.inventory-item \.loot-compare \{\s*max-height/.test(css), "inventory compare box should not become a nested scroll box on mobile");
 assert(/\.inventory \{[\s\S]*?grid-auto-rows: max-content;/.test(css), "inventory cards should keep their full height inside the scrolling list");
 assert(!/grid-template-rows: 112px 54px 92px/.test(css), "loot card rows should grow instead of clipping stat rows");
+// Ausrüstungsleiste passt sich dem Platz an statt 7 feste Spalten zu quetschen (Punkt 3 im Arbeitsplan).
+assert(/\.equipment-belt \{[\s\S]*?container-type: inline-size;/.test(css) && /@container \(min-width: 640px\)[\s\S]*?repeat\(7, minmax\(0, 1fr\)\)/.test(css), "equipment belt should switch between 4 and 7 columns via container query");
+assert(read("scripts/render.js").includes('title="${escapeAttr(itemName)}"') && read("scripts/render.js").includes("equipment-durability-bar"), "equipment chips should expose full item names as tooltip and show a durability bar");
 // Sprache: keine festen Texte ohne Übersetzung (Punkt 2 im Arbeitsplan).
 {
   const i18nContext = { console, window: {}, document: {} };
