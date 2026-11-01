@@ -176,13 +176,24 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Geprüft: Die Auswahl bleibt beim Neuladen der Seite erhalten.
     - Absicherung: Ein Test erlaubt nur `state`, `achievementCatalog` und `materialDrops` als globale `let`, und keine lokale Variable darf `ui` heissen.
 
-- [ ] **9. CSS entschlacken**
+- [x] **9. CSS entschlacken** ✅ erledigt in v0.8.130 (Grössenziel bewusst nicht erreicht, siehe Ergebnis)
   - Wo: `css/modals.css`, `css/base.css`
   - Wie:
     - Die 32 doppelten Selektoren zusammenführen.
     - Wiederkehrende Werte als CSS-Variablen definieren (Farben, Radius, Abstände, Schatten).
     - Ungenutzte Klassen finden: Klassen aus dem CSS gegen `index.html` und `render*.js` abgleichen, ungenutzte löschen.
   - Fertig wenn: Das CSS ist mindestens 20 % kleiner und die Screenshots sehen unverändert aus.
+  - Ergebnis:
+    - Die Analyse hat gezeigt: Das CSS ist kaum tot. Von 1'045 Regeln waren nur 7 ungenutzt (711 Bytes), dazu 7 doppelte Selektoren und 5 überschriebene Werte. Der Umfang kommt von den vielen Fenstern und Ansichten.
+    - **20 % weniger lassen sich nur durch Umbau des Designs erreichen.** Das passiert sinnvollerweise in Phase 4 (neue Grafik), nicht in einem reinen Aufräum-Schritt.
+    - Gemacht:
+      - ungenutzte Regeln entfernt, doppelte zusammengeführt
+      - 8 neue Farb-Variablen in `:root`
+      - 154 fest eingetragene Farbwerte durch Variablen ersetzt (`var(--…)`-Nutzungen 238 → 379); das Farbschema ist jetzt zentral änderbar
+      - 7'335 → 7'268 Zeilen
+    - Geprüft: Alle 108 Screenshots (27 Spielzustände × 4 Bildschirmgrössen) sind pixelgleich.
+    - Neu: `npm run visual:baseline` / `npm run visual:check` als Sicherheitsnetz für spätere Design-Arbeit.
+    - Absicherung: `npm test` schlägt fehl, wenn eine CSS-Klasse nirgends benutzt wird.
 
 - [ ] **10. Spielstand schlanker speichern**
   - Wo: `scripts/save-system.js` → `save()`
@@ -319,7 +330,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 | Phase | Punkte | Erledigt |
 |---|---|---|
 | 1 – Bugs | 1–5 | 5/5 ✅ |
-| 2 – Code | 6–10 | 3/5 |
+| 2 – Code | 6–10 | 4/5 |
 | 3 – Gameplay | 11–15 | 0/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |
 | 5 – Inhalt | 22–24 | 0/3 |

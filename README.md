@@ -6,7 +6,7 @@ Aktueller Stand: spielbarer Alpha-Prototyp.
 
 ## Version
 
-Alpha v0.8.129
+Alpha v0.8.130
 
 ## Spielen
 
@@ -54,6 +54,16 @@ Starten:
 
 ```powershell
 npm run test:ui
+```
+
+### Visueller Vergleich (für Design- und CSS-Änderungen)
+
+Macht 108 Screenshots (27 Spielzustände auf 4 Bildschirmgrössen, mit festem Zufallswert) und vergleicht sie Pixel für Pixel:
+
+```powershell
+npm i -D pngjs pixelmatch@5   # einmalig, zusätzlich zu playwright
+npm run visual:baseline       # vor der Änderung: Ist-Zustand speichern
+npm run visual:check          # nach der Änderung: vergleichen (Unterschiede in .visual/diff)
 ```
 
 ## Version erhöhen

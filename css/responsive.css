@@ -217,16 +217,6 @@
     padding: 8px;
   }
 
-  .character-panel,
-  .side-panel,
-  .world-panel {
-    align-self: stretch;
-    justify-self: stretch;
-    width: 100%;
-    max-width: none;
-    min-width: 0;
-  }
-
   .panel {
     width: 100%;
     max-width: 100%;
@@ -239,24 +229,12 @@
   .character-panel,
   .side-panel,
   .world-panel {
+    align-self: stretch;
+    justify-self: stretch;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
     gap: 10px;
-  }
-
-  .character-panel .portrait {
-    grid-template-columns: auto minmax(0, 1fr);
-    justify-items: start;
-    min-height: 66px;
-    padding: 8px 10px;
-    gap: 10px;
-    text-align: left;
-  }
-
-  .character-panel .portrait svg {
-    width: 50px;
-  }
-
-  .character-panel .portrait .class-portrait-icon {
-    width: 50px;
   }
 
   .portrait-summary {
@@ -271,15 +249,6 @@
     font-weight: 900;
     line-height: 1;
     text-transform: uppercase;
-  }
-
-  .portrait-summary strong {
-    overflow: hidden;
-    color: var(--text);
-    font-size: 22px;
-    line-height: 1.05;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .portrait-summary span {
@@ -298,8 +267,7 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .side-zone-map .zone-options,
-  .zone-modal-options {
+  .side-zone-map .zone-options {
     grid-template-columns: 1fr;
   }
 
@@ -623,12 +591,6 @@
     font-size: 15px;
   }
 
-  .modal-head-actions {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
   .repair-summary,
   .repair-row,
   .smith-card,
@@ -708,17 +670,6 @@
   .inventory-window .modal-window-head {
     margin: -12px -12px 8px;
     padding: 12px 12px 9px;
-  }
-
-  .inventory-summary {
-    position: sticky;
-    top: 62px;
-    z-index: 2;
-    margin: 0 -4px 8px;
-    padding: 8px;
-    border: 1px solid rgba(109, 149, 184, 0.28);
-    border-radius: 10px;
-    background: rgba(8, 18, 29, 0.96);
   }
 
   .inventory-summary > div {
@@ -908,6 +859,14 @@
   }
 
   .inventory-summary {
+    position: sticky;
+    top: 62px;
+    z-index: 2;
+    margin: 0 -4px 8px;
+    padding: 8px;
+    border: 1px solid rgba(109, 149, 184, 0.28);
+    border-radius: 10px;
+    background: rgba(8, 18, 29, 0.96);
     flex-direction: column;
   }
 
@@ -924,6 +883,10 @@
   }
 
   .character-panel .portrait {
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-items: start;
+    gap: 10px;
+    text-align: left;
     min-height: 62px;
     padding: 7px 9px;
   }
@@ -937,6 +900,11 @@
   }
 
   .portrait-summary strong {
+    overflow: hidden;
+    color: var(--text);
+    line-height: 1.05;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 20px;
   }
 

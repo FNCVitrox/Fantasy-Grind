@@ -14,6 +14,14 @@
   --purple: #b089ff;
   --aqua: #34d5d8;
   --accent: #34d5d8;
+  --panel-dark: #0c1723;
+  --gold-bright: #f0c04f;
+  --gold-soft: #d8ae4b;
+  --parchment: #d8d0bc;
+  --red-soft: #ef646b;
+  --gold-line-faint: rgba(216, 174, 75, 0.12);
+  --shadow-soft: rgba(0, 0, 0, 0.22);
+  --shadow-mid: rgba(0, 0, 0, 0.24);
 }
 
 * {
@@ -83,7 +91,7 @@ body.modal-open {
 
 .studio-splash p {
   margin: 4px 0 0;
-  color: #f2c14e;
+  color: var(--gold);
   font-size: clamp(22px, 5vw, 34px);
   font-weight: 950;
   letter-spacing: 0;
@@ -136,7 +144,7 @@ body.modal-open {
 
 button {
   border: 1px solid var(--line);
-  background: #17283a;
+  background: var(--panel-2);
   color: var(--text);
   min-height: 42px;
   padding: 0 14px;
@@ -269,7 +277,7 @@ h2 {
   background:
     linear-gradient(90deg, rgba(52, 213, 216, 0.2), transparent 62%),
     #0d1d2c;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24), inset 0 0 0 1px rgba(52, 213, 216, 0.12);
+  box-shadow: 0 10px 24px var(--shadow-mid), inset 0 0 0 1px rgba(52, 213, 216, 0.12);
   transform: translateY(-1px);
 }
 
@@ -290,7 +298,7 @@ h2 {
 }
 
 .book-button.has-new-quests::before {
-  background: linear-gradient(180deg, #f2c14e, #54f0c1);
+  background: linear-gradient(180deg, var(--gold), #54f0c1);
   opacity: 1;
 }
 
@@ -307,7 +315,7 @@ h2 {
 }
 
 .book-button.has-new-achievements::before {
-  background: linear-gradient(180deg, #b089ff, #f2c14e);
+  background: linear-gradient(180deg, var(--purple), var(--gold));
   opacity: 1;
 }
 
@@ -376,7 +384,7 @@ h2 {
 }
 
 .camp-button::before {
-  background: linear-gradient(180deg, #f2c14e, #e0645f);
+  background: linear-gradient(180deg, var(--gold), var(--red));
 }
 
 .quest-board-button::before {
@@ -388,7 +396,7 @@ h2 {
 }
 
 .merchant-button::before {
-  background: linear-gradient(180deg, #f2c14e, #65d7b2);
+  background: linear-gradient(180deg, var(--gold), #65d7b2);
 }
 
 .smith-button::before {
@@ -429,8 +437,8 @@ h2 {
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
-    linear-gradient(45deg, rgba(216, 174, 75, 0.12), transparent),
-    #0c1723;
+    linear-gradient(45deg, var(--gold-line-faint), transparent),
+    var(--panel-dark);
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
@@ -451,7 +459,7 @@ h2 {
     radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--class-accent) 32%, transparent), transparent 32%),
     linear-gradient(145deg, rgba(216, 222, 233, 0.13), transparent 48%),
     #1b2632;
-  box-shadow: inset 0 -18px 28px rgba(0, 0, 0, 0.24);
+  box-shadow: inset 0 -18px 28px var(--shadow-mid);
 }
 
 .class-icon-mark,
@@ -573,7 +581,7 @@ h2 {
   width: 52%;
   height: 7%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #f5e6a6 0 72%, #f2c14e 73% 100%);
+  background: linear-gradient(90deg, #f5e6a6 0 72%, var(--gold) 73% 100%);
 }
 
 .class-icon-archer .class-icon-tool::after {
@@ -585,7 +593,7 @@ h2 {
   height: 0;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
-  border-left: 9px solid #f2c14e;
+  border-left: 9px solid var(--gold);
 }
 
 .portrait-summary {
@@ -595,7 +603,7 @@ h2 {
 .portrait:hover,
 .portrait:focus-visible {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(216, 174, 75, 0.12), 0 18px 36px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 0 0 3px var(--gold-line-faint), 0 18px 36px var(--shadow-soft);
   transform: translateY(-1px);
 }
 
@@ -609,7 +617,7 @@ h2 {
   padding: 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #0c1723;
+  background: var(--panel-dark);
 }
 
 .character-status span {
@@ -626,7 +634,7 @@ h2 {
   padding: 8px 9px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #0c1723;
+  background: var(--panel-dark);
 }
 
 .character-stats-button {
@@ -649,10 +657,6 @@ h2 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
-}
-
-.class-list {
-  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
 }
 
 .build-list button {
@@ -692,7 +696,7 @@ h2 {
   padding: 7px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #0c1723;
+  background: var(--panel-dark);
   transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
@@ -729,10 +733,10 @@ h2 {
 
 .bar {
   height: 12px;
-  background: #07111b;
+  background: var(--panel-deep);
   border-radius: 99px;
   overflow: hidden;
-  border: 1px solid #28445a;
+  border: 1px solid var(--line);
 }
 
 .bar span {
@@ -768,7 +772,7 @@ h2 {
 .enemy {
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #0c1723;
+  background: var(--panel-dark);
   padding: 10px;
 }
 
@@ -967,7 +971,7 @@ h2 {
   background:
     linear-gradient(135deg, rgba(52, 213, 216, 0.16), transparent 36%),
     linear-gradient(45deg, transparent 55%, rgba(109, 149, 184, 0.18)),
-    #0c1723;
+    var(--panel-dark);
 }
 
 .side-zone-map {
@@ -1075,7 +1079,7 @@ h2 {
   text-align: left;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent),
-    #17283a;
+    var(--panel-2);
 }
 
 .side-zone-map .zone {
@@ -1136,12 +1140,6 @@ h2 {
   line-height: 1.15;
 }
 
-.equipment-chip span,
-.equipment-chip small {
-  font-size: 10px;
-  line-height: 1.2;
-}
-
 .equipment-chip strong,
 .equipment-chip span,
 .equipment-chip small {
@@ -1157,6 +1155,8 @@ h2 {
 
 .equipment-chip span,
 .equipment-chip small {
+  font-size: 10px;
+  line-height: 1.2;
   color: var(--muted);
 }
 
@@ -1235,7 +1235,7 @@ h2 {
 .enemy.active {
   border-color: var(--gold);
   background:
-    linear-gradient(90deg, rgba(216, 174, 75, 0.12), transparent 42%),
+    linear-gradient(90deg, var(--gold-line-faint), transparent 42%),
     #142438;
   box-shadow: inset 3px 0 0 rgba(242, 193, 78, 0.72);
 }
@@ -1392,7 +1392,7 @@ h2 {
   z-index: 3;
   margin: -18px -18px 12px;
   padding: 18px 18px 10px;
-  background: linear-gradient(180deg, #17283a 76%, rgba(23, 40, 58, 0));
+  background: linear-gradient(180deg, var(--panel-2) 76%, rgba(23, 40, 58, 0));
 }
 
 .inventory-window .inventory {
@@ -1434,8 +1434,8 @@ h2 {
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(216, 174, 75, 0.12), transparent),
-    #07111b;
+    linear-gradient(135deg, var(--gold-line-faint), transparent),
+    var(--panel-deep);
 }
 
 .smith-greeting strong {
@@ -1509,7 +1509,7 @@ h2 {
   border: 1px solid rgba(216, 174, 75, 0.48);
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(216, 174, 75, 0.12), transparent 42%),
+    linear-gradient(135deg, var(--gold-line-faint), transparent 42%),
     #08131f;
 }
 
@@ -1561,7 +1561,7 @@ h2 {
   padding: 7px 9px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #0c1723;
+  background: var(--panel-dark);
   color: var(--muted);
 }
 
@@ -1590,7 +1590,7 @@ h2 {
     radial-gradient(circle at 64% 42%, #f3d279 0 6%, transparent 7%),
     linear-gradient(90deg, transparent 0 42%, rgba(7, 17, 27, 0.78) 43% 57%, transparent 58%),
     linear-gradient(180deg, #c4cbd4 0 24%, #7c8792 25% 34%, #263240 35% 58%, #7b4a38 59%),
-    #17283a;
+    var(--panel-2);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28), inset 0 -8px 0 rgba(0, 0, 0, 0.18);
 }
 
@@ -1618,10 +1618,10 @@ h2 {
   top: 14px;
   width: 16px;
   height: 58px;
-  border: 2px solid #d8ae4b;
+  border: 2px solid var(--gold-soft);
   border-radius: 8px;
   background:
-    radial-gradient(circle at 50% 13%, #f0c04f 0 24%, transparent 25%),
+    radial-gradient(circle at 50% 13%, var(--gold-bright) 0 24%, transparent 25%),
     linear-gradient(180deg, #654330, #201717);
   transform: rotate(-22deg);
   box-shadow: 0 0 16px rgba(216, 174, 75, 0.28);
@@ -1658,7 +1658,7 @@ h2 {
   border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(166, 120, 194, 0.14), transparent),
-    #07111b;
+    var(--panel-deep);
 }
 
 .enchant-intro {
@@ -1758,7 +1758,7 @@ h2 {
   border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(166, 120, 194, 0.17), rgba(52, 213, 216, 0.07)),
-    #07111b;
+    var(--panel-deep);
 }
 
 .enchant-locked span {
@@ -1832,7 +1832,7 @@ h2 {
   gap: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #0c1723;
+  background: var(--panel-dark);
   min-height: 32px;
   padding: 5px 8px;
   color: var(--muted);
@@ -1857,7 +1857,7 @@ h2 {
   border-color: rgba(216, 174, 75, 0.72);
   background:
     linear-gradient(135deg, rgba(216, 174, 75, 0.14), transparent),
-    #0c1723;
+    var(--panel-dark);
 }
 
 .smith-renown {
@@ -1910,7 +1910,7 @@ h2 {
   gap: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #0c1723;
+  background: var(--panel-dark);
   padding: 8px 10px;
   min-height: 76px;
 }
@@ -2037,7 +2037,7 @@ h2 {
   align-items: center;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #0c1723;
+  background: var(--panel-dark);
   padding: 10px;
 }
 
@@ -2201,7 +2201,7 @@ h2 {
 
 .discovery-badge.known {
   border-color: rgba(216, 174, 75, 0.5);
-  background: rgba(216, 174, 75, 0.12);
+  background: var(--gold-line-faint);
   color: #e5d29a;
 }
 

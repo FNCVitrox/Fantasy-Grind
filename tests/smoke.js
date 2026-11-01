@@ -187,6 +187,17 @@ assert(/\.equipment-belt \{[\s\S]*?container-type: inline-size;/.test(css) && /@
 assert(read("scripts/render.js").includes('title="${escapeAttr(itemName)}"') && read("scripts/render.js").includes("equipment-durability-bar"), "equipment chips should expose full item names as tooltip and show a durability bar");
 // Überspringen blockiert nicht mehr auf die Ergebnis-Anzeige (Punkt 4 im Arbeitsplan).
 assert(/if \(ui.skipCombat\) \{[\s\S]{0,120}hideBattleResultLater\(/.test(readLogic()), "skipped fights should not wait for the result banner");
+// CSS ohne Leichen (Punkt 9): jede Klasse in einem Selektor kommt in HTML oder JS vor (auch als Präfix wie `rarity-${...}`).
+{
+  const source = [html, ...fs.readdirSync(path.join(root, "scripts")).filter((name) => name.endsWith(".js")).map((name) => read(`scripts/${name}`))].join("\n");
+  const prefixes = [...source.matchAll(/([a-zA-Z][\w-]*-)\$\{/g)].map((match) => match[1]);
+  const cssWithoutKeyframes = css.replace(/@keyframes[^{]+\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  const selectorText = [...cssWithoutKeyframes.matchAll(/([^{}]+)\{/g)].map((match) => match[1]).filter((text) => !text.trim().startsWith("@")).join(",");
+  const classes = [...new Set([...selectorText.matchAll(/\.([a-zA-Z_][\w-]*)/g)].map((match) => match[1]))];
+  const unusedClasses = classes.filter((name) => !new RegExp(`(^|[^\\w-])${name.replace(/-/g, "\\-")}($|[^\\w-])`).test(source) && !prefixes.some((prefix) => name.startsWith(prefix)));
+  assert.deepStrictEqual(unusedClasses, [], "every CSS class should be used in index.html or the scripts");
+  assert(/--panel-dark: #0c1723;[\s\S]*--gold-soft: #d8ae4b;/.test(css) && !/#0c1723/.test(css.replace(/--panel-dark: #0c1723;/, "")), "repeated colors should come from CSS variables");
+}
 // Sprache: keine festen Texte ohne Übersetzung (Punkt 2 im Arbeitsplan).
 {
   const i18nContext = { console, window: {}, document: {} };
@@ -307,7 +318,7 @@ for (const classId of ["warrior", "mage", "rogue", "archer"]) {
   }
 }
 assert(read("scripts/render.js").includes("hero-class-${characterClass}") && read("scripts/render.js").includes("heroSpriteName"), "combat hero sprite should follow the selected class and update its label");
-assert(css.includes(".class-list"), "class selector should have dedicated layout CSS");
+assert(css.includes(".class-choice-list {") && html.includes('class="class-choice-list"'), "class chooser should have dedicated layout CSS");
 assert(css.includes(".smith-avatar::before") && css.includes(".enchant-avatar::after"), "Borin and Mira avatars should have detailed CSS silhouettes");
 for (const frame of ["forged", "ember", "runic", "oath", "masterwork"]) {
   assert(css.includes(`.upgrade-frame-${frame}`), `Missing upgraded item frame CSS: ${frame}`);
