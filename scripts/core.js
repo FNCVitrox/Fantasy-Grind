@@ -1,24 +1,4 @@
 ﻿let state;
-let selectedZone = "meadow";
-let selectedEnemy = zones[selectedZone]?.enemies?.[0] || "wolf";
-let selectedBestiaryZone = selectedZone;
-let selectedBestiaryEnemy = selectedEnemy;
-let selectedBestiaryType = zones[selectedBestiaryZone]?.type || "zone";
-let isFighting = false;
-let skipCombat = false;
-let bestiaryListDirty = true;
-let bestiaryListHtml = "";
-let selectedBestiaryCategory = "overview";
-let selectedBestiaryFilter = "all";
-let selectedBestiarySearch = "";
-let selectedBestiaryPage = 0;
-let selectedBestiaryItemKey = "";
-let smithView = "home";
-let combatWatchdog = 0;
-let manualCombatStep = null;
-let activeCombatState = null;
-let pendingCombatAction = null;
-let bestiarySearchFrame = 0;
 const preparedCombatEvents = new Map();
 const tooltipItemCache = new Map();
 const tooltipHtmlCache = new Map();
@@ -279,11 +259,11 @@ function defaultState() {
   };
 }
 
-selectedZone = state.ui?.selectedZone || "meadow";
-selectedEnemy = state.ui?.selectedEnemy || zones[selectedZone]?.enemies?.[0] || "wolf";
-selectedBestiaryZone = state.ui?.selectedBestiaryZone || selectedZone;
-selectedBestiaryEnemy = state.ui?.selectedBestiaryEnemy || selectedEnemy;
-selectedBestiaryType = zones[selectedBestiaryZone]?.type || "zone";
+ui.selectedZone = state.ui?.selectedZone || "meadow";
+ui.selectedEnemy = state.ui?.selectedEnemy || zones[ui.selectedZone]?.enemies?.[0] || "wolf";
+ui.selectedBestiaryZone = state.ui?.selectedBestiaryZone || ui.selectedZone;
+ui.selectedBestiaryEnemy = state.ui?.selectedBestiaryEnemy || ui.selectedEnemy;
+ui.selectedBestiaryType = zones[ui.selectedBestiaryZone]?.type || "zone";
 
 function emptyMaterials() {
   return Object.fromEntries(Object.keys(materialLabel).map((id) => [id, 0]));

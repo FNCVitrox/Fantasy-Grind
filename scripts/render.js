@@ -67,11 +67,11 @@ function renderCombatPanel() {
   renderCombatModeToggle();
   renderCombatActions();
   const manualMode = isManualCombatMode();
-  const fightText = isFighting
-    ? manualMode ? t("combat.inProgress", "Kampf läuft") : (skipCombat ? t("combat.skipping", "Überspringe...") : t("combat.skip", "Skip"))
+  const fightText = ui.isFighting
+    ? manualMode ? t("combat.inProgress", "Kampf läuft") : (ui.skipCombat ? t("combat.skipping", "Überspringe...") : t("combat.skip", "Skip"))
     : t("combat.start", "Kampf starten");
   setText("fightBtn", fightText);
-  setDisabled("fightBtn", isFighting ? (manualMode || skipCombat) : state.pendingLoot.length > 0);
+  setDisabled("fightBtn", ui.isFighting ? (manualMode || ui.skipCombat) : state.pendingLoot.length > 0);
 }
 
 function renderCombatModeToggle() {
@@ -79,7 +79,7 @@ function renderCombatModeToggle() {
     const active = button.dataset.combatMode === combatMode();
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", active ? "true" : "false");
-    button.disabled = isFighting;
+    button.disabled = ui.isFighting;
     const labelKey = button.dataset.combatMode === "manual" ? "combat.modeManual" : "combat.modeAuto";
     const fallback = button.dataset.combatMode === "manual" ? "Manuell" : "Auto";
     const label = t(labelKey, fallback);
@@ -92,16 +92,16 @@ function renderCombatActions() {
   if (!container) return;
   const resource = classResource();
   const resourceClass = escapeToken(state.characterClass, Object.keys(classCatalog), "warrior");
-  const resourceValue = activeCombatState ? activeCombatState.resource : 0;
-  const maxResource = activeCombatState ? activeCombatState.maxResource : resource.max;
-  const actions = combatActionList(activeCombatState);
+  const resourceValue = ui.activeCombatState ? ui.activeCombatState.resource : 0;
+  const maxResource = ui.activeCombatState ? ui.activeCombatState.maxResource : resource.max;
+  const actions = combatActionList(ui.activeCombatState);
   const signature = [
     currentLanguage(),
     state.characterClass,
     state.build,
     state.level,
-    isFighting ? 1 : 0,
-    activeCombatState?.awaitingPlayerAction ? 1 : 0,
+    ui.isFighting ? 1 : 0,
+    ui.activeCombatState?.awaitingPlayerAction ? 1 : 0,
     resourceValue,
     maxResource,
     actions.map((action) => `${action.id}:${action.disabled ? 1 : 0}:${action.disabledReason || ""}`).join("|"),
@@ -191,14 +191,14 @@ function escapeToken(value, allowed, fallback) {
 }
 
 function renderMap() {
-  const zoneData = zones[selectedZone] || zones.meadow;
-  setText("activeZoneName", zoneDisplayName(selectedZone));
-  setText("activeZoneRange", `${zoneKindLabel(zoneData)} · ${zoneRangeText(selectedZone) || zoneData.range || t("common.unknown", "Unbekannt")}`);
-  const mapSignature = `${currentLanguage()}|${selectedZone}|${zoneUnlockSignature()}`;
+  const zoneData = zones[ui.selectedZone] || zones.meadow;
+  setText("activeZoneName", zoneDisplayName(ui.selectedZone));
+  setText("activeZoneRange", `${zoneKindLabel(zoneData)} · ${zoneRangeText(ui.selectedZone) || zoneData.range || t("common.unknown", "Unbekannt")}`);
+  const mapSignature = `${currentLanguage()}|${ui.selectedZone}|${zoneUnlockSignature()}`;
   if (renderCache.map === mapSignature) return;
   renderCache.map = mapSignature;
   document.querySelectorAll("[data-zone]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.zone === selectedZone);
+    button.classList.toggle("active", button.dataset.zone === ui.selectedZone);
     button.disabled = !isZoneUnlocked(button.dataset.zone);
   });
   renderZoneOptions();
@@ -411,21 +411,21 @@ function renderEnemies(stats = totalStats()) {
   const bossRewardSignature = Array.isArray(state.defeatedBosses) ? state.defeatedBosses.join(",") : "";
   const signature = [
     currentLanguage(),
-    selectedZone,
-    selectedEnemy,
+    ui.selectedZone,
+    ui.selectedEnemy,
     state.hp,
     stats.damage,
     stats.defense,
     stats.maxHp,
     stats.critChance,
     stats.critDamage,
-    zoneEncounterSignature(selectedZone),
+    zoneEncounterSignature(ui.selectedZone),
     bossRewardSignature,
     bossDropPitySignature(),
   ].join("|");
   if (renderCache.enemies === signature) return;
   renderCache.enemies = signature;
-  $("enemyList").innerHTML = zones[selectedZone].enemies.map((id) => {
+  $("enemyList").innerHTML = zones[ui.selectedZone].enemies.map((id) => {
     const enemy = getPreparedEncounter(id);
     const risk = riskFor(enemy, stats);
     const rarity = enemyRarity(enemy);
@@ -433,7 +433,7 @@ function renderEnemies(stats = totalStats()) {
     const enemyType = enemy.boss ? ` · ${t("common.boss", "Boss")}` : enemy.elite ? ` · ${t("common.elite", "Elite")}` : "";
     const displayName = enemyDisplayName(enemy, id);
     const extraMeta = renderEnemyCardMeta(enemy, id);
-    return `<button class="enemy rarity-card rarity-${safeRarity} ${id === selectedEnemy ? "active" : ""}" type="button" data-enemy="${id}">
+    return `<button class="enemy rarity-card rarity-${safeRarity} ${id === ui.selectedEnemy ? "active" : ""}" type="button" data-enemy="${id}">
       <span><strong>${escapeHtml(displayName)}</strong><p><span class="quality-${safeRarity}">${labelFor(rarityLabel, safeRarity)}</span> · ${t("common.level", "Level")} ${enemy.level}${enemyType} · ${enemy.xp} ${t("common.xp", "XP")}</p>${extraMeta}</span>
       <em class="risk ${riskLabelClass(risk)}">${riskLabel(risk)}</em>
     </button>`;
@@ -551,7 +551,7 @@ function renderZoneOptions() {
       <div class="zone-options">
         ${entries.map(([id, zone]) => {
           const locked = !isZoneUnlocked(id);
-          return `<button class="zone ${id === selectedZone ? "active" : ""}" type="button" data-zone="${id}" ${locked ? "disabled" : ""}>
+          return `<button class="zone ${id === ui.selectedZone ? "active" : ""}" type="button" data-zone="${id}" ${locked ? "disabled" : ""}>
             <span>${escapeHtml(zoneDisplayName(id))}</span>
             <small>${escapeHtml(zoneRangeText(id) || zone.range || "")}</small>
             <em>${locked ? escapeHtml(zoneLockText(id)) : `${zone.enemies.length} ${type === "dungeon" ? t("common.bosses", "Bosse") : t("common.enemies", "Gegner")}`}</em>
@@ -572,13 +572,13 @@ function enemyRarity(enemy) {
 
 function renderSelectedEnemy() {
   const bossRewardSignature = Array.isArray(state.defeatedBosses) ? state.defeatedBosses.join(",") : "";
-  const signature = `${selectedEnemy}|${state.hp}|${state.maxHp}|${state.level}|${state.build}|${zoneEncounterSignature(selectedZone)}|${equipmentSignature()}|${bossRewardSignature}|${bossDropPitySignature()}`;
+  const signature = `${ui.selectedEnemy}|${state.hp}|${state.maxHp}|${state.level}|${state.build}|${zoneEncounterSignature(ui.selectedZone)}|${equipmentSignature()}|${bossRewardSignature}|${bossDropPitySignature()}`;
   if (renderCache.selectedEnemy === signature) return;
   renderCache.selectedEnemy = signature;
-  const enemy = getPreparedEncounter(selectedEnemy);
+  const enemy = getPreparedEncounter(ui.selectedEnemy);
   resetBattleStageState();
   setBattleEnemyVisual(enemy);
-  renderBattleEventBadge(combatEventAnimationEntry(prepareCombatEvent(enemy, selectedEnemy), enemy, state.hp));
+  renderBattleEventBadge(combatEventAnimationEntry(prepareCombatEvent(enemy, ui.selectedEnemy), enemy, state.hp));
   $("battleText").textContent = t("combat.ready", "Bereit");
 }
 
@@ -590,9 +590,9 @@ function bossDropPitySignature() {
 }
 
 function resetBattleStageState() {
-  if (isFighting) return;
+  if (ui.isFighting) return;
   // Ergebnis-Banner nach "Überspringen" noch sichtbar lassen; der Timer setzt die Bühne danach zurück.
-  if (typeof battleResultTimer !== "undefined" && battleResultTimer) return;
+  if (typeof ui !== "undefined" && ui.battleResultTimer) return;
   const stage = $("battleStage");
   if (stage.className !== "battle-stage") stage.className = "battle-stage";
   stage.querySelectorAll(".damage-number").forEach((number) => number.remove());
@@ -614,7 +614,7 @@ function renderBattleEventBadge(event) {
   badge.dataset.eventDescription = description;
   badge.title = description;
   const stage = $("battleStage");
-  if (stage && !isFighting) stage.className = `battle-stage event-tone-${tone}`;
+  if (stage && !ui.isFighting) stage.className = `battle-stage event-tone-${tone}`;
   $("battleEventLabel").textContent = t(`combat.eventTone.${tone}`, "Event");
   $("battleEventName").textContent = event.combatEventName || event.combatEventId;
 }
@@ -627,11 +627,11 @@ function hideBattleEventBadge() {
   delete badge.dataset.eventDescription;
   badge.removeAttribute("title");
   const stage = $("battleStage");
-  if (stage && !isFighting) stage.className = "battle-stage";
+  if (stage && !ui.isFighting) stage.className = "battle-stage";
 }
 
 function setBattleEnemyVisual(enemy) {
-  setText("enemySpriteName", enemyDisplayName(enemy, enemy.baseId || selectedEnemy));
+  setText("enemySpriteName", enemyDisplayName(enemy, enemy.baseId || ui.selectedEnemy));
   const className = `combatant enemy-sprite ${enemy.sprite}${enemy.eliteVariant ? " elite-variant" : ""}`;
   if ($("enemySprite").className !== className) $("enemySprite").className = className;
   updateBattleHealth(state.hp, state.maxHp, enemy.hp, enemy.hp);
@@ -853,24 +853,24 @@ function renderEquipmentDetails() {
 
 function renderSmith() {
   const modal = $("smithModal")?.querySelector(".smith-window");
-  if (modal) modal.classList.toggle("is-enchanting", smithView === "enchant");
-  setText("smithEyebrow", smithView === "enchant" ? t("enchant.eyebrow", "Arkanistin der Grauwacht") : t("smith.eyebrow", "Zwergenmeister der Grauwacht"));
-  setText("smithTitle", smithView === "enchant" ? t("enchant.title", "Mira Nachtfaden") : t("smith.title", "Borin Glutbart"));
+  if (modal) modal.classList.toggle("is-enchanting", ui.smithView === "enchant");
+  setText("smithEyebrow", ui.smithView === "enchant" ? t("enchant.eyebrow", "Arkanistin der Grauwacht") : t("smith.eyebrow", "Zwergenmeister der Grauwacht"));
+  setText("smithTitle", ui.smithView === "enchant" ? t("enchant.title", "Mira Nachtfaden") : t("smith.title", "Borin Glutbart"));
   renderSmithMaterials();
-  if (smithView === "enchant") {
+  if (ui.smithView === "enchant") {
     renderEnchantStatus();
   } else {
     renderSmithRenown();
   }
-  setHidden("smithHome", smithView !== "home");
-  setHidden("smithUpgradeSection", smithView !== "upgrade");
-  setHidden("smithSalvageSection", smithView !== "salvage");
-  setHidden("smithEnchantSection", smithView !== "enchant");
+  setHidden("smithHome", ui.smithView !== "home");
+  setHidden("smithUpgradeSection", ui.smithView !== "upgrade");
+  setHidden("smithSalvageSection", ui.smithView !== "salvage");
+  setHidden("smithEnchantSection", ui.smithView !== "enchant");
 
-  if (smithView === "home") renderSmithHome();
-  if (smithView === "upgrade") renderSmithUpgrade();
-  if (smithView === "salvage") renderSmithSalvage();
-  if (smithView === "enchant") renderSmithEnchant();
+  if (ui.smithView === "home") renderSmithHome();
+  if (ui.smithView === "upgrade") renderSmithUpgrade();
+  if (ui.smithView === "salvage") renderSmithSalvage();
+  if (ui.smithView === "enchant") renderSmithEnchant();
 }
 
 function formatSaveDate(value) {
@@ -890,7 +890,7 @@ function renderSaveSummary() {
     state.xp,
     state.gold,
     state.renown,
-    selectedZone,
+    ui.selectedZone,
     (state.activeQuests || []).length,
     (state.inventory || []).length,
     (state.pendingLoot || []).length,
@@ -1713,29 +1713,29 @@ function isQuestActive(questId) {
 
 function renderBestiary() {
   const container = $("bestiary");
-  if (bestiaryListDirty || !container.querySelector(".bestiary-list")) {
-    bestiaryListHtml = renderBestiaryList();
-    container.innerHTML = `${bestiaryListHtml}<div class="bestiary-detail" id="bestiaryDetail"></div>`;
+  if (ui.bestiaryListDirty || !container.querySelector(".bestiary-list")) {
+    ui.bestiaryListHtml = renderBestiaryList();
+    container.innerHTML = `${ui.bestiaryListHtml}<div class="bestiary-detail" id="bestiaryDetail"></div>`;
     elementCache.delete("bestiaryDetail");
     renderCache.bestiaryDetail = "";
-    bestiaryListDirty = false;
+    ui.bestiaryListDirty = false;
   }
   updateBestiaryActiveCard();
   renderBestiaryDetail();
 }
 
 function renderBestiaryList() {
-  selectedBestiaryType = ["zone", "dungeon"].includes(selectedBestiaryType) ? selectedBestiaryType : "zone";
-  const availableZones = bestiaryZonesForType(selectedBestiaryType);
-  if (!availableZones.some(([id]) => id === selectedBestiaryZone)) {
-    selectedBestiaryZone = availableZones[0]?.[0] || "meadow";
-    selectedBestiaryEnemy = zones[selectedBestiaryZone]?.enemies[0] || selectedBestiaryEnemy;
+  ui.selectedBestiaryType = ["zone", "dungeon"].includes(ui.selectedBestiaryType) ? ui.selectedBestiaryType : "zone";
+  const availableZones = bestiaryZonesForType(ui.selectedBestiaryType);
+  if (!availableZones.some(([id]) => id === ui.selectedBestiaryZone)) {
+    ui.selectedBestiaryZone = availableZones[0]?.[0] || "meadow";
+    ui.selectedBestiaryEnemy = zones[ui.selectedBestiaryZone]?.enemies[0] || ui.selectedBestiaryEnemy;
   }
-  const zone = zones[selectedBestiaryZone] || zones.meadow;
+  const zone = zones[ui.selectedBestiaryZone] || zones.meadow;
   const entries = zone.enemies.map((id) => [id, enemies[id]]).filter(([, enemy]) => enemy);
   return `<div class="bestiary-list">
     <div class="bestiary-type-tabs" role="tablist" aria-label="${t("bestiary.typeTabs", "Bestiarium-Bereiche")}">
-      ${bestiaryTypeTabs().map((tab) => `<button class="${selectedBestiaryType === tab.id ? "active" : ""}" type="button" data-bestiary-type="${tab.id}">
+      ${bestiaryTypeTabs().map((tab) => `<button class="${ui.selectedBestiaryType === tab.id ? "active" : ""}" type="button" data-bestiary-type="${tab.id}">
         <span>${escapeHtml(tab.label)}</span>
         <strong>${tab.count}</strong>
       </button>`).join("")}
@@ -1743,10 +1743,10 @@ function renderBestiaryList() {
     ${renderBestiarySectionSummary()}
     <div class="bestiary-zone-tabs">
       ${availableZones.map(([id, zoneData]) => {
-        const countLabel = selectedBestiaryType === "dungeon"
+        const countLabel = ui.selectedBestiaryType === "dungeon"
           ? t("bestiary.bossCount", "{count} Bosse", { count: zoneData.enemies.length })
           : t("bestiary.enemyCount", "{count} Gegner", { count: zoneData.enemies.length });
-        return `<button class="${id === selectedBestiaryZone ? "active" : ""}" type="button" data-bestiary-zone="${id}">
+        return `<button class="${id === ui.selectedBestiaryZone ? "active" : ""}" type="button" data-bestiary-zone="${id}">
         <strong>${escapeHtml(zoneDisplayName(id))}</strong>
         <span>${escapeHtml(countLabel)}</span>
       </button>`;
@@ -1754,7 +1754,7 @@ function renderBestiaryList() {
     </div>
     ${entries.map(([id, enemy]) => {
       const completion = lootCompletion(id);
-      return `<button class="bestiary-card ${id === selectedBestiaryEnemy ? "active" : ""}" type="button" data-bestiary="${id}">
+      return `<button class="bestiary-card ${id === ui.selectedBestiaryEnemy ? "active" : ""}" type="button" data-bestiary="${id}">
         <strong>${escapeHtml(enemyDisplayName(enemy, id))}</strong>
         <p>${t("bestiary.collection", "Sammlung {found}/{total}", { found: completion.found, total: completion.total })} ${t("bestiary.discovered", "entdeckt")}</p>
         <div class="completion-bar" aria-label="${escapeAttr(t("bestiary.discoveryProgress", "Entdeckter Ausrüstungsfortschritt"))}"><span style="width:${completion.percent}%"></span></div>
@@ -1775,8 +1775,8 @@ function bestiaryTypeTabs() {
 }
 
 function renderBestiarySectionSummary() {
-  const isDungeon = selectedBestiaryType === "dungeon";
-  const stats = bestiarySectionStats(selectedBestiaryType);
+  const isDungeon = ui.selectedBestiaryType === "dungeon";
+  const stats = bestiarySectionStats(ui.selectedBestiaryType);
   const title = isDungeon
     ? t("bestiary.dungeonSectionTitle", "Dungeon-Bosse")
     : t("bestiary.zoneSectionTitle", "Normale Gebiete");
@@ -1828,42 +1828,42 @@ function bestiarySectionStats(type) {
 
 function updateBestiaryActiveCard() {
   $("bestiary").querySelectorAll("[data-bestiary]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.bestiary === selectedBestiaryEnemy);
+    button.classList.toggle("active", button.dataset.bestiary === ui.selectedBestiaryEnemy);
   });
 }
 
 function renderBestiaryDetail() {
-  const detailEnemy = enemies[selectedBestiaryEnemy] || enemies.wolf;
-  const discovered = groupedBestiaryLoot(selectedBestiaryEnemy);
+  const detailEnemy = enemies[ui.selectedBestiaryEnemy] || enemies.wolf;
+  const discovered = groupedBestiaryLoot(ui.selectedBestiaryEnemy);
   const detail = document.getElementById("bestiaryDetail");
   if (!detail) return;
-  const signature = bestiaryDetailSignature(selectedBestiaryEnemy, detailEnemy, discovered);
+  const signature = bestiaryDetailSignature(ui.selectedBestiaryEnemy, detailEnemy, discovered);
   if (renderCache.bestiaryDetail === signature) return;
   renderCache.bestiaryDetail = signature;
-  const categories = bestiaryCategories(selectedBestiaryEnemy, detailEnemy, discovered);
-  const categoryRows = renderBestiaryCategoryRows(selectedBestiaryEnemy, detailEnemy, discovered);
+  const categories = bestiaryCategories(ui.selectedBestiaryEnemy, detailEnemy, discovered);
+  const categoryRows = renderBestiaryCategoryRows(ui.selectedBestiaryEnemy, detailEnemy, discovered);
 
   detail.innerHTML = `
     <div class="detail-head">
       <div>
-        <p class="eyebrow">${escapeHtml(zoneDisplayName(zoneKeyForEnemy(selectedBestiaryEnemy)))}</p>
-        <h2>${escapeHtml(enemyDisplayName(detailEnemy, selectedBestiaryEnemy))}</h2>
+        <p class="eyebrow">${escapeHtml(zoneDisplayName(zoneKeyForEnemy(ui.selectedBestiaryEnemy)))}</p>
+        <h2>${escapeHtml(enemyDisplayName(detailEnemy, ui.selectedBestiaryEnemy))}</h2>
       </div>
     </div>
     <p>${t("common.level", "Level")} ${detailEnemy.level}${detailEnemy.boss ? ` · ${t("common.boss", "Boss")}` : detailEnemy.elite ? ` · ${t("common.elite", "Elite")}` : ""} · ${detailEnemy.hp} ${t("main.life", "Leben")} · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} ${t("main.damage", "Schaden")} · ${detailEnemy.defense} ${t("main.defense", "Rüstung")} · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)} · Quest-Schriftrolle ${formatChance(rareQuestDropChance(detailEnemy))}</p>
-    ${renderBossRewardPanel(selectedBestiaryEnemy, detailEnemy)}
+    ${renderBossRewardPanel(ui.selectedBestiaryEnemy, detailEnemy)}
     ${renderEnemyAbilities(detailEnemy)}
-    <h3>${t("bestiary.collection", "Sammlung {found}/{total}", lootCompletion(selectedBestiaryEnemy))}</h3>
+    <h3>${t("bestiary.collection", "Sammlung {found}/{total}", lootCompletion(ui.selectedBestiaryEnemy))}</h3>
     <div class="bestiary-category-grid">
-      ${categories.map((category) => `<button class="bestiary-category ${selectedBestiaryCategory === category.id ? "active" : ""}" type="button" data-bestiary-category="${category.id}">
+      ${categories.map((category) => `<button class="bestiary-category ${ui.selectedBestiaryCategory === category.id ? "active" : ""}" type="button" data-bestiary-category="${category.id}">
         <strong>${escapeHtml(category.label)}</strong>
         <span>${category.count}</span>
       </button>`).join("")}
     </div>
-    ${selectedBestiaryCategory === "overview" ? "" : renderBestiaryFilters()}
+    ${ui.selectedBestiaryCategory === "overview" ? "" : renderBestiaryFilters()}
     <div class="bestiary-content-grid">
       <div class="drop-list">${categoryRows}</div>
-      ${renderBestiaryItemDetail(selectedBestiaryEnemy, detailEnemy, discovered)}
+      ${renderBestiaryItemDetail(ui.selectedBestiaryEnemy, detailEnemy, discovered)}
     </div>
     <p class="loot-note">${t("bestiary.note", "Items werden zusammengefasst, seitenweise geladen und Details erscheinen direkt neben der Liste.")}</p>
   `;
@@ -1886,11 +1886,11 @@ function bestiaryDetailSignature(enemyId, enemy, discovered) {
     bossDropPityCount(enemyId),
     (enemy.drops || []).map((drop) => `${drop.id}:${drop.chance}`).join(","),
     bossFirstClearRewardText(enemy),
-    selectedBestiaryCategory,
-    selectedBestiaryFilter,
-    selectedBestiarySearch,
-    selectedBestiaryPage,
-    selectedBestiaryItemKey,
+    ui.selectedBestiaryCategory,
+    ui.selectedBestiaryFilter,
+    ui.selectedBestiarySearch,
+    ui.selectedBestiaryPage,
+    ui.selectedBestiaryItemKey,
     discoveredSignature,
   ].join("~");
 }
@@ -1948,16 +1948,16 @@ function bestiaryCategories(enemyId, enemy, discovered = groupedBestiaryLoot(ene
 }
 
 function renderBestiaryCategoryRows(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
-  if (selectedBestiaryCategory === "overview") {
+  if (ui.selectedBestiaryCategory === "overview") {
     return renderBestiaryOverview(enemyId, enemy, discovered);
   }
-  if (selectedBestiaryCategory === "fixed") {
+  if (ui.selectedBestiaryCategory === "fixed") {
     return renderFixedDropRows(enemyId, enemy);
   }
-  if (selectedBestiaryCategory === "materials") {
+  if (ui.selectedBestiaryCategory === "materials") {
     return renderMaterialDropRows(enemyId);
   }
-  return renderDiscoveredLootRows(enemyId, selectedBestiaryCategory, discovered);
+  return renderDiscoveredLootRows(enemyId, ui.selectedBestiaryCategory, discovered);
 }
 
 function renderBestiaryOverview(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
@@ -2065,8 +2065,8 @@ function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiar
   const sorted = filtered.sort((a, b) => bestiaryRowRank(b) - bestiaryRowRank(a) || a.name.localeCompare(b.name));
   const pageSize = 15;
   const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
-  selectedBestiaryPage = Math.min(selectedBestiaryPage, pageCount - 1);
-  const start = selectedBestiaryPage * pageSize;
+  ui.selectedBestiaryPage = Math.min(ui.selectedBestiaryPage, pageCount - 1);
+  const start = ui.selectedBestiaryPage * pageSize;
   const visible = sorted.slice(start, start + pageSize);
   const rows = visible
     .map((template) => renderGeneratedDropRow(template, discoveredLookup))
@@ -2076,9 +2076,9 @@ function renderDiscoveredLootRows(enemyId, category, discovered = groupedBestiar
 
   return `${rows}
     <div class="bestiary-pagination">
-      <button type="button" data-bestiary-page="prev" ${selectedBestiaryPage === 0 ? "disabled" : ""}>${t("common.previous", "Zurück")}</button>
-      <span>${t("common.page", "Seite")} ${selectedBestiaryPage + 1}/${pageCount}</span>
-      <button type="button" data-bestiary-page="next" ${selectedBestiaryPage >= pageCount - 1 ? "disabled" : ""}>${t("common.next", "Weiter")}</button>
+      <button type="button" data-bestiary-page="prev" ${ui.selectedBestiaryPage === 0 ? "disabled" : ""}>${t("common.previous", "Zurück")}</button>
+      <span>${t("common.page", "Seite")} ${ui.selectedBestiaryPage + 1}/${pageCount}</span>
+      <button type="button" data-bestiary-page="next" ${ui.selectedBestiaryPage >= pageCount - 1 ? "disabled" : ""}>${t("common.next", "Weiter")}</button>
     </div>`;
 }
 
@@ -2097,7 +2097,7 @@ function renderGeneratedDropRow(template, discoveredLookup) {
   const key = found ? bestiaryItemKey(found) : `unknown:${bestiaryItemKey(template)}`;
   const status = found ? ((found.count || 0) <= 1 ? t("common.new", "Neu") : t("common.known", "Bekannt")) : t("common.unknown", "Unbekannt");
   const hoverClass = found ? "item-hover-row" : "locked-drop";
-  return `<button class="drop-row discovered-drop bestiary-item-row ${hoverClass} ${selectedBestiaryItemKey === key ? "active" : ""}" type="button" data-bestiary-item="${escapeAttr(key)}" ${found ? `data-tooltip-key="${cacheTooltipItem(found)}"` : ""}>
+  return `<button class="drop-row discovered-drop bestiary-item-row ${hoverClass} ${ui.selectedBestiaryItemKey === key ? "active" : ""}" type="button" data-bestiary-item="${escapeAttr(key)}" ${found ? `data-tooltip-key="${cacheTooltipItem(found)}"` : ""}>
     <span><b class="quality-${quality}">${escapeHtml(itemDisplayName(item, item.id))}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(template.dropChance)}</small></span>
     <span>${status}</span>
   </button>`;
@@ -2210,12 +2210,12 @@ function bestiaryItemGroup(item) {
 }
 
 function filterBestiaryLoot(items) {
-  const search = selectedBestiarySearch.trim().toLowerCase();
+  const search = ui.selectedBestiarySearch.trim().toLowerCase();
   const searched = search ? items.filter((item) => itemDisplayName(item, item.id).toLowerCase().includes(search)) : items;
-  if (selectedBestiaryFilter === "new") return searched.filter((item) => (item.count || 0) <= 1);
-  if (selectedBestiaryFilter === "sets") return searched.filter((item) => item.set);
-  if (selectedBestiaryFilter === "epic") return searched.filter((item) => item.quality === "epic" || item.quality === "legendary");
-  if (selectedBestiaryFilter === "incomplete") return searched.filter((item) => (item.count || 0) <= 1 || item.quality === "epic" || item.quality === "legendary" || item.set);
+  if (ui.selectedBestiaryFilter === "new") return searched.filter((item) => (item.count || 0) <= 1);
+  if (ui.selectedBestiaryFilter === "sets") return searched.filter((item) => item.set);
+  if (ui.selectedBestiaryFilter === "epic") return searched.filter((item) => item.quality === "epic" || item.quality === "legendary");
+  if (ui.selectedBestiaryFilter === "incomplete") return searched.filter((item) => (item.count || 0) <= 1 || item.quality === "epic" || item.quality === "legendary" || item.set);
   return searched;
 }
 
@@ -2228,8 +2228,8 @@ function renderBestiaryFilters() {
     ["incomplete", t("bestiary.filterIncomplete", "Noch nicht vollständig")],
   ];
   return `<div class="bestiary-filters">
-    <input id="bestiarySearch" type="search" value="${escapeAttr(selectedBestiarySearch)}" placeholder="${t("bestiary.search", "Item suchen")}">
-    ${filters.map(([id, label]) => `<button class="${selectedBestiaryFilter === id ? "active" : ""}" type="button" data-bestiary-filter="${id}">${label}</button>`).join("")}
+    <input id="bestiarySearch" type="search" value="${escapeAttr(ui.selectedBestiarySearch)}" placeholder="${t("bestiary.search", "Item suchen")}">
+    ${filters.map(([id, label]) => `<button class="${ui.selectedBestiaryFilter === id ? "active" : ""}" type="button" data-bestiary-filter="${id}">${label}</button>`).join("")}
   </div>`;
 }
 
@@ -2250,23 +2250,23 @@ function escapeHtml(value) {
 }
 
 function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLoot(enemyId)) {
-  if (selectedBestiaryCategory === "overview" && !selectedBestiaryItemKey) {
+  if (ui.selectedBestiaryCategory === "overview" && !ui.selectedBestiaryItemKey) {
     return `<aside class="bestiary-selected-detail">
       <strong>${t("bestiary.details", "Details")}</strong>
       <p>${t("bestiary.clickDiscovery", "Klicke einen Fund an, um Details zu sehen.")}</p>
     </aside>`;
   }
 
-  if (selectedBestiaryCategory === "materials") {
-    const material = (materialDrops[enemyId] || []).find((drop) => `mat:${drop.id}` === selectedBestiaryItemKey);
+  if (ui.selectedBestiaryCategory === "materials") {
+    const material = (materialDrops[enemyId] || []).find((drop) => `mat:${drop.id}` === ui.selectedBestiaryItemKey);
     return `<aside class="bestiary-selected-detail">
       <strong>${t("bestiary.materials", "Materialien")}</strong>
       ${material ? `<p>${labelFor(materialLabel, material.id)}</p><p>${t("bestiary.dropAmount", "Drop-Menge")}: ${material.min}-${material.max}</p><p>${t("bestiary.usedForUpgrades", "Wird beim Schmied für Upgrades genutzt.")}</p>` : `<p>${t("bestiary.clickDiscovery", "Klicke ein Material für Details.")}</p>`}
     </aside>`;
   }
 
-  if (selectedBestiaryItemKey.startsWith("unknown:")) {
-    const key = selectedBestiaryItemKey.replace("unknown:", "");
+  if (ui.selectedBestiaryItemKey.startsWith("unknown:")) {
+    const key = ui.selectedBestiaryItemKey.replace("unknown:", "");
     const template = generatedBestiaryTemplates(enemy).find((entry) => bestiaryItemKey(entry) === key);
     return `<aside class="bestiary-selected-detail">
       <strong>${t("bestiary.unknownDrop", "Unbekannter Fund")}</strong>
@@ -2274,11 +2274,11 @@ function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLo
     </aside>`;
   }
 
-  if (selectedBestiaryItemKey.startsWith("fixed:")) {
-    const itemId = selectedBestiaryItemKey.replace("fixed:", "");
+  if (ui.selectedBestiaryItemKey.startsWith("fixed:")) {
+    const itemId = ui.selectedBestiaryItemKey.replace("fixed:", "");
     const drop = enemy.drops.find((entry) => entry.id === itemId);
     const item = getItem(itemId);
-    const known = Boolean(state.discoveredLoot[enemyId]?.[selectedBestiaryItemKey]);
+    const known = Boolean(state.discoveredLoot[enemyId]?.[ui.selectedBestiaryItemKey]);
     if (!known) {
       return `<aside class="bestiary-selected-detail">
         <strong>${t("bestiary.fixedDrop", "Fester Drop")}</strong>
@@ -2293,7 +2293,7 @@ function renderBestiaryItemDetail(enemyId, enemy, discovered = groupedBestiaryLo
     </aside>`;
   }
 
-  const item = discovered.find((entry) => bestiaryItemKey(entry) === selectedBestiaryItemKey);
+  const item = discovered.find((entry) => bestiaryItemKey(entry) === ui.selectedBestiaryItemKey);
 
   if (!item) {
     return `<aside class="bestiary-selected-detail">
@@ -2361,7 +2361,7 @@ function renderItemTooltip(item) {
 }
 
 function renderMaterialTooltip(materialId) {
-  const drop = (materialDrops[selectedBestiaryEnemy] || []).find((entry) => entry.id === materialId);
+  const drop = (materialDrops[ui.selectedBestiaryEnemy] || []).find((entry) => entry.id === materialId);
   return `<div class="item-tooltip">
     <strong>${labelFor(materialLabel, materialId, materialId)}</strong>
     <span>${t("bestiary.materialForSmith", "Material fürs Schmieden")}</span>
@@ -2374,9 +2374,9 @@ function showFloatingTooltip(row) {
   if (!canShowFloatingTooltip()) return false;
   const materialId = row.dataset.materialId;
   const key = materialId
-    ? `material:${selectedBestiaryEnemy}:${materialId}`
+    ? `material:${ui.selectedBestiaryEnemy}:${materialId}`
     : row.dataset.tooltipKey || row.querySelector("[data-tooltip-key]")?.dataset.tooltipKey || row.querySelector("[data-set-tooltip-key]")?.dataset.setTooltipKey;
-  if (!key || activeTooltipKey === key) return Boolean(key);
+  if (!key || ui.activeTooltipKey === key) return Boolean(key);
 
   if (materialId) {
     const tooltip = $("floatingTooltip");
@@ -2399,9 +2399,9 @@ function canShowFloatingTooltip() {
 
 function openFloatingTooltip(key) {
   const tooltip = $("floatingTooltip");
-  activeTooltipKey = key;
-  tooltipSize = null;
-  lastTooltipPosition = { x: -9999, y: -9999 };
+  ui.activeTooltipKey = key;
+  ui.tooltipSize = null;
+  ui.lastTooltipPosition = { x: -9999, y: -9999 };
   tooltip.classList.add("open");
   tooltip.setAttribute("aria-hidden", "false");
 }
@@ -2421,21 +2421,16 @@ function tooltipCacheKey(key, item) {
 function positionFloatingTooltip(event) {
   const tooltip = $("floatingTooltip");
   if (!tooltip.classList.contains("open")) return;
-  if (Math.abs(event.clientX - lastTooltipPosition.x) + Math.abs(event.clientY - lastTooltipPosition.y) < 8) return;
+  if (Math.abs(event.clientX - ui.lastTooltipPosition.x) + Math.abs(event.clientY - ui.lastTooltipPosition.y) < 8) return;
 
-  pendingTooltipEvent = event;
-  if (tooltipFrame) return;
-  tooltipFrame = requestAnimationFrame(() => {
-    tooltipFrame = 0;
-    applyTooltipPosition(pendingTooltipEvent);
+  ui.pendingTooltipEvent = event;
+  if (ui.tooltipFrame) return;
+  ui.tooltipFrame = requestAnimationFrame(() => {
+    ui.tooltipFrame = 0;
+    applyTooltipPosition(ui.pendingTooltipEvent);
   });
 }
 
-let tooltipFrame = 0;
-let pendingTooltipEvent = null;
-let activeTooltipKey = "";
-let tooltipSize = null;
-let lastTooltipPosition = { x: -9999, y: -9999 };
 
 function applyTooltipPosition(event) {
   const tooltip = $("floatingTooltip");
@@ -2443,34 +2438,34 @@ function applyTooltipPosition(event) {
 
   const margin = 16;
   const offset = 18;
-  if (!tooltipSize) {
+  if (!ui.tooltipSize) {
     const rect = tooltip.getBoundingClientRect();
-    tooltipSize = { width: rect.width, height: rect.height };
+    ui.tooltipSize = { width: rect.width, height: rect.height };
   }
   let left = event.clientX + offset;
   let top = event.clientY + offset;
 
-  if (left + tooltipSize.width + margin > window.innerWidth) {
-    left = event.clientX - tooltipSize.width - offset;
+  if (left + ui.tooltipSize.width + margin > window.innerWidth) {
+    left = event.clientX - ui.tooltipSize.width - offset;
   }
-  if (top + tooltipSize.height + margin > window.innerHeight) {
-    top = event.clientY - tooltipSize.height - offset;
+  if (top + ui.tooltipSize.height + margin > window.innerHeight) {
+    top = event.clientY - ui.tooltipSize.height - offset;
   }
 
-  lastTooltipPosition = { x: event.clientX, y: event.clientY };
+  ui.lastTooltipPosition = { x: event.clientX, y: event.clientY };
   tooltip.style.transform = `translate3d(${Math.max(margin, left)}px, ${Math.max(margin, top)}px, 0)`;
 }
 
 function hideFloatingTooltip() {
   const tooltip = $("floatingTooltip");
-  if (tooltipFrame) {
-    cancelAnimationFrame(tooltipFrame);
-    tooltipFrame = 0;
+  if (ui.tooltipFrame) {
+    cancelAnimationFrame(ui.tooltipFrame);
+    ui.tooltipFrame = 0;
   }
-  activeTooltipKey = "";
-  tooltipSize = null;
-  pendingTooltipEvent = null;
-  lastTooltipPosition = { x: -9999, y: -9999 };
+  ui.activeTooltipKey = "";
+  ui.tooltipSize = null;
+  ui.pendingTooltipEvent = null;
+  ui.lastTooltipPosition = { x: -9999, y: -9999 };
   tooltip.style.transform = "translate3d(0, 0, 0)";
   tooltip.classList.remove("open");
   tooltip.setAttribute("aria-hidden", "true");

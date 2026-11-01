@@ -347,7 +347,7 @@ function rollItemSet(enemy, quality) {
 
 function recordDiscoveredLoot(enemyId, lootItems) {
   state.discoveredLoot[enemyId] = state.discoveredLoot[enemyId] || {};
-  bestiaryListDirty = true;
+  ui.bestiaryListDirty = true;
   bestiaryLootCache.delete(enemyId);
 
   lootItems.forEach((item) => {

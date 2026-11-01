@@ -165,10 +165,16 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Den ungenutzten Platzhalter `scripts/game.js` habe ich gelöscht.
     - Absicherung: Tests prüfen die Dateigrösse (≤ 1'200 Zeilen), dass die Module nur Funktionen enthalten und dass jede Funktion nur einmal definiert ist.
 
-- [ ] **8. Globale UI-Variablen bündeln**
+- [x] **8. Globale UI-Variablen bündeln** ✅ erledigt in v0.8.129
   - Wo: Die 22 `let`-Variablen oben in `render.js` / `core.js` (`selectedEnemy`, `isFighting`, `smithView` …)
   - Wie: Alles in ein Objekt `const ui = { … }` packen und die Zugriffe ersetzen. `state` bleibt der Save-State, `ui` ist flüchtig.
   - Fertig wenn: Ausser `state`, `ui` und den Daten-Katalogen gibt es keine globalen `let` mehr.
+  - Ergebnis:
+    - 27 lose globale Variablen sind jetzt im kommentierten Objekt `ui` gebündelt: 20 aus core.js, 5 Tooltip-Variablen aus render.js, `battleResultTimer` und `languageOverride`. `ui` liegt in der zuerst geladenen Datei data.js.
+    - 356 Stellen sind per Skript umgestellt. Objekt-Schlüssel im Spielstand blieben unberührt.
+    - Unterwegs gefunden und behoben: `restoreUiSelection` hatte eine lokale Variable namens `ui`. Sie heisst jetzt `saved`.
+    - Geprüft: Die Auswahl bleibt beim Neuladen der Seite erhalten.
+    - Absicherung: Ein Test erlaubt nur `state`, `achievementCatalog` und `materialDrops` als globale `let`, und keine lokale Variable darf `ui` heissen.
 
 - [ ] **9. CSS entschlacken**
   - Wo: `css/modals.css`, `css/base.css`
@@ -313,7 +319,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 | Phase | Punkte | Erledigt |
 |---|---|---|
 | 1 – Bugs | 1–5 | 5/5 ✅ |
-| 2 – Code | 6–10 | 2/5 |
+| 2 – Code | 6–10 | 3/5 |
 | 3 – Gameplay | 11–15 | 0/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |
 | 5 – Inhalt | 22–24 | 0/3 |

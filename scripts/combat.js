@@ -72,7 +72,7 @@ function combatAbilitySlots() {
   }));
 }
 
-function combatActionList(combat = activeCombatState) {
+function combatActionList(combat = ui.activeCombatState) {
   const resource = classResource();
   const cooldowns = combat?.cooldowns || {};
   const currentResource = combat?.resource ?? 0;
@@ -120,12 +120,12 @@ function combatActionList(combat = activeCombatState) {
 }
 
 function requestCombatAction(actionId) {
-  if (!pendingCombatAction) return false;
-  const action = combatActionList(activeCombatState).find((entry) => entry.id === actionId && !entry.disabled);
+  if (!ui.pendingCombatAction) return false;
+  const action = combatActionList(ui.activeCombatState).find((entry) => entry.id === actionId && !entry.disabled);
   if (!action) return false;
-  const resolve = pendingCombatAction;
-  pendingCombatAction = null;
-  if (activeCombatState) activeCombatState.awaitingPlayerAction = false;
+  const resolve = ui.pendingCombatAction;
+  ui.pendingCombatAction = null;
+  if (ui.activeCombatState) ui.activeCombatState.awaitingPlayerAction = false;
   renderCombatPanel();
   resolve(action);
   return true;
@@ -133,8 +133,8 @@ function requestCombatAction(actionId) {
 
 function waitForCombatAction() {
   return new Promise((resolve) => {
-    pendingCombatAction = resolve;
-    if (activeCombatState) activeCombatState.awaitingPlayerAction = true;
+    ui.pendingCombatAction = resolve;
+    if (ui.activeCombatState) ui.activeCombatState.awaitingPlayerAction = true;
     renderCombatPanel();
   });
 }
@@ -170,7 +170,7 @@ function setCombatLog(enemy, events, playerWon, rounds) {
   const result = playerWon ? t("combat.victory", "Sieg") : t("combat.defeat", "Niederlage");
   const resultKey = playerWon ? "combat.victoryAgainst" : "combat.defeatAgainst";
   const summary = combatSummary(events);
-  const enemyName = enemyDisplayName(enemy, enemy.baseId || selectedEnemy);
+  const enemyName = enemyDisplayName(enemy, enemy.baseId || ui.selectedEnemy);
   const entries = [
     {
       type: playerWon ? "good" : "bad",
@@ -295,12 +295,12 @@ function rollCombatEvent(enemy, roll = Math.random()) {
   return pool[random(0, pool.length - 1)];
 }
 
-function preparedCombatEventKey(enemyId = selectedEnemy) {
+function preparedCombatEventKey(enemyId = ui.selectedEnemy) {
   const elite = state.nextEncounters?.[enemyId]?.elite ? 1 : 0;
-  return `${selectedZone}:${enemyId}:${elite}`;
+  return `${ui.selectedZone}:${enemyId}:${elite}`;
 }
 
-function prepareCombatEvent(enemy, enemyId = selectedEnemy) {
+function prepareCombatEvent(enemy, enemyId = ui.selectedEnemy) {
   const key = preparedCombatEventKey(enemyId);
   if (!preparedCombatEvents.has(key)) {
     preparedCombatEvents.set(key, rollCombatEvent(enemy));
@@ -308,7 +308,7 @@ function prepareCombatEvent(enemy, enemyId = selectedEnemy) {
   return preparedCombatEvents.get(key);
 }
 
-function consumePreparedCombatEvent(enemy, enemyId = selectedEnemy) {
+function consumePreparedCombatEvent(enemy, enemyId = ui.selectedEnemy) {
   const key = preparedCombatEventKey(enemyId);
   if (!preparedCombatEvents.has(key)) return rollCombatEvent(enemy);
   const combatEvent = preparedCombatEvents.get(key);
@@ -547,7 +547,7 @@ function isManualCombatMode() {
 }
 
 function setCombatMode(mode) {
-  if (isFighting) return;
+  if (ui.isFighting) return;
   const nextMode = mode === "manual" ? "manual" : "auto";
   state.ui = { ...(state.ui || {}), combatMode: nextMode };
   save();
@@ -555,13 +555,13 @@ function setCombatMode(mode) {
 }
 
 function clearManualCombatStep() {
-  manualCombatStep = null;
+  ui.manualCombatStep = null;
 }
 
 async function fight() {
-  if (isFighting) return;
-  const enemy = getPreparedEncounter(selectedEnemy);
-  const enemyName = enemyDisplayName(enemy, enemy.baseId || selectedEnemy);
+  if (ui.isFighting) return;
+  const enemy = getPreparedEncounter(ui.selectedEnemy);
+  const enemyName = enemyDisplayName(enemy, enemy.baseId || ui.selectedEnemy);
   syncDerivedStats();
 
   if (state.hp <= 0) {
@@ -575,14 +575,14 @@ async function fight() {
   }
 
   resetCombatLog();
-  isFighting = true;
-  skipCombat = false;
+  ui.isFighting = true;
+  ui.skipCombat = false;
   setBattleEnemyVisual(enemy);
   setControlsDisabled(true);
   if (!isManualCombatMode()) armCombatWatchdog(30000);
 
   const combat = createActionCombat(enemy);
-  activeCombatState = combat;
+  ui.activeCombatState = combat;
   renderCombatPanel();
   hideBattleResult();
   renderBattleEventBadge(combat.preparedEventEntry);
@@ -600,13 +600,13 @@ async function fight() {
   } finally {
     clearCombatWatchdog();
     clearManualCombatStep();
-    pendingCombatAction = null;
-    activeCombatState = null;
-    isFighting = false;
-    skipCombat = false;
+    ui.pendingCombatAction = null;
+    ui.activeCombatState = null;
+    ui.isFighting = false;
+    ui.skipCombat = false;
     setControlsDisabled(false);
     resetFightButton();
-    prepareNextEncounter(enemy.baseId || selectedEnemy);
+    prepareNextEncounter(enemy.baseId || ui.selectedEnemy);
     save();
     safeRender();
   }
@@ -617,12 +617,12 @@ function createActionCombat(enemy) {
   const effectSummary = itemEffectSummary();
   const enchantStats = equippedEnchantmentSummary();
   const combatStats = combatStatsWithItemEffects(stats, enemy, effectSummary);
-  const combatEvent = consumePreparedCombatEvent(enemy, enemy.baseId || selectedEnemy);
+  const combatEvent = consumePreparedCombatEvent(enemy, enemy.baseId || ui.selectedEnemy);
   const preparedEventEntry = combatEventAnimationEntry(combatEvent, enemy, state.hp);
   const resource = classResource();
   return {
     enemy,
-    enemyName: enemyDisplayName(enemy, enemy.baseId || selectedEnemy),
+    enemyName: enemyDisplayName(enemy, enemy.baseId || ui.selectedEnemy),
     playerHp: state.hp,
     enemyHp: enemy.hp,
     rounds: 0,
@@ -904,7 +904,7 @@ async function finishActionCombat(combat) {
   $("battleStage").className = "battle-stage";
   $("battleStage").classList.add(combat.playerHp > 0 ? "victory" : "defeat");
   showBattleResult(combat.playerHp > 0, combat.enemyName, combat.rounds, combatAnimationSummary(combat.events));
-  if (skipCombat) {
+  if (ui.skipCombat) {
     // Übersprungen: sofort weiter, Ergebnis-Banner blendet sich nebenher aus.
     hideBattleResultLater(1100);
   } else {
@@ -929,18 +929,18 @@ function grantActionCombatRewards(combat) {
   const xp = scaledCombatReward(Math.max(1, Math.floor(combat.enemy.xp * (1 + combat.enchantStats.xpBonus + combat.effectSummary.xpBonus))), combat.enemy);
   state.gold += gold;
   gainXp(xp);
-  grantMaterials(combat.enemy.baseId || selectedEnemy, combat.enemy.eliteVariant);
-  createLootChoices(combat.enemy, combat.enemy.baseId || selectedEnemy);
+  grantMaterials(combat.enemy.baseId || ui.selectedEnemy, combat.enemy.eliteVariant);
+  createLootChoices(combat.enemy, combat.enemy.baseId || ui.selectedEnemy);
   state.combatStats = normalizeCombatStats(state.combatStats);
   state.combatStats.wins += 1;
   recordSmithMasteryBattle(combat.enemy);
   recordEnchantMasteryBattle(combat.enemy);
-  updateQuestProgress(combat.enemy, combat.enemy.baseId || selectedEnemy);
+  updateQuestProgress(combat.enemy, combat.enemy.baseId || ui.selectedEnemy);
   maybeGrantBattleRenown(combat.enemy);
-  const firstClearReward = grantBossFirstClear(combat.enemy, combat.enemy.baseId || selectedEnemy);
+  const firstClearReward = grantBossFirstClear(combat.enemy, combat.enemy.baseId || ui.selectedEnemy);
   maybeDropRareQuest(combat.enemy);
   refreshQuestBoard(false);
-  log(() => t("combat.winLog", "Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.", { enemy: enemyDisplayName(combat.enemy, combat.enemy.baseId || selectedEnemy), rounds: combat.rounds, xp, gold }), "good");
+  log(() => t("combat.winLog", "Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.", { enemy: enemyDisplayName(combat.enemy, combat.enemy.baseId || ui.selectedEnemy), rounds: combat.rounds, xp, gold }), "good");
   if (rewardScale < 1) {
     log(() => t("combat.rewardScaledLog", "Alte Gegner geben nur noch {percent}% Kampfbelohnung.", { percent: Math.round(rewardScale * 100) }), "drop");
   }
@@ -957,28 +957,28 @@ function applyActionCombatLoss(combat) {
   state.deaths += 1;
   state.hp = state.maxHp;
   damageEquippedItems(combat.enemy, 2);
-  log(() => t("combat.lossLog", "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.", { enemy: enemyDisplayName(combat.enemy, combat.enemy.baseId || selectedEnemy), xp: xpLoss, gold: goldLoss }), "bad");
+  log(() => t("combat.lossLog", "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.", { enemy: enemyDisplayName(combat.enemy, combat.enemy.baseId || ui.selectedEnemy), xp: xpLoss, gold: goldLoss }), "bad");
 }
 
 function armCombatWatchdog(ms) {
   clearCombatWatchdog();
-  combatWatchdog = window.setTimeout(() => {
-    if (isFighting) {
+  ui.combatWatchdog = window.setTimeout(() => {
+    if (ui.isFighting) {
       forceUnlockCombat(() => t("combat.autoUnlockLog", "Der Kampf wurde automatisch freigegeben."));
     }
   }, ms);
 }
 
 function clearCombatWatchdog() {
-  if (!combatWatchdog) return;
-  window.clearTimeout(combatWatchdog);
-  combatWatchdog = 0;
+  if (!ui.combatWatchdog) return;
+  window.clearTimeout(ui.combatWatchdog);
+  ui.combatWatchdog = 0;
 }
 
 function forceUnlockCombat(message) {
   clearCombatWatchdog();
-  isFighting = false;
-  skipCombat = false;
+  ui.isFighting = false;
+  ui.skipCombat = false;
   setControlsDisabled(false);
   resetFightButton();
   if (message) log(message, "bad");

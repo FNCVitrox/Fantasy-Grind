@@ -66,7 +66,7 @@ function maybeGrantBattleRenown(enemy) {
   const chance = state.renown >= 30 ? 0.14 : 0.08;
   if (!guaranteed && Math.random() > chance) return;
   state.renown += 1;
-  log(() => t("combat.renownLog", "Dein Ruf wächst: +1 Ruhm für den Sieg gegen {enemy}.", { enemy: enemyDisplayName(enemy, enemy.baseId || selectedEnemy) }), "drop");
+  log(() => t("combat.renownLog", "Dein Ruf wächst: +1 Ruhm für den Sieg gegen {enemy}.", { enemy: enemyDisplayName(enemy, enemy.baseId || ui.selectedEnemy) }), "drop");
 }
 
 function bossFirstClearClaimed(enemyId) {
@@ -132,7 +132,7 @@ function bossFirstClearRewardText(enemy) {
   return parts.join(" · ");
 }
 
-function grantBossFirstClear(enemy, enemyId = selectedEnemy) {
+function grantBossFirstClear(enemy, enemyId = ui.selectedEnemy) {
   const bossId = enemy?.baseId || enemyId;
   const reward = bossFirstClearReward(enemy);
   if (!reward || bossFirstClearClaimed(bossId)) return null;
@@ -177,8 +177,8 @@ function selectZone(zoneId) {
     }), "bad");
     return false;
   }
-  selectedZone = zoneId;
-  selectedEnemy = zones[selectedZone].enemies[0];
+  ui.selectedZone = zoneId;
+  ui.selectedEnemy = zones[ui.selectedZone].enemies[0];
   save();
   return true;
 }
@@ -212,13 +212,13 @@ function questTargetAvailableForQuest(quest) {
 
 function questRelevantForCurrentZone(quest) {
   if (!quest) return false;
-  return questEnemyIdsForZone(quest, selectedZone).length > 0;
+  return questEnemyIdsForZone(quest, ui.selectedZone).length > 0;
 }
 
 function currentQuestEnemyId() {
-  const zone = zones[selectedZone];
-  if (zone?.enemies?.includes(selectedEnemy)) return selectedEnemy;
-  return zone?.enemies?.[0] || selectedEnemy || "wolf";
+  const zone = zones[ui.selectedZone];
+  if (zone?.enemies?.includes(ui.selectedEnemy)) return ui.selectedEnemy;
+  return zone?.enemies?.[0] || ui.selectedEnemy || "wolf";
 }
 
 function questRelevantForCurrentEnemy(quest) {
@@ -230,14 +230,14 @@ function questMatchesEnemy(quest, enemyId) {
   if (!quest || !enemy) return false;
   const enemyIds = questEnemyIds(quest);
   if (enemyIds.length) return enemyIds.includes(enemyId);
-  const zone = zones[questZoneIdForEnemy(enemyId)] || zones[selectedZone];
+  const zone = zones[questZoneIdForEnemy(enemyId)] || zones[ui.selectedZone];
   if (quest.target === "elite") return Boolean(enemy.elite);
   if (quest.target === "dungeon") return zone?.type === "dungeon";
   return Boolean(enemy.tags?.[quest.target]);
 }
 
 function questZoneIdForEnemy(enemyId) {
-  return Object.entries(zones).find(([, zone]) => zone.enemies.includes(enemyId))?.[0] || selectedZone;
+  return Object.entries(zones).find(([, zone]) => zone.enemies.includes(enemyId))?.[0] || ui.selectedZone;
 }
 
 function questEnemyIds(quest) {
@@ -258,7 +258,7 @@ function questEnemyIdsForZone(quest, zoneId) {
   });
 }
 
-function questLevelRange(quest, zoneId = selectedZone) {
+function questLevelRange(quest, zoneId = ui.selectedZone) {
   const matchingLevels = questEnemyIdsForZone(quest, zoneId)
     .map((enemyId) => enemies[enemyId]?.level)
     .filter((level) => Number.isFinite(level));
@@ -279,7 +279,7 @@ function isQuestCompletedPermanent(questId) {
   return Boolean(quest && !quest.repeatable && state.completedQuests.includes(questId));
 }
 
-function updateQuestProgress(enemy, enemyId = selectedEnemy) {
+function updateQuestProgress(enemy, enemyId = ui.selectedEnemy) {
   state.activeQuests.map(getQuestById).filter(Boolean).forEach((quest) => {
     if (!isQuestActive(quest.id)) return;
     if (isQuestCompletedPermanent(quest.id)) return;
@@ -319,7 +319,7 @@ function updateQuestProgress(enemy, enemyId = selectedEnemy) {
   });
 }
 
-function questProgressGain(quest, enemy, enemyId = selectedEnemy) {
+function questProgressGain(quest, enemy, enemyId = ui.selectedEnemy) {
   if (!quest || !enemy) return 0;
   const enemyIds = questEnemyIds(quest);
   if (enemyIds.length) return enemyIds.includes(enemyId) ? 1 : 0;

@@ -1,7 +1,7 @@
 ﻿document.querySelectorAll("[data-zone]").forEach((button) => {
   button.addEventListener("click", () => {
-    selectedZone = button.dataset.zone;
-    selectedEnemy = zones[selectedZone].enemies[0];
+    ui.selectedZone = button.dataset.zone;
+    ui.selectedEnemy = zones[ui.selectedZone].enemies[0];
     save();
     closeZone();
     render();
@@ -11,7 +11,7 @@
 $("enemyList").addEventListener("click", (event) => {
   const button = event.target.closest("[data-enemy]");
   if (!button) return;
-  selectedEnemy = button.dataset.enemy;
+  ui.selectedEnemy = button.dataset.enemy;
   save();
   renderEnemies();
   renderSelectedEnemy();
@@ -68,100 +68,100 @@ $("achievements").addEventListener("click", (event) => {
 $("bestiary").addEventListener("click", (event) => {
   const type = event.target.closest("[data-bestiary-type]");
   if (type) {
-    selectedBestiaryType = type.dataset.bestiaryType;
-    const firstZone = bestiaryZonesForType(selectedBestiaryType)[0];
+    ui.selectedBestiaryType = type.dataset.bestiaryType;
+    const firstZone = bestiaryZonesForType(ui.selectedBestiaryType)[0];
     if (firstZone) {
-      selectedBestiaryZone = firstZone[0];
-      selectedBestiaryEnemy = firstZone[1].enemies[0] || selectedBestiaryEnemy;
+      ui.selectedBestiaryZone = firstZone[0];
+      ui.selectedBestiaryEnemy = firstZone[1].enemies[0] || ui.selectedBestiaryEnemy;
     }
-    selectedBestiaryCategory = "overview";
-    selectedBestiaryFilter = "all";
-    selectedBestiarySearch = "";
-    selectedBestiaryPage = 0;
-    selectedBestiaryItemKey = "";
-    bestiaryListDirty = true;
+    ui.selectedBestiaryCategory = "overview";
+    ui.selectedBestiaryFilter = "all";
+    ui.selectedBestiarySearch = "";
+    ui.selectedBestiaryPage = 0;
+    ui.selectedBestiaryItemKey = "";
+    ui.bestiaryListDirty = true;
     renderBestiary();
     return;
   }
 
   const zone = event.target.closest("[data-bestiary-zone]");
   if (zone) {
-    selectedBestiaryZone = zone.dataset.bestiaryZone;
-    selectedBestiaryType = zones[selectedBestiaryZone]?.type || "zone";
-    selectedBestiaryEnemy = zones[selectedBestiaryZone]?.enemies[0] || selectedBestiaryEnemy;
-    selectedBestiaryCategory = "overview";
-    selectedBestiaryFilter = "all";
-    selectedBestiarySearch = "";
-    selectedBestiaryPage = 0;
-    selectedBestiaryItemKey = "";
-    bestiaryListDirty = true;
+    ui.selectedBestiaryZone = zone.dataset.bestiaryZone;
+    ui.selectedBestiaryType = zones[ui.selectedBestiaryZone]?.type || "zone";
+    ui.selectedBestiaryEnemy = zones[ui.selectedBestiaryZone]?.enemies[0] || ui.selectedBestiaryEnemy;
+    ui.selectedBestiaryCategory = "overview";
+    ui.selectedBestiaryFilter = "all";
+    ui.selectedBestiarySearch = "";
+    ui.selectedBestiaryPage = 0;
+    ui.selectedBestiaryItemKey = "";
+    ui.bestiaryListDirty = true;
     renderBestiary();
     return;
   }
 
   const page = event.target.closest("[data-bestiary-page]");
   if (page) {
-    selectedBestiaryPage += page.dataset.bestiaryPage === "next" ? 1 : -1;
+    ui.selectedBestiaryPage += page.dataset.bestiaryPage === "next" ? 1 : -1;
     renderBestiaryDetail();
     return;
   }
 
   const filter = event.target.closest("[data-bestiary-filter]");
   if (filter) {
-    selectedBestiaryFilter = filter.dataset.bestiaryFilter;
-    selectedBestiaryPage = 0;
-    selectedBestiaryItemKey = "";
+    ui.selectedBestiaryFilter = filter.dataset.bestiaryFilter;
+    ui.selectedBestiaryPage = 0;
+    ui.selectedBestiaryItemKey = "";
     renderBestiaryDetail();
     return;
   }
 
   const material = event.target.closest("[data-bestiary-material]");
   if (material) {
-    selectedBestiaryItemKey = `mat:${material.dataset.bestiaryMaterial}`;
+    ui.selectedBestiaryItemKey = `mat:${material.dataset.bestiaryMaterial}`;
     renderBestiaryDetail();
     return;
   }
 
   const item = event.target.closest("[data-bestiary-item]");
   if (item) {
-    selectedBestiaryItemKey = item.dataset.bestiaryItem;
+    ui.selectedBestiaryItemKey = item.dataset.bestiaryItem;
     renderBestiaryDetail();
     return;
   }
 
   const category = event.target.closest("[data-bestiary-category]");
   if (category) {
-    selectedBestiaryCategory = category.dataset.bestiaryCategory;
-    selectedBestiaryFilter = "all";
-    selectedBestiarySearch = "";
-    selectedBestiaryPage = 0;
-    selectedBestiaryItemKey = "";
+    ui.selectedBestiaryCategory = category.dataset.bestiaryCategory;
+    ui.selectedBestiaryFilter = "all";
+    ui.selectedBestiarySearch = "";
+    ui.selectedBestiaryPage = 0;
+    ui.selectedBestiaryItemKey = "";
     renderBestiaryDetail();
     return;
   }
 
   const button = event.target.closest("[data-bestiary]");
   if (!button) return;
-  selectedBestiaryEnemy = button.dataset.bestiary;
-  selectedBestiaryZone = zoneKeyForEnemy(selectedBestiaryEnemy);
-  selectedBestiaryType = zones[selectedBestiaryZone]?.type || "zone";
-  selectedBestiaryCategory = "overview";
-  selectedBestiaryFilter = "all";
-  selectedBestiarySearch = "";
-  selectedBestiaryPage = 0;
-  selectedBestiaryItemKey = "";
+  ui.selectedBestiaryEnemy = button.dataset.bestiary;
+  ui.selectedBestiaryZone = zoneKeyForEnemy(ui.selectedBestiaryEnemy);
+  ui.selectedBestiaryType = zones[ui.selectedBestiaryZone]?.type || "zone";
+  ui.selectedBestiaryCategory = "overview";
+  ui.selectedBestiaryFilter = "all";
+  ui.selectedBestiarySearch = "";
+  ui.selectedBestiaryPage = 0;
+  ui.selectedBestiaryItemKey = "";
   updateBestiaryActiveCard();
   renderBestiaryDetail();
 });
 
 $("bestiary").addEventListener("input", (event) => {
   if (!event.target.matches("#bestiarySearch")) return;
-  selectedBestiarySearch = event.target.value;
-  selectedBestiaryPage = 0;
-  selectedBestiaryItemKey = "";
-  if (bestiarySearchFrame) cancelAnimationFrame(bestiarySearchFrame);
-  bestiarySearchFrame = requestAnimationFrame(() => {
-    bestiarySearchFrame = 0;
+  ui.selectedBestiarySearch = event.target.value;
+  ui.selectedBestiaryPage = 0;
+  ui.selectedBestiaryItemKey = "";
+  if (ui.bestiarySearchFrame) cancelAnimationFrame(ui.bestiarySearchFrame);
+  ui.bestiarySearchFrame = requestAnimationFrame(() => {
+    ui.bestiarySearchFrame = 0;
     renderBestiaryDetail();
     const search = document.getElementById("bestiarySearch");
     search?.focus();
@@ -220,21 +220,21 @@ $("smithHome").addEventListener("click", (event) => {
   }
   const button = event.target.closest("[data-smith-view]");
   if (!button) return;
-  smithView = button.dataset.smithView;
+  ui.smithView = button.dataset.smithView;
   renderSmith();
 });
 
 $("smithUpgradeSection").addEventListener("click", (event) => {
   const button = event.target.closest("[data-smith-view]");
   if (!button) return;
-  smithView = button.dataset.smithView;
+  ui.smithView = button.dataset.smithView;
   renderSmith();
 });
 
 $("smithSalvageSection").addEventListener("click", (event) => {
   const button = event.target.closest("[data-smith-view]");
   if (!button) return;
-  smithView = button.dataset.smithView;
+  ui.smithView = button.dataset.smithView;
   renderSmith();
 });
 
@@ -256,7 +256,7 @@ $("smithEnchantSection").addEventListener("click", (event) => {
   }
   const button = event.target.closest("[data-smith-view]");
   if (!button) return;
-  smithView = button.dataset.smithView;
+  ui.smithView = button.dataset.smithView;
   renderSmith();
 });
 
@@ -266,9 +266,9 @@ $("salvageList").addEventListener("click", (event) => {
 });
 
 $("fightBtn").addEventListener("click", () => {
-  if (isFighting) {
+  if (ui.isFighting) {
     if (isManualCombatMode()) return;
-    skipCombat = true;
+    ui.skipCombat = true;
     $("battleText").textContent = t("combat.skippingBattle", "Kampf wird übersprungen...");
     $("fightBtn").textContent = t("combat.skipping", "Überspringe...");
     $("fightBtn").disabled = true;
@@ -393,12 +393,12 @@ $("merchantModal").addEventListener("click", (event) => {
   if (event.target.id === "merchantModal") closeMerchant();
 });
 $("openSmithBtn").addEventListener("click", () => {
-  smithView = "home";
+  ui.smithView = "home";
   renderSmith();
   openModal("smithModal");
 });
 $("openEnchantBtn").addEventListener("click", () => {
-  smithView = "enchant";
+  ui.smithView = "enchant";
   renderSmith();
   openModal("smithModal");
 });
@@ -661,12 +661,12 @@ function setControlsDisabled(disabled) {
 }
 
 function waitCombat(ms) {
-  if (skipCombat) return Promise.resolve();
+  if (ui.skipCombat) return Promise.resolve();
 
   return new Promise((resolve) => {
     const started = performance.now();
     const timer = window.setInterval(() => {
-      if (skipCombat || performance.now() - started >= ms) {
+      if (ui.skipCombat || performance.now() - started >= ms) {
         window.clearInterval(timer);
         resolve();
       }
@@ -726,12 +726,11 @@ function showBattleResult(playerWon, enemyName, rounds = 0, summary = {}) {
   $("battleResult").className = `battle-result show ${playerWon ? "win" : "loss"}`;
 }
 
-let battleResultTimer = 0;
 
 function clearBattleResultTimer() {
-  if (!battleResultTimer) return;
-  window.clearTimeout(battleResultTimer);
-  battleResultTimer = 0;
+  if (!ui.battleResultTimer) return;
+  window.clearTimeout(ui.battleResultTimer);
+  ui.battleResultTimer = 0;
 }
 
 function hideBattleResult() {
@@ -744,8 +743,8 @@ function hideBattleResult() {
 // Banner bleibt sichtbar, ohne den Spielablauf zu blockieren (z. B. nach "Überspringen").
 function hideBattleResultLater(ms) {
   clearBattleResultTimer();
-  battleResultTimer = window.setTimeout(() => {
-    battleResultTimer = 0;
+  ui.battleResultTimer = window.setTimeout(() => {
+    ui.battleResultTimer = 0;
     hideBattleResult();
     if (typeof resetBattleStageState === "function") resetBattleStageState();
   }, ms);

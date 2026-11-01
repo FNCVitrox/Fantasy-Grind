@@ -114,7 +114,7 @@ function exportSaveData() {
 }
 
 function buildSaveMetadata(exportedAt = state.lastSaveExportAt || new Date().toISOString()) {
-  const zone = zoneDisplayName(selectedZone) || "Grauwacht";
+  const zone = zoneDisplayName(ui.selectedZone) || "Grauwacht";
   const needed = state.level >= 20 ? t("common.max", "Max") : xpForLevel(state.level);
   return {
     exportedAt,
@@ -138,7 +138,7 @@ function buildSaveMetadata(exportedAt = state.lastSaveExportAt || new Date().toI
 }
 
 function saveFileName() {
-  const zone = zoneDisplayName(selectedZone) || "Grauwacht";
+  const zone = zoneDisplayName(ui.selectedZone) || "Grauwacht";
   const safeZone = zone
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -189,11 +189,11 @@ function resetSaveData() {
   restoreUiSelection();
   syncDerivedStats();
 
-  isFighting = false;
-  skipCombat = false;
-  manualCombatStep = null;
-  activeCombatState = null;
-  pendingCombatAction = null;
+  ui.isFighting = false;
+  ui.skipCombat = false;
+  ui.manualCombatStep = null;
+  ui.activeCombatState = null;
+  ui.pendingCombatAction = null;
   if (typeof clearCombatWatchdog === "function") clearCombatWatchdog();
 
   saveDiagnostics.loadedFrom = "Neuer Spielstand";
@@ -464,14 +464,14 @@ function normalizeLoadedCharacter(loaded) {
     : [];
 }
 
-function normalizeSavedUi(ui = {}) {
-  const selectedZoneId = zones[ui.selectedZone] ? ui.selectedZone : "meadow";
+function normalizeSavedUi(saved = {}) {
+  const selectedZoneId = zones[saved.selectedZone] ? saved.selectedZone : "meadow";
   const zoneEnemies = zones[selectedZoneId]?.enemies || zones.meadow.enemies;
-  const selectedEnemyId = zoneEnemies.includes(ui.selectedEnemy) ? ui.selectedEnemy : zoneEnemies[0];
-  const bestiaryZoneId = zones[ui.selectedBestiaryZone] ? ui.selectedBestiaryZone : selectedZoneId;
+  const selectedEnemyId = zoneEnemies.includes(saved.selectedEnemy) ? saved.selectedEnemy : zoneEnemies[0];
+  const bestiaryZoneId = zones[saved.selectedBestiaryZone] ? saved.selectedBestiaryZone : selectedZoneId;
   const bestiaryEnemies = zones[bestiaryZoneId]?.enemies || zoneEnemies;
-  const bestiaryEnemyId = bestiaryEnemies.includes(ui.selectedBestiaryEnemy) ? ui.selectedBestiaryEnemy : bestiaryEnemies[0];
-  const combatMode = ui.combatMode === "manual" ? "manual" : "auto";
+  const bestiaryEnemyId = bestiaryEnemies.includes(saved.selectedBestiaryEnemy) ? saved.selectedBestiaryEnemy : bestiaryEnemies[0];
+  const combatMode = saved.combatMode === "manual" ? "manual" : "auto";
   return {
     selectedZone: selectedZoneId,
     selectedEnemy: selectedEnemyId,
@@ -483,21 +483,21 @@ function normalizeSavedUi(ui = {}) {
 
 function syncUiState() {
   state.ui = normalizeSavedUi({
-    selectedZone,
-    selectedEnemy,
-    selectedBestiaryZone,
-    selectedBestiaryEnemy,
+    selectedZone: ui.selectedZone,
+    selectedEnemy: ui.selectedEnemy,
+    selectedBestiaryZone: ui.selectedBestiaryZone,
+    selectedBestiaryEnemy: ui.selectedBestiaryEnemy,
     combatMode: state.ui?.combatMode,
   });
 }
 
 function restoreUiSelection() {
-  const ui = normalizeSavedUi(state.ui);
-  state.ui = ui;
-  selectedZone = ui.selectedZone;
-  selectedEnemy = ui.selectedEnemy;
-  selectedBestiaryZone = ui.selectedBestiaryZone;
-  selectedBestiaryEnemy = ui.selectedBestiaryEnemy;
+  const saved = normalizeSavedUi(state.ui);
+  state.ui = saved;
+  ui.selectedZone = saved.selectedZone;
+  ui.selectedEnemy = saved.selectedEnemy;
+  ui.selectedBestiaryZone = saved.selectedBestiaryZone;
+  ui.selectedBestiaryEnemy = saved.selectedBestiaryEnemy;
 }
 
 function readWindowNameStore() {
