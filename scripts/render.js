@@ -1850,7 +1850,7 @@ function renderBestiaryDetail() {
         <h2>${escapeHtml(enemyDisplayName(detailEnemy, ui.selectedBestiaryEnemy))}</h2>
       </div>
     </div>
-    <p>${t("common.level", "Level")} ${detailEnemy.level}${detailEnemy.boss ? ` · ${t("common.boss", "Boss")}` : detailEnemy.elite ? ` · ${t("common.elite", "Elite")}` : ""} · ${detailEnemy.hp} ${t("main.life", "Leben")} · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} ${t("main.damage", "Schaden")} · ${detailEnemy.defense} ${t("main.defense", "Rüstung")} · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)} · Quest-Schriftrolle ${formatChance(rareQuestDropChance(detailEnemy))}</p>
+    <p>${t("common.level", "Level")} ${detailEnemy.level}${detailEnemy.boss ? ` · ${t("common.boss", "Boss")}` : detailEnemy.elite ? ` · ${t("common.elite", "Elite")}` : ""} · ${detailEnemy.hp} ${t("main.life", "Leben")} · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} ${t("main.damage", "Schaden")} · ${detailEnemy.defense} ${t("main.defense", "Rüstung")} · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)} · ${t("bestiary.questScrollChance", "Quest-Schriftrolle {chance}", { chance: formatChance(rareQuestDropChance(detailEnemy)) })}</p>
     ${renderBossRewardPanel(ui.selectedBestiaryEnemy, detailEnemy)}
     ${renderEnemyAbilities(detailEnemy)}
     <h3>${t("bestiary.collection", "Sammlung {found}/{total}", lootCompletion(ui.selectedBestiaryEnemy))}</h3>

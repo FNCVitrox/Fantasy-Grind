@@ -126,11 +126,11 @@ function smithRankMeets(threshold = 0) {
 function smithMasteryRequirementStatus(rank) {
   const requirement = rank.requirement || {};
   return [
-    { label: `Level ${requirement.level}`, done: state.level >= (requirement.level || 1) },
+    { label: `${t("common.level", "Level")} ${requirement.level}`, done: state.level >= (requirement.level || 1) },
     { label: `${requirement.renown} ${t("common.renown", "Ruhm")}`, done: state.renown >= (requirement.renown || 0) },
-    { label: "ein ausgerüstetes Item am aktuellen Limit", done: hasEquippedItemAtLimit() },
-    { label: "Schmied vertraut dir genug", done: smithRankMeets(requirement.rank || 0) },
-    ...(requirement.bossKills ? [{ label: `${requirement.bossKills} Dungeon-Boss besiegt`, done: (state.combatStats?.bossKills || 0) >= requirement.bossKills }] : []),
+    { label: t("mastery.req.itemAtLimit", "ein ausgerüstetes Item am aktuellen Limit"), done: hasEquippedItemAtLimit() },
+    { label: t("mastery.req.smithTrust", "Schmied vertraut dir genug"), done: smithRankMeets(requirement.rank || 0) },
+    ...(requirement.bossKills ? [{ label: t("mastery.req.bossKills", "{count} Dungeon-Bosse besiegt", { count: requirement.bossKills }), done: (state.combatStats?.bossKills || 0) >= requirement.bossKills }] : []),
   ];
 }
 
@@ -163,17 +163,17 @@ function smithMasteryObjectiveStatus(rank) {
   const progress = smithMasteryProgress(rank);
   const objectives = [];
   if (rank.progress?.eliteKills) {
-    objectives.push({ label: "Elite-Gegner", value: progress.eliteKills || 0, needed: rank.progress.eliteKills });
+    objectives.push({ label: t("mastery.obj.elites", "Elite-Gegner"), value: progress.eliteKills || 0, needed: rank.progress.eliteKills });
   }
   if (rank.progress?.bossKills) {
-    objectives.push({ label: "Dungeon-Bosse", value: progress.bossKills || 0, needed: rank.progress.bossKills });
+    objectives.push({ label: t("mastery.obj.bosses", "Dungeon-Bosse"), value: progress.bossKills || 0, needed: rank.progress.bossKills });
   }
   Object.entries(rank.materials || {}).forEach(([id, needed]) => {
     objectives.push({ label: labelFor(materialLabel, id), value: state.materials[id] || 0, needed });
   });
   objectives.push({ label: "Gold", value: state.gold, needed: rank.gold });
   if (rank.sacrificeQuality) {
-    objectives.push({ label: "Episches Opferstück", value: findSmithSacrificeItemId() ? 1 : 0, needed: 1 });
+    objectives.push({ label: t("mastery.obj.sacrifice.epic", "Episches Opferstück"), value: findSmithSacrificeItemId() ? 1 : 0, needed: 1 });
   }
   return objectives;
 }
