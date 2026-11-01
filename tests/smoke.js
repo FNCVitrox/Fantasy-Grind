@@ -38,6 +38,9 @@ assert.deepStrictEqual = (actual, expected, message) => {
 
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
+// Spiellogik ist auf mehrere Dateien verteilt; statische Prüfungen durchsuchen alle zusammen.
+const logicFiles = ["scripts/combat.js", "scripts/combat-risk.js", "scripts/loot.js", "scripts/smith.js", "scripts/arcanist.js", "scripts/progression.js", "scripts/core.js"];
+const readLogic = () => logicFiles.map(read).join("\n");
 
 const html = read("index.html");
 const css = ["css/base.css", "css/modals.css", "css/responsive.css"].map(read).join("\n");
@@ -56,6 +59,12 @@ const scripts = [
   "scripts/i18n.js",
   "scripts/i18n-en.js",
   "scripts/save-system.js",
+  "scripts/combat.js",
+  "scripts/combat-risk.js",
+  "scripts/loot.js",
+  "scripts/smith.js",
+  "scripts/arcanist.js",
+  "scripts/progression.js",
   "scripts/core.js",
   "scripts/render.js",
   "scripts/render-loot.js",
@@ -94,6 +103,12 @@ assert.deepStrictEqual(scriptOrder, [
   "scripts/data-labels.js",
   "scripts/i18n.js",
   "scripts/save-system.js",
+  "scripts/combat.js",
+  "scripts/combat-risk.js",
+  "scripts/loot.js",
+  "scripts/smith.js",
+  "scripts/arcanist.js",
+  "scripts/progression.js",
   "scripts/core.js",
   "scripts/render.js",
   "scripts/render-loot.js",
@@ -107,7 +122,7 @@ assert(
   "startup should not immediately overwrite an unreadable stored save",
 );
 assert(
-  /async function finishActionCombat[\s\S]*?showBattleResult\([\s\S]*?if \(skipCombat\) \{[\s\S]*?hideBattleResultLater\([\s\S]*?await waitResult\(900\)/.test(read("scripts/core.js")),
+  /async function finishActionCombat[\s\S]*?showBattleResult\([\s\S]*?if \(skipCombat\) \{[\s\S]*?hideBattleResultLater\([\s\S]*?await waitResult\(900\)/.test(readLogic()),
   "combat should show the win/loss result; skipped fights show it without blocking",
 );
 {
@@ -121,7 +136,15 @@ assert(
   const duplicates = [...definitions].filter(([, files]) => files.length > 1).map(([name, files]) => `${name} (${files.join(", ")})`);
   assert.deepStrictEqual(duplicates, [], "functions should be defined exactly once across all scripts");
 }
-assert(!/function legacyFight|function playCombatAnimation|function playManualCombatAnimation/.test(read("scripts/core.js") + read("scripts/events.js")), "legacy combat code should stay removed");
+// Aufteilung von core.js (Punkt 7): Dateien bleiben überschaubar, Module vor core.js enthalten nur Funktionen.
+for (const file of logicFiles) {
+  assert(read(file).split("\n").length <= 1200, `${file} should stay below 1200 lines`);
+}
+for (const file of logicFiles.filter((name) => name !== "scripts/core.js")) {
+  const topLevel = read(file).replace(/^\uFEFF/, "").split("\n").filter((line) => line && !/^(\s|\/\/|}|const healTextPattern)/.test(line) && !/^(async\s+)?function\s/.test(line));
+  assert.deepStrictEqual(topLevel, [], `${file} should only contain function declarations (no load-time code)`);
+}
+assert(!/function legacyFight|function playCombatAnimation|function playManualCombatAnimation/.test(readLogic() + read("scripts/events.js")), "legacy combat code should stay removed");
 assert(html.includes('id="combatModeToggle"') && html.includes('data-combat-mode="manual"'), "combat mode toggle should expose a manual mode button");
 assert(css.includes(".combat-mode-toggle"), "combat mode toggle should have stable styling");
 assert(html.includes('id="combatActions"'), "combat UI should expose RPG action buttons");
@@ -137,7 +160,7 @@ assert(!html.includes('id="classList"'), "class chooser should not remain as a p
 assert(/renderClassChoices\(\);[\s\S]*openModal\("classModal"\)/.test(read("scripts/events.js")), "portrait class button should render and open the class modal");
 assert(html.includes('id="characterClassIcon"') && css.includes(".class-icon-warrior") && css.includes(".class-icon-mage") && css.includes(".class-icon-rogue") && css.includes(".class-icon-archer"), "all playable classes should have distinct portrait icons");
 assert(read("scripts/render.js").includes("classIconMarkup(id)") && read("scripts/render.js").includes("classIconClass(state.characterClass)"), "class chooser and portrait should use dynamic class icons");
-assert(/manualMode \? await waitForCombatAction\(\) : chooseAutoCombatAction/.test(read("scripts/core.js")), "manual and auto combat should share the same action loop");
+assert(/manualMode \? await waitForCombatAction\(\) : chooseAutoCombatAction/.test(readLogic()), "manual and auto combat should share the same action loop");
 assert(/requestCombatAction\(button\.dataset\.combatAction\)/.test(read("scripts/events.js")), "combat action buttons should feed manual combat choices");
 assert(read("scripts/render.js").includes("combat-resource-${resourceClass}") && ["warrior", "mage", "rogue", "archer"].every((id) => css.includes(`.combat-resource-${id}`)), "combat resource meter should visually follow the selected class");
 assert(css.includes("grid-template-rows: auto minmax(0, 1fr)") && css.includes(".combat-command-main"), "combat command dock should stack controls above full-width actions");
@@ -155,7 +178,7 @@ assert(!/grid-template-rows: 112px 54px 92px/.test(css), "loot card rows should 
 assert(/\.equipment-belt \{[\s\S]*?container-type: inline-size;/.test(css) && /@container \(min-width: 640px\)[\s\S]*?repeat\(7, minmax\(0, 1fr\)\)/.test(css), "equipment belt should switch between 4 and 7 columns via container query");
 assert(read("scripts/render.js").includes('title="${escapeAttr(itemName)}"') && read("scripts/render.js").includes("equipment-durability-bar"), "equipment chips should expose full item names as tooltip and show a durability bar");
 // Überspringen blockiert nicht mehr auf die Ergebnis-Anzeige (Punkt 4 im Arbeitsplan).
-assert(/if \(skipCombat\) \{[\s\S]{0,120}hideBattleResultLater\(/.test(read("scripts/core.js")), "skipped fights should not wait for the result banner");
+assert(/if \(skipCombat\) \{[\s\S]{0,120}hideBattleResultLater\(/.test(readLogic()), "skipped fights should not wait for the result banner");
 // Sprache: keine festen Texte ohne Übersetzung (Punkt 2 im Arbeitsplan).
 {
   const i18nContext = { console, window: {}, document: {} };
@@ -166,11 +189,11 @@ assert(/if \(skipCombat\) \{[\s\S]{0,120}hideBattleResultLater\(/.test(read("scr
   const ariaWithoutKey = [...html.matchAll(/<[^>]*\baria-label="[^"]*"[^>]*>/g)].map((match) => match[0]).filter((tag) => !tag.includes("data-i18n-aria="));
   assert.deepStrictEqual(ariaWithoutKey, [], "every aria-label in index.html should be bound to a translation key via data-i18n-aria");
   const htmlKeys = [...html.matchAll(/data-i18n(?:-aria|-title)?="([^"]+)"/g)].map((match) => match[1]);
-  const codeKeys = ["scripts/core.js", "scripts/render.js", "scripts/render-loot.js", "scripts/events.js", "scripts/save-system.js", "scripts/i18n.js"]
+  const codeKeys = [...logicFiles, "scripts/render.js", "scripts/render-loot.js", "scripts/events.js", "scripts/save-system.js", "scripts/i18n.js"]
     .flatMap((file) => [...read(file).matchAll(/\bt\(\s*"([a-zA-Z0-9_.]+)"/g)].map((match) => match[1]));
   const missingKeys = [...new Set([...htmlKeys, ...codeKeys])].filter((key) => !(key in de) || !(key in en));
   assert.deepStrictEqual(missingKeys, [], "every literal translation key should exist in German and English");
-  const rawLogCalls = ["scripts/core.js", "scripts/render.js", "scripts/events.js", "scripts/save-system.js"]
+  const rawLogCalls = [...logicFiles, "scripts/render.js", "scripts/events.js", "scripts/save-system.js"]
     .flatMap((file) => read(file).split("\n").filter((line) => /(^|[^\w.])log\((?!\(\) =>|message|entry)/.test(line) && !/function log\(/.test(line)));
   assert.deepStrictEqual(rawLogCalls, [], "log() should receive a message function so entries can be shown in both languages");
 }

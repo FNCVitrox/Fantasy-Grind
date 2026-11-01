@@ -138,7 +138,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Nachtrag: 11 Funktionen waren doppelt definiert, in solchen Fällen gilt stillschweigend nur die zuletzt geladene Version. 8 identische Kopien in core.js und 3 wirkungslose core.js-Versionen, die von render.js überschrieben wurden, sind entfernt (−156 Zeilen). Das Verhalten bleibt gleich.
     - Absicherung: Ein Test stellt sicher, dass der alte Kampfcode nicht zurückkommt und dass jede Funktion nur einmal definiert ist.
 
-- [ ] **7. core.js aufteilen**
+- [x] **7. core.js aufteilen** ✅ erledigt in v0.8.128
   - Wie: Ohne Build-Tool, weiter als klassische `<script>`-Dateien, in dieser Reihenfolge eingebunden:
     - `scripts/combat.js`: Kampf, Fähigkeiten, Effekte, Belohnungen
     - `scripts/loot.js`: Loot-Erzeugung, Auswahl, Vergleich
@@ -147,6 +147,23 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - `scripts/progression.js`: XP, Level, Ruhm, Quests, Erfolge
     - `core.js` behält nur State, Hilfsfunktionen und `init`.
   - Fertig wenn: Keine Datei ist länger als ~1'200 Zeilen, die Tests sind grün und das Spiel ist identisch spielbar. `package.json` → `test` kennt die neuen Dateien.
+  - Ergebnis:
+    - core.js (3'985 Zeilen) ist aufgeteilt in:
+
+      | Datei | Zeilen |
+      |---|---|
+      | `core.js` | 713 |
+      | `combat.js` | 1'039 |
+      | `combat-risk.js` | 207 |
+      | `loot.js` | 551 |
+      | `smith.js` | 585 |
+      | `arcanist.js` | 312 |
+      | `progression.js` | 589 |
+
+    - Per Skript verschoben und gegengeprüft: alle 312 Funktionen und alle übrigen Zeilen sind unverändert und genau einmal vorhanden.
+    - Die neuen Dateien laden vor core.js und enthalten nur Funktionen. Die Konstanten bleiben in core.js, damit die Ladereihenfolge nie zum Problem wird.
+    - Den ungenutzten Platzhalter `scripts/game.js` habe ich gelöscht.
+    - Absicherung: Tests prüfen die Dateigrösse (≤ 1'200 Zeilen), dass die Module nur Funktionen enthalten und dass jede Funktion nur einmal definiert ist.
 
 - [ ] **8. Globale UI-Variablen bündeln**
   - Wo: Die 22 `let`-Variablen oben in `render.js` / `core.js` (`selectedEnemy`, `isFighting`, `smithView` …)
@@ -296,7 +313,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 | Phase | Punkte | Erledigt |
 |---|---|---|
 | 1 – Bugs | 1–5 | 5/5 ✅ |
-| 2 – Code | 6–10 | 1/5 |
+| 2 – Code | 6–10 | 2/5 |
 | 3 – Gameplay | 11–15 | 0/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |
 | 5 – Inhalt | 22–24 | 0/3 |
