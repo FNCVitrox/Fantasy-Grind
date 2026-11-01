@@ -5,21 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=0.8.122" />
-    <link rel="stylesheet" href="./css/modals.css?v=0.8.122" />
-    <link rel="stylesheet" href="./css/responsive.css?v=0.8.122" />
+    <link rel="stylesheet" href="./css/base.css?v=0.8.123" />
+    <link rel="stylesheet" href="./css/modals.css?v=0.8.123" />
+    <link rel="stylesheet" href="./css/responsive.css?v=0.8.123" />
   </head>
   <body>
-    <div class="studio-splash" id="studioSplash" role="status" aria-live="polite" aria-label="Nemurenai Game Studio presents Fantasy Grind" tabindex="0">
+    <div class="studio-splash" id="studioSplash" role="status" aria-live="polite" aria-label="Nemurenai Game Studio präsentiert Fantasy Grind" data-i18n-aria="aria.splash" tabindex="0">
       <div class="studio-splash-inner">
         <img src="./assets/nemurenai-logo-transparent.png" alt="Nemurenai Game Studio" width="360" height="360" />
         <p>Nemurenai Game Studio</p>
         <span>presents</span>
       </div>
     </div>
-    <div class="version-badge" aria-label="Spielversion">Alpha v0.8.122</div>
+    <div class="version-badge" aria-label="Spielversion" data-i18n-aria="aria.version">Alpha v0.8.123</div>
     <main class="shell">
-      <section class="topbar" aria-label="Spielstatus">
+      <section class="topbar" aria-label="Spielstatus" data-i18n-aria="aria.gameStatus">
         <div>
           <p class="eyebrow">Fantasy Grind</p>
           <h1>Grauwacht</h1>
@@ -27,37 +27,37 @@
         <button class="mobile-menu-toggle" id="mobileMenuBtn" type="button" aria-expanded="false" aria-controls="topbarActions">
           Menü
         </button>
-        <div class="topbar-actions" id="topbarActions" aria-label="Schnellzugriff">
-          <button class="book-button camp-button" id="restBtn" type="button" aria-label="Am Lagerplatz heilen">
+        <div class="topbar-actions" id="topbarActions" aria-label="Schnellzugriff" data-i18n-aria="aria.quickAccess">
+          <button class="book-button camp-button" id="restBtn" type="button" aria-label="Am Lagerplatz heilen" data-i18n-aria="aria.restCamp">
             <span>Lagerplatz</span>
           </button>
-          <button class="book-button" id="openBestiaryBtn" type="button" aria-label="Bestiarium öffnen">
+          <button class="book-button" id="openBestiaryBtn" type="button" aria-label="Bestiarium öffnen" data-i18n-aria="aria.openBestiary">
             <span>Bestiarium</span>
           </button>
-          <button class="book-button quest-board-button" id="openQuestBoardBtn" type="button" aria-label="Quest-Tafel öffnen">
+          <button class="book-button quest-board-button" id="openQuestBoardBtn" type="button" aria-label="Quest-Tafel öffnen" data-i18n-aria="aria.openQuestBoard">
             <span>Quests</span>
             <em class="quest-notice" id="questNotice" hidden>0</em>
           </button>
-          <button class="book-button achievement-button" id="openAchievementsBtn" type="button" aria-label="Erfolge öffnen">
+          <button class="book-button achievement-button" id="openAchievementsBtn" type="button" aria-label="Erfolge öffnen" data-i18n-aria="aria.openAchievements">
             <span>Erfolge</span>
             <em class="quest-notice achievement-notice" id="achievementNotice" hidden>0</em>
           </button>
-          <button class="book-button backpack-button" id="openInventoryBtn" type="button" aria-label="Rucksack öffnen">
+          <button class="book-button backpack-button" id="openInventoryBtn" type="button" aria-label="Rucksack öffnen" data-i18n-aria="aria.openInventory">
             <span>Rucksack</span>
           </button>
-          <button class="book-button merchant-button" id="openMerchantBtn" type="button" aria-label="Händler öffnen">
+          <button class="book-button merchant-button" id="openMerchantBtn" type="button" aria-label="Händler öffnen" data-i18n-aria="aria.openMerchant">
             <span>Händler</span>
           </button>
-          <button class="book-button smith-button" id="openSmithBtn" type="button" aria-label="Schmied öffnen">
+          <button class="book-button smith-button" id="openSmithBtn" type="button" aria-label="Schmied öffnen" data-i18n-aria="aria.openSmith">
             <span>Schmied</span>
           </button>
-          <button class="book-button enchant-button" id="openEnchantBtn" type="button" aria-label="Arkanistin öffnen">
+          <button class="book-button enchant-button" id="openEnchantBtn" type="button" aria-label="Arkanistin öffnen" data-i18n-aria="aria.openEnchant">
             <span>Arkanistin</span>
           </button>
-          <button class="book-button save-menu-button" id="openSaveMenuBtn" type="button" aria-label="Spielstand öffnen">
+          <button class="book-button save-menu-button" id="openSaveMenuBtn" type="button" aria-label="Spielstand öffnen" data-i18n-aria="aria.openSave">
             <span>Save</span>
           </button>
-          <button class="book-button language-button" id="languageToggleBtn" type="button" aria-label="Sprache wechseln">
+          <button class="book-button language-button" id="languageToggleBtn" type="button" aria-label="Sprache wechseln" data-i18n-aria="language.aria">
             <span id="languageButtonLabel">Sprache</span>
             <small id="languageButtonValue">DE</small>
           </button>
@@ -66,8 +66,8 @@
       </section>
 
       <section class="game-layout">
-        <aside class="panel character-panel" aria-label="Charakter">
-          <button class="portrait" id="openClassModalBtn" type="button" aria-label="Klasse wechseln">
+        <aside class="panel character-panel" aria-label="Charakter" data-i18n-aria="aria.character">
+          <button class="portrait" id="openClassModalBtn" type="button" aria-label="Klasse wechseln" data-i18n-aria="main.changeClass">
             <span class="class-portrait-icon class-icon-warrior" id="characterClassIcon" aria-hidden="true">
               <span class="class-icon-mark"></span>
               <span class="class-icon-tool"></span>
@@ -79,7 +79,7 @@
             </span>
           </button>
           <h2 id="className">Krieger</h2>
-          <div class="character-status" aria-label="Charakterwerte">
+          <div class="character-status" aria-label="Charakterwerte" data-i18n-aria="aria.characterStats">
             <div><span>Level</span><strong id="level">1</strong></div>
             <div><span>Gold</span><strong id="gold">0</strong></div>
             <div><span>Ruhm</span><strong id="renown">0</strong></div>
@@ -89,7 +89,7 @@
             <div class="bar xp"><span id="xpBar"></span></div>
           </div>
           <button class="secondary character-stats-button" id="openPlayerStatsBtn" type="button">Spielerwerte</button>
-          <section class="class-card" aria-label="Klasse und Fähigkeiten">
+          <section class="class-card" aria-label="Klasse und Fähigkeiten" data-i18n-aria="aria.classAbilities">
             <div>
               <h3 id="buildSectionTitle">Build</h3>
               <div class="build-list" id="buildList"></div>
@@ -101,15 +101,15 @@
           </section>
         </aside>
 
-        <section class="panel world-panel" aria-label="Welt und Kampf">
-          <section class="equipment-belt" aria-label="Ausrüstungsübersicht">
+        <section class="panel world-panel" aria-label="Welt und Kampf" data-i18n-aria="aria.worldCombat">
+          <section class="equipment-belt" aria-label="Ausrüstungsübersicht" data-i18n-aria="aria.equipmentOverview">
             <div>
               <p class="eyebrow">Ausrüstung</p>
               <h2>Gürtel</h2>
             </div>
             <div class="equipment" id="equipment"></div>
           </section>
-          <div class="battle-stage" id="battleStage" aria-label="Kampfanimation">
+          <div class="battle-stage" id="battleStage" aria-label="Kampfanimation" data-i18n-aria="aria.battleAnimation">
             <button class="battle-log-tab" id="openCombatLogBtn" type="button" aria-haspopup="dialog">
               <span>Log</span>
               <small id="combatLogSummary">Noch leer</small>
@@ -126,7 +126,7 @@
                 <span class="hero-sword"></span>
               </div>
               <b id="heroSpriteName">Krieger</b>
-              <div class="combat-health hero-health" aria-label="Krieger Leben">
+              <div class="combat-health hero-health" aria-label="Krieger Leben" data-i18n-aria="aria.heroHealth">
                 <div class="combat-health-label"><span>Leben</span><strong id="battleHeroHpText">0/0</strong></div>
                 <div class="combat-health-bar"><span id="battleHeroHpBar"></span></div>
               </div>
@@ -148,7 +148,7 @@
                 <span class="enemy-eye"></span>
               </div>
               <b id="enemySpriteName">Waldwolf</b>
-              <div class="combat-health enemy-health" aria-label="Gegner Leben">
+              <div class="combat-health enemy-health" aria-label="Gegner Leben" data-i18n-aria="aria.enemyHealth">
                 <div class="combat-health-label"><span>Leben</span><strong id="battleEnemyHpText">0/0</strong></div>
                 <div class="combat-health-bar enemy-health-bar"><span id="battleEnemyHpBar"></span></div>
               </div>
@@ -158,34 +158,34 @@
           <div class="combat-card">
             <div class="combat-command-main">
               <div class="combat-command-top">
-                <div class="combat-mode-toggle" id="combatModeToggle" role="group" aria-label="Kampfmodus">
+                <div class="combat-mode-toggle" id="combatModeToggle" role="group" aria-label="Kampfmodus" data-i18n-aria="aria.combatMode">
                   <button type="button" data-combat-mode="auto">Auto</button>
                   <button type="button" data-combat-mode="manual">Manuell</button>
                 </div>
                 <button class="primary" id="fightBtn" type="button">Kampf starten</button>
               </div>
-              <div class="combat-actions" id="combatActions" aria-label="Kampfaktionen"></div>
+              <div class="combat-actions" id="combatActions" aria-label="Kampfaktionen" data-i18n-aria="aria.combatActions"></div>
             </div>
           </div>
         </section>
 
-        <aside class="panel side-panel" aria-label="Gebiete und Quests">
+        <aside class="panel side-panel" aria-label="Gebiete und Quests" data-i18n-aria="aria.zonesQuests">
           <section>
-            <h2>Gebiet</h2>
+            <h2 data-i18n="common.zone">Gebiet</h2>
             <div class="map zone-map side-zone-map" id="zoneMap">
               <div>
-                <small>Aktiv</small>
+                <small data-i18n="common.active">Aktiv</small>
                 <strong id="activeZoneName">Grauwacht-Wald</strong>
                 <em id="activeZoneRange">Gebiet · Level 1-6</em>
               </div>
-              <button id="openZoneBtn" type="button">Wechseln</button>
+              <button id="openZoneBtn" type="button" data-i18n="zone.switch">Wechseln</button>
             </div>
           </section>
           <section>
             <h2>Quests</h2>
             <div class="quests" id="quests"></div>
           </section>
-          <section class="log-panel compact" id="logPanel" aria-label="Kampfprotokoll">
+          <section class="log-panel compact" id="logPanel" aria-label="Kampfprotokoll" data-i18n-aria="aria.combatProtocol">
             <div>
               <h2>Protokoll</h2>
               <p id="logPreview" class="log-preview">Noch keine Einträge.</p>
@@ -215,7 +215,7 @@
             <p class="eyebrow">Reisekarte</p>
             <h2 id="zoneTitle">Reiseziel wählen</h2>
           </div>
-          <button class="modal-close" id="closeZoneBtn" type="button" aria-label="Gebiete schließen">Schließen</button>
+          <button class="modal-close" id="closeZoneBtn" type="button" aria-label="Gebiete schließen" data-i18n-aria="aria.closeZones">Schließen</button>
         </div>
         <div class="travel-options" id="zoneOptions"></div>
       </div>
@@ -227,7 +227,7 @@
             <p class="eyebrow">Buch der Gegner</p>
             <h2 id="bestiaryTitle">Bestiarium</h2>
           </div>
-          <button class="modal-close" id="closeBestiaryBtn" type="button" aria-label="Bestiarium schließen">Schließen</button>
+          <button class="modal-close" id="closeBestiaryBtn" type="button" aria-label="Bestiarium schließen" data-i18n-aria="aria.closeBestiary">Schließen</button>
         </div>
         <div class="bestiary" id="bestiary"></div>
       </div>
@@ -239,7 +239,7 @@
             <p class="eyebrow">Aufträge der Grauwacht</p>
             <h2 id="questBoardTitle">Quest-Tafel</h2>
           </div>
-          <button class="modal-close" id="closeQuestBoardBtn" type="button" aria-label="Quest-Tafel schließen">Schließen</button>
+          <button class="modal-close" id="closeQuestBoardBtn" type="button" aria-label="Quest-Tafel schließen" data-i18n-aria="aria.closeQuestBoard">Schließen</button>
         </div>
         <div class="quest-board" id="questBoard"></div>
       </div>
@@ -251,7 +251,7 @@
             <p class="eyebrow">Ruhmesbuch</p>
             <h2 id="achievementsTitle">Erfolge</h2>
           </div>
-          <button class="modal-close" id="closeAchievementsBtn" type="button" aria-label="Erfolge schließen">Schließen</button>
+          <button class="modal-close" id="closeAchievementsBtn" type="button" aria-label="Erfolge schließen" data-i18n-aria="aria.closeAchievements">Schließen</button>
         </div>
         <div class="achievements" id="achievements"></div>
       </div>
@@ -263,7 +263,7 @@
             <p class="eyebrow">Rucksack</p>
             <h2 id="inventoryTitle">Inventar</h2>
           </div>
-          <button class="modal-close" id="closeInventoryBtn" type="button" aria-label="Rucksack schließen">Schließen</button>
+          <button class="modal-close" id="closeInventoryBtn" type="button" aria-label="Rucksack schließen" data-i18n-aria="aria.closeInventory">Schließen</button>
         </div>
         <div class="inventory-summary">
           <div id="inventorySummary"></div>
@@ -278,7 +278,7 @@
             <p class="eyebrow" id="merchantEyebrow">Handelsposten</p>
             <h2 id="merchantTitle">Tilda Münzhand</h2>
           </div>
-          <button class="modal-close" id="closeMerchantBtn" type="button" aria-label="Händler schließen">Schließen</button>
+          <button class="modal-close" id="closeMerchantBtn" type="button" aria-label="Händler schließen" data-i18n-aria="aria.closeMerchant">Schließen</button>
         </div>
         <div class="merchant-summary" id="merchantSummary"></div>
         <div class="merchant-actions">
@@ -294,7 +294,7 @@
             <p class="eyebrow" id="smithEyebrow">Zwergenmeister der Grauwacht</p>
             <h2 id="smithTitle">Borin Glutbart</h2>
           </div>
-          <button class="modal-close" id="closeSmithBtn" type="button" aria-label="Schmied schließen">Schließen</button>
+          <button class="modal-close" id="closeSmithBtn" type="button" aria-label="Schmied schließen" data-i18n-aria="aria.closeSmith">Schließen</button>
         </div>
         <div class="materials" id="materials"></div>
         <div class="smith-renown" id="smithRenown"></div>
@@ -339,7 +339,7 @@
             <p class="eyebrow">Kampfverlauf</p>
             <h2 id="logTitle">Protokoll</h2>
           </div>
-          <button class="modal-close" id="closeLogBtn" type="button" aria-label="Protokoll schließen">Schließen</button>
+          <button class="modal-close" id="closeLogBtn" type="button" aria-label="Protokoll schließen" data-i18n-aria="aria.closeLog">Schließen</button>
         </div>
         <div id="log" class="log"></div>
       </div>
@@ -351,7 +351,7 @@
             <p class="eyebrow">Kampf-Log</p>
             <h2 id="combatLogTitle">Letzter Kampf</h2>
           </div>
-          <button class="modal-close" id="closeCombatLogBtn" type="button" aria-label="Kampf-Log schließen">Schließen</button>
+          <button class="modal-close" id="closeCombatLogBtn" type="button" aria-label="Kampf-Log schließen" data-i18n-aria="aria.closeCombatLog">Schließen</button>
         </div>
         <div class="combat-log" id="combatLog">
           <div class="combat-log-empty">Starte einen Kampf, dann erscheinen hier Schaden, Heilung und Effekte.</div>
@@ -365,9 +365,9 @@
             <p class="eyebrow">Sicherung</p>
             <h2 id="saveTitle">Spielstand</h2>
           </div>
-          <button class="modal-close" id="closeSaveBtn" type="button" aria-label="Spielstand schließen">Schließen</button>
+          <button class="modal-close" id="closeSaveBtn" type="button" aria-label="Spielstand schließen" data-i18n-aria="aria.closeSave">Schließen</button>
         </div>
-        <div class="save-summary" id="saveSummary" aria-label="Aktueller Spielstand"></div>
+        <div class="save-summary" id="saveSummary" aria-label="Aktueller Spielstand" data-i18n-aria="aria.currentSave"></div>
         <div class="save-actions">
           <button id="exportSaveTopBtn" type="button">
             <strong>Spielstand herunterladen</strong>
@@ -392,7 +392,7 @@
             <p class="eyebrow">Werkbank</p>
             <h2 id="repairTitle">Ausrüstung reparieren</h2>
           </div>
-          <button class="modal-close" id="closeRepairBtn" type="button" aria-label="Reparatur schließen">Schließen</button>
+          <button class="modal-close" id="closeRepairBtn" type="button" aria-label="Reparatur schließen" data-i18n-aria="aria.closeRepair">Schließen</button>
         </div>
         <div class="repair-summary" id="repairSummary"></div>
         <div class="repair-list" id="repairList"></div>
@@ -405,7 +405,7 @@
             <p class="eyebrow">Ausrüstung</p>
             <h2 id="equipmentTitle">Getragene Ausrüstung</h2>
           </div>
-          <button class="modal-close" id="closeEquipmentBtn" type="button" aria-label="Ausrüstung schließen">Schließen</button>
+          <button class="modal-close" id="closeEquipmentBtn" type="button" aria-label="Ausrüstung schließen" data-i18n-aria="aria.closeEquipment">Schließen</button>
         </div>
         <div class="equipment-detail-grid" id="equipmentDetails"></div>
       </div>
@@ -417,7 +417,7 @@
             <p class="eyebrow">Charakter</p>
             <h2 id="playerStatsTitle">Spielerwerte</h2>
           </div>
-          <button class="modal-close" id="closePlayerStatsBtn" type="button" aria-label="Spielerwerte schließen">Schließen</button>
+          <button class="modal-close" id="closePlayerStatsBtn" type="button" aria-label="Spielerwerte schließen" data-i18n-aria="aria.closePlayerStats">Schließen</button>
         </div>
         <div class="player-stats-detail" id="playerStatsDetails"></div>
       </div>
@@ -429,24 +429,24 @@
             <p class="eyebrow">Charakter</p>
             <h2 id="classModalTitle">Klasse wechseln</h2>
           </div>
-          <button class="modal-close" id="closeClassModalBtn" type="button" aria-label="Klasse schließen">Schließen</button>
+          <button class="modal-close" id="closeClassModalBtn" type="button" aria-label="Klasse schließen" data-i18n-aria="aria.closeClass">Schließen</button>
         </div>
         <div class="class-choice-list" id="classChoiceList"></div>
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=0.8.122"></script>
-    <script src="./scripts/data-loader.js?v=0.8.122"></script>
-    <script src="./scripts/data-player.js?v=0.8.122"></script>
-    <script src="./scripts/data-world.js?v=0.8.122"></script>
-    <script src="./scripts/data-items.js?v=0.8.122"></script>
-    <script src="./scripts/data-quests.js?v=0.8.122"></script>
-    <script src="./scripts/data-labels.js?v=0.8.122"></script>
-    <script src="./scripts/i18n.js?v=0.8.122"></script>
-    <script src="./scripts/save-system.js?v=0.8.122"></script>
-    <script src="./scripts/core.js?v=0.8.122"></script>
-    <script src="./scripts/render.js?v=0.8.122"></script>
-    <script src="./scripts/render-loot.js?v=0.8.122"></script>
-    <script src="./scripts/events.js?v=0.8.122"></script>
+    <script src="./scripts/data.js?v=0.8.123"></script>
+    <script src="./scripts/data-loader.js?v=0.8.123"></script>
+    <script src="./scripts/data-player.js?v=0.8.123"></script>
+    <script src="./scripts/data-world.js?v=0.8.123"></script>
+    <script src="./scripts/data-items.js?v=0.8.123"></script>
+    <script src="./scripts/data-quests.js?v=0.8.123"></script>
+    <script src="./scripts/data-labels.js?v=0.8.123"></script>
+    <script src="./scripts/i18n.js?v=0.8.123"></script>
+    <script src="./scripts/save-system.js?v=0.8.123"></script>
+    <script src="./scripts/core.js?v=0.8.123"></script>
+    <script src="./scripts/render.js?v=0.8.123"></script>
+    <script src="./scripts/render-loot.js?v=0.8.123"></script>
+    <script src="./scripts/events.js?v=0.8.123"></script>
   </body>
 </html>

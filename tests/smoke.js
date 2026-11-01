@@ -139,6 +139,24 @@ assert(!/\.modal-window \{\s*width: calc\(100vw/.test(css), "modal windows shoul
 assert(!/\.inventory-item \.loot-compare \{\s*max-height/.test(css), "inventory compare box should not become a nested scroll box on mobile");
 assert(/\.inventory \{[\s\S]*?grid-auto-rows: max-content;/.test(css), "inventory cards should keep their full height inside the scrolling list");
 assert(!/grid-template-rows: 112px 54px 92px/.test(css), "loot card rows should grow instead of clipping stat rows");
+// Sprache: keine festen Texte ohne Übersetzung (Punkt 2 im Arbeitsplan).
+{
+  const i18nContext = { console, window: {}, document: {} };
+  vm.createContext(i18nContext);
+  vm.runInContext(read("scripts/i18n.js").replace(/^const translations/m, "var translations"), i18nContext);
+  vm.runInContext(read("scripts/i18n-en.js"), i18nContext);
+  const { de, en } = i18nContext.translations;
+  const ariaWithoutKey = [...html.matchAll(/<[^>]*\baria-label="[^"]*"[^>]*>/g)].map((match) => match[0]).filter((tag) => !tag.includes("data-i18n-aria="));
+  assert.deepStrictEqual(ariaWithoutKey, [], "every aria-label in index.html should be bound to a translation key via data-i18n-aria");
+  const htmlKeys = [...html.matchAll(/data-i18n(?:-aria|-title)?="([^"]+)"/g)].map((match) => match[1]);
+  const codeKeys = ["scripts/core.js", "scripts/render.js", "scripts/render-loot.js", "scripts/events.js", "scripts/save-system.js", "scripts/i18n.js"]
+    .flatMap((file) => [...read(file).matchAll(/\bt\(\s*"([a-zA-Z0-9_.]+)"/g)].map((match) => match[1]));
+  const missingKeys = [...new Set([...htmlKeys, ...codeKeys])].filter((key) => !(key in de) || !(key in en));
+  assert.deepStrictEqual(missingKeys, [], "every literal translation key should exist in German and English");
+  const rawLogCalls = ["scripts/core.js", "scripts/render.js", "scripts/events.js", "scripts/save-system.js"]
+    .flatMap((file) => read(file).split("\n").filter((line) => /(^|[^\w.])log\((?!\(\) =>|message|entry)/.test(line) && !/function log\(/.test(line)));
+  assert.deepStrictEqual(rawLogCalls, [], "log() should receive a message function so entries can be shown in both languages");
+}
 
 suite("runtime harness boot");
 
@@ -523,7 +541,12 @@ assert.strictEqual(vm.runInContext("state = defaultState(); render = () => {}; i
 assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; saveFileName().includes('Level-1-Ruhm-0-Grauwacht-Wald')", context), "save filename should include useful progress info");
 assert(vm.runInContext("state = defaultState(); const exported = JSON.parse(exportSaveData()); exported.metadata.level === 1 && exported.metadata.zone === 'Grauwacht-Wald' && exported.metadata.equipment.weapon === 'Übungsschwert'", context), "save exports should include readable progress metadata");
 assert(vm.runInContext("/\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}/.test(saveFileName())", context), "save filename should include date and time");
-assert(vm.runInContext("state.log = []; remindSaveBackup('Testmoment.'); state.log[0].startsWith('Tipp: Spielstand herunterladen')", context), "important moments should create a save reminder");
+assert(vm.runInContext("state.log = []; remindSaveBackup('Testmoment.'); logEntryText(state.log[0]).startsWith('Tipp: Spielstand herunterladen')", context), "important moments should create a save reminder");
+assert(vm.runInContext("state.log = []; remindSaveBackup(() => 'A'); remindSaveBackup(() => 'B'); state.log.length === 1 && state.log[0].kind === 'saveReminder'", context), "save reminders should not repeat back to back");
+// Log-Einträge sind zweisprachig und folgen der aktuellen Sprache (Punkt 2 im Arbeitsplan).
+assert(vm.runInContext("(() => { state = defaultState(); state.language = 'de'; renderLog = () => {}; log(() => t('combat.winLog', 'Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.', { enemy: enemyDisplayName(enemies.wolf, 'wolf'), rounds: 3, xp: 5, gold: 2 }), 'good'); const entry = state.log[0]; const de = logEntryText(entry); state.language = 'en'; const en = logEntryText(entry); return entry.type === 'good' && de.includes('Waldwolf') && de.startsWith('Sieg') && en.startsWith('Victory') && !en.includes('Waldwolf'); })()", context), "log entries should store both languages including translated names");
+assert(vm.runInContext("(() => { state = defaultState(); state.language = 'en'; return logEntryText(state.log[0]).startsWith('You reach'); })()", context), "the starting log entry should follow the selected language");
+assert(vm.runInContext("(() => { const clean = normalizeLogEntry({ type: 'evil', de: 'x', en: 5, extra: 1 }); const keyed = normalizeLogEntry({ key: 'log.start', params: { a: { nested: 1 }, b: 2 } }); return clean.type === '' && clean.en === null && !('extra' in clean) && !('a' in keyed.params) && keyed.params.b === 2 && normalizeLogEntry('Alter Eintrag') === 'Alter Eintrag' && normalizeLogEntry(42) === null; })()", context), "imported log entries should be sanitized and old text entries kept");
 assert(vm.runInContext("const cachedSave = storageGet(saveKey); localStorage = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } }; storageGet(saveKey) === cachedSave", context), "window.name fallback should load when localStorage is blocked");
 assert(vm.runInContext("(() => { state = defaultState(); const exported = JSON.parse(exportSaveData()); return exported.game === 'Fantasy Grind' && exported.version === saveExportVersion && exported.save.level === 1; })()", context), "exported save data should include game id, export version and save payload");
 assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 1; state.gold = 0; restCost()", context), 10, "level 1 rest cost should stay explicit even when the player has no gold");

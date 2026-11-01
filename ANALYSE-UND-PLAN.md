@@ -64,10 +64,29 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Geprüft: 15 Fenster × 14 Bildschirmgrössen (320×568 bis 1920×1080, auch Querformat), mit leerem und vollem Spielstand. Kein Überlauf, nichts abgeschnitten.
     - Absicherung: 6 neue Prüfungen in `npm test` und der neue Browser-Test `npm run test:ui`.
 
-- [ ] **2. Sprachmix beheben**
+- [x] **2. Sprachmix beheben** ✅ erledigt in v0.8.123
   - Wo: `index.html` Zeile 174, 179 und 181. Dazu alle `log("…")`/`` log(`…`) `` ohne `t()` in `scripts/core.js` (u. a. Zeile 1265, 1280).
   - Wie: Für alle festen Texte `data-i18n`-Keys bzw. `t("key", "Fallback")` verwenden und die Keys in `i18n.js` (DE) und `i18n-en.js` (EN) ergänzen. Zusätzlich einen Test in `tests/smoke.js`: Mit EN aktiv darf kein sichtbarer Text bekannte deutsche Wörter enthalten („Gebiet“, „Wechseln“, „erreicht“, „Lager“).
   - Fertig wenn: In EN ist alles englisch und in DE alles deutsch, und der neue Test besteht.
+  - Ergebnis:
+    - Log-Einträge speichern jetzt beide Sprachen und ihren Typ und wechseln beim Umschalten mit, auch Einträge von vorher. Die Farbe kommt nicht mehr aus deutschen Wörtern.
+    - Alte Spielstände bleiben lesbar.
+    - Alle 42 `aria-label` und die festen Texte in `index.html` laufen über `data-i18n` / `data-i18n-aria`.
+    - Behoben:
+      - „Gebiet“, „Aktiv“, „Wechseln“
+      - fehlender Key `common.health` („Leben“)
+      - Kampftexte „nutzt“ und „Kritischer Treffer für“
+      - Kampfzusammenfassung
+      - Heilungen werden nur auf Deutsch erkannt
+      - Level-up-Meldung
+      - Backup-Tipp
+      - Herkunft des Spielstands
+      - Dateiname („Ruhm“ → „Renown“)
+      - Material-Namen bei Erfolgs-Belohnungen
+      - „1 Runden“ → „1 Runde“
+    - Absicherung:
+      - `npm test` prüft, dass jedes `aria-label` einen Key hat, dass jeder Key in DE und EN existiert und dass kein `log()` mit festem Text vorkommt.
+      - `npm run test:ui` scannt alle Fenster in beiden Sprachen.
 
 - [ ] **3. Abgeschnittene Ausrüstungs-Slots (Desktop)**
   - Wo: `css/base.css` (Equipment-Leiste), `scripts/render.js` (`renderEquipment`)
@@ -248,7 +267,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 
 | Phase | Punkte | Erledigt |
 |---|---|---|
-| 1 – Bugs | 1–5 | 1/5 |
+| 1 – Bugs | 1–5 | 2/5 |
 | 2 – Code | 6–10 | 0/5 |
 | 3 – Gameplay | 11–15 | 0/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |

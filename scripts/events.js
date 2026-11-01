@@ -471,6 +471,8 @@ async function bootGame() {
   await ensureLanguagePack(currentLanguage());
   render();
   scheduleStudioSplashHide();
+  // Englisch im Hintergrund nachladen, damit neue Log-Einträge sofort in beiden Sprachen gespeichert werden.
+  void ensureLanguagePack("en");
 }
 
 function setupStudioSplash() {
@@ -564,7 +566,7 @@ function exportSave() {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  log(t("save.exported", "Spielstand als Datei gesichert."), "drop");
+  log(() => t("save.exported", "Spielstand als Datei gesichert."), "drop");
   render();
 }
 
@@ -594,10 +596,10 @@ function importSaveFile(event) {
   const reader = new FileReader();
   reader.onload = () => {
     const imported = importSaveData(String(reader.result || ""));
-    if (imported) log(t("save.importedFrom", "Spielstand aus {file} geladen.", { file: file.name }), "drop");
+    if (imported) log(() => t("save.importedFrom", "Spielstand aus {file} geladen.", { file: file.name }), "drop");
   };
   reader.onerror = () => {
-    log(t("save.importFileUnreadable", "Import fehlgeschlagen: Die Datei konnte nicht gelesen werden."), "bad");
+    log(() => t("save.importFileUnreadable", "Import fehlgeschlagen: Die Datei konnte nicht gelesen werden."), "bad");
     render();
   };
   reader.readAsText(file);

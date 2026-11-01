@@ -75,7 +75,7 @@ function renderLootStatGrid(item) {
   const content = stats.length
     ? stats.map((stat) => `<span><em>${stat.label}</em><strong>${stat.value}</strong></span>`).join("")
     : `<span><em>${t("loot.stats", "Werte")}</em><strong>${t("loot.noStats", "Keine")}</strong></span>`;
-  return `<div class="loot-stat-grid" aria-label="Itemwerte">${content}</div>`;
+  return `<div class="loot-stat-grid" aria-label="${escapeAttr(t("loot.statsAria", "Itemwerte"))}">${content}</div>`;
 }
 
 function renderLootCompare(compare) {
