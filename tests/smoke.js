@@ -83,7 +83,7 @@ for (const ignored of ["node_modules/", ".vs/", ".env", "*.log", "Fantasy-Grind-
 }
 
 const htmlIds = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
-const dynamicIds = new Set(["bestiaryDetail", "bestiarySearch", "smithGreeting", "smithGreetingText", "smithMastery", "battleResult"]);
+const dynamicIds = new Set(["smithBackpack", "bestiaryDetail", "bestiarySearch", "smithGreeting", "smithGreetingText", "smithMastery", "battleResult"]);
 const referencedIds = new Set(
   [...scripts.join("\n").matchAll(/\$\("([^"]+)"\)/g)].map((match) => match[1]),
 );
@@ -209,6 +209,19 @@ assert(/function hideFloatingTooltip\(\) \{[\s\S]{0,300}if \(!tooltip\.classList
     .filter((text) => /[A-Za-zÄÖÜäöüß]{3,}/.test(text.replace(/\$\{[^}]*\}/g, "")) && !neutral.has(text.trim()))
     .map((text) => `${file}: ${text}`));
   assert.deepStrictEqual(rawLabels, [], "UI labels in game logic should be translated with t()");
+}
+// Jede zufällige Schmied-Begrüssung braucht einen englischen Text (sonst erscheint Deutsch in der EN-Version).
+{
+  const dialogueSource = read("scripts/render.js").match(/const smithDialogues = (\{[\s\S]*?\n\});/)[1];
+  const dialogues = vm.runInNewContext(`(${dialogueSource})`);
+  const enContext = { window: {}, document: {} };
+  vm.createContext(enContext);
+  vm.runInContext(read("scripts/i18n.js").replace(/^const translations/m, "var translations"), enContext);
+  vm.runInContext(read("scripts/i18n-en.js"), enContext);
+  const missing = Object.entries(dialogues).flatMap(([rank, lines]) => lines.flatMap((line, index) => ["title", "text"]
+    .map((field) => `smith.dialogue.${rank}.${index}.${field}`)
+    .filter((key) => !(key in enContext.translations.en))));
+  assert.deepStrictEqual(missing, [], "every smith greeting should have an English translation");
 }
 // Sprache: keine festen Texte ohne Übersetzung (Punkt 2 im Arbeitsplan).
 {
@@ -344,6 +357,16 @@ assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 20 })", con
 assert(vm.runInContext("state = defaultState(); state.customItems.frameTest = { ...items.trainingSword, id: 'frameTest', upgrade: 10, name: 'Übungsschwert +10' }; state.inventory = ['frameTest']; renderInventoryItemCard('frameTest', 0).includes('upgrade-frame-runic')", context), "upgraded item cards should render special upgrade frames");
 
 suite("quest board and inventory flows");
+
+// Auto-Loot und Rucksack-Limit (Punkt 11)
+assert(vm.runInContext("(() => { const s = normalizeSettings({ autoLoot: 'ja', autoSellCommon: true, extra: 1 }); return s.autoLoot === false && s.autoSellCommon === true && !('extra' in s); })()", context), "settings should be normalized to known booleans");
+assert(vm.runInContext("normalizeInventoryCapacity(undefined) === 60 && normalizeInventoryCapacity(999) === 120 && normalizeInventoryCapacity(73) === 70 && normalizeInventoryCapacity(10) === 60", context), "inventory capacity should be clamped to 60-120 in steps of 10");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.level = 10; state.settings.autoLoot = true; createLootChoices({ ...enemies.boar, baseId: 'boar' }, 'boar'); return state.pendingLoot.length === 0; })()", context), "auto-loot should resolve loot choices without a click");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.level = 10; const score = () => Object.values(state.equipment).reduce((sum, id) => sum + (getItem(id) ? itemScore(getItem(id)) : 0), 0); const before = score(); state.settings.autoLoot = true; for (let i = 0; i < 12; i += 1) createLootChoices({ ...enemies.crownSentinel, baseId: 'crownSentinel' }, 'crownSentinel'); return score() > before; })()", context), "auto-loot should equip clear upgrades");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.settings.autoLoot = true; for (let i = 0; i < 90; i += 1) createLootChoices({ ...enemies.boar, baseId: 'boar' }, 'boar'); return state.inventory.length <= inventoryCapacity(); })()", context), "auto-loot should never push the backpack over its limit");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.inventory = Array.from({ length: 60 }, () => state.equipment.ring); const gold = state.gold; const item = { ...generateLootItem(enemies.wolf, 'wolf') }; state.pendingLoot = [item]; chooseLoot(0, false); return state.inventory.length === 60 && state.gold > gold && state.pendingLoot.length === 0; })()", context), "a full backpack should sell new loot instead of blocking");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.settings.autoSellCommon = true; const gold = state.gold; const item = { ...generateLootItem(enemies.wolf, 'wolf'), quality: 'common' }; state.pendingLoot = [item]; chooseLoot(0, false); return !state.inventory.includes(item.id) && state.gold > gold; })()", context), "junk filter should sell common loot");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.gold = 0; const failed = expandInventory() === false; state.gold = 5000; state.materials.leather = 40; const ok = expandInventory() && inventoryCapacity() === 70; state.inventoryCapacity = 120; return failed && ok && expandInventory() === false; })()", context), "backpack expansion should cost gold and leather and stop at 120");
 
 assert(vm.runInContext("state = defaultState(); questAvailable(getQuestById('wolves')) && !questAvailable(getQuestById('fields'))", context), "early quest board should only offer reachable quest targets");
 assert(vm.runInContext("state.level = 9; state.renown = 8; ui.selectedZone = 'fields'; questAvailable(getQuestById('fields'))", context), "field quests should unlock when the field zone is selected");

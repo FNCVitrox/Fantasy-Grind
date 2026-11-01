@@ -1154,6 +1154,7 @@ function renderSmithHome() {
     ${renderSmithGreetingMarkup()}
     ${renderStationFocus("smith")}
     <div class="smith-mastery" id="smithMastery"></div>
+    <div class="smith-backpack" id="smithBackpack"></div>
     <div class="smith-choice-grid">
       <button type="button" data-smith-view="upgrade">
         <strong>${t("smith.upgrade", "Verbessern")}</strong>
@@ -1169,8 +1170,32 @@ function renderSmithHome() {
       </button>
     </div>
   `);
-  if (shellChanged) elementCache.delete("smithMastery");
+  if (shellChanged) {
+    elementCache.delete("smithMastery");
+    elementCache.delete("smithBackpack");
+  }
   renderSmithMastery();
+  renderSmithBackpack();
+}
+
+function renderSmithBackpack() {
+  if (!$("smithBackpack")) return;
+  const capacity = inventoryCapacity();
+  const maxed = capacity >= inventoryMaxCapacity;
+  const cost = inventoryExpandCost();
+  const signature = `${currentLanguage()}|${capacity}|${state.gold}|${state.materials.leather || 0}|${state.inventory.length}`;
+  renderCachedHtml("smithBackpack", signature, () => `
+    <div class="smith-backpack-card">
+      <div>
+        <strong>${t("smith.backpackTitle", "Rucksack erweitern")}</strong>
+        <span>${t("smith.backpackStatus", "{used}/{capacity} Plätze belegt", { used: state.inventory.length, capacity })}</span>
+      </div>
+      ${maxed
+        ? `<em>${t("smith.backpackMaxed", "Maximale Grösse erreicht")}</em>`
+        : `<button type="button" data-expand-inventory ${canExpandInventory() ? "" : "disabled"}>
+            +${inventoryExpandStep} · ${cost.gold} ${t("common.gold", "Gold")} · ${cost.materials.leather} ${labelFor(materialLabel, "leather")}
+          </button>`}
+    </div>`);
 }
 
 function renderStationFocus(station) {
@@ -1502,8 +1527,10 @@ function renderSmithSalvage() {
 
 function renderInventory() {
   const lockedCount = (state.inventory || []).filter(isInventoryItemLocked).length;
-  renderCachedHtml("inventorySummary", `${currentLanguage()}|${state.inventory.length}|${lockedCount}|${state.gold}`, () =>
-    `<span>${t("common.items", "Items")}: <strong>${state.inventory.length}</strong></span><span>${lockedCount ? t("merchant.lockedCount", "{count} geschützt", { count: lockedCount }) : t("inventory.sellHint", "Verkauf beim Händler")}</span>`
+  const capacity = inventoryCapacity();
+  const full = isInventoryFull();
+  renderCachedHtml("inventorySummary", `${currentLanguage()}|${state.inventory.length}|${capacity}|${lockedCount}|${state.gold}|${lootSettingsSignature()}`, () =>
+    `<span class="${full ? "inventory-full" : ""}">${t("common.items", "Items")}: <strong>${state.inventory.length}/${capacity}</strong>${full ? ` · ${t("inventory.full", "Rucksack voll – neue Beute wird verkauft")}` : ""}</span><span>${lockedCount ? t("merchant.lockedCount", "{count} geschützt", { count: lockedCount }) : t("inventory.sellHint", "Verkauf beim Händler")}</span>${renderLootSettingToggles()}`
   );
   const signature = `${currentLanguage()}|${inventorySignature()}|${equipmentSignature()}`;
   renderCachedList(
@@ -1513,6 +1540,23 @@ function renderInventory() {
     () => `<div class="inventory-empty">${t("inventory.emptyShort", "Noch keine Items im Inventar.")}</div>`,
     renderInventoryItemCard,
   );
+}
+
+function lootSettingsSignature() {
+  const settings = normalizeSettings(state.settings);
+  return `${settings.autoLoot ? 1 : 0}${settings.autoSellCommon ? 1 : 0}`;
+}
+
+// Schalter für Auto-Loot und Junk-Filter (Rucksack und Beute-Fenster).
+function renderLootSettingToggles() {
+  const settings = normalizeSettings(state.settings);
+  const toggle = (key, label, hint) => `<button type="button" class="setting-toggle ${settings[key] ? "is-on" : ""}" data-setting-toggle="${key}" aria-pressed="${settings[key] ? "true" : "false"}" title="${escapeAttr(hint)}">
+      <span class="setting-toggle-switch" aria-hidden="true"></span><span>${escapeHtml(label)}</span>
+    </button>`;
+  return `<div class="loot-settings">
+    ${toggle("autoLoot", t("settings.autoLoot", "Auto-Loot"), t("settings.autoLootHint", "Nimmt nach jedem Sieg automatisch das beste Item. Verbesserungen werden angelegt."))}
+    ${toggle("autoSellCommon", t("settings.autoSellCommon", "Gewöhnliches verkaufen"), t("settings.autoSellCommonHint", "Gewöhnliche Beute wird sofort verkauft statt eingelagert."))}
+  </div>`;
 }
 
 function renderInventoryItemCard(itemId, index) {

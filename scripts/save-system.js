@@ -419,6 +419,8 @@ function normalizeLoadedCollections(loaded) {
   loaded.lockedItems = Array.isArray(loaded.lockedItems)
     ? uniqueSaveIds(loaded.lockedItems).filter((id) => loaded.inventory.includes(id))
     : [];
+  loaded.inventoryCapacity = normalizeInventoryCapacity(loaded.inventoryCapacity);
+  loaded.settings = normalizeSettings(loaded.settings);
   loaded.log = Array.isArray(loaded.log) ? loaded.log.map(normalizeLogEntry).filter(Boolean).slice(0, 40) : defaultState().log;
   loaded.lastSaveExportAt = loaded.lastSaveExportAt || "";
 }

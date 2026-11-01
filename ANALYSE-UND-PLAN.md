@@ -214,7 +214,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 
 ### Phase 3 – Gameplay-Flow
 
-- [ ] **11. Auto-Loot und Inventarlimit**
+- [x] **11. Auto-Loot und Inventarlimit** ✅ erledigt in v0.8.134
   - Wo: `scripts/core.js` → `createLootChoices`, `chooseLoot` (Zeile 3391), Einstellungen im State
   - Wie:
     - Neue Option „Auto-Loot“: Das beste Item gemäss Vergleich wird automatisch genommen, der Rest wird nach Wahl zerlegt oder verkauft.
@@ -222,6 +222,15 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Junk-Filter: „Gewöhnliche Items automatisch verkaufen“.
     - Kämpfe sind nicht mehr blockiert, solange Auto-Loot aktiv ist.
   - Fertig wenn: 100 Kämpfe am Stück sind ohne Klick auf Loot möglich, und das Inventar bleibt unter dem Limit.
+  - Ergebnis:
+    - Schalter „Auto-Loot“ und „Gewöhnliches verkaufen“ im Rucksack und im Beute-Fenster (Kopfzeile).
+    - Auto-Loot nimmt das Angebot mit der grössten Verbesserung gegenüber dem getragenen Teil und legt Verbesserungen direkt an. Die übrigen Angebote verfallen wie beim manuellen Wählen, damit Auto-Loot nicht stärker ist als selber spielen.
+    - Rucksack: 60 Plätze, beim Schmied in 10er-Schritten bis 120 erweiterbar (Gold und Lederreste, Kosten steigen).
+    - Ist der Rucksack voll, wird neue Beute verkauft statt blockiert, und der Knopf zeigt dann „Verkaufen +X“.
+    - Im Auto-Modus wird bei vollem Rucksack das ersetzte, schlechtere Teil verkauft. Beim manuellen Anlegen geht nie etwas verloren.
+    - Geprüft: 100 Siege ohne Klick, kein Beute-Fenster, Rucksack maximal 60/60, die Ausrüstung wird von selbst besser.
+    - Mitbehoben: 3 Schmied-Begrüssungen hatten keinen englischen Text.
+    - Absicherung: 8 Logik-Tests, ein Test für alle Schmied-Begrüssungen und der 100-Kämpfe-Test in `npm run test:ui`.
 
 - [ ] **12. Mehr Gegner pro Gebiet**
   - Wo: `scripts/data-world.js`, `scripts/data-drops.js`, `scripts/i18n-en.js`
@@ -341,7 +350,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 |---|---|---|
 | 1 – Bugs | 1–5 | 5/5 ✅ |
 | 2 – Code | 6–10 | 5/5 ✅ |
-| 3 – Gameplay | 11–15 | 0/5 |
+| 3 – Gameplay | 11–15 | 1/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |
 | 5 – Inhalt | 22–24 | 0/3 |
 | 6 – Steam | 25–28 | 0/4 |

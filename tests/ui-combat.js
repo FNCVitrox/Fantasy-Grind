@@ -13,11 +13,19 @@ const r=await p.evaluate(async()=>{const skip=[];const normal=[];
  const bannerAfterSkip=$('battleResult').classList.contains('show');await new Promise(r=>setTimeout(r,1300));const bannerLater=$('battleResult').classList.contains('show');
  prep('wolf');const t0=performance.now();$('fightBtn').click();while(ui.isFighting)await new Promise(r=>setTimeout(r,5));normal.push(Math.round(performance.now()-t0));
  return {skip,normal,bannerAfterSkip,bannerLater};});
+// Auto-Loot (Punkt 11): 100 Kämpfe ohne Klick auf Beute, Rucksack bleibt im Limit
+const al=await p.evaluate(async()=>{state.level=8;syncDerivedStats();state.hp=state.maxHp;state.gold=500;state.inventory=[];state.pendingLoot=[];closeModal('lootModal');
+ $('openInventoryBtn').click();render();document.querySelector('[data-setting-toggle="autoLoot"]').click();closeModal('inventoryModal');
+ let wins=0,modal=0,maxInv=0;for(let i=0;i<100;i++){if(state.hp<state.maxHp*0.5)rest();ui.selectedZone='meadow';ui.selectedEnemy=['wolf','bandit','boar'][i%3];const pr=fight();ui.skipCombat=true;await pr;if(state.hp>0)wins++;if($('lootModal').classList.contains('open'))modal++;maxInv=Math.max(maxInv,state.inventory.length);}
+ return {wins,modal,maxInv,cap:inventoryCapacity(),pending:state.pendingLoot.length}});
 const worst=Math.max(...r.skip);const errs=[];
 if(worst>=250)errs.push('Überspringen zu langsam: '+worst+' ms');
 if(!r.bannerAfterSkip)errs.push('Ergebnis-Banner fehlt nach dem Überspringen');
 if(r.bannerLater)errs.push('Ergebnis-Banner verschwindet nicht');
 if(r.normal[0]<900)errs.push('normaler Kampf zeigt das Ergebnis nicht lange genug ('+r.normal[0]+' ms)');
+if(al.wins<100||al.modal||al.pending)errs.push('Auto-Loot: '+JSON.stringify(al));
+if(al.maxInv>al.cap)errs.push('Rucksack über dem Limit: '+al.maxInv+'/'+al.cap);
+console.log('Auto-Loot: '+al.wins+' Siege ohne Klick, Rucksack max '+al.maxInv+'/'+al.cap);
 if(errors.length)errs.push('Seitenfehler: '+errors.slice(0,2).join(' | '));
 console.log('Überspringen: max '+worst+' ms (Ziel < 250 ms), normaler Kampf: '+r.normal[0]+' ms');
 errs.forEach(e=>console.log(e));

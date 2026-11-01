@@ -1,4 +1,8 @@
 ﻿let state;
+// Rucksack: Grundgrösse und Erweiterung beim Schmied (Punkt 11).
+const inventoryBaseCapacity = 60;
+const inventoryMaxCapacity = 120;
+const inventoryExpandStep = 10;
 const preparedCombatEvents = new Map();
 const tooltipItemCache = new Map();
 const tooltipHtmlCache = new Map();
@@ -223,6 +227,8 @@ function defaultState() {
     bossDropPity: {},
     inventory: [],
     lockedItems: [],
+    inventoryCapacity: inventoryBaseCapacity,
+    settings: defaultSettings(),
     materials: emptyMaterials(),
     discoveredLoot: {},
     defeatedBosses: [],

@@ -3905,3 +3905,92 @@ button.drop-row span:last-child {
 .battle-result.loss span {
   color: #ff7467;
 }
+
+/* Auto-Loot / Junk-Filter Schalter (Punkt 11) */
+.loot-settings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.loot-head-side {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.loot-head-side .loot-settings {
+  justify-content: flex-end;
+}
+
+.setting-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 12px 6px 8px;
+  font-size: 13px;
+}
+
+.setting-toggle-switch {
+  position: relative;
+  width: 30px;
+  height: 16px;
+  flex: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.setting-toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.setting-toggle.is-on {
+  border-color: var(--green);
+}
+
+.setting-toggle.is-on .setting-toggle-switch {
+  background: rgba(63, 214, 163, 0.35);
+}
+
+.setting-toggle.is-on .setting-toggle-switch::after {
+  transform: translateX(14px);
+  background: var(--green);
+}
+
+.inventory-full {
+  color: var(--red-soft);
+}
+
+.smith-backpack-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-deep);
+}
+
+.smith-backpack-card > div {
+  display: grid;
+  gap: 2px;
+}
+
+.smith-backpack-card span,
+.smith-backpack-card em {
+  color: var(--muted);
+  font-size: 13px;
+}

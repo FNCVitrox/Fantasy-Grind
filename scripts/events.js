@@ -40,6 +40,18 @@ $("merchantList").addEventListener("click", (event) => {
   if (sell) sellInventoryItem(Number(sell.dataset.sell));
 });
 
+// Auto-Loot / Junk-Filter: Schalter im Rucksack und im Beute-Fenster
+["inventorySummary", "lootSettings"].forEach((id) => {
+  $(id).addEventListener("click", (event) => {
+    const toggle = event.target.closest("[data-setting-toggle]");
+    if (toggle) toggleSetting(toggle.dataset.settingToggle);
+  });
+});
+
+$("smithHome").addEventListener("click", (event) => {
+  if (event.target.closest("[data-expand-inventory]")) expandInventory();
+});
+
 $("lootChoices").addEventListener("click", (event) => {
   const equipLoot = event.target.closest("[data-equip-loot]");
   if (equipLoot) {

@@ -232,9 +232,83 @@ function queueLootBatch(items) {
   if (!equipmentItems.length) return;
   if (state.pendingLoot.length) {
     state.lootQueue.push(equipmentItems);
-    return;
+  } else {
+    state.pendingLoot = equipmentItems;
   }
-  state.pendingLoot = equipmentItems;
+  if (state.settings?.autoLoot) resolveAutoLoot();
+}
+
+// --- Einstellungen, Rucksack-Limit und Auto-Loot (Punkt 11) ---
+
+function defaultSettings() {
+  return { autoLoot: false, autoSellCommon: false };
+}
+
+function normalizeSettings(settings) {
+  const source = settings && typeof settings === "object" ? settings : {};
+  const defaults = defaultSettings();
+  return Object.fromEntries(Object.keys(defaults).map((key) => [key, typeof source[key] === "boolean" ? source[key] : defaults[key]]));
+}
+
+function toggleSetting(key) {
+  state.settings = normalizeSettings(state.settings);
+  if (!(key in state.settings)) return;
+  state.settings[key] = !state.settings[key];
+  if (key === "autoLoot" && state.settings.autoLoot && state.pendingLoot.length) resolveAutoLoot();
+  save();
+  render();
+}
+
+function normalizeInventoryCapacity(value) {
+  const capacity = Number.isFinite(value) ? Math.floor(value) : inventoryBaseCapacity;
+  const clamped = Math.min(inventoryMaxCapacity, Math.max(inventoryBaseCapacity, capacity));
+  return inventoryBaseCapacity + Math.round((clamped - inventoryBaseCapacity) / inventoryExpandStep) * inventoryExpandStep;
+}
+
+function inventoryCapacity() {
+  return normalizeInventoryCapacity(state.inventoryCapacity);
+}
+
+function isInventoryFull() {
+  return (state.inventory || []).length >= inventoryCapacity();
+}
+
+// Wie viel besser ein Item im Vergleich zum aktuell getragenen Teil desselben Slots ist (positiv = Verbesserung).
+function lootUpgradeDelta(item) {
+  const current = getItem(state.equipment[itemSlot(item)]);
+  return itemScore(item) - (current ? itemScore(current) : 0);
+}
+
+function autoLootPickIndex(choices) {
+  let bestIndex = 0;
+  choices.forEach((item, index) => {
+    const best = choices[bestIndex];
+    const delta = lootUpgradeDelta(item);
+    const bestDelta = lootUpgradeDelta(best);
+    if (delta > bestDelta || (delta === bestDelta && sellValue(item) > sellValue(best))) bestIndex = index;
+  });
+  return bestIndex;
+}
+
+// Nimmt aus jedem offenen Beute-Angebot das beste Item; Verbesserungen werden angelegt, der Rest wandert in den Rucksack.
+// Wie beim manuellen Wählen verfallen die übrigen Angebote.
+function resolveAutoLoot() {
+  let guard = 0;
+  while (state.pendingLoot.length && guard < 50) {
+    guard += 1;
+    const index = autoLootPickIndex(state.pendingLoot);
+    const item = state.pendingLoot[index];
+    chooseLoot(index, lootUpgradeDelta(item) > 0, { auto: true });
+  }
+}
+
+// Sofort verkaufen statt einlagern (voller Rucksack oder Junk-Filter). Liefert das erhaltene Gold.
+function sellLootDirectly(item) {
+  const value = sellValue(item);
+  state.gold += value;
+  delete state.customItems[item.id];
+  delete state.itemDurability[item.id];
+  return value;
 }
 
 function advanceLootQueue() {
@@ -399,9 +473,10 @@ function rollQuality(enemy) {
   return "common";
 }
 
-function chooseLoot(index, equipNow = false) {
+function chooseLoot(index, equipNow = false, options = {}) {
   if (!state.pendingLoot[index]) return;
   const item = state.pendingLoot[index];
+  const sellInstead = !equipNow && (isInventoryFull() || (state.settings?.autoSellCommon && itemQuality(item) === "common"));
   const sourceEnemy = item.sourceEnemy;
   if (!item.fixed) {
     state.customItems[item.id] = item;
@@ -413,19 +488,32 @@ function chooseLoot(index, equipNow = false) {
   if (equipNow) {
     const previousId = state.equipment[item.slot];
     state.equipment[item.slot] = item.id;
-    if (previousId) {
+    if (previousId && options.auto && isInventoryFull()) {
+      // Auto-Loot bei vollem Rucksack: das ersetzte (schlechtere) Teil wird verkauft statt das Limit zu sprengen.
+      const previous = getItem(previousId);
+      const gold = previous ? sellValue(previous) : 0;
+      state.gold += gold;
+      delete state.customItems[previousId];
+      delete state.itemDurability[previousId];
+      log(() => t("loot.autoSoldReplacedLog", "Rucksack voll: ersetztes Teil {item} verkauft, +{gold} Gold.", { item: previous ? itemDisplayName(previous, previousId) : "?", gold }), "drop");
+    } else if (previousId) {
       state.inventory.push(previousId);
     }
-    log(() => t("loot.chosenEquippedLog", "{item} gewählt und direkt ausgerüstet.", { item: itemDisplayName(item, item.id) }), "drop");
+    log(() => t(options.auto ? "loot.autoEquippedLog" : "loot.chosenEquippedLog", "{item} gewählt und direkt ausgerüstet.", { item: itemDisplayName(item, item.id) }), "drop");
+  } else if (sellInstead) {
+    const gold = sellLootDirectly(item);
+    const reasonKey = isInventoryFull() ? "loot.autoSoldFullLog" : "loot.autoSoldJunkLog";
+    log(() => t(reasonKey, "{item} verkauft: +{gold} Gold.", { item: itemDisplayName(item, item.id), gold }), "drop");
   } else {
     state.inventory.push(item.id);
-    log(() => t("loot.chosenInventoryLog", "{item} gewählt und ins Inventar gelegt.", { item: itemDisplayName(item, item.id) }), "drop");
+    log(() => t(options.auto ? "loot.autoInventoryLog" : "loot.chosenInventoryLog", "{item} gewählt und ins Inventar gelegt.", { item: itemDisplayName(item, item.id) }), "drop");
   }
   if (["epic", "legendary"].includes(itemQuality(item))) {
     remindSaveBackup(() => t("save.backupLootReason", "du hast {quality}e Beute erhalten.", { quality: labelFor(qualityLabel, itemQuality(item)) }));
   }
   notifyReadyAchievements();
   advanceLootQueue();
+  if (options.auto) return;
   save();
   render();
 }
