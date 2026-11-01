@@ -834,24 +834,130 @@ h2 {
   gap: 10px;
 }
 
+/* Ausrüstungsleiste: Überschrift als Etikett auf dem Rahmen (kostet keine Zeile),
+   Slots passen sich dem Platz an (Container Query statt fester 7 Spalten). */
 .equipment-belt {
+  container-type: inline-size;
+  position: relative;
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
   align-items: center;
-  padding: 10px;
+  margin-top: 6px;
+  padding: 12px 10px 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(7, 17, 27, 0.72);
 }
 
+.equipment-belt > div:first-child {
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: #0b1824;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.equipment-belt > div:first-child .eyebrow {
+  font-size: 11px;
+  line-height: 14px;
+}
+
+/* "Gürtel" bleibt für Screenreader erhalten, braucht aber keinen sichtbaren Platz. */
 .equipment-belt h2 {
-  margin-top: 2px;
-  font-size: 18px;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .equipment-belt .equipment {
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Popups der rechten Spalte nach links öffnen, damit sie nicht aus dem Bild ragen. */
+.equipment-belt .equipment-chip:nth-child(4n) .equipment-hover-detail,
+.equipment-belt .equipment-chip:nth-child(4n + 3) .equipment-hover-detail {
+  left: auto;
+  right: 0;
+}
+
+/* Kompakte Slots (Standard): Slot, Item-Name und Haltbarkeitsbalken. Details zeigt das Hover-Fenster. */
+.equipment-belt .equipment-chip {
+  min-height: 52px;
+  gap: 2px;
+  padding: 7px 8px 8px 11px;
+  align-content: start;
+}
+
+.equipment-belt .equipment-chip > small {
+  display: none;
+}
+
+.equipment-durability-bar {
+  display: block;
+  height: 4px;
+  margin-top: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.equipment-durability-bar b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #4ade80;
+}
+
+.equipment-durability-bar.is-mid b {
+  background: #facc15;
+}
+
+.equipment-durability-bar.is-low b {
+  background: #f87171;
+}
+
+/* Viel Platz: 7 Slots in einer Reihe. */
+@container (min-width: 640px) {
+  .equipment-belt .equipment {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .equipment-belt .equipment-chip > span:not(.equipment-hover-detail) {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  .equipment-belt .equipment-chip:nth-child(4n) .equipment-hover-detail,
+  .equipment-belt .equipment-chip:nth-child(4n + 3) .equipment-hover-detail {
+    left: 0;
+    right: auto;
+  }
+
+  .equipment-belt .equipment-chip:nth-last-child(-n + 2) .equipment-hover-detail {
+    left: auto;
+    right: 0;
+  }
+}
+
+/* Sehr viel Platz: zusätzlich Seltenheit, Upgrade, Haltbarkeit und Reparaturkosten als Text. */
+@container (min-width: 900px) {
+  .equipment-belt .equipment-chip > small {
+    display: block;
+  }
 }
 
 .map {
@@ -1044,6 +1150,11 @@ h2 {
   white-space: nowrap;
 }
 
+/* Item-Name: einzeilig mit "…" (voller Name im Tooltip); in der 1-Reihen-Ansicht zweizeilig (siehe @container). */
+.equipment-chip > span:not(.equipment-hover-detail) {
+  display: block;
+}
+
 .equipment-chip span,
 .equipment-chip small {
   color: var(--muted);
@@ -1204,6 +1315,9 @@ h2 {
   max-height: min(62vh, 620px);
   overflow: auto;
   padding-right: 2px;
+  /* Karten behalten ihre volle Höhe; die Liste scrollt statt die Karten zu stauchen. */
+  grid-auto-rows: max-content;
+  align-content: start;
 }
 
 .inventory-item {

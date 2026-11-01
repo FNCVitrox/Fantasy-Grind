@@ -4,13 +4,22 @@
   z-index: 1000;
   display: none;
   place-items: center;
-  padding: 18px;
+  /* Einziger Ort für den Abstand zum Bildschirmrand. Fenster dürfen nie breiter/höher als der Platz darin werden. */
+  --modal-pad: 18px;
+  padding:
+    max(var(--modal-pad), env(safe-area-inset-top, 0px))
+    max(var(--modal-pad), env(safe-area-inset-right, 0px))
+    max(var(--modal-pad), env(safe-area-inset-bottom, 0px))
+    max(var(--modal-pad), env(safe-area-inset-left, 0px));
   background: rgba(4, 10, 18, 0.82);
   overscroll-behavior: contain;
+  overflow: hidden;
 }
 
 .modal-overlay.open {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .modal-window {
@@ -65,7 +74,8 @@
 
 .loot-window .loot-card {
   display: grid;
-  grid-template-rows: 112px 54px 92px 46px minmax(116px, 1fr) auto;
+  /* Werte-Zeile: Platz für 2 Reihen, wächst bei Bedarf statt abzuschneiden. */
+  grid-template-rows: minmax(112px, auto) minmax(54px, auto) minmax(108px, auto) minmax(46px, auto) minmax(116px, 1fr) auto;
   gap: 8px;
   min-height: 460px;
   height: 100%;

@@ -11,10 +11,6 @@
     grid-template-columns: 1fr;
   }
 
-  .equipment-belt .equipment {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .topbar {
     align-items: flex-start;
     flex-direction: column;
@@ -312,9 +308,10 @@
     max-width: none;
     min-width: 0;
     gap: 12px;
-    padding: 10px;
+    padding: 14px 10px 10px;
     border-radius: 10px;
-    overflow: hidden;
+    /* sichtbar lassen, damit das Etikett auf dem Rahmen nicht abgeschnitten wird */
+    overflow: visible;
   }
 
   .equipment-belt h2 {
@@ -595,9 +592,12 @@
     text-align: center;
   }
 
+  .modal-overlay {
+    --modal-pad: 9px;
+  }
+
   .modal-window {
-    width: min(100%, calc(100vw - 18px));
-    max-height: calc(100dvh - 18px);
+    width: 100%;
     padding: 12px;
     overflow: auto;
     overscroll-behavior: contain;
@@ -696,7 +696,7 @@
 
   .quest-board-window,
   .loot-window {
-    width: min(100%, calc(100vw - 18px));
+    width: 100%;
   }
 
   .inventory-window {
@@ -1066,10 +1066,18 @@
     font-size: 12px;
   }
 
+  .modal-overlay {
+    --modal-pad: 5px;
+  }
+
   .modal-window {
-    width: calc(100vw - 10px);
-    max-height: calc(100dvh - 10px);
+    width: 100%;
     padding: 10px;
+  }
+
+  .inventory-window .modal-window-head {
+    margin: -10px -10px 8px;
+    padding: 10px 10px 9px;
   }
 
   .modal-window-head {
@@ -1134,11 +1142,6 @@
     line-height: 1.22;
   }
 
-  .inventory-item .loot-compare {
-    max-height: 64px;
-    overflow: auto;
-  }
-
   .inventory-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1146,4 +1149,11 @@
   .inventory-actions button {
     min-height: 38px;
   }
+}
+
+/* Schutzregel für alle Fenster: nie breiter oder höher als der freie Platz im Overlay (inkl. Notch/Safe-Area). */
+.modal-overlay > .modal-window {
+  min-width: 0;
+  max-width: 100%;
+  max-height: 100%;
 }

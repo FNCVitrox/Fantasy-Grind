@@ -6,7 +6,7 @@ Aktueller Stand: spielbarer Alpha-Prototyp.
 
 ## Version
 
-Alpha v0.8.116
+Alpha v0.8.126
 
 ## Spielen
 
@@ -33,6 +33,41 @@ test-starten.bat
 ```
 
 Wenn alles passt, steht am Ende `Smoke test passed` und `ALLE TESTS BESTANDEN`.
+
+### Browser-Tests (Darstellung, Sprache, Kampf)
+
+Diese Tests öffnen das Spiel in einem echten Browser (Chromium) und prüfen:
+
+- alle Fenster auf 14 Bildschirmgrössen: kein Überlauf, nichts abgeschnitten
+- Deutsch und Englisch: keine gemischten Texte, keine fehlenden Übersetzungen
+- Ausrüstungsleiste lesbar und Kampf-Button ohne Scrollen erreichbar
+- „Überspringen“ beendet einen Kampf in unter 250 ms
+
+Einmalig installieren:
+
+```powershell
+npm i -D playwright
+npx playwright install chromium
+```
+
+Starten:
+
+```powershell
+npm run test:ui
+```
+
+## Version erhöhen
+
+Die Version wird nur noch an einer Stelle gepflegt: `assetVersion` in `scripts/data.js`. Der Befehl überträgt sie automatisch nach `index.html` (Cache-Busting `?v=` und das Badge) und in diese README:
+
+```powershell
+npm run bump            # 0.8.125 -> 0.8.126
+npm run bump -- minor   # 0.8.125 -> 0.9.0
+npm run bump -- 1.0.0   # feste Version
+npm run version:check   # nur prüfen, ob überall dieselbe Version steht
+```
+
+`npm test` schlägt fehl, wenn die Versionen auseinanderlaufen.
 
 ## Wichtig: Spielstand sichern
 

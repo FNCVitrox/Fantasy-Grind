@@ -598,6 +598,8 @@ function bossDropPitySignature() {
 
 function resetBattleStageState() {
   if (isFighting) return;
+  // Ergebnis-Banner nach "Überspringen" noch sichtbar lassen; der Timer setzt die Bühne danach zurück.
+  if (typeof battleResultTimer !== "undefined" && battleResultTimer) return;
   const stage = $("battleStage");
   if (stage.className !== "battle-stage") stage.className = "battle-stage";
   stage.querySelectorAll(".damage-number").forEach((number) => number.remove());
@@ -807,9 +809,10 @@ function renderEquipment() {
     const enchantText = itemEnchantmentsText(item);
     return `<button class="equipment-chip rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}" type="button" data-open-equipment>
       <strong>${labelFor(slotLabel, slot)}</strong>
-      <span class="quality-${quality}">${escapeHtml(itemName)}</span>
+      <span class="quality-${quality}" title="${escapeAttr(itemName)}">${escapeHtml(itemName)}</span>
       <small>${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</small>
       <small class="${durability <= 25 ? "durability-low" : ""}">${durability}% · ${repairCost} ${t("common.gold", "Gold")}</small>
+      <i class="equipment-durability-bar${durability <= 25 ? " is-low" : durability <= 60 ? " is-mid" : ""}" title="${escapeAttr(`${t("main.durability", "Haltbarkeit")}: ${durability}%`)}"><b style="width:${Math.max(0, Math.min(100, durability))}%"></b></i>
       <span class="equipment-hover-detail" aria-hidden="true">
         <b class="quality-${quality}">${escapeHtml(itemName)}</b>
         <em>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</em>
@@ -953,13 +956,13 @@ function renderStorageStatus() {
   const failedLoad = status.failedLoads[0];
   const headline = storageWorks ? t("save.browserActive", "Browser-Speicher aktiv") : t("save.browserBlocked", "Browser-Speicher blockiert");
   const detail = failedLoad
-    ? t("save.readFailed", "{label} konnte nicht gelesen werden: {error}", { label: failedLoad.label, error: failedLoad.error })
+    ? t("save.readFailed", "{label} konnte nicht gelesen werden: {error}", { label: saveSourceLabel(failedLoad.label), error: failedLoad.error })
     : fallbackWorks
       ? t("save.autoPathReady", "Automatisches Speichern hat mindestens einen funktionierenden Speicherweg.")
       : t("save.useDownload", "Bitte nutze regelmaessig Spielstand herunterladen.");
   const loadedFrom = status.recoveredFrom
-    ? t("save.recoveredFrom", "Aus {label} wiederhergestellt", { label: status.recoveredFrom })
-    : status.loadedFrom;
+    ? t("save.recoveredFrom", "Aus {label} wiederhergestellt", { label: saveSourceLabel(status.recoveredFrom) })
+    : saveSourceLabel(status.loadedFrom);
 
   return `
     <section class="save-storage-card ${storageWorks ? "is-ok" : "is-warning"}">
@@ -1696,7 +1699,7 @@ function acceptQuest(questId) {
   if (isQuestActive(questId) || state.completedQuests.includes(questId)) return;
   const quest = getQuestById(questId);
   if (!questAvailable(quest)) {
-    log(t("quest.notReadyArea", "Diese Quest passt noch nicht zu deinen freigeschalteten Gebieten."), "bad");
+    log(() => t("quest.notReadyArea", "Diese Quest passt noch nicht zu deinen freigeschalteten Gebieten."), "bad");
     render();
     return;
   }
@@ -1704,7 +1707,7 @@ function acceptQuest(questId) {
   state.questBoard = state.questBoard.filter((id) => id !== questId);
   forgetNewQuest(questId);
   state.quests[questId] = state.quests[questId] || 0;
-  log(t("quest.acceptLog", "Quest angenommen: {quest}.", { quest: questDisplayName(quest) }), "drop");
+  log(() => t("quest.acceptLog", "Quest angenommen: {quest}.", { quest: questDisplayName(quest) }), "drop");
   save();
   render();
 }
@@ -1761,7 +1764,7 @@ function renderBestiaryList() {
       return `<button class="bestiary-card ${id === selectedBestiaryEnemy ? "active" : ""}" type="button" data-bestiary="${id}">
         <strong>${escapeHtml(enemyDisplayName(enemy, id))}</strong>
         <p>${t("bestiary.collection", "Sammlung {found}/{total}", { found: completion.found, total: completion.total })} ${t("bestiary.discovered", "entdeckt")}</p>
-        <div class="completion-bar" aria-label="Entdeckter Ausrüstungsfortschritt"><span style="width:${completion.percent}%"></span></div>
+        <div class="completion-bar" aria-label="${escapeAttr(t("bestiary.discoveryProgress", "Entdeckter Ausrüstungsfortschritt"))}"><span style="width:${completion.percent}%"></span></div>
       </button>`;
     }).join("")}
   </div>`;
@@ -2492,25 +2495,33 @@ function formatChance(chance) {
   return `${(chance * 100).toFixed(chance < 0.02 ? 1 : 0)}%`;
 }
 
+function logEntryClass(entry, index) {
+  if (entry && typeof entry === "object") return ["good", "bad", "drop"].includes(entry.type) ? entry.type : "";
+  // Alte Spielstände: Einträge waren reine Texte, Typ wurde aus dem Inhalt geraten.
+  const text = String(entry || "");
+  return text.includes("Tod") ? "bad" : text.includes("Seltener") || text.includes("Quest") || text.includes("ausgerüstet") ? "drop" : index === 0 ? "good" : "";
+}
+
 function renderLog() {
-  const previewSignature = `${currentLanguage()}|${state.log.slice(0, 5).join("\n") || "empty"}`;
+  const previewTexts = state.log.slice(0, 5).map(logEntryText);
+  const previewSignature = `${currentLanguage()}|${previewTexts.join("\n") || "empty"}`;
   if (renderCache.logPreview !== previewSignature) {
     renderCache.logPreview = previewSignature;
-    $("logPreview").innerHTML = state.log.length
-      ? state.log.slice(0, 5).map(escapeHtml).join("<br>")
-      : t("log.empty", "Noch keine Einträge.");
+    $("logPreview").innerHTML = previewTexts.length
+      ? previewTexts.map(escapeHtml).join("<br>")
+      : escapeHtml(t("log.empty", "Noch keine Einträge."));
   }
   if (!isModalOpen("logModal")) {
     renderCache.log = "";
     return;
   }
-  const signature = `${currentLanguage()}|${state.log.slice(0, 18).join("\n") || "empty"}`;
+  const entries = state.log.slice(0, 18);
+  const texts = entries.map(logEntryText);
+  const signature = `${currentLanguage()}|${texts.join("\n") || "empty"}`;
   if (renderCache.log === signature) return;
   renderCache.log = signature;
-  $("log").innerHTML = state.log.slice(0, 18).map((entry, index) => {
-    const type = entry.includes("Tod") ? "bad" : entry.includes("Seltener") || entry.includes("Quest") || entry.includes("ausgerüstet") ? "drop" : index === 0 ? "good" : "";
-    return `<div class="${type}">${escapeHtml(entry)}</div>`;
-  }).join("") || `<div>${t("log.empty", "Noch keine Einträge.")}</div>`;
+  $("log").innerHTML = entries.map((entry, index) => `<div class="${logEntryClass(entry, index)}">${escapeHtml(texts[index])}</div>`).join("")
+    || `<div>${escapeHtml(t("log.empty", "Noch keine Einträge."))}</div>`;
 }
 
 function renderCombatLogSummary() {

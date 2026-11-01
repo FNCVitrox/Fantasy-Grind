@@ -774,7 +774,82 @@ const translations = {
         "log.title": "Protokoll",
         "log.eyebrow": "Kampfverlauf",
         "log.empty": "Noch keine Einträge.",
-        "log.start": "Du erreichst das Lager Grauwacht. Der Grind beginnt langsam."
+        "log.start": "Du erreichst das Lager Grauwacht. Der Grind beginnt langsam.",
+        "save.backupTip": "Tipp: Spielstand herunterladen - {reason}",
+        "save.backupLevelReason": "du hast gerade ein Level geschafft.",
+        "save.backupBossReason": "du hast einen Dungeon-Boss besiegt.",
+        "save.restoredFrom": "Spielstand aus {source} wiederhergestellt.",
+        "progress.levelUpLog": "Level {level} erreicht. Deine Wunden schließen sich, aber der nächste Schritt wird schwerer.",
+        "combat.firstClearLog": "Erster Dungeon-Sieg: {reward}.",
+        "combat.autoUnlockLog": "Der Kampf wurde automatisch freigegeben.",
+        "log.balanceRework": "Balance überarbeitet: Item-Stats folgen klareren Rollen pro Ausrüstungsslot.",
+        "combat.roundsCount": "{count} Runden",
+        "combat.roundsCount.one": "1 Runde",
+        "combat.victoryAgainst.one": "Sieg gegen {enemy} nach 1 Runde.",
+        "combat.defeatAgainst.one": "Niederlage gegen {enemy} nach 1 Runde.",
+        "combat.winLog.one": "Sieg gegen {enemy} nach 1 Runde. +{xp} XP, +{gold} Gold.",
+        "aria.version": "Spielversion",
+        "aria.gameStatus": "Spielstatus",
+        "aria.quickAccess": "Schnellzugriff",
+        "aria.restCamp": "Am Lagerplatz heilen",
+        "aria.openBestiary": "Bestiarium öffnen",
+        "aria.openQuestBoard": "Quest-Tafel öffnen",
+        "aria.openAchievements": "Erfolge öffnen",
+        "aria.openInventory": "Rucksack öffnen",
+        "aria.openMerchant": "Händler öffnen",
+        "aria.openSmith": "Schmied öffnen",
+        "aria.openEnchant": "Arkanistin öffnen",
+        "aria.openSave": "Spielstand öffnen",
+        "aria.character": "Charakter",
+        "aria.characterStats": "Charakterwerte",
+        "aria.classAbilities": "Klasse und Fähigkeiten",
+        "aria.worldCombat": "Welt und Kampf",
+        "aria.equipmentOverview": "Ausrüstungsübersicht",
+        "aria.battleAnimation": "Kampfanimation",
+        "aria.heroHealth": "Krieger Leben",
+        "aria.enemyHealth": "Gegner Leben",
+        "aria.combatMode": "Kampfmodus",
+        "aria.combatActions": "Kampfaktionen",
+        "aria.zonesQuests": "Gebiete und Quests",
+        "aria.combatProtocol": "Kampfprotokoll",
+        "aria.closeZones": "Gebiete schließen",
+        "aria.closeBestiary": "Bestiarium schließen",
+        "aria.closeQuestBoard": "Quest-Tafel schließen",
+        "aria.closeAchievements": "Erfolge schließen",
+        "aria.closeInventory": "Rucksack schließen",
+        "aria.closeMerchant": "Händler schließen",
+        "aria.closeSmith": "Schmied schließen",
+        "aria.closeLog": "Protokoll schließen",
+        "aria.closeCombatLog": "Kampf-Log schließen",
+        "aria.closeSave": "Spielstand schließen",
+        "aria.currentSave": "Aktueller Spielstand",
+        "aria.closeRepair": "Reparatur schließen",
+        "aria.closeEquipment": "Ausrüstung schließen",
+        "aria.closePlayerStats": "Spielerwerte schließen",
+        "aria.closeClass": "Klasse schließen",
+        "aria.splash": "Nemurenai Game Studio präsentiert Fantasy Grind",
+        "common.health": "Leben",
+        "enchant.lockedRunes": "Gesperrt bis höhere Bindung",
+        "bestiary.discoveryProgress": "Entdeckter Ausrüstungsfortschritt",
+        "loot.statsAria": "Itemwerte",
+        "combat.enemyUses": "{enemy} nutzt {abilities}.",
+        "combat.forWord": "für",
+        "combat.critFor": "kritisch für {damage}",
+        "combat.critAppend": "Kritischer Treffer für {damage}.",
+        "combat.summaryCrit": "{count} Crit",
+        "combat.summaryCrits": "{count} Crits",
+        "combat.summaryHeal": "{count} Heilung",
+        "combat.summaryHeals": "{count} Heilungen",
+        "combat.summaryEffect": "{count} Effekt",
+        "combat.summaryEffects": "{count} Effekte",
+        "achievements.noReward": "Keine Belohnung",
+        "save.source.main": "Hauptspielstand",
+        "save.source.backup": "Backup",
+        "save.source.previous": "vorheriges Backup",
+        "save.source.mainRepaired": "Hauptspielstand (repariert)",
+        "save.source.backupRepaired": "Backup (repariert)",
+        "save.source.previousRepaired": "Vorheriges Backup (repariert)",
+        "save.fileRenown": "Ruhm"
     }
 };
 
@@ -1059,7 +1134,78 @@ function defaultLanguage() {
     return "de";
 }
 
+let languageOverride = null;
+
+// Führt fn in einer bestimmten Sprache aus (z. B. um Log-Einträge in DE und EN zu erzeugen).
+function withLanguage(language, fn) {
+    const previous = languageOverride;
+    languageOverride = normalizeLanguage(language);
+    try {
+        return fn();
+    } finally {
+        languageOverride = previous;
+    }
+}
+
+function isLanguageAvailable(language) {
+    const normalized = normalizeLanguage(language);
+    return normalized === "de" || Boolean(translations[normalized]);
+}
+
+const logEntryTypes = new Set(["", "good", "bad", "drop"]);
+
+// Log-Eintrag, der beide Sprachen enthält. messageFn wird pro Sprache ausgewertet,
+// damit auch Namen (Gegner, Items, Quests) in der jeweiligen Sprache stehen.
+function createLogEntry(messageFn, type = "", extra = {}) {
+    const entry = { type: logEntryTypes.has(type) ? type : "", ...extra };
+    entry.de = String(withLanguage("de", messageFn) ?? "");
+    entry.en = isLanguageAvailable("en") ? String(withLanguage("en", messageFn) ?? "") : null;
+    return entry;
+}
+
+// Log-Eintrag nur aus Übersetzungs-Key und einfachen Werten; wird beim Anzeigen live übersetzt.
+function createKeyLogEntry(key, fallback = key, params = {}, type = "", extra = {}) {
+    return { type: logEntryTypes.has(type) ? type : "", key, fallback, params, ...extra };
+}
+
+function logEntryText(entry) {
+    if (typeof entry === "string") return entry;
+    if (!entry || typeof entry !== "object") return "";
+    if (entry.key) {
+        // Parameter mit Endung "Key" (z. B. sourceKey) werden live übersetzt und ersetzen den Parameter ohne Endung.
+        const params = { ...(entry.params || {}) };
+        Object.entries(entry.params || {}).forEach(([name, value]) => {
+            if (name.endsWith("Key") && typeof value === "string" && value) params[name.slice(0, -3)] = t(value, params[name.slice(0, -3)] ?? value);
+        });
+        return t(entry.key, entry.fallback || entry.key, params);
+    }
+    const language = currentLanguage();
+    if (language === "en") return entry.en || entry.de || "";
+    return entry.de || entry.en || "";
+}
+
+function normalizeLogEntry(entry) {
+    if (typeof entry === "string") return entry.slice(0, 500);
+    if (!entry || typeof entry !== "object") return null;
+    const clean = { type: logEntryTypes.has(entry.type) ? entry.type : "" };
+    if (typeof entry.kind === "string") clean.kind = entry.kind.slice(0, 40);
+    if (typeof entry.key === "string" && entry.key) {
+        clean.key = entry.key.slice(0, 120);
+        clean.fallback = typeof entry.fallback === "string" ? entry.fallback.slice(0, 500) : clean.key;
+        clean.params = {};
+        Object.entries(entry.params && typeof entry.params === "object" ? entry.params : {}).slice(0, 12).forEach(([name, value]) => {
+            if (["string", "number", "boolean"].includes(typeof value)) clean.params[String(name).slice(0, 40)] = typeof value === "string" ? value.slice(0, 200) : value;
+        });
+        return clean;
+    }
+    if (typeof entry.de !== "string" && typeof entry.en !== "string") return null;
+    clean.de = typeof entry.de === "string" ? entry.de.slice(0, 500) : "";
+    clean.en = typeof entry.en === "string" ? entry.en.slice(0, 500) : null;
+    return clean;
+}
+
 function currentLanguage() {
+    if (languageOverride) return languageOverride;
     if (typeof state !== "undefined" && state && state.language) {
         return normalizeLanguage(state.language);
     }
@@ -1088,7 +1234,10 @@ function writeStoredLanguage(language) {
 
 function t(key, fallback = key, params = {}) {
     const language = currentLanguage();
-    const text = translations[language]?.[key] ?? translations.de[key] ?? fallback;
+    // Einzahl: Gibt es "<key>.one" und ist count/rounds genau 1, wird diese Variante genutzt.
+    const singular = (params?.count === 1 || params?.rounds === 1) ? `${key}.one` : "";
+    const singularText = singular ? (translations[language]?.[singular] ?? translations.de[singular]) : undefined;
+    const text = singularText ?? translations[language]?.[key] ?? translations.de[key] ?? fallback;
     return Object.entries(params).reduce(
         (result, [name, value]) => result.replaceAll(`{${name}}`, String(value)),
         text
@@ -1120,6 +1269,7 @@ function toggleLanguage() {
 }
 
 function clearRenderCache() {
+    if (typeof document !== "undefined" && document.documentElement?.dataset) delete document.documentElement.dataset.i18nApplied;
     if (typeof renderCache === "undefined" || !renderCache) return;
     Object.keys(renderCache).forEach((key) => {
         delete renderCache[key];
@@ -1371,7 +1521,6 @@ function applyStaticTranslations() {
     setStaticText(".equipment-belt h2", "main.belt");
     setStaticText(".target-card .eyebrow", "main.target");
     setStaticText(".combat-health-label span", "main.life");
-    setStaticText(".map-card h2", "common.zone");
     setStaticText(".quest-panel h2", "quest.active");
     setStaticText(".log-panel h2", "log.title");
     setStaticText("#toggleLogBtn", "common.open");
@@ -1406,8 +1555,33 @@ function applyStaticTranslations() {
     setStaticText("#smithEnchantSection .enchant-intro p", "enchant.intro");
     setStaticText("[data-smith-view='home']", "common.back");
     setCloseButtons();
-    setStaticAria("#languageToggleBtn", "language.aria");
-    setStaticAria("#openClassModalBtn", "main.changeClass");
+    applyDataI18n();
+}
+
+// Übersetzt alle Elemente mit data-i18n (Text), data-i18n-aria (aria-label) und data-i18n-title (title).
+// Der deutsche Originaltext aus index.html bleibt als Fallback im Element gespeichert.
+function applyDataI18n() {
+    if (!document.querySelectorAll) return;
+    const language = currentLanguage();
+    if (document.documentElement?.dataset && document.documentElement.dataset.i18nApplied === language) return;
+    const bindings = [
+        ["data-i18n", null],
+        ["data-i18n-aria", "aria-label"],
+        ["data-i18n-title", "title"],
+    ];
+    bindings.forEach(([attribute, target]) => {
+        document.querySelectorAll(`[${attribute}]`).forEach((element) => {
+            const key = element.getAttribute(attribute);
+            const fallbackAttribute = `${attribute}-fallback`;
+            if (!element.hasAttribute(fallbackAttribute)) {
+                element.setAttribute(fallbackAttribute, target ? element.getAttribute(target) || "" : element.textContent);
+            }
+            const text = t(key, element.getAttribute(fallbackAttribute));
+            if (target) element.setAttribute(target, text);
+            else element.textContent = text;
+        });
+    });
+    if (document.documentElement?.dataset) document.documentElement.dataset.i18nApplied = language;
 }
 
 function setDocumentTitle() {
@@ -1434,6 +1608,6 @@ function setCloseButtons() {
     if (!document.querySelectorAll) return;
     document.querySelectorAll(".modal-close").forEach((button) => {
         button.textContent = t("common.close", button.textContent);
-        button.setAttribute("aria-label", t("common.close", button.getAttribute("aria-label") || ""));
+        if (!button.hasAttribute("data-i18n-aria")) button.setAttribute("aria-label", t("common.close", button.getAttribute("aria-label") || ""));
     });
 }

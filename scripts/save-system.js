@@ -55,14 +55,35 @@ function load() {
     }
   }
 
-  saveDiagnostics.loadedFrom = foundStoredSave ? t("save.newAfterError", "Neuer Spielstand nach Ladefehler") : t("save.newGame", "Neuer Spielstand");
+  saveDiagnostics.loadedFrom = foundStoredSave ? "Neuer Spielstand nach Ladefehler" : "Neuer Spielstand";
   saveDiagnostics.startedWithStoredSave = foundStoredSave;
   return defaultState();
 }
 
+// Interne Herkunfts-Bezeichnungen sind deutsch; für die Anzeige werden sie übersetzt.
+const saveSourceKeys = {
+  "Hauptspielstand": "save.source.main",
+  "Backup": "save.source.backup",
+  "vorheriges Backup": "save.source.previous",
+  "Hauptspielstand (repariert)": "save.source.mainRepaired",
+  "Backup (repariert)": "save.source.backupRepaired",
+  "Vorheriges Backup (repariert)": "save.source.previousRepaired",
+  "Neuer Spielstand": "save.newGame",
+  "Neuer Spielstand nach Ladefehler": "save.newAfterError",
+};
+
+function saveSourceKey(label) {
+  return saveSourceKeys[label] || "";
+}
+
+function saveSourceLabel(label) {
+  const key = saveSourceKey(label);
+  return key ? t(key, label) : String(label || "");
+}
+
 function restoreRecoveredSave(label, loaded) {
   loaded.log = [
-    `Spielstand aus ${label} wiederhergestellt.`,
+    createKeyLogEntry("save.restoredFrom", "Spielstand aus {source} wiederhergestellt.", { source: String(label), sourceKey: saveSourceKey(label) }, "drop"),
     ...(loaded.log || []),
   ].slice(0, 40);
   const restored = JSON.stringify(loaded);
@@ -124,7 +145,8 @@ function saveFileName() {
     .replace(/[^a-zA-Z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 16);
-  return `Fantasy-Grind-Level-${state.level}-Ruhm-${state.renown}-${safeZone}-${stamp}.json`;
+  const renownWord = t("save.fileRenown", "Ruhm").normalize("NFD").replace(/[^a-zA-Z0-9]+/g, "");
+  return `Fantasy-Grind-Level-${state.level}-${renownWord}-${state.renown}-${safeZone}-${stamp}.json`;
 }
 
 function importSaveData(raw) {
@@ -132,21 +154,21 @@ function importSaveData(raw) {
   try {
     parsed = JSON.parse(raw);
   } catch {
-    log(t("save.importInvalidJson", "Import fehlgeschlagen: Der Text ist kein gültiges JSON."), "bad");
+    log(() => t("save.importInvalidJson", "Import fehlgeschlagen: Der Text ist kein gültiges JSON."), "bad");
     return false;
   }
 
   const rawSave = parsed?.save ? JSON.stringify(parsed.save) : JSON.stringify(parsed);
   const loaded = parseSavedState(rawSave);
   if (!loaded) {
-    log(t("save.importUnreadable", "Import fehlgeschlagen: Der Spielstand konnte nicht gelesen werden."), "bad");
+    log(() => t("save.importUnreadable", "Import fehlgeschlagen: Der Spielstand konnte nicht gelesen werden."), "bad");
     return false;
   }
 
   state = loaded;
   restoreUiSelection();
   state.log = [
-    t("save.imported", "Spielstand erfolgreich importiert."),
+    createKeyLogEntry("save.imported", "Spielstand erfolgreich importiert.", {}, "drop"),
     ...(state.log || []),
   ].slice(0, 40);
   save();
@@ -162,7 +184,7 @@ function resetSaveData() {
 
   state = defaultState();
   state.language = preservedLanguage;
-  state.log = [t("save.newRunLog", "Neuer Spielstand begonnen.")];
+  state.log = [createKeyLogEntry("save.newRunLog", "Neuer Spielstand begonnen.")];
   state.combatLog = [];
   restoreUiSelection();
   syncDerivedStats();
@@ -174,7 +196,7 @@ function resetSaveData() {
   pendingCombatAction = null;
   if (typeof clearCombatWatchdog === "function") clearCombatWatchdog();
 
-  saveDiagnostics.loadedFrom = t("save.newGame", "Neuer Spielstand");
+  saveDiagnostics.loadedFrom = "Neuer Spielstand";
   saveDiagnostics.recoveredFrom = "";
   saveDiagnostics.failedLoads = [];
   saveDiagnostics.lastParseError = "";
@@ -338,7 +360,7 @@ function normalizeLoadedCollections(loaded) {
   loaded.lockedItems = Array.isArray(loaded.lockedItems)
     ? uniqueSaveIds(loaded.lockedItems).filter((id) => loaded.inventory.includes(id))
     : [];
-  loaded.log = Array.isArray(loaded.log) ? loaded.log : defaultState().log;
+  loaded.log = Array.isArray(loaded.log) ? loaded.log.map(normalizeLogEntry).filter(Boolean).slice(0, 40) : defaultState().log;
   loaded.lastSaveExportAt = loaded.lastSaveExportAt || "";
 }
 

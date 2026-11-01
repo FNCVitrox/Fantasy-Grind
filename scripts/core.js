@@ -278,7 +278,7 @@ function defaultState() {
       combatMode: "auto",
     },
     balanceVersion: 4,
-    log: [t("log.start", "Du erreichst das Lager Grauwacht. Der Grind beginnt langsam.")],
+    log: [createKeyLogEntry("log.start", "Du erreichst das Lager Grauwacht. Der Grind beginnt langsam.")],
   };
 }
 
@@ -294,7 +294,7 @@ function applyBalanceMigration(loaded) {
   Object.values(loaded.discoveredLoot || {}).forEach((drops) => Object.values(drops || {}).forEach(rebalanceSavedItem));
   loaded.balanceVersion = balanceVersion;
   loaded.log = [
-    "Balance überarbeitet: Item-Stats folgen klareren Rollen pro Ausrüstungsslot.",
+    createKeyLogEntry("log.balanceRework", "Balance überarbeitet: Item-Stats folgen klareren Rollen pro Ausrüstungsslot.", {}, "drop"),
     ...(loaded.log || []),
   ].slice(0, 40);
 }
@@ -416,7 +416,7 @@ function applyBalanceMigration(loaded) {
   Object.values(loaded.discoveredLoot || {}).forEach((drops) => Object.values(drops || {}).forEach(rebalanceSavedItem));
   loaded.balanceVersion = balanceVersion;
   loaded.log = [
-    "Balance überarbeitet: Item-Stats folgen klareren Rollen pro Ausrüstungsslot.",
+    createKeyLogEntry("log.balanceRework", "Balance überarbeitet: Item-Stats folgen klareren Rollen pro Ausrüstungsslot.", {}, "drop"),
     ...(loaded.log || []),
   ].slice(0, 40);
 }
@@ -1081,7 +1081,7 @@ function setCharacterClass(classId) {
   state.characterClass = classId;
   syncDerivedStats();
   state.hp = Math.max(1, Math.min(state.maxHp, Math.floor(state.maxHp * hpRatio)));
-  log(t("class.changed", "Klasse gewechselt: {class}.", { class: entityName("class", classId, classCatalog[classId].name) }), "drop");
+  log(() => t("class.changed", "Klasse gewechselt: {class}.", { class: entityName("class", classId, classCatalog[classId].name) }), "drop");
   save();
   render();
 }
@@ -1092,7 +1092,7 @@ function setBuild(buildId) {
   state.build = buildId;
   syncDerivedStats();
   state.hp = Math.max(1, Math.min(state.maxHp, Math.round(state.maxHp * hpRatio)));
-  log(t("build.changed", "Build gewechselt: {build}.", { build: buildName(buildId) }), "drop");
+  log(() => t("build.changed", "Build gewechselt: {build}.", { build: buildName(buildId) }), "drop");
   save();
   render();
 }
@@ -1197,7 +1197,7 @@ function damageEquippedItems(enemy, extraLoss = 0) {
     state.equipment[slot] = null;
     delete state.itemDurability[itemId];
     if (state.customItems[itemId]) delete state.customItems[itemId];
-    log(t("equipment.brokenLog", "{item} ist zerbrochen.", { item: itemDisplayName(item, itemId) }), "bad");
+    log(() => t("equipment.brokenLog", "{item} ist zerbrochen.", { item: itemDisplayName(item, itemId) }), "bad");
   });
 
   state.durability = equippedDurabilityAverage();
@@ -1209,8 +1209,14 @@ function syncDerivedStats() {
   state.hp = Math.min(state.hp, state.maxHp);
 }
 
-function log(message, type = "") {
-  state.log.unshift(message);
+// message: Funktion, die den Text liefert (wird für DE und EN ausgewertet), oder ein fertiger Log-Eintrag.
+function log(message, type = "", extra = {}) {
+  const entry = typeof message === "function"
+    ? createLogEntry(message, type, extra)
+    : typeof message === "object" && message
+      ? message
+      : createLogEntry(() => String(message), type, extra);
+  state.log.unshift(entry);
   state.log = state.log.slice(0, 40);
   renderLog(type);
 }
@@ -1236,14 +1242,24 @@ function setCombatLog(enemy, events, playerWon, rounds) {
   renderCombatLog();
 }
 
+// Erkennt Heilungen in Kampftexten (Deutsch und Englisch).
+const healTextPattern = /\bheilt\b|\bheilen\b|\bheilung\b|\bheals?\b|\bhealed\b|\bhealing\b/i;
+
+function isHealEvent(event) {
+  return event?.heal === true || healTextPattern.test(event?.text || "");
+}
+
 function combatSummary(events) {
   const criticals = events.filter((event) => event.critical).length;
-  const heals = events.filter((event) => /\bheilt\b|\bheilen\b|\bheilung\b/i.test(event.text || "")).length;
-  const effects = events.filter((event) => event.damage === 0 && !event.critical && !/\bheilt\b|\bheilen\b|\bheilung\b/i.test(event.text || "")).length;
+  const heals = events.filter(isHealEvent).length;
+  const effects = events.filter((event) => event.damage === 0 && !event.critical && !isHealEvent(event)).length;
+  const part = (count, oneKey, oneFallback, manyKey, manyFallback) => (count
+    ? (count === 1 ? t(oneKey, oneFallback, { count }) : t(manyKey, manyFallback, { count }))
+    : "");
   return [
-    criticals ? `${criticals} Crit${criticals === 1 ? "" : "s"}` : "",
-    heals ? `${heals} Heilung${heals === 1 ? "" : "en"}` : "",
-    effects ? `${effects} Effekt${effects === 1 ? "" : "e"}` : "",
+    part(criticals, "combat.summaryCrit", "{count} Crit", "combat.summaryCrits", "{count} Crits"),
+    part(heals, "combat.summaryHeal", "{count} Heilung", "combat.summaryHeals", "{count} Heilungen"),
+    part(effects, "combat.summaryEffect", "{count} Effekt", "combat.summaryEffects", "{count} Effekte"),
   ].filter(Boolean).join(" · ");
 }
 
@@ -1252,7 +1268,7 @@ function combatLogEntry(event) {
   let type = event.actor === "hero" ? "hero" : "enemy";
   if (event.critical) type = "critical";
   if (event.damage === 0) type = "effect";
-  if (/\bheilt\b|\bheilen\b|\bheilung\b/i.test(event.text || "")) type = "heal";
+  if (isHealEvent(event)) type = "heal";
   const roundText = event.round ? `R${event.round}` : t("combat.beforeFight", "Vor Kampf");
   return {
     type,
@@ -1260,9 +1276,11 @@ function combatLogEntry(event) {
   };
 }
 
+// reason: Funktion, die den Grund in der aktuellen Sprache liefert (oder ein fester Text).
 function remindSaveBackup(reason) {
-  if (state.log.slice(0, 8).some((entry) => entry.startsWith("Tipp: Spielstand herunterladen"))) return;
-  log(`Tipp: Spielstand herunterladen - ${reason}`, "drop");
+  const isReminder = (entry) => entry?.kind === "saveReminder" || (typeof entry === "string" && entry.startsWith("Tipp: Spielstand herunterladen"));
+  if (state.log.slice(0, 8).some(isReminder)) return;
+  log(() => t("save.backupTip", "Tipp: Spielstand herunterladen - {reason}", { reason: typeof reason === "function" ? reason() : String(reason) }), "drop", { kind: "saveReminder" });
 }
 
 function gainXp(amount) {
@@ -1277,8 +1295,9 @@ function gainXp(amount) {
     state.level += 1;
     syncDerivedStats();
     state.hp = state.maxHp;
-    log(`Level ${state.level} erreicht. Deine Wunden schließen sich, aber der nächste Schritt wird schwerer.`, "good");
-    remindSaveBackup("du hast gerade ein Level geschafft.");
+    const reachedLevel = state.level;
+    log(() => t("progress.levelUpLog", "Level {level} erreicht. Deine Wunden schließen sich, aber der nächste Schritt wird schwerer.", { level: reachedLevel }), "good");
+    remindSaveBackup(() => t("save.backupLevelReason", "du hast gerade ein Level geschafft."));
   }
 }
 
@@ -1338,7 +1357,7 @@ function maybeGrantBattleRenown(enemy) {
   const chance = state.renown >= 30 ? 0.14 : 0.08;
   if (!guaranteed && Math.random() > chance) return;
   state.renown += 1;
-  log(t("combat.renownLog", "Dein Ruf wächst: +1 Ruhm für den Sieg gegen {enemy}.", { enemy: enemyDisplayName(enemy, enemy.baseId || selectedEnemy) }), "drop");
+  log(() => t("combat.renownLog", "Dein Ruf wächst: +1 Ruhm für den Sieg gegen {enemy}.", { enemy: enemyDisplayName(enemy, enemy.baseId || selectedEnemy) }), "drop");
 }
 
 function bossFirstClearClaimed(enemyId) {
@@ -1397,7 +1416,7 @@ function bossFirstClearRewardText(enemy) {
   const reward = bossFirstClearReward(enemy);
   if (!reward) return "";
   const parts = [];
-  if (reward.renown) parts.push(`${reward.renown} Ruhm`);
+  if (reward.renown) parts.push(`${reward.renown} ${t("common.renown", "Ruhm")}`);
   if (reward.gold) parts.push(`${reward.gold} Gold`);
   const materials = rewardMaterialText(reward.materials);
   if (materials) parts.push(materials);
@@ -1443,7 +1462,7 @@ function zoneLockText(zoneId) {
 function selectZone(zoneId) {
   if (!zones[zoneId]) return false;
   if (!isZoneUnlocked(zoneId)) {
-    log(t("zone.lockedLog", "{zone} ist noch gesperrt. {requirements}.", {
+    log(() => t("zone.lockedLog", "{zone} ist noch gesperrt. {requirements}.", {
       zone: zoneDisplayName(zoneId),
       requirements: zoneLockText(zoneId),
     }), "bad");
@@ -1605,10 +1624,11 @@ function rollEnemyCritical(hit, enemy, effectSummary = itemEffectSummary()) {
 }
 
 function criticalText(text, damage) {
-  const replacement = `kritisch für ${damage}`;
-  return text.includes(" für ")
-    ? text.replace(/für \d+/, replacement)
-    : `${text} Kritischer Treffer für ${damage}.`;
+  const forWord = t("combat.forWord", "für").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`(^|\\s)${forWord} \\d+`);
+  return pattern.test(text)
+    ? text.replace(pattern, (match, space) => `${space}${t("combat.critFor", "kritisch für {damage}", { damage })}`)
+    : `${text} ${t("combat.critAppend", "Kritischer Treffer für {damage}.", { damage })}`;
 }
 
 function enemyAbilityIds(enemy) {
@@ -1916,12 +1936,12 @@ async function legacyFight() {
   syncDerivedStats();
 
   if (state.hp <= 0) {
-    log("Du bist kampfunfähig. Raste zuerst im Lager.", "bad");
+    log(() => t("combat.cannotFight", "Du bist kampfunfähig. Raste zuerst im Lager."), "bad");
     return;
   }
 
   if (state.pendingLoot.length) {
-    log("Wähle zuerst deine Beute aus dem letzten Kampf.", "drop");
+    log(() => t("combat.pickLootFirst", "Wähle zuerst deine Beute aus dem letzten Kampf."), "drop");
     return;
   }
 
@@ -2335,16 +2355,16 @@ async function legacyFight() {
       const firstClearReward = grantBossFirstClear(enemy, enemy.baseId || selectedEnemy);
       maybeDropRareQuest(enemy);
       refreshQuestBoard(false);
-      log(t("combat.winLog", "Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.", { enemy: enemyName, rounds, xp, gold }), "good");
+      log(() => t("combat.winLog", "Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.", { enemy: enemyDisplayName(enemy, enemy.baseId || selectedEnemy), rounds, xp, gold }), "good");
       if (rewardScale < 1) {
-        log(t("combat.rewardScaledLog", "Alte Gegner geben nur noch {percent}% Kampfbelohnung.", {
+        log(() => t("combat.rewardScaledLog", "Alte Gegner geben nur noch {percent}% Kampfbelohnung.", {
           percent: Math.round(rewardScale * 100),
         }), "drop");
       }
       if (firstClearReward) {
-        log(`Erster Dungeon-Sieg: ${bossFirstClearRewardText(enemy)}.`, "drop");
+        log(() => t("combat.firstClearLog", "Erster Dungeon-Sieg: {reward}.", { reward: bossFirstClearRewardText(enemy) }), "drop");
       }
-      if (enemy.boss) remindSaveBackup("du hast einen Dungeon-Boss besiegt.");
+      if (enemy.boss) remindSaveBackup(() => t("save.backupBossReason", "du hast einen Dungeon-Boss besiegt."));
       notifyReadyAchievements();
     } else {
       const xpLoss = Math.min(state.xp, Math.ceil(xpForLevel(state.level) * 0.1));
@@ -2354,11 +2374,11 @@ async function legacyFight() {
       state.deaths += 1;
       state.hp = Math.max(1, Math.floor(state.maxHp * 0.35));
       damageEquippedItems(enemy, 2);
-      log(t("combat.lossLog", "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.", { enemy: enemyName, xp: xpLoss, gold: goldLoss }), "bad");
+      log(() => t("combat.lossLog", "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.", { enemy: enemyDisplayName(enemy, enemy.baseId || selectedEnemy), xp: xpLoss, gold: goldLoss }), "bad");
     }
   } catch (error) {
     console.error(error);
-    log("Der Kampfabschluss hatte einen Fehler, wurde aber sauber freigegeben.", "bad");
+    log(() => t("combat.finishError", "Der Kampfabschluss hatte einen Fehler, wurde aber sauber freigegeben."), "bad");
   } finally {
     clearCombatWatchdog();
     clearManualCombatStep();
@@ -2379,12 +2399,12 @@ async function fight() {
   syncDerivedStats();
 
   if (state.hp <= 0) {
-    log(t("combat.cannotFight", "Du bist kampfunfähig. Raste zuerst im Lager."), "bad");
+    log(() => t("combat.cannotFight", "Du bist kampfunfähig. Raste zuerst im Lager."), "bad");
     return;
   }
 
   if (state.pendingLoot.length) {
-    log(t("combat.pickLootFirst", "Wähle zuerst deine Beute aus dem letzten Kampf."), "drop");
+    log(() => t("combat.pickLootFirst", "Wähle zuerst deine Beute aus dem letzten Kampf."), "drop");
     return;
   }
 
@@ -2410,7 +2430,7 @@ async function fight() {
     await finishActionCombat(combat);
   } catch (error) {
     console.error(error);
-    log(t("combat.finishError", "Der Kampfabschluss hatte einen Fehler, wurde aber sauber freigegeben."), "bad");
+    log(() => t("combat.finishError", "Der Kampfabschluss hatte einen Fehler, wurde aber sauber freigegeben."), "bad");
   } finally {
     clearCombatWatchdog();
     clearManualCombatStep();
@@ -2568,7 +2588,7 @@ async function executePlayerCombatAction(combat, action) {
         round: combat.rounds,
         actor: "enemy",
         damage: 0,
-        text: `${combat.enemyName} nutzt ${defense.defensive.join(" + ")}.`,
+        text: t("combat.enemyUses", "{enemy} nutzt {abilities}.", { enemy: combat.enemyName, abilities: defense.defensive.join(" + ") }),
       });
     }
   }
@@ -2718,8 +2738,13 @@ async function finishActionCombat(combat) {
   $("battleStage").className = "battle-stage";
   $("battleStage").classList.add(combat.playerHp > 0 ? "victory" : "defeat");
   showBattleResult(combat.playerHp > 0, combat.enemyName, combat.rounds, combatAnimationSummary(combat.events));
-  await waitResult(900);
-  hideBattleResult();
+  if (skipCombat) {
+    // Übersprungen: sofort weiter, Ergebnis-Banner blendet sich nebenher aus.
+    hideBattleResultLater(1100);
+  } else {
+    await waitResult(900);
+    hideBattleResult();
+  }
   setCombatLog(combat.enemy, combat.events, combat.playerHp > 0, combat.rounds);
   damageEquippedItems(combat.enemy);
   if (combat.playerHp > 0) {
@@ -2749,12 +2774,12 @@ function grantActionCombatRewards(combat) {
   const firstClearReward = grantBossFirstClear(combat.enemy, combat.enemy.baseId || selectedEnemy);
   maybeDropRareQuest(combat.enemy);
   refreshQuestBoard(false);
-  log(t("combat.winLog", "Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.", { enemy: combat.enemyName, rounds: combat.rounds, xp, gold }), "good");
+  log(() => t("combat.winLog", "Sieg gegen {enemy} nach {rounds} Runden. +{xp} XP, +{gold} Gold.", { enemy: enemyDisplayName(combat.enemy, combat.enemy.baseId || selectedEnemy), rounds: combat.rounds, xp, gold }), "good");
   if (rewardScale < 1) {
-    log(t("combat.rewardScaledLog", "Alte Gegner geben nur noch {percent}% Kampfbelohnung.", { percent: Math.round(rewardScale * 100) }), "drop");
+    log(() => t("combat.rewardScaledLog", "Alte Gegner geben nur noch {percent}% Kampfbelohnung.", { percent: Math.round(rewardScale * 100) }), "drop");
   }
-  if (firstClearReward) log(`Erster Dungeon-Sieg: ${bossFirstClearRewardText(combat.enemy)}.`, "drop");
-  if (combat.enemy.boss) remindSaveBackup("du hast einen Dungeon-Boss besiegt.");
+  if (firstClearReward) log(() => t("combat.firstClearLog", "Erster Dungeon-Sieg: {reward}.", { reward: bossFirstClearRewardText(combat.enemy) }), "drop");
+  if (combat.enemy.boss) remindSaveBackup(() => t("save.backupBossReason", "du hast einen Dungeon-Boss besiegt."));
   notifyReadyAchievements();
 }
 
@@ -2766,14 +2791,14 @@ function applyActionCombatLoss(combat) {
   state.deaths += 1;
   state.hp = state.maxHp;
   damageEquippedItems(combat.enemy, 2);
-  log(t("combat.lossLog", "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.", { enemy: combat.enemyName, xp: xpLoss, gold: goldLoss }), "bad");
+  log(() => t("combat.lossLog", "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.", { enemy: enemyDisplayName(combat.enemy, combat.enemy.baseId || selectedEnemy), xp: xpLoss, gold: goldLoss }), "bad");
 }
 
 function armCombatWatchdog(ms) {
   clearCombatWatchdog();
   combatWatchdog = window.setTimeout(() => {
     if (isFighting) {
-      forceUnlockCombat("Der Kampf wurde automatisch freigegeben.");
+      forceUnlockCombat(() => t("combat.autoUnlockLog", "Der Kampf wurde automatisch freigegeben."));
     }
   }, ms);
 }
@@ -2829,7 +2854,7 @@ function prepareNextEncounter(enemyId) {
   const elite = Math.random() <= eliteEncounterChance;
   state.nextEncounters[enemyId] = { elite };
   if (elite) {
-    log(t("enemy.nextEliteLog", "Der nächste {enemy} ist eine Elite-Version.", { enemy: enemyDisplayName(base, enemyId) }), "bad");
+    log(() => t("enemy.nextEliteLog", "Der nächste {enemy} ist eine Elite-Version.", { enemy: enemyDisplayName(base, enemyId) }), "bad");
   }
 }
 
@@ -2882,12 +2907,12 @@ function updateQuestProgress(enemy, enemyId = selectedEnemy) {
         const reward = createQuestRewardItem(quest);
         state.customItems[reward.id] = reward;
         queueLootBatch([reward]);
-        log(t("quest.rewardLog", "Questbelohnung erhalten: {item} ({quality}).", {
+        log(() => t("quest.rewardLog", "Questbelohnung erhalten: {item} ({quality}).", {
           item: itemDisplayName(reward, reward.id),
           quality: labelFor(qualityLabel, reward.quality),
         }), "drop");
       }
-      log(t("quest.completeLog", "Quest abgeschlossen: {quest}. +{xp} XP, +{gold} Gold, +{renown} Ruhm.", {
+      log(() => t("quest.completeLog", "Quest abgeschlossen: {quest}. +{xp} XP, +{gold} Gold, +{renown} Ruhm.", {
         quest: questDisplayName(quest),
         xp: quest.rewardXp,
         gold: quest.rewardGold,
@@ -2924,7 +2949,7 @@ function maybeDropRareQuest(enemy) {
   state.questBoard.unshift(id);
   state.questBoard = uniqueQuestIds(state.questBoard).slice(0, state.renown >= 40 ? 6 : 5);
   markQuestAsNew(id);
-  log(t("quest.rareFoundLog", "Seltene Quest-Schriftrolle gefunden: {quest}. Sie liegt auf der Quest-Tafel.", { quest: questDisplayName(quest) }), "drop");
+  log(() => t("quest.rareFoundLog", "Seltene Quest-Schriftrolle gefunden: {quest}. Sie liegt auf der Quest-Tafel.", { quest: questDisplayName(quest) }), "drop");
 }
 
 function rareQuestDropChance(enemy) {
@@ -3000,7 +3025,7 @@ function cancelQuest(questId) {
   state.questBoard = state.questBoard.filter((id) => id !== questId);
   forgetNewQuest(questId);
   refreshQuestBoard(true);
-  log(t("quest.cancelLog", "Quest gelöscht: {quest}.", { quest: questDisplayName(quest) }), "bad");
+  log(() => t("quest.cancelLog", "Quest gelöscht: {quest}.", { quest: questDisplayName(quest) }), "bad");
   save();
   render();
 }
@@ -3160,7 +3185,7 @@ function addFixedDropChoices(choices, enemy, enemyId) {
     const fallback = drop.guaranteed
       ? "Beutedruck garantiert Bossbeute: {item} ({quality})."
       : "Seltener Fund in der Beuteauswahl: {item} ({quality}).";
-    log(t(logKey, fallback, {
+    log(() => t(logKey, fallback, {
       item: itemDisplayName(specialItem, drop.id),
       quality: labelFor(qualityLabel, specialItem.quality),
     }), "drop");
@@ -3405,13 +3430,13 @@ function chooseLoot(index, equipNow = false) {
     if (previousId) {
       state.inventory.push(previousId);
     }
-    log(t("loot.chosenEquippedLog", "{item} gewählt und direkt ausgerüstet.", { item: itemDisplayName(item, item.id) }), "drop");
+    log(() => t("loot.chosenEquippedLog", "{item} gewählt und direkt ausgerüstet.", { item: itemDisplayName(item, item.id) }), "drop");
   } else {
     state.inventory.push(item.id);
-    log(t("loot.chosenInventoryLog", "{item} gewählt und ins Inventar gelegt.", { item: itemDisplayName(item, item.id) }), "drop");
+    log(() => t("loot.chosenInventoryLog", "{item} gewählt und ins Inventar gelegt.", { item: itemDisplayName(item, item.id) }), "drop");
   }
   if (["epic", "legendary"].includes(itemQuality(item))) {
-    remindSaveBackup(t("save.backupLootReason", "du hast {quality}e Beute erhalten.", { quality: labelFor(qualityLabel, itemQuality(item)) }));
+    remindSaveBackup(() => t("save.backupLootReason", "du hast {quality}e Beute erhalten.", { quality: labelFor(qualityLabel, itemQuality(item)) }));
   }
   notifyReadyAchievements();
   advanceLootQueue();
@@ -3433,7 +3458,7 @@ function equipInventoryItem(index) {
     state.inventory.push(previousId);
   }
 
-  log(t("inventory.equipLog", "{item} ausgerüstet. {previous} liegt jetzt im Inventar.", {
+  log(() => t("inventory.equipLog", "{item} ausgerüstet. {previous} liegt jetzt im Inventar.", {
     item: itemDisplayName(item, itemId),
     previous: previousId ? itemDisplayName(getItem(previousId), previousId) : t("inventory.oldItem", "Altes Teil"),
   }), "drop");
@@ -3446,7 +3471,7 @@ function sellInventoryItem(index) {
   const item = getItem(itemId);
   if (!item) return;
   if (isInventoryItemLocked(itemId)) {
-    log(t("merchant.lockedItemLog", "{item} ist geschützt und wird nicht verkauft.", { item: itemDisplayName(item, itemId) }), "bad");
+    log(() => t("merchant.lockedItemLog", "{item} ist geschützt und wird nicht verkauft.", { item: itemDisplayName(item, itemId) }), "bad");
     return;
   }
 
@@ -3455,7 +3480,7 @@ function sellInventoryItem(index) {
   unlockInventoryItem(itemId);
   delete state.itemDurability[itemId];
   state.gold += value;
-  log(t("merchant.sellItemLog", "Tilda Münzhand kauft {item}. +{gold} Gold.", { item: itemDisplayName(item, itemId), gold: value }), "drop");
+  log(() => t("merchant.sellItemLog", "Tilda Münzhand kauft {item}. +{gold} Gold.", { item: itemDisplayName(item, itemId), gold: value }), "drop");
   save();
   render();
 }
@@ -3472,7 +3497,7 @@ function sellAllInventoryItems() {
   });
   state.inventory = state.inventory.filter((itemId) => isInventoryItemLocked(itemId));
   state.gold += total;
-  log(t("merchant.sellAllLog", "Tilda Münzhand kauft {count} Items. +{gold} Gold.", { count, gold: total }), "drop");
+  log(() => t("merchant.sellAllLog", "Tilda Münzhand kauft {count} Items. +{gold} Gold.", { count, gold: total }), "drop");
   save();
   render();
 }
@@ -3502,10 +3527,10 @@ function toggleInventoryItemLock(index) {
   if (!item) return;
   if (isInventoryItemLocked(itemId)) {
     unlockInventoryItem(itemId);
-    log(t("merchant.unlockItemLog", "{item} ist nicht mehr geschützt.", { item: itemDisplayName(item, itemId) }), "drop");
+    log(() => t("merchant.unlockItemLog", "{item} ist nicht mehr geschützt.", { item: itemDisplayName(item, itemId) }), "drop");
   } else {
     lockInventoryItem(itemId);
-    log(t("merchant.lockItemLog", "{item} ist vor Verkauf geschützt.", { item: itemDisplayName(item, itemId) }), "drop");
+    log(() => t("merchant.lockItemLog", "{item} ist vor Verkauf geschützt.", { item: itemDisplayName(item, itemId) }), "drop");
   }
   save();
   render();
@@ -3521,17 +3546,21 @@ function sellValue(item) {
   return Math.max(2, Math.floor(qualityValue[item.quality] + itemScore(item) * 1.45));
 }
 
+function materialAmountsText(amounts) {
+  return Object.entries(amounts || {}).map(([id, amount]) => `${amount} ${labelFor(materialLabel, id)}`).join(", ");
+}
+
 function grantMaterials(enemyId, eliteBonus = false) {
   const drops = materialDrops[enemyId] || [];
-  const gained = [];
+  const gained = {};
   drops.forEach((drop) => {
     const amount = Math.max(0, random(drop.min, drop.max) + (eliteBonus && Math.random() < 0.65 ? 1 : 0) - (Math.random() < 0.22 ? 1 : 0));
     if (amount <= 0) return;
     state.materials[drop.id] = (state.materials[drop.id] || 0) + amount;
-    gained.push(`${amount} ${labelFor(materialLabel, drop.id)}`);
+    gained[drop.id] = (gained[drop.id] || 0) + amount;
   });
-  if (gained.length) {
-    log(t("material.foundLog", "Material gefunden: {materials}.", { materials: gained.join(", ") }), "drop");
+  if (Object.keys(gained).length) {
+    log(() => t("material.foundLog", "Material gefunden: {materials}.", { materials: materialAmountsText(gained) }), "drop");
   }
 }
 
@@ -3571,7 +3600,7 @@ function smithMasteryRequirementStatus(rank) {
   const requirement = rank.requirement || {};
   return [
     { label: `Level ${requirement.level}`, done: state.level >= (requirement.level || 1) },
-    { label: `${requirement.renown} Ruhm`, done: state.renown >= (requirement.renown || 0) },
+    { label: `${requirement.renown} ${t("common.renown", "Ruhm")}`, done: state.renown >= (requirement.renown || 0) },
     { label: "ein ausgerüstetes Item am aktuellen Limit", done: hasEquippedItemAtLimit() },
     { label: "Schmied vertraut dir genug", done: smithRankMeets(requirement.rank || 0) },
     ...(requirement.bossKills ? [{ label: `${requirement.bossKills} Dungeon-Boss besiegt`, done: (state.combatStats?.bossKills || 0) >= requirement.bossKills }] : []),
@@ -3588,13 +3617,13 @@ function canStartSmithMasteryMission(rank) {
 function startSmithMasteryMission(rankId) {
   const rank = smithMasteryRankById(rankId);
   if (!canStartSmithMasteryMission(rank)) {
-    log(t("smith.masteryBlockedLog", "Borin Glutbart schüttelt den Kopf. Für diesen Meisterauftrag fehlt dir noch etwas."), "bad");
+    log(() => t("smith.masteryBlockedLog", "Borin Glutbart schüttelt den Kopf. Für diesen Meisterauftrag fehlt dir noch etwas."), "bad");
     return;
   }
   state.smithMastery.discovered = true;
   state.smithMastery.active = rank.id;
   state.smithMastery.progress[rank.id] = { eliteKills: 0, bossKills: 0 };
-  log(t("smith.masteryStartLog", "Meisterauftrag begonnen: {name}.", { name: smithMasteryName(rank) }), "drop");
+  log(() => t("smith.masteryStartLog", "Meisterauftrag begonnen: {name}.", { name: smithMasteryName(rank) }), "drop");
   save();
   render();
 }
@@ -3631,7 +3660,7 @@ function canCompleteSmithMasteryMission(rank) {
 function completeSmithMasteryMission(rankId) {
   const rank = smithMasteryRankById(rankId);
   if (!canCompleteSmithMasteryMission(rank)) {
-    log(t("smith.masteryIncompleteLog", "Borin Glutbart knurrt: Bring mir Erz, nicht Ausreden."), "bad");
+    log(() => t("smith.masteryIncompleteLog", "Borin Glutbart knurrt: Bring mir Erz, nicht Ausreden."), "bad");
     return;
   }
 
@@ -3645,12 +3674,12 @@ function completeSmithMasteryMission(rankId) {
   state.smithMastery.active = null;
   state.smithMastery.completed = [...new Set([...state.smithMastery.completed, rank.id])];
   state.renown += rank.rewardRenown;
-  log(t("smith.masteryCompleteLog", "Borin Glutbart vollendet \"{name}\". Neues Upgrade-Limit: +{limit}. +{renown} Ruhm.", {
+  log(() => t("smith.masteryCompleteLog", "Borin Glutbart vollendet \"{name}\". Neues Upgrade-Limit: +{limit}. +{renown} Ruhm.", {
     name: smithMasteryName(rank),
     limit: rank.limit,
     renown: rank.rewardRenown,
   }), "drop");
-  remindSaveBackup(t("save.backupSmithReason", "Borin hat seine Werkstatt erweitert."));
+  remindSaveBackup(() => t("save.backupSmithReason", "Borin hat seine Werkstatt erweitert."));
   notifyReadyAchievements();
   save();
   render();
@@ -3685,7 +3714,7 @@ function enchantMasteryRequirementStatus(rank) {
   const requirement = rank.requirement || {};
   return [
     { label: `Level ${requirement.level}`, done: state.level >= (requirement.level || 1) },
-    { label: `${requirement.renown} Ruhm`, done: state.renown >= (requirement.renown || 0) },
+    { label: `${requirement.renown} ${t("common.renown", "Ruhm")}`, done: state.renown >= (requirement.renown || 0) },
     ...(requirement.enchantedItem ? [{ label: "ein verzaubertes ausgerüstetes Item", done: hasEnchantedEquippedItem() }] : []),
     ...(requirement.bossKills ? [{ label: `${requirement.bossKills} Dungeon-Boss besiegt`, done: (state.combatStats?.bossKills || 0) >= requirement.bossKills }] : []),
   ];
@@ -3702,13 +3731,13 @@ function canStartEnchantMasteryMission(rank) {
 function startEnchantMasteryMission(rankId) {
   const rank = enchantMasteryRankById(rankId);
   if (!canStartEnchantMasteryMission(rank)) {
-    log(t("enchant.masteryBlockedLog", "Mira Nachtfaden lächelt spitz: Erst die Prüfung, dann das Ritual."), "bad");
+    log(() => t("enchant.masteryBlockedLog", "Mira Nachtfaden lächelt spitz: Erst die Prüfung, dann das Ritual."), "bad");
     return;
   }
   state.enchanting.discovered = true;
   state.enchanting.active = rank.id;
   state.enchanting.progress[rank.id] = { eliteKills: 0, bossKills: 0 };
-  log(t("enchant.masteryStartLog", "Arkaner Auftrag begonnen: {name}.", { name: enchantMasteryName(rank) }), "drop");
+  log(() => t("enchant.masteryStartLog", "Arkaner Auftrag begonnen: {name}.", { name: enchantMasteryName(rank) }), "drop");
   save();
   render();
 }
@@ -3745,7 +3774,7 @@ function canCompleteEnchantMasteryMission(rank) {
 function completeEnchantMasteryMission(rankId) {
   const rank = enchantMasteryRankById(rankId);
   if (!canCompleteEnchantMasteryMission(rank)) {
-    log(t("enchant.masteryIncompleteLog", "Mira Nachtfaden tippt auf den Runenkreis. Er bleibt kalt."), "bad");
+    log(() => t("enchant.masteryIncompleteLog", "Mira Nachtfaden tippt auf den Runenkreis. Er bleibt kalt."), "bad");
     return;
   }
 
@@ -3758,12 +3787,12 @@ function completeEnchantMasteryMission(rankId) {
   state.enchanting.active = null;
   state.enchanting.completed = [...new Set([...state.enchanting.completed, rank.id])];
   state.renown += rank.rewardRenown;
-  log(t("enchant.masteryCompleteLog", "Mira vollendet \"{name}\". {reward} +{renown} Ruhm.", {
+  log(() => t("enchant.masteryCompleteLog", "Mira vollendet \"{name}\". {reward} +{renown} Ruhm.", {
     name: enchantMasteryName(rank),
     reward: enchantMasteryReward(rank),
     renown: rank.rewardRenown,
   }), "drop");
-  remindSaveBackup(t("save.backupEnchantReason", "Mira hat deine Runenbindung erweitert."));
+  remindSaveBackup(() => t("save.backupEnchantReason", "Mira hat deine Runenbindung erweitert."));
   notifyReadyAchievements();
   save();
   render();
@@ -3861,11 +3890,11 @@ function claimedAchievementCount() {
 function achievementRewardText(reward = {}) {
   const parts = [];
   if (reward.gold) parts.push(`${reward.gold} Gold`);
-  if (reward.renown) parts.push(`${reward.renown} Ruhm`);
+  if (reward.renown) parts.push(`${reward.renown} ${t("common.renown", "Ruhm")}`);
   Object.entries(reward.materials || {}).forEach(([id, amount]) => {
-    parts.push(`${amount} ${materialLabel[id] || id}`);
+    parts.push(`${amount} ${mapLabel(materialLabel, id, materialLabel[id] || id)}`);
   });
-  return parts.join(" · ") || "Keine Belohnung";
+  return parts.join(" · ") || t("achievements.noReward", "Keine Belohnung");
 }
 
 function claimAchievement(id) {
@@ -3873,7 +3902,7 @@ function claimAchievement(id) {
   if (!achievement || isAchievementClaimed(id) || !achievementProgress(achievement).ready) return false;
   state.achievements.claimed.push(id);
   grantAchievementReward(achievement.reward);
-  log(t("achievements.claimLog", "Erfolg eingelöst: {achievement}. Belohnung: {reward}.", {
+  log(() => t("achievements.claimLog", "Erfolg eingelöst: {achievement}. Belohnung: {reward}.", {
     achievement: achievementDisplayName(achievement),
     reward: achievementRewardText(achievement.reward),
   }), "drop");
@@ -3900,7 +3929,7 @@ function notifyReadyAchievements() {
     ...unseenReady.map((achievement) => achievement.id),
   ])];
   const first = unseenReady[0];
-  log(unseenReady.length === 1
+  log(() => unseenReady.length === 1
     ? t("achievements.readyLog", "Neuer Erfolg bereit: {achievement}.", { achievement: achievementDisplayName(first) })
     : t("achievements.readyManyLog", "{count} neue Erfolge sind bereit.", { count: unseenReady.length }),
   "drop");
@@ -4086,25 +4115,25 @@ function ensureCustomEquippedItem(slot) {
 
 function enchantEquipped(slot, category) {
   if (!enchantmentsUnlocked()) {
-    log(t("enchant.tooLowLog", "Mira Nachtfaden erscheint erst, wenn du erfahren genug bist."), "bad");
+    log(() => t("enchant.tooLowLog", "Mira Nachtfaden erscheint erst, wenn du erfahren genug bist."), "bad");
     return;
   }
   const item = ensureCustomEquippedItem(slot);
   if (!item) return;
   const limit = maxEnchantSlotsForLevel();
   if (savedItemEnchantments(item).length >= limit) {
-    log(t("enchant.noSlotLog", "{item} hat aktuell keinen freien Verzauberungs-Slot.", { item: itemDisplayName(item, state.equipment[slot]) }), "bad");
+    log(() => t("enchant.noSlotLog", "{item} hat aktuell keinen freien Verzauberungs-Slot.", { item: itemDisplayName(item, state.equipment[slot]) }), "bad");
     return;
   }
   const cost = enchantCost();
   if (!canPayCost(cost)) {
-    log(t("enchant.costMissingLog", "Mira Nachtfaden braucht mehr Gold, Runensplitter oder Mondstaub."), "bad");
+    log(() => t("enchant.costMissingLog", "Mira Nachtfaden braucht mehr Gold, Runensplitter oder Mondstaub."), "bad");
     return;
   }
   const enchantmentId = rollEnchantment(item.slot, category, item);
   const enchantment = enchantmentCatalog[enchantmentId];
   if (!enchantment) {
-    log(t("enchant.noRuneForItemLog", "Für dieses Item passt in dieser Kategorie keine freie Verzauberung."), "bad");
+    log(() => t("enchant.noRuneForItemLog", "Für dieses Item passt in dieser Kategorie keine freie Verzauberung."), "bad");
     return;
   }
   spendCost(cost);
@@ -4114,7 +4143,7 @@ function enchantEquipped(slot, category) {
   if (enchantRarityRank(enchantment.rarity) >= enchantRarityRank("rare")) {
     state.combatStats.rareEnchantments += 1;
   }
-  log(t("enchant.successLog", "{item} verzaubert: {enchantment}.", {
+  log(() => t("enchant.successLog", "{item} verzaubert: {enchantment}.", {
     item: itemDisplayName(item, state.equipment[slot]),
     enchantment: enchantmentDisplayName(enchantment, enchantmentId),
   }), "drop");
@@ -4166,11 +4195,11 @@ function upgradeCritDamageGain(upgrade) {
 function upgradeEquipped(slot) {
   const item = getItem(state.equipment[slot]);
   if (item && (item.upgrade || 0) >= currentSmithMasteryLimit()) {
-    log(t("smith.limitLog", "Borin Glutbart knurrt: Der Stahl braucht erst bessere Bindung."), "bad");
+    log(() => t("smith.limitLog", "Borin Glutbart knurrt: Der Stahl braucht erst bessere Bindung."), "bad");
     return;
   }
   if (!item || !canUpgrade(item)) {
-    log(t("smith.costMissingLog", "Borin Glutbart knurrt: Dem Amboss fehlen noch Material oder Gold."), "bad");
+    log(() => t("smith.costMissingLog", "Borin Glutbart knurrt: Dem Amboss fehlen noch Material oder Gold."), "bad");
     return;
   }
   const cost = upgradeCost(item);
@@ -4186,7 +4215,7 @@ function upgradeEquipped(slot) {
   }
   state.combatStats = normalizeCombatStats(state.combatStats);
   state.combatStats.itemsUpgraded += 1;
-  log(t("smith.upgradeLog", "{item} beim Schmied verbessert.", { item: itemDisplayName(upgraded, upgraded.id) }), "drop");
+  log(() => t("smith.upgradeLog", "{item} beim Schmied verbessert.", { item: itemDisplayName(upgraded, upgraded.id) }), "drop");
   notifyReadyAchievements();
   save();
   render();
@@ -4227,6 +4256,8 @@ function salvageBonusMaterials(item) {
   const material = options[random(0, options.length - 1)] || "scrap";
   return {
     materials: { [material]: amount },
+    amount,
+    material,
     text: t("smith.salvageBonusLog", "Sauber zerlegt: +{amount} {material}.", { amount, material: labelFor(materialLabel, material) }),
   };
 }
@@ -4269,9 +4300,8 @@ function salvageInventoryItem(index) {
   delete state.itemDurability[itemId];
   state.combatStats = normalizeCombatStats(state.combatStats);
   state.combatStats.itemsSalvaged += 1;
-  const text = Object.entries(materials).map(([id, amount]) => `${amount} ${labelFor(materialLabel, id)}`).join(", ");
-  log(t("smith.salvageLog", "{item} zerlegt. Erhalten: {materials}.", { item: itemDisplayName(item, itemId), materials: text }), "drop");
-  if (bonus) log(bonus.text, "drop");
+  log(() => t("smith.salvageLog", "{item} zerlegt. Erhalten: {materials}.", { item: itemDisplayName(item, itemId), materials: materialAmountsText(materials) }), "drop");
+  if (bonus) log(() => t("smith.salvageBonusLog", "Sauber zerlegt: +{amount} {material}.", { amount: bonus.amount, material: labelFor(materialLabel, bonus.material) }), "drop");
   notifyReadyAchievements();
   save();
   render();
@@ -4299,9 +4329,8 @@ function salvageAllInventoryItems() {
   state.inventory = [];
   state.combatStats = normalizeCombatStats(state.combatStats);
   state.combatStats.itemsSalvaged += count;
-  const text = Object.entries(gained).map(([id, amount]) => `${amount} ${labelFor(materialLabel, id)}`).join(", ");
-  log(t("smith.salvageAllLog", "{count} Items zerlegt. Erhalten: {materials}.", { count, materials: text }), "drop");
-  if (bonusCount) log(t("smith.salvageAllBonusLog", "{count} Items wurden sauber zerlegt und gaben Bonus-Material.", { count: bonusCount }), "drop");
+  log(() => t("smith.salvageAllLog", "{count} Items zerlegt. Erhalten: {materials}.", { count, materials: materialAmountsText(gained) }), "drop");
+  if (bonusCount) log(() => t("smith.salvageAllBonusLog", "{count} Items wurden sauber zerlegt und gaben Bonus-Material.", { count: bonusCount }), "drop");
   notifyReadyAchievements();
   save();
   render();
@@ -4311,13 +4340,13 @@ function rest() {
   const cost = restCost();
   syncDerivedStats();
   if (state.hp >= state.maxHp) {
-    log(t("camp.alreadyRestedLog", "Du bist bereits vollständig erholt."));
+    log(() => t("camp.alreadyRestedLog", "Du bist bereits vollständig erholt."));
     return;
   }
   const paid = state.gold >= cost ? cost : 0;
   state.gold -= paid;
   state.hp = state.maxHp;
-  log(paid
+  log(() => paid
     ? t("camp.restPaidLog", "Du rastest am Lagerplatz. Leben vollständig erholt. Kosten: {gold} Gold.", { gold: cost })
     : t("camp.restFreeLog", "Du rastest am Lagerplatz. Ohne genug Gold heilt dich die Grauwacht kostenlos."));
   save();
@@ -4327,11 +4356,11 @@ function rest() {
 function repair() {
   const cost = repairCost();
   if (!cost) {
-    log(t("equipment.repairAllGoodLog", "Deine Ausrüstung ist bereits in gutem Zustand."));
+    log(() => t("equipment.repairAllGoodLog", "Deine Ausrüstung ist bereits in gutem Zustand."));
     return;
   }
   if (state.gold < cost) {
-    log(t("equipment.repairMissingLog", "Für die Reparatur fehlen {gold} Gold.", { gold: cost - state.gold }), "bad");
+    log(() => t("equipment.repairMissingLog", "Für die Reparatur fehlen {gold} Gold.", { gold: cost - state.gold }), "bad");
     return;
   }
   state.gold -= cost;
@@ -4340,7 +4369,7 @@ function repair() {
     if (getItem(itemId)) setItemDurability(itemId, 100);
   });
   state.durability = equippedDurabilityAverage();
-  log(t("equipment.repairAllLog", "Der Schmied repariert deine ausgerüsteten Items vollständig. Kosten: {gold} Gold.", { gold: cost }));
+  log(() => t("equipment.repairAllLog", "Der Schmied repariert deine ausgerüsteten Items vollständig. Kosten: {gold} Gold.", { gold: cost }));
   save();
   render();
 }
@@ -4351,17 +4380,17 @@ function repairSlot(slot) {
   if (!item) return;
   const cost = repairCostForSlot(slot);
   if (!cost) {
-    log(t("equipment.repairSlotFullLog", "{item} ist bereits vollständig repariert.", { item: itemDisplayName(item, itemId) }));
+    log(() => t("equipment.repairSlotFullLog", "{item} ist bereits vollständig repariert.", { item: itemDisplayName(item, itemId) }));
     return;
   }
   if (state.gold < cost) {
-    log(t("equipment.repairSlotMissingLog", "Für {item} fehlen {gold} Gold.", { item: itemDisplayName(item, itemId), gold: cost - state.gold }), "bad");
+    log(() => t("equipment.repairSlotMissingLog", "Für {item} fehlen {gold} Gold.", { item: itemDisplayName(item, itemId), gold: cost - state.gold }), "bad");
     return;
   }
   state.gold -= cost;
   setItemDurability(itemId, 100);
   state.durability = equippedDurabilityAverage();
-  log(t("equipment.repairSlotLog", "{item} repariert. Kosten: {gold} Gold.", { item: itemDisplayName(item, itemId), gold: cost }));
+  log(() => t("equipment.repairSlotLog", "{item} repariert. Kosten: {gold} Gold.", { item: itemDisplayName(item, itemId), gold: cost }));
   save();
   render();
 }
