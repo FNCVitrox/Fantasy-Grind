@@ -30,8 +30,3 @@ const rareQuestTemplates = [
   { key: "dungeon", name: "Runen aus der Tiefe", rarity: "legendary", text: "Besiege 7 Dungeon-Gegner und berge eine Runenbelohnung.", target: "dungeon", needed: 7, rewardXp: 540, rewardGold: 130, slot: "ring" },
   { key: "ash", name: "Schwarzer Chor", rarity: "legendary", text: "Bezwinge 5 Aschengegner für eine versengte Reliquie.", target: "ash", needed: 5, rewardXp: 760, rewardGold: 190, slot: "necklace" },
 ];
-
-const allQuestIds = () => [
-  ...questCatalog.map((quest) => quest.id),
-  ...Object.keys(typeof state !== "undefined" && state?.rareQuests ? state.rareQuests : {}),
-];

@@ -1597,13 +1597,6 @@ function setStaticText(selector, key) {
     });
 }
 
-function setStaticAria(selector, key) {
-    if (!document.querySelectorAll) return;
-    document.querySelectorAll(selector).forEach((element) => {
-        element.setAttribute("aria-label", t(key, element.getAttribute("aria-label") || ""));
-    });
-}
-
 function setCloseButtons() {
     if (!document.querySelectorAll) return;
     document.querySelectorAll(".modal-close").forEach((button) => {

@@ -367,13 +367,6 @@ function formatPercent(value) {
   return `${Math.round((value || 0) * 100)}%`;
 }
 
-function itemCritText(item) {
-  return [
-    item.critChance ? `Crit ${formatPercent(item.critChance)}` : "",
-    item.critDamage ? `${t("stat.critDamage", "Crit-Schaden")} +${formatPercent(item.critDamage)}` : "",
-  ].filter(Boolean).join(" · ");
-}
-
 function itemEffectName(item) {
   return item?.effect ? itemEffectDisplayName(item.effect) : "";
 }
@@ -2485,10 +2478,6 @@ function hideFloatingTooltip() {
 
 function zoneKeyForEnemy(enemyId) {
   return Object.entries(zones).find(([, zone]) => zone.enemies.includes(enemyId))?.[0] || "meadow";
-}
-
-function zoneForEnemy(enemyId) {
-  return zoneDisplayName(zoneKeyForEnemy(enemyId));
 }
 
 function formatChance(chance) {

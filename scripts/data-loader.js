@@ -47,10 +47,6 @@ function loadDataPack(key) {
   return promise;
 }
 
-function loadDataPacks(keys) {
-  return Promise.all(keys.map(loadDataPack));
-}
-
 async function loadOptionalDataPack(key) {
   try {
     await loadDataPack(key);

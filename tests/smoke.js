@@ -107,9 +107,10 @@ assert(
   "startup should not immediately overwrite an unreadable stored save",
 );
 assert(
-  /if \(skipCombat\) break;[\s\S]*showBattleResult\(playerWon, enemyName, rounds, summary\);[\s\S]*waitResult\(skipCombat \? 850 : 1350\)/.test(read("scripts/events.js")),
-  "skip combat should still show the win/loss result before the battle stage resets",
+  /async function finishActionCombat[\s\S]*?showBattleResult\([\s\S]*?if \(skipCombat\) \{[\s\S]*?hideBattleResultLater\([\s\S]*?await waitResult\(900\)/.test(read("scripts/core.js")),
+  "combat should show the win/loss result; skipped fights show it without blocking",
 );
+assert(!/function legacyFight|function playCombatAnimation|function playManualCombatAnimation/.test(read("scripts/core.js") + read("scripts/events.js")), "legacy combat code should stay removed");
 assert(html.includes('id="combatModeToggle"') && html.includes('data-combat-mode="manual"'), "combat mode toggle should expose a manual mode button");
 assert(css.includes(".combat-mode-toggle"), "combat mode toggle should have stable styling");
 assert(html.includes('id="combatActions"'), "combat UI should expose RPG action buttons");
@@ -568,7 +569,6 @@ assert(vm.runInContext("state = defaultState(); state.completedQuests = ['wolves
 assert(vm.runInContext("rareQuestDropChance(enemies.wolf) > 0 && rareQuestDropChance(enemies.ratguard) > rareQuestDropChance(enemies.wolf)", context), "rare quest drop chances should be explicit and scale by enemy type");
 assert(vm.runInContext("state = defaultState(); state.language = 'en'; const quest = { ...rareQuestTemplates.find((entry) => entry.key === 'elite'), id: 'rare-elite-test' }; questDisplayName(quest) === 'Oath Against the Fallen' && questDisplayText(quest).includes('elite enemies')", context), "dynamic rare quests should use translated names and text");
 assert(vm.runInContext("state = defaultState(); state.language = 'en'; itemDisplayName({ ...items.cryptCrusher, id: 'cryptCrusher' }) === 'Crypt Splitter'", context), "drop item names should use English display names");
-assert(vm.runInContext("state = defaultState(); state.language = 'en'; zoneForEnemy('ratguard') === 'Crypt of Graywatch'", context), "enemy zone labels should use translated zone names");
 assert(vm.runInContext("state = defaultState(); render = () => {}; createLootChoices(enemies.wolf, 'wolf'); const before = Object.keys(state.discoveredLoot.wolf || {}).length; chooseLoot(0, false); before === 0 && Object.keys(state.discoveredLoot.wolf || {}).length === 1", context), "bestiary loot should register only after a loot item is chosen");
 assert(vm.runInContext("state = defaultState(); renderBestiaryList().includes('completion-bar')", context), "bestiary cards should keep the visual loot progress bar");
 assert(vm.runInContext("state = defaultState(); const html = renderBestiaryList(); html.includes('Sammlung: 0/') && !html.includes('Level 1') && !html.includes('44 Leben')", context), "bestiary cards should show compact collection progress instead of level and hp");
