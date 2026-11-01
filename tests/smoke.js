@@ -110,6 +110,17 @@ assert(
   /async function finishActionCombat[\s\S]*?showBattleResult\([\s\S]*?if \(skipCombat\) \{[\s\S]*?hideBattleResultLater\([\s\S]*?await waitResult\(900\)/.test(read("scripts/core.js")),
   "combat should show the win/loss result; skipped fights show it without blocking",
 );
+{
+  // Jede Funktion darf nur einmal definiert sein; sonst gewinnt stillschweigend die zuletzt geladene Version.
+  const definitions = new Map();
+  for (const file of fs.readdirSync(path.join(root, "scripts")).filter((name) => name.endsWith(".js"))) {
+    for (const match of read(`scripts/${file}`).matchAll(/^(?:async\s+)?function\s+([\w$]+)\s*\(/gm)) {
+      definitions.set(match[1], [...(definitions.get(match[1]) || []), file]);
+    }
+  }
+  const duplicates = [...definitions].filter(([, files]) => files.length > 1).map(([name, files]) => `${name} (${files.join(", ")})`);
+  assert.deepStrictEqual(duplicates, [], "functions should be defined exactly once across all scripts");
+}
 assert(!/function legacyFight|function playCombatAnimation|function playManualCombatAnimation/.test(read("scripts/core.js") + read("scripts/events.js")), "legacy combat code should stay removed");
 assert(html.includes('id="combatModeToggle"') && html.includes('data-combat-mode="manual"'), "combat mode toggle should expose a manual mode button");
 assert(css.includes(".combat-mode-toggle"), "combat mode toggle should have stable styling");

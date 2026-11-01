@@ -130,12 +130,13 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
   - Wie: Die Funktion löschen und mit `grep` prüfen, dass auch keine Hilfsfunktion mehr verwendet wird, die nur sie gebraucht hat. Diese Hilfsfunktionen ebenfalls löschen.
   - Fertig wenn: Die Tests sind grün, und core.js ist um mindestens 450 Zeilen kürzer.
   - Ergebnis:
-    - 606 Zeilen gelöscht. core.js ist von 4'592 auf 4'141 Zeilen geschrumpft.
+    - 762 Zeilen gelöscht. core.js ist von 4'592 auf 3'985 Zeilen geschrumpft.
     - Entfernt:
       - Funktionen: `legacyFight`, `advanceManualCombat`, `waitManualCombatStep`, `playCombatAnimation`, `playManualCombatAnimation`, `itemCritText`, `zoneForEnemy`, `setStaticAria`, `loadDataPacks`
       - Variablen: `logExpanded`, `generatedLootPoolSize`, `wait`, `enchantmentRarityLabel`, `allQuestIds`
     - Gelöscht wurde in mehreren Runden, bis keine unbenutzte Funktion mehr übrig war. Bewusst behalten: `itemBalanceBudget`, weil der Balance-Test damit prüft, dass kein Item zu stark ist.
-    - Absicherung: Ein Test stellt sicher, dass der alte Kampfcode nicht zurückkommt.
+    - Nachtrag: 11 Funktionen waren doppelt definiert, in solchen Fällen gilt stillschweigend nur die zuletzt geladene Version. 8 identische Kopien in core.js und 3 wirkungslose core.js-Versionen, die von render.js überschrieben wurden, sind entfernt (−156 Zeilen). Das Verhalten bleibt gleich.
+    - Absicherung: Ein Test stellt sicher, dass der alte Kampfcode nicht zurückkommt und dass jede Funktion nur einmal definiert ist.
 
 - [ ] **7. core.js aufteilen**
   - Wie: Ohne Build-Tool, weiter als klassische `<script>`-Dateien, in dieser Reihenfolge eingebunden:

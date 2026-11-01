@@ -279,122 +279,6 @@ function defaultState() {
   };
 }
 
-function emptyMaterials() {
-  return Object.fromEntries(Object.keys(materialLabel).map((id) => [id, 0]));
-}
-
-function applyBalanceMigration(loaded) {
-  if ((loaded.balanceVersion || 1) >= balanceVersion) return;
-  Object.values(loaded.customItems || {}).forEach(rebalanceSavedItem);
-  (loaded.pendingLoot || []).forEach(rebalanceSavedItem);
-  (loaded.lootQueue || []).flat().forEach(rebalanceSavedItem);
-  Object.values(loaded.discoveredLoot || {}).forEach((drops) => Object.values(drops || {}).forEach(rebalanceSavedItem));
-  loaded.balanceVersion = balanceVersion;
-  loaded.log = [
-    createKeyLogEntry("log.balanceRework", "Balance überarbeitet: Item-Stats folgen klareren Rollen pro Ausrüstungsslot.", {}, "drop"),
-    ...(loaded.log || []),
-  ].slice(0, 40);
-}
-
-function normalizeMaterials(materials = {}) {
-  const next = { ...emptyMaterials(), ...materials };
-  const legacyMap = {
-    hide: "leather",
-    fang: "sinew",
-    iron: "scrap",
-  };
-
-  Object.entries(legacyMap).forEach(([oldId, newId]) => {
-    if (!next[oldId]) return;
-    next[newId] = (next[newId] || 0) + next[oldId];
-    delete next[oldId];
-  });
-
-  Object.keys(next).forEach((id) => {
-    if (!materialLabel[id]) delete next[id];
-  });
-
-  return { ...emptyMaterials(), ...next };
-}
-
-function normalizeCombatStats(stats = {}) {
-  return {
-    eliteKills: Math.max(0, Math.floor(stats.eliteKills || 0)),
-    bossKills: Math.max(0, Math.floor(stats.bossKills || 0)),
-    wins: Math.max(0, Math.floor(stats.wins || 0)),
-    itemsUpgraded: Math.max(0, Math.floor(stats.itemsUpgraded || 0)),
-    itemsSalvaged: Math.max(0, Math.floor(stats.itemsSalvaged || 0)),
-    itemsEnchanted: Math.max(0, Math.floor(stats.itemsEnchanted || 0)),
-    rareEnchantments: Math.max(0, Math.floor(stats.rareEnchantments || 0)),
-  };
-}
-
-function normalizeAchievements(achievements = {}) {
-  const catalogReady = Array.isArray(achievementCatalog) && achievementCatalog.length > 0;
-  const ids = new Set(achievementCatalog.map((achievement) => achievement.id));
-  const claimed = Array.isArray(achievements.claimed)
-    ? achievements.claimed.filter((id) => !catalogReady || ids.has(id))
-    : [];
-  const notified = Array.isArray(achievements.notified)
-    ? achievements.notified.filter((id) => !catalogReady || ids.has(id))
-    : [];
-  return {
-    claimed: [...new Set(claimed)],
-    notified: [...new Set(notified)],
-  };
-}
-
-function normalizeSmithMastery(mastery = {}, sourceState = state) {
-  const savedLimit = Math.max(5, Math.min(20, mastery.limit || 5));
-  const completed = Array.isArray(mastery.completed)
-    ? mastery.completed.filter((id) => smithMasteryRanks.some((rank) => rank.id === id))
-    : [];
-  smithMasteryRanks
-    .filter((rank) => rank.limit <= savedLimit && savedLimit > 5)
-    .forEach((rank) => completed.push(rank.id));
-  const highestCompletedLimit = smithMasteryRanks
-    .filter((rank) => completed.includes(rank.id))
-    .reduce((limit, rank) => Math.max(limit, rank.limit), 5);
-  const limit = Math.max(savedLimit, highestCompletedLimit);
-  const active = smithMasteryRanks.some((rank) => rank.id === mastery.active) && !completed.includes(mastery.active)
-    ? mastery.active
-    : null;
-  return {
-    limit: Math.max(limit, highestCompletedLimit),
-    active,
-    completed: [...new Set(completed)],
-    progress: normalizeSmithMasteryProgress(mastery.progress),
-    discovered: Boolean(mastery.discovered || active || completed.length || hasSavedItemAtSmithLimit(mastery.limit || 5, sourceState)),
-  };
-}
-
-function normalizeEnchanting(enchanting = {}) {
-  const completed = Array.isArray(enchanting.completed)
-    ? enchanting.completed.filter((id) => enchantMasteryRanks.some((rank) => rank.id === id))
-    : [];
-  const active = enchantMasteryRanks.some((rank) => rank.id === enchanting.active) && !completed.includes(enchanting.active)
-    ? enchanting.active
-    : null;
-  return {
-    unlockedSeen: Boolean(enchanting.unlockedSeen),
-    active,
-    completed: [...new Set(completed)],
-    progress: normalizeEnchantMasteryProgress(enchanting.progress),
-    discovered: Boolean(enchanting.discovered || active || completed.length),
-  };
-}
-
-function normalizeEnchantMasteryProgress(progress = {}) {
-  return enchantMasteryRanks.reduce((result, rank) => {
-    const source = progress[rank.id] || {};
-    result[rank.id] = {
-      eliteKills: Math.max(0, Math.floor(source.eliteKills || 0)),
-      bossKills: Math.max(0, Math.floor(source.bossKills || 0)),
-    };
-    return result;
-  }, {});
-}
-
 selectedZone = state.ui?.selectedZone || "meadow";
 selectedEnemy = state.ui?.selectedEnemy || zones[selectedZone]?.enemies?.[0] || "wolf";
 selectedBestiaryZone = state.ui?.selectedBestiaryZone || selectedZone;
@@ -2813,24 +2697,6 @@ function itemEffectPool(slot, quality, enemy = null) {
   return pool.filter((id) => itemEffectCatalog[id]?.slots?.includes(slot));
 }
 
-function nearestAllowedQuality(quality, allowedQualities) {
-  const order = ["common", "rare", "epic", "legendary"];
-  const allowed = allowedQualities.filter((item) => order.includes(item));
-  if (allowed.includes(quality)) return quality;
-
-  const targetIndex = order.indexOf(quality);
-  return allowed
-    .slice()
-    .sort((a, b) => Math.abs(order.indexOf(a) - targetIndex) - Math.abs(order.indexOf(b) - targetIndex))[0] || "common";
-}
-
-function generatedLootPoolCount(enemy) {
-  const profile = enemy.generatedLoot || {};
-  const slots = (profile.slots || lootSlots).filter((slot) => lootSlots.includes(slot));
-  const qualities = (profile.qualities || Object.keys(qualityPower)).filter((quality) => qualityPower[quality]);
-  return (slots.length || lootSlots.length) * (qualities.length || Object.keys(qualityPower).length) * 3;
-}
-
 function rollSlotStats(slot, base, power) {
   const profiles = {
     weapon: [1.35, 0],
@@ -2882,28 +2748,6 @@ function recordDiscoveredLoot(enemyId, lootItems) {
     };
   });
   pruneBestiaryLoot(enemyId);
-}
-
-function pruneBestiaryLoot(enemyId) {
-  const entries = Object.entries(state.discoveredLoot[enemyId] || {});
-  const fixed = entries.filter(([, item]) => item.fixed);
-  const generatedLimit = Math.max(0, maxBestiaryLootPerEnemy - fixed.length);
-  const generated = entries
-    .filter(([, item]) => !item.fixed)
-    .sort(([, a], [, b]) => bestiaryKeepScore(b) - bestiaryKeepScore(a));
-
-  state.discoveredLoot[enemyId] = Object.fromEntries([
-    ...fixed,
-    ...generated.slice(0, generatedLimit),
-  ]);
-  bestiaryLootCache.delete(enemyId);
-}
-
-function bestiaryKeepScore(item) {
-  const rarityScore = { common: 1, rare: 10, epic: 25, legendary: 50 }[item.quality] || 0;
-  const setScore = item.set ? 18 : 0;
-  const countScore = Math.min(10, item.count || 0);
-  return rarityScore + setScore + itemScore(item) * 0.2 + countScore;
 }
 
 function markLootDiscovery(enemyId, lootItems) {
