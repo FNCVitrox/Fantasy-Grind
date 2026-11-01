@@ -2458,6 +2458,9 @@ function applyTooltipPosition(event) {
 
 function hideFloatingTooltip() {
   const tooltip = $("floatingTooltip");
+  // Wird bei jedem Scroll-Ereignis aufgerufen: ohne offenen Tooltip nichts anfassen,
+  // sonst muss der Browser bei jedem Scroll-Schritt Stil und Layout neu berechnen.
+  if (!tooltip.classList.contains("open") && !ui.tooltipFrame && !ui.activeTooltipKey) return;
   if (ui.tooltipFrame) {
     cancelAnimationFrame(ui.tooltipFrame);
     ui.tooltipFrame = 0;

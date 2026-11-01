@@ -198,6 +198,8 @@ assert(/if \(ui.skipCombat\) \{[\s\S]{0,120}hideBattleResultLater\(/.test(readLo
   assert.deepStrictEqual(unusedClasses, [], "every CSS class should be used in index.html or the scripts");
   assert(/--panel-dark: #0c1723;[\s\S]*--gold-soft: #d8ae4b;/.test(css) && !/#0c1723/.test(css.replace(/--panel-dark: #0c1723;/, "")), "repeated colors should come from CSS variables");
 }
+// Scrollen bleibt flüssig: der Scroll-Listener fasst den Tooltip nur an, wenn er offen ist.
+assert(/function hideFloatingTooltip\(\) \{[\s\S]{0,300}if \(!tooltip\.classList\.contains\("open"\) && !ui\.tooltipFrame && !ui\.activeTooltipKey\) return;/.test(read("scripts/render.js")), "hiding a closed tooltip on scroll should be a no-op");
 // Sprache: keine festen Texte ohne Übersetzung (Punkt 2 im Arbeitsplan).
 {
   const i18nContext = { console, window: {}, document: {} };
