@@ -20,7 +20,7 @@ await p.evaluate(async()=>{state.level=15;state.gold=99999;state.renown=80;syncD
 const found=new Map();
 async function scan(where){const res=await p.evaluate(({src,flags,L})=>{const rx0=new RegExp(src,flags);const out=[];
  const other=L==='en'?translations.de:translations.en, mine=L==='en'?translations.en:translations.de;
- if(!window.__foreign){window.__foreign=new Set();for(const k in other){const v=other[k];if(typeof v==='string'&&v.length>=4&&mine[k]!==undefined&&mine[k]!==v&&!/^[\d\s{}+%.,:·-]+$/.test(v))window.__foreign.add(v.trim())}}
+ if(!window.__foreign){window.__foreign=new Set();const mineValues=new Set(Object.values(mine).map(v=>String(v).trim()));for(const k in other){const v=other[k];if(typeof v==='string'&&v.length>=4&&mine[k]!==undefined&&mine[k]!==v&&!mineValues.has(v.trim())&&!/^[\d\s{}+%.,:·-]+$/.test(v))window.__foreign.add(v.trim())}}
  const rx={test:(tx)=>rx0.test(tx)||window.__foreign.has(tx.trim())};
  const vis=(el)=>{const r=el.getBoundingClientRect();const s=getComputedStyle(el);return r.width>0&&r.height>0&&s.visibility!=='hidden'&&s.display!=='none'};
  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while(n=walker.nextNode()){const tx=n.textContent.trim();if(!tx||!n.parentElement||!vis(n.parentElement))continue;if(n.parentElement.closest('script,style,.studio-splash'))continue;

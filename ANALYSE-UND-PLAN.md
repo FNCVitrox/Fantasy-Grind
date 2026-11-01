@@ -112,10 +112,16 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Mitbehoben: Das Ergebnis-Banner zeigte „Runde/Runden“ und „Effekt/e“ fest auf Deutsch.
     - Absicherung: `tests/ui-combat.js` misst 10 übersprungene Kämpfe über den echten Button und prüft das Banner. Der Sprach-Test prüft jetzt auch das Banner.
 
-- [ ] **5. Version an einer Stelle pflegen**
+- [x] **5. Version an einer Stelle pflegen** ✅ erledigt in v0.8.126
   - Wo: `scripts/data.js` (`assetVersion`), `index.html` (`?v=`), `README.md`
   - Wie: Ein kleines Node-Skript `scripts/tools/bump-version.js` schreibt die Version in alle drei Dateien. Den Befehl `npm run bump` in `package.json` ergänzen.
   - Fertig wenn: Es gibt nur noch eine Quelle, und README und Spiel zeigen dieselbe Version.
+  - Ergebnis:
+    - `scripts/tools/bump-version.js` mit den Befehlen `npm run bump` (patch / minor / major / feste Version) und `npm run version:check`.
+    - Quelle ist `assetVersion` in `scripts/data.js`. Das Skript überträgt sie nach `index.html` (17 Stellen) und in die README. Windows-Zeilenenden und BOM bleiben erhalten.
+    - `npm test` schlägt jetzt fehl, wenn die Versionen auseinanderlaufen (Gegenprobe gemacht).
+    - Die README erklärt Browser-Tests und Versionsbefehle.
+    - Nebenbei: Der Sprach-Test meldete „Tempo“ zufallsabhängig fälschlich, weil es auch auf Englisch gültig ist. Das ist korrigiert und mehrfach gegengeprüft.
 
 ### Phase 2 – Code aufräumen (Basis für alles Weitere)
 
@@ -281,7 +287,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 
 | Phase | Punkte | Erledigt |
 |---|---|---|
-| 1 – Bugs | 1–5 | 4/5 |
+| 1 – Bugs | 1–5 | 5/5 ✅ |
 | 2 – Code | 6–10 | 0/5 |
 | 3 – Gameplay | 11–15 | 0/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |

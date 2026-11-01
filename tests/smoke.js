@@ -211,6 +211,7 @@ const assetVersionInCode = vm.runInContext("assetVersion", context);
 const htmlAssetVersions = [...html.matchAll(/\?v=([^"]+)/g)].map((match) => match[1]);
 assert(htmlAssetVersions.length > 0 && htmlAssetVersions.every((version) => version === assetVersionInCode), "HTML asset versions should match assetVersion for cache busting");
 assert(html.includes(`Alpha v${assetVersionInCode}`), "visible version badge should match assetVersion");
+assert(read("README.md").includes(`\nAlpha v${assetVersionInCode}\n`) || read("README.md").includes(`\nAlpha v${assetVersionInCode}\r\n`), "README version should match assetVersion (npm run bump keeps them in sync)");
 assert.strictEqual(context.defaultState().level, 1);
 assert.strictEqual(context.defaultState().build, "damage");
 assert.strictEqual(context.defaultState().ui.combatMode, "auto");
