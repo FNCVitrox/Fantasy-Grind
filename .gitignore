@@ -29,3 +29,6 @@ Fantasy-Grind-Export-*.json
 *.save.json
 debug-*.json
 profile-*.json
+
+# Screenshots des visuellen Vergleichs
+.visual/

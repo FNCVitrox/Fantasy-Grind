@@ -441,13 +441,6 @@ const enchantmentCategoryLabel = {
   utility: "Utility",
 };
 
-const enchantmentRarityLabel = {
-  common: "Gewöhnlich",
-  rare: "Selten",
-  epic: "Episch",
-  arcane: "Arkan",
-};
-
 const qualityLabel = {
   common: "Gewöhnlich",
   rare: "Selten",

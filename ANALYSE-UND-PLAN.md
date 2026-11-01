@@ -125,12 +125,20 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 
 ### Phase 2 – Code aufräumen (Basis für alles Weitere)
 
-- [ ] **6. Toten Code entfernen**
+- [x] **6. Toten Code entfernen** ✅ erledigt in v0.8.127
   - Wo: `scripts/core.js` → `legacyFight()` (ab Zeile 1912, 464 Zeilen)
   - Wie: Die Funktion löschen und mit `grep` prüfen, dass auch keine Hilfsfunktion mehr verwendet wird, die nur sie gebraucht hat. Diese Hilfsfunktionen ebenfalls löschen.
   - Fertig wenn: Die Tests sind grün, und core.js ist um mindestens 450 Zeilen kürzer.
+  - Ergebnis:
+    - 762 Zeilen gelöscht. core.js ist von 4'592 auf 3'985 Zeilen geschrumpft.
+    - Entfernt:
+      - Funktionen: `legacyFight`, `advanceManualCombat`, `waitManualCombatStep`, `playCombatAnimation`, `playManualCombatAnimation`, `itemCritText`, `zoneForEnemy`, `setStaticAria`, `loadDataPacks`
+      - Variablen: `logExpanded`, `generatedLootPoolSize`, `wait`, `enchantmentRarityLabel`, `allQuestIds`
+    - Gelöscht wurde in mehreren Runden, bis keine unbenutzte Funktion mehr übrig war. Bewusst behalten: `itemBalanceBudget`, weil der Balance-Test damit prüft, dass kein Item zu stark ist.
+    - Nachtrag: 11 Funktionen waren doppelt definiert, in solchen Fällen gilt stillschweigend nur die zuletzt geladene Version. 8 identische Kopien in core.js und 3 wirkungslose core.js-Versionen, die von render.js überschrieben wurden, sind entfernt (−156 Zeilen). Das Verhalten bleibt gleich.
+    - Absicherung: Ein Test stellt sicher, dass der alte Kampfcode nicht zurückkommt und dass jede Funktion nur einmal definiert ist.
 
-- [ ] **7. core.js aufteilen**
+- [x] **7. core.js aufteilen** ✅ erledigt in v0.8.128
   - Wie: Ohne Build-Tool, weiter als klassische `<script>`-Dateien, in dieser Reihenfolge eingebunden:
     - `scripts/combat.js`: Kampf, Fähigkeiten, Effekte, Belohnungen
     - `scripts/loot.js`: Loot-Erzeugung, Auswahl, Vergleich
@@ -139,26 +147,70 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - `scripts/progression.js`: XP, Level, Ruhm, Quests, Erfolge
     - `core.js` behält nur State, Hilfsfunktionen und `init`.
   - Fertig wenn: Keine Datei ist länger als ~1'200 Zeilen, die Tests sind grün und das Spiel ist identisch spielbar. `package.json` → `test` kennt die neuen Dateien.
+  - Ergebnis:
+    - core.js (3'985 Zeilen) ist aufgeteilt in:
 
-- [ ] **8. Globale UI-Variablen bündeln**
+      | Datei | Zeilen |
+      |---|---|
+      | `core.js` | 713 |
+      | `combat.js` | 1'039 |
+      | `combat-risk.js` | 207 |
+      | `loot.js` | 551 |
+      | `smith.js` | 585 |
+      | `arcanist.js` | 312 |
+      | `progression.js` | 589 |
+
+    - Per Skript verschoben und gegengeprüft: alle 312 Funktionen und alle übrigen Zeilen sind unverändert und genau einmal vorhanden.
+    - Die neuen Dateien laden vor core.js und enthalten nur Funktionen. Die Konstanten bleiben in core.js, damit die Ladereihenfolge nie zum Problem wird.
+    - Den ungenutzten Platzhalter `scripts/game.js` habe ich gelöscht.
+    - Absicherung: Tests prüfen die Dateigrösse (≤ 1'200 Zeilen), dass die Module nur Funktionen enthalten und dass jede Funktion nur einmal definiert ist.
+
+- [x] **8. Globale UI-Variablen bündeln** ✅ erledigt in v0.8.129
   - Wo: Die 22 `let`-Variablen oben in `render.js` / `core.js` (`selectedEnemy`, `isFighting`, `smithView` …)
   - Wie: Alles in ein Objekt `const ui = { … }` packen und die Zugriffe ersetzen. `state` bleibt der Save-State, `ui` ist flüchtig.
   - Fertig wenn: Ausser `state`, `ui` und den Daten-Katalogen gibt es keine globalen `let` mehr.
+  - Ergebnis:
+    - 27 lose globale Variablen sind jetzt im kommentierten Objekt `ui` gebündelt: 20 aus core.js, 5 Tooltip-Variablen aus render.js, `battleResultTimer` und `languageOverride`. `ui` liegt in der zuerst geladenen Datei data.js.
+    - 356 Stellen sind per Skript umgestellt. Objekt-Schlüssel im Spielstand blieben unberührt.
+    - Unterwegs gefunden und behoben: `restoreUiSelection` hatte eine lokale Variable namens `ui`. Sie heisst jetzt `saved`.
+    - Geprüft: Die Auswahl bleibt beim Neuladen der Seite erhalten.
+    - Absicherung: Ein Test erlaubt nur `state`, `achievementCatalog` und `materialDrops` als globale `let`, und keine lokale Variable darf `ui` heissen.
 
-- [ ] **9. CSS entschlacken**
+- [x] **9. CSS entschlacken** ✅ erledigt in v0.8.130 (Grössenziel bewusst nicht erreicht, siehe Ergebnis)
   - Wo: `css/modals.css`, `css/base.css`
   - Wie:
     - Die 32 doppelten Selektoren zusammenführen.
     - Wiederkehrende Werte als CSS-Variablen definieren (Farben, Radius, Abstände, Schatten).
     - Ungenutzte Klassen finden: Klassen aus dem CSS gegen `index.html` und `render*.js` abgleichen, ungenutzte löschen.
   - Fertig wenn: Das CSS ist mindestens 20 % kleiner und die Screenshots sehen unverändert aus.
+  - Ergebnis:
+    - Die Analyse hat gezeigt: Das CSS ist kaum tot. Von 1'045 Regeln waren nur 7 ungenutzt (711 Bytes), dazu 7 doppelte Selektoren und 5 überschriebene Werte. Der Umfang kommt von den vielen Fenstern und Ansichten.
+    - **20 % weniger lassen sich nur durch Umbau des Designs erreichen.** Das passiert sinnvollerweise in Phase 4 (neue Grafik), nicht in einem reinen Aufräum-Schritt.
+    - Gemacht:
+      - ungenutzte Regeln entfernt, doppelte zusammengeführt
+      - 8 neue Farb-Variablen in `:root`
+      - 154 fest eingetragene Farbwerte durch Variablen ersetzt (`var(--…)`-Nutzungen 238 → 379); das Farbschema ist jetzt zentral änderbar
+      - 7'335 → 7'268 Zeilen
+    - Geprüft: Alle 108 Screenshots (27 Spielzustände × 4 Bildschirmgrössen) sind pixelgleich.
+    - Neu: `npm run visual:baseline` / `npm run visual:check` als Sicherheitsnetz für spätere Design-Arbeit.
+    - Absicherung: `npm test` schlägt fehl, wenn eine CSS-Klasse nirgends benutzt wird.
 
-- [ ] **10. Spielstand schlanker speichern**
+- [x] **10. Spielstand schlanker speichern** ✅ erledigt in v0.8.131
   - Wo: `scripts/save-system.js` → `save()`
   - Wie:
     - Backup und Vorgänger-Save nur noch alle 5 Minuten oder bei Levelaufstieg schreiben, nicht bei jedem Speichern.
     - Häufige Speichervorgänge bündeln (300 ms Debounce).
   - Fertig wenn: Pro Aktion wird höchstens einmal in den localStorage geschrieben. Die bestehenden Save-Tests bleiben grün.
+  - Ergebnis:
+    - Vorher schrieb jedes Speichern 3 Schlüssel an je 4 Orte: localStorage, sessionStorage, `window.name` (dort wurden jedes Mal alle Stände neu verpackt) und IndexedDB. Pro Kampf waren das rund 340 KB bei 21 KB Spielstand.
+    - Jetzt gilt:
+      - Gespeichert wird nur der Hauptstand und nur, wenn sich etwas geändert hat.
+      - Backup und Vorgänger werden alle 5 Minuten weitergereicht, und sofort bei wichtigen Momenten (Level-up, Boss, seltene Beute, Schmied, Mira, Import).
+      - Kampfenden werden auf 300 ms gebündelt.
+    - Gemessen bei 20 übersprungenen Kämpfen: 3 statt 60 Schreibvorgänge, rund 0,2 MB statt 6,8 MB (−97 %). Im normalen Spiel sind es etwa −69 % pro Kampf.
+    - Sicherheit: Offenes Speichern wird bei `beforeunload`, `pagehide` und `visibilitychange` sofort geschrieben. Geprüft wurde ein Reload direkt nach dem Kampf, es ging nichts verloren.
+    - Die Wiederherstellungskette Haupt → Backup → Vorgänger bleibt erhalten.
+    - Absicherung: 6 neue Tests (ein Schlüssel pro Aktion, kein Schreiben ohne Änderung, Backup-Rotation, Intervall, Bündeln, Speichern beim Verlassen).
 
 ### Phase 3 – Gameplay-Flow
 
@@ -288,7 +340,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 | Phase | Punkte | Erledigt |
 |---|---|---|
 | 1 – Bugs | 1–5 | 5/5 ✅ |
-| 2 – Code | 6–10 | 0/5 |
+| 2 – Code | 6–10 | 5/5 ✅ |
 | 3 – Gameplay | 11–15 | 0/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |
 | 5 – Inhalt | 22–24 | 0/3 |

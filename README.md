@@ -6,7 +6,7 @@ Aktueller Stand: spielbarer Alpha-Prototyp.
 
 ## Version
 
-Alpha v0.8.126
+Alpha v0.8.131
 
 ## Spielen
 
@@ -54,6 +54,16 @@ Starten:
 
 ```powershell
 npm run test:ui
+```
+
+### Visueller Vergleich (für Design- und CSS-Änderungen)
+
+Macht 108 Screenshots (27 Spielzustände auf 4 Bildschirmgrössen, mit festem Zufallswert) und vergleicht sie Pixel für Pixel:
+
+```powershell
+npm i -D pngjs pixelmatch@5   # einmalig, zusätzlich zu playwright
+npm run visual:baseline       # vor der Änderung: Ist-Zustand speichern
+npm run visual:check          # nach der Änderung: vergleichen (Unterschiede in .visual/diff)
 ```
 
 ## Version erhöhen
@@ -182,7 +192,14 @@ Der Code ist zunehmend in Bereiche getrennt, damit das Projekt wartbarer bleibt:
 - `scripts/data-drops.js`: Material-Drops, lazy bei Bestiarium oder Kampfsieg
 - `scripts/i18n.js`: Sprachumschaltung und UI-Texte
 - `scripts/i18n-en.js`: englische Texte, die erst beim Wechsel auf Englisch geladen werden
-- `scripts/core.js`: Spiellogik
+- `scripts/core.js`: Spielstand, Konstanten, Migrationen alter Spielstände und Grundfunktionen (`getItem`, `totalStats`, `log`)
+- `scripts/combat.js`: Kampfablauf, Klassen, Builds, Fähigkeiten, Gegnerfähigkeiten, Kampf-Log
+- `scripts/combat-risk.js`: Risiko-Einschätzung der Gegner
+- `scripts/loot.js`: Beute, Item-Bewertung, Item-Effekte und Sets, Inventar, Verkaufen
+- `scripts/smith.js`: Schmied: Haltbarkeit, Reparatur, Upgrades, Zerlegen, Meisteraufträge
+- `scripts/arcanist.js`: Arkanistin Mira: Verzauberungen und arkane Meisteraufträge
+- `scripts/progression.js`: XP, Ruhm, Gebiete, Quests, Erfolge, Boss-Belohnungen
+- `scripts/tools/bump-version.js`: Version an alle Stellen übertragen (`npm run bump`)
 - `scripts/render.js`: Haupt-Rendering
 - `scripts/render-loot.js`: Lootkarten und Vergleiche
 - `scripts/save-system.js`: Speichern, Laden und Export

@@ -38,6 +38,9 @@ assert.deepStrictEqual = (actual, expected, message) => {
 
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
+// Spiellogik ist auf mehrere Dateien verteilt; statische Prüfungen durchsuchen alle zusammen.
+const logicFiles = ["scripts/combat.js", "scripts/combat-risk.js", "scripts/loot.js", "scripts/smith.js", "scripts/arcanist.js", "scripts/progression.js", "scripts/core.js"];
+const readLogic = () => logicFiles.map(read).join("\n");
 
 const html = read("index.html");
 const css = ["css/base.css", "css/modals.css", "css/responsive.css"].map(read).join("\n");
@@ -56,6 +59,12 @@ const scripts = [
   "scripts/i18n.js",
   "scripts/i18n-en.js",
   "scripts/save-system.js",
+  "scripts/combat.js",
+  "scripts/combat-risk.js",
+  "scripts/loot.js",
+  "scripts/smith.js",
+  "scripts/arcanist.js",
+  "scripts/progression.js",
   "scripts/core.js",
   "scripts/render.js",
   "scripts/render-loot.js",
@@ -94,6 +103,12 @@ assert.deepStrictEqual(scriptOrder, [
   "scripts/data-labels.js",
   "scripts/i18n.js",
   "scripts/save-system.js",
+  "scripts/combat.js",
+  "scripts/combat-risk.js",
+  "scripts/loot.js",
+  "scripts/smith.js",
+  "scripts/arcanist.js",
+  "scripts/progression.js",
   "scripts/core.js",
   "scripts/render.js",
   "scripts/render-loot.js",
@@ -107,9 +122,37 @@ assert(
   "startup should not immediately overwrite an unreadable stored save",
 );
 assert(
-  /if \(skipCombat\) break;[\s\S]*showBattleResult\(playerWon, enemyName, rounds, summary\);[\s\S]*waitResult\(skipCombat \? 850 : 1350\)/.test(read("scripts/events.js")),
-  "skip combat should still show the win/loss result before the battle stage resets",
+  /async function finishActionCombat[\s\S]*?showBattleResult\([\s\S]*?if \(ui.skipCombat\) \{[\s\S]*?hideBattleResultLater\([\s\S]*?await waitResult\(900\)/.test(readLogic()),
+  "combat should show the win/loss result; skipped fights show it without blocking",
 );
+{
+  // Jede Funktion darf nur einmal definiert sein; sonst gewinnt stillschweigend die zuletzt geladene Version.
+  const definitions = new Map();
+  for (const file of fs.readdirSync(path.join(root, "scripts")).filter((name) => name.endsWith(".js"))) {
+    for (const match of read(`scripts/${file}`).matchAll(/^(?:async\s+)?function\s+([\w$]+)\s*\(/gm)) {
+      definitions.set(match[1], [...(definitions.get(match[1]) || []), file]);
+    }
+  }
+  const duplicates = [...definitions].filter(([, files]) => files.length > 1).map(([name, files]) => `${name} (${files.join(", ")})`);
+  assert.deepStrictEqual(duplicates, [], "functions should be defined exactly once across all scripts");
+}
+// Aufteilung von core.js (Punkt 7): Dateien bleiben überschaubar, Module vor core.js enthalten nur Funktionen.
+for (const file of logicFiles) {
+  assert(read(file).split("\n").length <= 1200, `${file} should stay below 1200 lines`);
+}
+for (const file of logicFiles.filter((name) => name !== "scripts/core.js")) {
+  const topLevel = read(file).replace(/^\uFEFF/, "").split("\n").filter((line) => line && !/^(\s|\/\/|}|const healTextPattern)/.test(line) && !/^(async\s+)?function\s/.test(line));
+  assert.deepStrictEqual(topLevel, [], `${file} should only contain function declarations (no load-time code)`);
+}
+// Globaler Oberflächen-Zustand liegt gebündelt in `ui` (Punkt 8).
+{
+  const scriptFiles = fs.readdirSync(path.join(root, "scripts")).filter((name) => name.endsWith(".js"));
+  const globalLets = scriptFiles.flatMap((file) => [...read(`scripts/${file}`).replace(/^\uFEFF/, "").matchAll(/^let\s+([\w$]+)/gm)].map((match) => match[1]));
+  assert.deepStrictEqual(globalLets.sort(), ["achievementCatalog", "materialDrops", "state"], "only state and lazily loaded catalogs may be global lets; UI state belongs in ui");
+  const shadowingUi = scriptFiles.filter((file) => file !== "data.js").flatMap((file) => read(`scripts/${file}`).split("\n").filter((line) => /(const|let|var)\s+ui\b|function\s*[\w$]*\(([^)]*,)?\s*ui\s*(=[^,)]*)?[,)]|\(\s*ui\s*\)\s*=>|(^|[^\w$.])ui\s*=>/.test(line)).map((line) => `${file}: ${line.trim()}`));
+  assert.deepStrictEqual(shadowingUi, [], "no local variable or parameter may shadow the global ui object");
+}
+assert(!/function legacyFight|function playCombatAnimation|function playManualCombatAnimation/.test(readLogic() + read("scripts/events.js")), "legacy combat code should stay removed");
 assert(html.includes('id="combatModeToggle"') && html.includes('data-combat-mode="manual"'), "combat mode toggle should expose a manual mode button");
 assert(css.includes(".combat-mode-toggle"), "combat mode toggle should have stable styling");
 assert(html.includes('id="combatActions"'), "combat UI should expose RPG action buttons");
@@ -125,7 +168,7 @@ assert(!html.includes('id="classList"'), "class chooser should not remain as a p
 assert(/renderClassChoices\(\);[\s\S]*openModal\("classModal"\)/.test(read("scripts/events.js")), "portrait class button should render and open the class modal");
 assert(html.includes('id="characterClassIcon"') && css.includes(".class-icon-warrior") && css.includes(".class-icon-mage") && css.includes(".class-icon-rogue") && css.includes(".class-icon-archer"), "all playable classes should have distinct portrait icons");
 assert(read("scripts/render.js").includes("classIconMarkup(id)") && read("scripts/render.js").includes("classIconClass(state.characterClass)"), "class chooser and portrait should use dynamic class icons");
-assert(/manualMode \? await waitForCombatAction\(\) : chooseAutoCombatAction/.test(read("scripts/core.js")), "manual and auto combat should share the same action loop");
+assert(/manualMode \? await waitForCombatAction\(\) : chooseAutoCombatAction/.test(readLogic()), "manual and auto combat should share the same action loop");
 assert(/requestCombatAction\(button\.dataset\.combatAction\)/.test(read("scripts/events.js")), "combat action buttons should feed manual combat choices");
 assert(read("scripts/render.js").includes("combat-resource-${resourceClass}") && ["warrior", "mage", "rogue", "archer"].every((id) => css.includes(`.combat-resource-${id}`)), "combat resource meter should visually follow the selected class");
 assert(css.includes("grid-template-rows: auto minmax(0, 1fr)") && css.includes(".combat-command-main"), "combat command dock should stack controls above full-width actions");
@@ -143,7 +186,18 @@ assert(!/grid-template-rows: 112px 54px 92px/.test(css), "loot card rows should 
 assert(/\.equipment-belt \{[\s\S]*?container-type: inline-size;/.test(css) && /@container \(min-width: 640px\)[\s\S]*?repeat\(7, minmax\(0, 1fr\)\)/.test(css), "equipment belt should switch between 4 and 7 columns via container query");
 assert(read("scripts/render.js").includes('title="${escapeAttr(itemName)}"') && read("scripts/render.js").includes("equipment-durability-bar"), "equipment chips should expose full item names as tooltip and show a durability bar");
 // Überspringen blockiert nicht mehr auf die Ergebnis-Anzeige (Punkt 4 im Arbeitsplan).
-assert(/if \(skipCombat\) \{[\s\S]{0,120}hideBattleResultLater\(/.test(read("scripts/core.js")), "skipped fights should not wait for the result banner");
+assert(/if \(ui.skipCombat\) \{[\s\S]{0,120}hideBattleResultLater\(/.test(readLogic()), "skipped fights should not wait for the result banner");
+// CSS ohne Leichen (Punkt 9): jede Klasse in einem Selektor kommt in HTML oder JS vor (auch als Präfix wie `rarity-${...}`).
+{
+  const source = [html, ...fs.readdirSync(path.join(root, "scripts")).filter((name) => name.endsWith(".js")).map((name) => read(`scripts/${name}`))].join("\n");
+  const prefixes = [...source.matchAll(/([a-zA-Z][\w-]*-)\$\{/g)].map((match) => match[1]);
+  const cssWithoutKeyframes = css.replace(/@keyframes[^{]+\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  const selectorText = [...cssWithoutKeyframes.matchAll(/([^{}]+)\{/g)].map((match) => match[1]).filter((text) => !text.trim().startsWith("@")).join(",");
+  const classes = [...new Set([...selectorText.matchAll(/\.([a-zA-Z_][\w-]*)/g)].map((match) => match[1]))];
+  const unusedClasses = classes.filter((name) => !new RegExp(`(^|[^\\w-])${name.replace(/-/g, "\\-")}($|[^\\w-])`).test(source) && !prefixes.some((prefix) => name.startsWith(prefix)));
+  assert.deepStrictEqual(unusedClasses, [], "every CSS class should be used in index.html or the scripts");
+  assert(/--panel-dark: #0c1723;[\s\S]*--gold-soft: #d8ae4b;/.test(css) && !/#0c1723/.test(css.replace(/--panel-dark: #0c1723;/, "")), "repeated colors should come from CSS variables");
+}
 // Sprache: keine festen Texte ohne Übersetzung (Punkt 2 im Arbeitsplan).
 {
   const i18nContext = { console, window: {}, document: {} };
@@ -154,11 +208,11 @@ assert(/if \(skipCombat\) \{[\s\S]{0,120}hideBattleResultLater\(/.test(read("scr
   const ariaWithoutKey = [...html.matchAll(/<[^>]*\baria-label="[^"]*"[^>]*>/g)].map((match) => match[0]).filter((tag) => !tag.includes("data-i18n-aria="));
   assert.deepStrictEqual(ariaWithoutKey, [], "every aria-label in index.html should be bound to a translation key via data-i18n-aria");
   const htmlKeys = [...html.matchAll(/data-i18n(?:-aria|-title)?="([^"]+)"/g)].map((match) => match[1]);
-  const codeKeys = ["scripts/core.js", "scripts/render.js", "scripts/render-loot.js", "scripts/events.js", "scripts/save-system.js", "scripts/i18n.js"]
+  const codeKeys = [...logicFiles, "scripts/render.js", "scripts/render-loot.js", "scripts/events.js", "scripts/save-system.js", "scripts/i18n.js"]
     .flatMap((file) => [...read(file).matchAll(/\bt\(\s*"([a-zA-Z0-9_.]+)"/g)].map((match) => match[1]));
   const missingKeys = [...new Set([...htmlKeys, ...codeKeys])].filter((key) => !(key in de) || !(key in en));
   assert.deepStrictEqual(missingKeys, [], "every literal translation key should exist in German and English");
-  const rawLogCalls = ["scripts/core.js", "scripts/render.js", "scripts/events.js", "scripts/save-system.js"]
+  const rawLogCalls = [...logicFiles, "scripts/render.js", "scripts/events.js", "scripts/save-system.js"]
     .flatMap((file) => read(file).split("\n").filter((line) => /(^|[^\w.])log\((?!\(\) =>|message|entry)/.test(line) && !/function log\(/.test(line)));
   assert.deepStrictEqual(rawLogCalls, [], "log() should receive a message function so entries can be shown in both languages");
 }
@@ -264,7 +318,7 @@ for (const classId of ["warrior", "mage", "rogue", "archer"]) {
   }
 }
 assert(read("scripts/render.js").includes("hero-class-${characterClass}") && read("scripts/render.js").includes("heroSpriteName"), "combat hero sprite should follow the selected class and update its label");
-assert(css.includes(".class-list"), "class selector should have dedicated layout CSS");
+assert(css.includes(".class-choice-list {") && html.includes('class="class-choice-list"'), "class chooser should have dedicated layout CSS");
 assert(css.includes(".smith-avatar::before") && css.includes(".enchant-avatar::after"), "Borin and Mira avatars should have detailed CSS silhouettes");
 for (const frame of ["forged", "ember", "runic", "oath", "masterwork"]) {
   assert(css.includes(`.upgrade-frame-${frame}`), `Missing upgraded item frame CSS: ${frame}`);
@@ -280,13 +334,13 @@ assert(vm.runInContext("state = defaultState(); state.customItems.frameTest = { 
 suite("quest board and inventory flows");
 
 assert(vm.runInContext("state = defaultState(); questAvailable(getQuestById('wolves')) && !questAvailable(getQuestById('fields'))", context), "early quest board should only offer reachable quest targets");
-assert(vm.runInContext("state.level = 9; state.renown = 8; selectedZone = 'fields'; questAvailable(getQuestById('fields'))", context), "field quests should unlock when the field zone is selected");
-assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'wolf'; state.questBoard = ['wolves', 'rust', 'boars']; refreshQuestBoard(true); state.questBoard.length === 1 && state.questBoard[0] === 'wolves'", context), "wolf target should only show wolf-related quests");
-assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'boar'; state.questBoard = ['wolves', 'rust', 'boars']; refreshQuestBoard(true); state.questBoard.length === 1 && state.questBoard[0] === 'boars'", context), "boar target should only show thorn boar quests");
-assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'bandit'; state.questBoard = []; refreshQuestBoard(true); state.questBoard.length > 0 && state.questBoard.every((id) => ['bandit', 'rust'].includes(getQuestById(id).target))", context), "bandit target should only show bandit and rust quests");
-assert(vm.runInContext("state = defaultState(); state.level = 20; state.renown = 40; selectedZone = 'ashcathedral'; selectedEnemy = 'crownBeast'; state.questBoard = ['boars', 'crownBeast', 'ash', 'dungeon']; refreshQuestBoard(true); !state.questBoard.includes('boars') && state.questBoard.includes('crownBeast')", context), "crown beast should not receive the thorn boar quest");
-assert(vm.runInContext("(() => { state = defaultState(); state.level = 20; state.renown = 40; return Object.entries(zones).every(([zoneId, zone]) => zone.enemies.every((enemyId) => { selectedZone = zoneId; selectedEnemy = enemyId; state.questBoard = []; refreshQuestBoard(true); return state.questBoard.length > 0 && state.questBoard.every((id) => questRelevantForCurrentEnemy(getQuestById(id))); })); })()", context), "every enemy should have at least one matching quest board offer");
-assert(vm.runInContext("(() => { state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'wolf'; state.questBoard = ['wolves']; const before = questBoardSourceSignature(); state.gold += 10; return before === questBoardSourceSignature(); })()", context), "quest board cache source should ignore unrelated gold changes");
+assert(vm.runInContext("state.level = 9; state.renown = 8; ui.selectedZone = 'fields'; questAvailable(getQuestById('fields'))", context), "field quests should unlock when the field zone is selected");
+assert(vm.runInContext("state = defaultState(); ui.selectedZone = 'meadow'; ui.selectedEnemy = 'wolf'; state.questBoard = ['wolves', 'rust', 'boars']; refreshQuestBoard(true); state.questBoard.length === 1 && state.questBoard[0] === 'wolves'", context), "wolf target should only show wolf-related quests");
+assert(vm.runInContext("state = defaultState(); ui.selectedZone = 'meadow'; ui.selectedEnemy = 'boar'; state.questBoard = ['wolves', 'rust', 'boars']; refreshQuestBoard(true); state.questBoard.length === 1 && state.questBoard[0] === 'boars'", context), "boar target should only show thorn boar quests");
+assert(vm.runInContext("state = defaultState(); ui.selectedZone = 'meadow'; ui.selectedEnemy = 'bandit'; state.questBoard = []; refreshQuestBoard(true); state.questBoard.length > 0 && state.questBoard.every((id) => ['bandit', 'rust'].includes(getQuestById(id).target))", context), "bandit target should only show bandit and rust quests");
+assert(vm.runInContext("state = defaultState(); state.level = 20; state.renown = 40; ui.selectedZone = 'ashcathedral'; ui.selectedEnemy = 'crownBeast'; state.questBoard = ['boars', 'crownBeast', 'ash', 'dungeon']; refreshQuestBoard(true); !state.questBoard.includes('boars') && state.questBoard.includes('crownBeast')", context), "crown beast should not receive the thorn boar quest");
+assert(vm.runInContext("(() => { state = defaultState(); state.level = 20; state.renown = 40; return Object.entries(zones).every(([zoneId, zone]) => zone.enemies.every((enemyId) => { ui.selectedZone = zoneId; ui.selectedEnemy = enemyId; state.questBoard = []; refreshQuestBoard(true); return state.questBoard.length > 0 && state.questBoard.every((id) => questRelevantForCurrentEnemy(getQuestById(id))); })); })()", context), "every enemy should have at least one matching quest board offer");
+assert(vm.runInContext("(() => { state = defaultState(); ui.selectedZone = 'meadow'; ui.selectedEnemy = 'wolf'; state.questBoard = ['wolves']; const before = questBoardSourceSignature(); state.gold += 10; return before === questBoardSourceSignature(); })()", context), "quest board cache source should ignore unrelated gold changes");
 assert(vm.runInContext("(() => { state = defaultState(); const before = inventorySignature(); state.gold += 10; return before === inventorySignature(); })()", context), "inventory list signature should ignore gold-only changes");
 assert(!vm.runInContext("state = defaultState(); renderInventoryItemCard('rustBlade', 0).includes('data-sell')", context), "backpack item cards should not sell directly");
 assert(vm.runInContext("state = defaultState(); state.inventory = ['rustBlade', 'wolfRing']; inventorySellTotal() === sellValue(items.rustBlade) + sellValue(items.wolfRing)", context), "merchant sell total should sum backpack items");
@@ -484,8 +538,8 @@ assert(html.includes('id="battleEventBadge" hidden aria-live="polite" tabindex="
 assert(css.includes("content: attr(data-event-description)") && css.includes(".battle-event-badge:hover::after"), "combat event badge should expose a hover tooltip");
 assert(vm.runInContext("combatEventTone(combatEventCatalog.find((event) => event.id === 'merchantRumor')) === 'reward' && combatEventTone(combatEventCatalog.find((event) => event.id === 'grimOmen')) === 'danger' && combatEventTone(combatEventCatalog.find((event) => event.id === 'clearOpening')) === 'advantage'", context), "combat event tones should match their gameplay effect");
 assert(vm.runInContext("combatEventAnimationEntry(combatEventCatalog.find((event) => event.id === 'grimOmen'), enemies.wolf, 100).combatEventText === combatEventText(combatEventCatalog.find((event) => event.id === 'grimOmen'))", context), "combat event animation entries should keep effect text for tooltip display");
-assert(vm.runInContext("(() => { state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'wolf'; preparedCombatEvents.clear(); const originalRandom = Math.random; let calls = 0; Math.random = () => (calls++ === 0 ? 1 : 0); try { const enemy = getPreparedEncounter('wolf'); const first = prepareCombatEvent(enemy, 'wolf'); const second = prepareCombatEvent(enemy, 'wolf'); return first === null && second === null && preparedCombatEvents.has(preparedCombatEventKey('wolf')); } finally { Math.random = originalRandom; preparedCombatEvents.clear(); } })()", context), "prepared combat events should stay stable while the same enemy is shown");
-assert(vm.runInContext("(() => { state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'wolf'; preparedCombatEvents.clear(); const originalRandom = Math.random; Math.random = () => 0; try { const enemy = getPreparedEncounter('wolf'); const prepared = prepareCombatEvent(enemy, 'wolf'); const consumed = consumePreparedCombatEvent(enemy, 'wolf'); return prepared && consumed === prepared && !preparedCombatEvents.has(preparedCombatEventKey('wolf')); } finally { Math.random = originalRandom; preparedCombatEvents.clear(); } })()", context), "starting a fight should consume the prepared combat event");
+assert(vm.runInContext("(() => { state = defaultState(); ui.selectedZone = 'meadow'; ui.selectedEnemy = 'wolf'; preparedCombatEvents.clear(); const originalRandom = Math.random; let calls = 0; Math.random = () => (calls++ === 0 ? 1 : 0); try { const enemy = getPreparedEncounter('wolf'); const first = prepareCombatEvent(enemy, 'wolf'); const second = prepareCombatEvent(enemy, 'wolf'); return first === null && second === null && preparedCombatEvents.has(preparedCombatEventKey('wolf')); } finally { Math.random = originalRandom; preparedCombatEvents.clear(); } })()", context), "prepared combat events should stay stable while the same enemy is shown");
+assert(vm.runInContext("(() => { state = defaultState(); ui.selectedZone = 'meadow'; ui.selectedEnemy = 'wolf'; preparedCombatEvents.clear(); const originalRandom = Math.random; Math.random = () => 0; try { const enemy = getPreparedEncounter('wolf'); const prepared = prepareCombatEvent(enemy, 'wolf'); const consumed = consumePreparedCombatEvent(enemy, 'wolf'); return prepared && consumed === prepared && !preparedCombatEvents.has(preparedCombatEventKey('wolf')); } finally { Math.random = originalRandom; preparedCombatEvents.clear(); } })()", context), "starting a fight should consume the prepared combat event");
 assert(vm.runInContext("['Einfach', 'Machbar', 'Riskant', 'Tödlich'].includes(riskFor(enemies.wolf))", context), "risk labels should use the clear risk scale");
 assert(vm.runInContext("state = defaultState(); state.hp = 10; riskFor(enemies.boar) !== 'Einfach'", context), "low current health should make risk stricter");
 assert(vm.runInContext("combatRiskEstimate(enemies.wolf).playerDamagePerRound > 0 && combatRiskEstimate(enemies.wolf).enemyDamagePerRound > 0", context), "risk estimate should expose positive combat pressure values");
@@ -530,9 +584,16 @@ assert(
 
 suite("save storage and quest completion");
 
-vm.runInContext("state.gold = 123; save();", context);
-assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1"]).gold, 123);
-assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1-backup"]).gold, 123);
+vm.runInContext("state.gold = 77; saveWithBackup(); state.gold = 123; save();", context);
+assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1"]).gold, 123, "save() should write the main save immediately");
+assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1-backup"]).gold, 77, "save() should not rewrite the backup on every action");
+// Speichern sparsam (Punkt 10): ohne Änderung kein Schreiben, Backup nur bei wichtigen Momenten oder alle 5 Minuten.
+assert(vm.runInContext("(() => { const original = localStorage.setItem; let writes = 0; localStorage.setItem = (key, value) => { writes += 1; return original(key, value); }; save(); save(); localStorage.setItem = original; return writes === 0; })()", context), "saving an unchanged state should not write anything");
+assert(vm.runInContext("(() => { const original = localStorage.setItem; const keys = []; localStorage.setItem = (key, value) => { keys.push(key); return original(key, value); }; state.gold = 124; save(); localStorage.setItem = original; return keys.length === 1 && keys[0] === saveKey; })()", context), "one action should write exactly one key");
+assert(vm.runInContext("(() => { state.gold = 200; saveWithBackup(); state.gold = 201; requestSaveBackup(); save(); return JSON.parse(localStorage.getItem(saveBackupKey)).gold === 201 && JSON.parse(localStorage.getItem(savePreviousKey)).gold === 200; })()", context), "important moments should rotate backup and previous backup");
+assert(vm.runInContext("(() => { state.gold = 300; saveWithBackup(); saveTiming.lastBackupAt -= saveTiming.backupIntervalMs; state.gold = 301; save(); return JSON.parse(localStorage.getItem(saveBackupKey)).gold === 301; })()", context), "backup should refresh after the backup interval");
+assert(vm.runInContext("(() => { state.gold = 400; queueSave(); queueSave(); const pending = Boolean(saveTiming.pendingTimer) && JSON.parse(localStorage.getItem(saveKey)).gold !== 400; flushQueuedSave(); return pending && !saveTiming.pendingTimer && JSON.parse(localStorage.getItem(saveKey)).gold === 400; })()", context), "queued saves should bundle and flush on demand");
+assert(read("scripts/events.js").includes('window.addEventListener("pagehide", () => save());') && read("scripts/events.js").includes('document.visibilityState === "hidden"'), "pending saves should be written when the page is hidden or closed");
 assert(vm.runInContext("window.name.includes('fantasy-grind-save-v1')", context), "save should also be mirrored into window.name for preview reloads");
 assert(vm.runInContext("indexedDbName === 'FantasyGrindSaves' && indexedDbStoreName === 'saves'", context), "IndexedDB save mirror should use stable database names");
 assert(vm.runInContext("browserStorageStatus().indexedDB.label === 'IndexedDB' && browserStorageStatus().indexedDB.ok === false && saveDiagnostics.indexedDbMirror === 'nicht verfuegbar'", context), "IndexedDB mirror should fail softly when the browser API is unavailable");
@@ -542,9 +603,9 @@ assert(
   vm.runInContext("localStorage.setItem(saveKey, '{broken'); localStorage.setItem(saveBackupKey, JSON.stringify({ ...defaultState(), gold: 321 })); state = load(); state.gold === 321 && saveDiagnostics.recoveredFrom === 'Backup'", context),
   "load should recover from backup instead of falling through to a fresh save",
 );
-assert.strictEqual(vm.runInContext("selectedZone = 'meadow'; selectedEnemy = zones.meadow.enemies[1]; save(); load().ui.selectedEnemy", context), vm.runInContext("zones.meadow.enemies[1]", context));
-assert.strictEqual(vm.runInContext("state = defaultState(); render = () => {}; importSaveData(JSON.stringify({ ...defaultState(), ui: { selectedZone: 'meadow', selectedEnemy: zones.meadow.enemies[2] } })); selectedEnemy", context), vm.runInContext("zones.meadow.enemies[2]", context));
-assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; saveFileName().includes('Level-1-Ruhm-0-Grauwacht-Wald')", context), "save filename should include useful progress info");
+assert.strictEqual(vm.runInContext("ui.selectedZone = 'meadow'; ui.selectedEnemy = zones.meadow.enemies[1]; save(); load().ui.selectedEnemy", context), vm.runInContext("zones.meadow.enemies[1]", context));
+assert.strictEqual(vm.runInContext("state = defaultState(); render = () => {}; importSaveData(JSON.stringify({ ...defaultState(), ui: { selectedZone: 'meadow', selectedEnemy: zones.meadow.enemies[2] } })); ui.selectedEnemy", context), vm.runInContext("zones.meadow.enemies[2]", context));
+assert(vm.runInContext("state = defaultState(); ui.selectedZone = 'meadow'; saveFileName().includes('Level-1-Ruhm-0-Grauwacht-Wald')", context), "save filename should include useful progress info");
 assert(vm.runInContext("state = defaultState(); const exported = JSON.parse(exportSaveData()); exported.metadata.level === 1 && exported.metadata.zone === 'Grauwacht-Wald' && exported.metadata.equipment.weapon === 'Übungsschwert'", context), "save exports should include readable progress metadata");
 assert(vm.runInContext("/\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}/.test(saveFileName())", context), "save filename should include date and time");
 assert(vm.runInContext("state.log = []; remindSaveBackup('Testmoment.'); logEntryText(state.log[0]).startsWith('Tipp: Spielstand herunterladen')", context), "important moments should create a save reminder");
@@ -558,9 +619,9 @@ assert(vm.runInContext("(() => { state = defaultState(); const exported = JSON.p
 assert.strictEqual(vm.runInContext("state = defaultState(); state.level = 1; state.gold = 0; restCost()", context), 10, "level 1 rest cost should stay explicit even when the player has no gold");
 assert(vm.runInContext("render = () => {}; state = defaultState(); state.hp = 10; state.gold = 0; rest(); state.hp === state.maxHp && state.gold === 0", context), "resting without gold should heal without charging hidden costs");
 assert(vm.runInContext("state = defaultState(); state.completedQuests = ['wolves', 'rust', 'boars']; state.questBoard = []; refreshQuestBoard(true); state.questBoard.length > 0 && state.questBoard.every((id) => questAvailable(getQuestById(id)))", context), "repeatable standard quests should refill the board after completion");
-assert(vm.runInContext("state = defaultState(); state.level = 17; state.renown = 30; selectedZone = 'ashgrounds'; state.questBoard = []; refreshQuestBoard(true); state.questBoard.length > 0 && !state.questBoard.includes('wolves') && state.questBoard.every((id) => questRelevantForCurrentZone(getQuestById(id)))", context), "late zones should not offer low-level starter quests");
-assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'wolf'; render = () => {}; renderLog = () => {}; state.questBoard = ['wolves']; acceptQuest('wolves'); state.activeQuests.includes('wolves') && !state.questBoard.includes('wolves')", context), "accepted quests should move from the board into active quests");
-assert(vm.runInContext("state = defaultState(); selectedZone = 'meadow'; selectedEnemy = 'wolf'; render = () => {}; renderLog = () => {}; state.activeQuests = ['wolves']; state.quests.wolves = 4; state.questBoard = []; cancelQuest('wolves'); !state.activeQuests.includes('wolves') && !('wolves' in state.quests)", context), "active quests should be deletable from the quest list");
+assert(vm.runInContext("state = defaultState(); state.level = 17; state.renown = 30; ui.selectedZone = 'ashgrounds'; state.questBoard = []; refreshQuestBoard(true); state.questBoard.length > 0 && !state.questBoard.includes('wolves') && state.questBoard.every((id) => questRelevantForCurrentZone(getQuestById(id)))", context), "late zones should not offer low-level starter quests");
+assert(vm.runInContext("state = defaultState(); ui.selectedZone = 'meadow'; ui.selectedEnemy = 'wolf'; render = () => {}; renderLog = () => {}; state.questBoard = ['wolves']; acceptQuest('wolves'); state.activeQuests.includes('wolves') && !state.questBoard.includes('wolves')", context), "accepted quests should move from the board into active quests");
+assert(vm.runInContext("state = defaultState(); ui.selectedZone = 'meadow'; ui.selectedEnemy = 'wolf'; render = () => {}; renderLog = () => {}; state.activeQuests = ['wolves']; state.quests.wolves = 4; state.questBoard = []; cancelQuest('wolves'); !state.activeQuests.includes('wolves') && !('wolves' in state.quests)", context), "active quests should be deletable from the quest list");
 assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; const quest = { ...rareQuestTemplates.find((entry) => entry.key === 'dungeon'), id: 'rare-dungeon-smoke', rare: true, rewardItem: true }; state.rareQuests[quest.id] = quest; state.activeQuests = [quest.id]; state.quests[quest.id] = quest.needed - 1; const beforeGold = state.gold; updateQuestProgress(enemies.ratguard, 'ratguard'); return state.completedQuests.includes(quest.id) && !state.activeQuests.includes(quest.id) && state.gold === beforeGold + quest.rewardGold && state.pendingLoot.some((item) => item.sourceType === 'quest' && item.sourceQuest === quest.id); })()", context), "quest completion should grant rewards, remove active quests, and queue reward loot");
 assert(vm.runInContext("state = defaultState(); state.questBoard = ['wolves']; markQuestAsNew('wolves'); state.unseenQuests.includes('wolves')", context), "new quests should be tracked for UI badges");
 assert(vm.runInContext("forgetNewQuest('wolves'); !state.unseenQuests.includes('wolves')", context), "accepted or completed quests should clear their new marker");
@@ -568,15 +629,14 @@ assert(vm.runInContext("state = defaultState(); state.completedQuests = ['wolves
 assert(vm.runInContext("rareQuestDropChance(enemies.wolf) > 0 && rareQuestDropChance(enemies.ratguard) > rareQuestDropChance(enemies.wolf)", context), "rare quest drop chances should be explicit and scale by enemy type");
 assert(vm.runInContext("state = defaultState(); state.language = 'en'; const quest = { ...rareQuestTemplates.find((entry) => entry.key === 'elite'), id: 'rare-elite-test' }; questDisplayName(quest) === 'Oath Against the Fallen' && questDisplayText(quest).includes('elite enemies')", context), "dynamic rare quests should use translated names and text");
 assert(vm.runInContext("state = defaultState(); state.language = 'en'; itemDisplayName({ ...items.cryptCrusher, id: 'cryptCrusher' }) === 'Crypt Splitter'", context), "drop item names should use English display names");
-assert(vm.runInContext("state = defaultState(); state.language = 'en'; zoneForEnemy('ratguard') === 'Crypt of Graywatch'", context), "enemy zone labels should use translated zone names");
 assert(vm.runInContext("state = defaultState(); render = () => {}; createLootChoices(enemies.wolf, 'wolf'); const before = Object.keys(state.discoveredLoot.wolf || {}).length; chooseLoot(0, false); before === 0 && Object.keys(state.discoveredLoot.wolf || {}).length === 1", context), "bestiary loot should register only after a loot item is chosen");
 assert(vm.runInContext("state = defaultState(); renderBestiaryList().includes('completion-bar')", context), "bestiary cards should keep the visual loot progress bar");
 assert(vm.runInContext("state = defaultState(); const html = renderBestiaryList(); html.includes('Sammlung: 0/') && !html.includes('Level 1') && !html.includes('44 Leben')", context), "bestiary cards should show compact collection progress instead of level and hp");
-assert(vm.runInContext("(() => { state = defaultState(); selectedBestiaryType = 'zone'; selectedBestiaryZone = 'meadow'; selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('data-bestiary-type=\"zone\"') && bestiaryHtml.includes('data-bestiary-type=\"dungeon\"') && bestiaryHtml.includes('Grauwacht-Wald') && !bestiaryHtml.includes('Krypta der Grauwacht'); })()", context), "bestiary should separate normal zones from dungeons");
-assert(vm.runInContext("(() => { state = defaultState(); selectedBestiaryType = 'zone'; selectedBestiaryZone = 'meadow'; selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('bestiary-section-head--zone') && bestiaryHtml.includes('Normale Gebiete') && bestiaryHtml.includes('Funde') && bestiaryHtml.includes('3 Gegner'); })()", context), "bestiary zone tab should show a dedicated normal-zone summary");
-assert(vm.runInContext("(() => { state = defaultState(); selectedBestiaryType = 'dungeon'; selectedBestiaryZone = 'meadow'; selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return selectedBestiaryZone === 'crypt' && selectedBestiaryEnemy === 'ratguard' && bestiaryHtml.includes('Krypta der Grauwacht') && !bestiaryHtml.includes('Grauwacht-Wald'); })()", context), "bestiary dungeon tab should select the first dungeon when needed");
-assert(vm.runInContext("(() => { state = defaultState(); selectedBestiaryType = 'dungeon'; selectedBestiaryZone = 'crypt'; selectedBestiaryEnemy = 'ratguard'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('bestiary-section-head--dungeon') && bestiaryHtml.includes('Dungeon-Bosse') && bestiaryHtml.includes('bestiary-section-summary') && bestiaryHtml.includes('Erste Siege') && bestiaryHtml.includes('Feste Drops'); })()", context), "bestiary dungeon tab should summarize boss progress");
-assert(vm.runInContext("(() => { state = defaultState(); state.language = 'en'; selectedBestiaryType = 'zone'; selectedBestiaryZone = 'meadow'; selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('Open Zones') && bestiaryHtml.includes('3 enemies'); })()", context), "bestiary section split should be translated in English");
+assert(vm.runInContext("(() => { state = defaultState(); ui.selectedBestiaryType = 'zone'; ui.selectedBestiaryZone = 'meadow'; ui.selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('data-bestiary-type=\"zone\"') && bestiaryHtml.includes('data-bestiary-type=\"dungeon\"') && bestiaryHtml.includes('Grauwacht-Wald') && !bestiaryHtml.includes('Krypta der Grauwacht'); })()", context), "bestiary should separate normal zones from dungeons");
+assert(vm.runInContext("(() => { state = defaultState(); ui.selectedBestiaryType = 'zone'; ui.selectedBestiaryZone = 'meadow'; ui.selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('bestiary-section-head--zone') && bestiaryHtml.includes('Normale Gebiete') && bestiaryHtml.includes('Funde') && bestiaryHtml.includes('3 Gegner'); })()", context), "bestiary zone tab should show a dedicated normal-zone summary");
+assert(vm.runInContext("(() => { state = defaultState(); ui.selectedBestiaryType = 'dungeon'; ui.selectedBestiaryZone = 'meadow'; ui.selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return ui.selectedBestiaryZone === 'crypt' && ui.selectedBestiaryEnemy === 'ratguard' && bestiaryHtml.includes('Krypta der Grauwacht') && !bestiaryHtml.includes('Grauwacht-Wald'); })()", context), "bestiary dungeon tab should select the first dungeon when needed");
+assert(vm.runInContext("(() => { state = defaultState(); ui.selectedBestiaryType = 'dungeon'; ui.selectedBestiaryZone = 'crypt'; ui.selectedBestiaryEnemy = 'ratguard'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('bestiary-section-head--dungeon') && bestiaryHtml.includes('Dungeon-Bosse') && bestiaryHtml.includes('bestiary-section-summary') && bestiaryHtml.includes('Erste Siege') && bestiaryHtml.includes('Feste Drops'); })()", context), "bestiary dungeon tab should summarize boss progress");
+assert(vm.runInContext("(() => { state = defaultState(); state.language = 'en'; ui.selectedBestiaryType = 'zone'; ui.selectedBestiaryZone = 'meadow'; ui.selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('Open Zones') && bestiaryHtml.includes('3 enemies'); })()", context), "bestiary section split should be translated in English");
 assert.strictEqual(vm.runInContext("previewUpgradedItem({ slot: 'chest', quality: 'rare', name: 'Testpanzer +10', damage: 0, defense: 10, upgrade: 10 }).defense", context), 12);
 assert.strictEqual(vm.runInContext("previewUpgradedItem({ slot: 'weapon', quality: 'rare', name: 'Testklinge +20', damage: 10, defense: 0, critChance: 0.1, critDamage: 0.2, upgrade: 20 }).critDamage", context), 0.21);
 assert(vm.runInContext("(() => { function clone(id) { return { ...items[id], id }; } function upgradeTo(item, target) { let copy = { ...item }; while ((copy.upgrade || 0) < target) copy = previewUpgradedItem(copy); return copy; } function equipBest(level, upgrade) { const ids = new Set(Object.values(defaultState().equipment)); Object.values(enemies).filter((enemy) => enemy.level <= level).forEach((enemy) => enemy.drops.forEach((drop) => ids.add(drop.id))); state.equipment = { ...state.equipment }; state.customItems = {}; equipmentSlots.forEach((slot) => { const best = [...ids].map(clone).filter((item) => item.slot === slot).sort((a, b) => itemScore(b) - itemScore(a))[0]; if (!best) return; const item = upgradeTo(best, upgrade); item.id = `power-${slot}`; state.customItems[item.id] = item; state.equipment[slot] = item.id; }); } state = defaultState(); state.level = 16; state.build = 'damage'; equipBest(16, 10); syncDerivedStats(); state.hp = state.maxHp; return riskFor(enemies.ironDuke, totalStats()) !== 'Einfach'; })()", context), "iron duke should remain threatening against level 16 upgraded damage builds");

@@ -29,7 +29,7 @@
   overscroll-behavior: contain;
   border: 1px solid rgba(216, 174, 75, 0.55);
   border-radius: 8px;
-  background: linear-gradient(180deg, #17283a, #0c1723);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel-dark));
   box-shadow: 0 20px 56px rgba(0, 0, 0, 0.45);
   padding: 18px;
 }
@@ -50,7 +50,6 @@
   .drop-row,
   .repair-row,
   .salvage-row,
-  .smith-item,
   .achievement-card,
   .bestiary-card {
     content-visibility: auto;
@@ -81,7 +80,7 @@
   height: 100%;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
-    #07111b;
+    var(--panel-deep);
 }
 
 .loot-card-head,
@@ -446,7 +445,7 @@
   border-radius: 8px;
   background:
     linear-gradient(180deg, rgba(176, 137, 255, 0.08), transparent),
-    #07111b;
+    var(--panel-deep);
 }
 
 .achievement-summary div {
@@ -499,7 +498,7 @@
   border-color: rgba(63, 214, 163, 0.52);
   background:
     linear-gradient(180deg, rgba(63, 214, 163, 0.08), transparent),
-    #07111b;
+    var(--panel-deep);
 }
 
 .achievement-card-head {
@@ -536,7 +535,7 @@
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: #07111b;
+  background: var(--panel-deep);
 }
 
 .achievement-progress span {
@@ -574,7 +573,7 @@
   min-height: 310px;
   background:
     linear-gradient(180deg, rgba(216, 174, 75, 0.08), transparent),
-    #07111b;
+    var(--panel-deep);
 }
 
 .quest-offer.done {
@@ -593,7 +592,7 @@
   border-color: rgba(166, 120, 194, 0.8);
   background:
     linear-gradient(180deg, rgba(166, 120, 194, 0.18), transparent),
-    #07111b;
+    var(--panel-deep);
 }
 
 .quest-offer.rare .quest-offer-title {
@@ -661,7 +660,7 @@
 
 .bestiary-card.active {
   border-color: var(--gold);
-  background: #17283a;
+  background: var(--panel-2);
 }
 
 .bestiary-card p {
@@ -671,9 +670,9 @@
 .completion-bar {
   height: 7px;
   overflow: hidden;
-  border: 1px solid #28445a;
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: #07111b;
+  background: var(--panel-deep);
 }
 
 .completion-bar span {
@@ -691,7 +690,7 @@
   border-radius: 8px;
   background:
     linear-gradient(180deg, rgba(216, 174, 75, 0.08), transparent),
-    #07111b;
+    var(--panel-deep);
   padding: 14px;
   contain: layout paint;
 }
@@ -727,14 +726,14 @@
   border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(240, 161, 150, 0.1), transparent),
-    #0c1723;
+    var(--panel-dark);
 }
 
 .enemy-ability.passive {
   border-color: rgba(216, 174, 75, 0.38);
   background:
     linear-gradient(135deg, rgba(216, 174, 75, 0.1), transparent),
-    #0c1723;
+    var(--panel-dark);
 }
 
 .enemy-ability strong {
@@ -756,7 +755,7 @@
   border: 1px solid rgba(216, 174, 75, 0.38);
   border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(216, 174, 75, 0.12), transparent 42%),
+    linear-gradient(135deg, var(--gold-line-faint), transparent 42%),
     rgba(12, 23, 35, 0.86);
 }
 
@@ -786,7 +785,7 @@
   padding: 8px 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #07111b;
+  background: var(--panel-deep);
 }
 
 .bestiary-category-grid {
@@ -807,7 +806,7 @@
 
 .bestiary-category.active {
   border-color: var(--gold);
-  background: rgba(216, 174, 75, 0.12);
+  background: var(--gold-line-faint);
 }
 
 .bestiary-category span {
@@ -827,7 +826,7 @@
   padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #07111b;
+  background: var(--panel-deep);
   color: var(--text);
   font: inherit;
   font-size: 13px;
@@ -879,20 +878,6 @@
   box-shadow: none;
 }
 
-.bestiary-overview {
-  display: grid;
-  gap: 6px;
-  padding: 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.16);
-}
-
-.bestiary-overview p {
-  margin: 0;
-  color: var(--muted);
-}
-
 .discovered-drop span:first-child {
   display: grid;
   gap: 2px;
@@ -933,7 +918,7 @@ button.drop-row {
 
 button.drop-row.active {
   border-color: var(--gold);
-  background: rgba(216, 174, 75, 0.12);
+  background: var(--gold-line-faint);
 }
 
 button.drop-row span:first-child {
@@ -965,14 +950,6 @@ button.drop-row span:last-child {
 }
 
 .bestiary-pagination button {
-  min-height: 34px;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.bestiary-more {
-  grid-column: 1 / -1;
-  margin-top: 6px;
   min-height: 34px;
   font-size: 13px;
   font-weight: 800;
@@ -1021,7 +998,7 @@ button.drop-row span:last-child {
   padding: 10px;
   border: 1px solid rgba(216, 174, 75, 0.65);
   border-radius: 8px;
-  background: #07111b;
+  background: var(--panel-deep);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
   color: var(--text);
 }
@@ -1084,7 +1061,7 @@ button.drop-row span:last-child {
   inset: auto 8% 28px;
   height: 34px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.24);
+  background: var(--shadow-mid);
   filter: blur(8px);
 }
 
@@ -1113,7 +1090,7 @@ button.drop-row span:last-child {
   background:
     linear-gradient(135deg, rgba(242, 193, 78, 0.16), rgba(52, 213, 216, 0.07)),
     rgba(7, 17, 27, 0.86);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 10px 26px var(--shadow-soft);
 }
 
 .battle-log-tab span {
@@ -1155,7 +1132,7 @@ button.drop-row span:last-child {
   background:
     linear-gradient(135deg, rgba(109, 149, 184, 0.18), rgba(52, 213, 216, 0.1)),
     rgba(7, 17, 27, 0.9);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 10px 28px var(--shadow-mid);
   color: var(--text);
   transform: translateX(-50%);
   animation: battle-event-pop 260ms ease-out both;
@@ -1335,7 +1312,7 @@ button.drop-row span:last-child {
   border: 1px solid rgba(109, 149, 184, 0.32);
   border-radius: 8px;
   background: rgba(7, 17, 27, 0.82);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 8px 18px var(--shadow-soft);
 }
 
 .combat-health-label {
@@ -1367,16 +1344,16 @@ button.drop-row span:last-child {
   width: 100%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #ef646b, #eea365);
+  background: linear-gradient(90deg, var(--red-soft), #eea365);
   transition: width 220ms ease;
 }
 
 .combat-health-bar.enemy-health-bar span {
-  background: linear-gradient(90deg, #d74d5a, #f0c04f);
+  background: linear-gradient(90deg, #d74d5a, var(--gold-bright));
 }
 
 .combat-health-bar.low span {
-  background: linear-gradient(90deg, #8b1e2d, #ef646b);
+  background: linear-gradient(90deg, #8b1e2d, var(--red-soft));
 }
 
 .hero-body,
@@ -1411,7 +1388,7 @@ button.drop-row span:last-child {
   height: 42px;
   border-radius: 18px 18px 20px 20px;
   background: linear-gradient(135deg, #b95548, #5f2220);
-  border: 2px solid #d8ae4b;
+  border: 2px solid var(--gold-soft);
 }
 
 .hero-sword {
@@ -1476,14 +1453,14 @@ button.drop-row span:last-child {
   width: 22px;
   height: 6px;
   border-radius: 999px;
-  background: #d8ae4b;
+  background: var(--gold-soft);
 }
 
 .hero-build-tank .hero-body {
   width: 84px;
   background: linear-gradient(135deg, #b7c1ce, #40516a 48%, #27384f 49%, #2d405f 100%);
-  border-color: #d8ae4b;
-  box-shadow: inset 0 0 0 3px rgba(216, 174, 75, 0.12), 0 0 22px rgba(73, 182, 255, 0.14);
+  border-color: var(--gold-soft);
+  box-shadow: inset 0 0 0 3px var(--gold-line-faint), 0 0 22px rgba(73, 182, 255, 0.14);
 }
 
 .hero-build-tank .hero-body::before {
@@ -1509,7 +1486,7 @@ button.drop-row span:last-child {
   width: 42px;
   height: 52px;
   border-radius: 18px 18px 24px 24px;
-  background: linear-gradient(135deg, #d8ae4b, #5c6a78 48%, #233142 49%);
+  background: linear-gradient(135deg, var(--gold-soft), #5c6a78 48%, #233142 49%);
 }
 
 .hero-build-tank .hero-shield::after {
@@ -1563,7 +1540,7 @@ button.drop-row span:last-child {
   top: -18px;
   width: 9px;
   height: 104px;
-  background: linear-gradient(180deg, #fff7c7, #f0c04f 28%, #d7e1ec 29%, #7c8792);
+  background: linear-gradient(180deg, #fff7c7, var(--gold-bright) 28%, #d7e1ec 29%, #7c8792);
   filter: drop-shadow(0 0 8px rgba(240, 192, 79, 0.45));
 }
 
@@ -1571,7 +1548,7 @@ button.drop-row span:last-child {
   left: -12px;
   top: 55px;
   width: 32px;
-  background: linear-gradient(90deg, #f0c04f, #ef646b);
+  background: linear-gradient(90deg, var(--gold-bright), var(--red-soft));
 }
 
 .hero-build-bruiser .hero-body {
@@ -1605,19 +1582,19 @@ button.drop-row span:last-child {
 }
 
 .hero-class-warrior .hero-body {
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22));
+  filter: drop-shadow(0 8px 14px var(--shadow-soft));
 }
 
 .hero-class-warrior.hero-build-tank .hero-body {
-  box-shadow: inset 0 0 0 3px rgba(216, 174, 75, 0.12), 0 0 22px rgba(73, 182, 255, 0.14);
+  box-shadow: inset 0 0 0 3px var(--gold-line-faint), 0 0 22px rgba(73, 182, 255, 0.14);
 }
 
 .hero-class-warrior.hero-build-damage .hero-body {
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.24)) saturate(1.08);
+  filter: drop-shadow(0 8px 14px var(--shadow-mid)) saturate(1.08);
 }
 
 .hero-class-warrior.hero-build-bruiser .hero-body {
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.22)) contrast(1.04);
+  filter: drop-shadow(0 8px 14px var(--shadow-soft)) contrast(1.04);
 }
 
 .hero-class-mage .hero-body {
@@ -1728,13 +1705,13 @@ button.drop-row span:last-child {
 .hero-class-mage.hero-build-damage .hero-body {
   background:
     radial-gradient(circle at 50% 22%, rgba(255, 192, 79, 0.5), transparent 21%),
-    linear-gradient(135deg, #52202b, #1c1422 52%, #ef646b 53% 58%, #381019 59%);
-  border-color: #f0c04f;
+    linear-gradient(135deg, #52202b, #1c1422 52%, var(--red-soft) 53% 58%, #381019 59%);
+  border-color: var(--gold-bright);
   box-shadow: 0 0 28px rgba(239, 100, 107, 0.34);
 }
 
 .hero-class-mage.hero-build-damage .hero-sword {
-  background: linear-gradient(180deg, #fff3b0, #f0c04f 28%, #8b1e2d 29% 100%);
+  background: linear-gradient(180deg, #fff3b0, var(--gold-bright) 28%, #8b1e2d 29% 100%);
   filter: drop-shadow(0 0 12px rgba(240, 192, 79, 0.62));
 }
 
@@ -1752,7 +1729,7 @@ button.drop-row span:last-child {
   background:
     linear-gradient(125deg, rgba(63, 214, 163, 0.34) 0 14%, transparent 15% 62%, rgba(5, 11, 18, 0.55) 63%),
     linear-gradient(135deg, #1e3943, #0e1721 48%, #284331 49%);
-  border-color: #3fd6a3;
+  border-color: var(--green);
   box-shadow: 0 0 20px rgba(63, 214, 163, 0.18);
 }
 
@@ -1781,7 +1758,7 @@ button.drop-row span:last-child {
   height: 31px;
   border-radius: 18px 18px 10px 10px;
   background: linear-gradient(135deg, #263d4a, #081018);
-  border-color: #3fd6a3;
+  border-color: var(--green);
 }
 
 .hero-class-rogue .hero-helm::before {
@@ -1798,7 +1775,7 @@ button.drop-row span:last-child {
   width: 16px;
   height: 42px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #d9f4ff, #3fd6a3 38%, #0b1721 39%);
+  background: linear-gradient(180deg, #d9f4ff, var(--green) 38%, #0b1721 39%);
   border-color: #75e9ff;
   transform: rotate(35deg);
 }
@@ -1820,7 +1797,7 @@ button.drop-row span:last-child {
   left: -8px;
   top: 31px;
   width: 24px;
-  background: #3fd6a3;
+  background: var(--green);
 }
 
 .hero-class-rogue.hero-build-tank .hero-body {
@@ -1839,8 +1816,8 @@ button.drop-row span:last-child {
 .hero-class-rogue.hero-build-damage .hero-body {
   background:
     linear-gradient(122deg, rgba(239, 100, 107, 0.36) 0 16%, transparent 17% 62%, rgba(5, 11, 18, 0.6) 63%),
-    linear-gradient(135deg, #3b1623, #101018 48%, #3fd6a3 49%);
-  border-color: #ef646b;
+    linear-gradient(135deg, #3b1623, #101018 48%, var(--green) 49%);
+  border-color: var(--red-soft);
 }
 
 .hero-class-rogue.hero-build-damage .hero-sword {
@@ -1891,7 +1868,7 @@ button.drop-row span:last-child {
   height: 33px;
   border-radius: 22px 22px 9px 9px;
   background: linear-gradient(135deg, #526145, #1b2b2c);
-  border-color: #d8ae4b;
+  border-color: var(--gold-soft);
 }
 
 .hero-class-archer .hero-helm::before {
@@ -1907,7 +1884,7 @@ button.drop-row span:last-child {
   top: 10px;
   width: 40px;
   height: 82px;
-  border: 4px solid #d8ae4b;
+  border: 4px solid var(--gold-soft);
   border-left-color: transparent;
   border-radius: 50%;
   background: transparent;
@@ -1929,7 +1906,7 @@ button.drop-row span:last-child {
   top: 12px;
   width: 7px;
   height: 78px;
-  background: linear-gradient(180deg, #f5f7fb, #d8ae4b 10%, #7c4b32 11% 100%);
+  background: linear-gradient(180deg, #f5f7fb, var(--gold-soft) 10%, #7c4b32 11% 100%);
   transform: rotate(-58deg);
   filter: drop-shadow(0 0 8px rgba(216, 174, 75, 0.3));
 }
@@ -1946,11 +1923,11 @@ button.drop-row span:last-child {
 .hero-class-archer.hero-build-tank .hero-body {
   background:
     linear-gradient(135deg, #315549, #12211f 50%, #263c2e 51%);
-  border-color: #3fd6a3;
+  border-color: var(--green);
 }
 
 .hero-class-archer.hero-build-tank .hero-shield {
-  border-color: #3fd6a3;
+  border-color: var(--green);
   border-left-color: transparent;
 }
 
@@ -1958,7 +1935,7 @@ button.drop-row span:last-child {
   background:
     linear-gradient(110deg, transparent 0 38%, rgba(240, 192, 79, 0.58) 39% 45%, transparent 46%),
     linear-gradient(135deg, #4f3f24, #111821 50%, #243f63 51%);
-  border-color: #f0c04f;
+  border-color: var(--gold-bright);
   box-shadow: 0 0 24px rgba(240, 192, 79, 0.24);
 }
 
@@ -2003,7 +1980,7 @@ button.drop-row span:last-child {
   height: 16px;
   border-radius: 50%;
   background: #f1c96b;
-  box-shadow: 20px 0 0 #f1c96b, 0 0 12px #d8ae4b, 20px 0 12px #d8ae4b;
+  box-shadow: 20px 0 0 #f1c96b, 0 0 12px var(--gold-soft), 20px 0 12px var(--gold-soft);
 }
 
 .enemy-wolf .enemy-body {
@@ -2080,7 +2057,7 @@ button.drop-row span:last-child {
   top: 22px;
   width: 8px;
   height: 8px;
-  box-shadow: 0 0 10px #d8ae4b;
+  box-shadow: 0 0 10px var(--gold-soft);
 }
 
 .enemy-bandit .enemy-body {
@@ -2172,7 +2149,7 @@ button.drop-row span:last-child {
   top: 22px;
   width: 9px;
   height: 9px;
-  box-shadow: 0 0 10px #d8ae4b;
+  box-shadow: 0 0 10px var(--gold-soft);
 }
 
 .enemy-knight .enemy-body,
@@ -2182,7 +2159,7 @@ button.drop-row span:last-child {
     linear-gradient(90deg, transparent 0 16%, rgba(241, 201, 107, 0.55) 17% 22%, transparent 23% 77%, rgba(241, 201, 107, 0.42) 78% 83%, transparent 84%),
     linear-gradient(135deg, #c4cbd4, #596675 54%, #20262d 55%);
   border-color: #d8dee9;
-  box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.22), 0 0 18px rgba(216, 222, 233, 0.12);
+  box-shadow: inset 0 -14px 0 var(--shadow-soft), 0 0 18px rgba(216, 222, 233, 0.12);
 }
 
 .enemy-knight .enemy-body::after,
@@ -2206,7 +2183,7 @@ button.drop-row span:last-child {
   background:
     linear-gradient(90deg, transparent 0 43%, #1b222b 44% 56%, transparent 57%),
     linear-gradient(135deg, #eef2f6, #7a8796);
-  border: 2px solid #d8ae4b;
+  border: 2px solid var(--gold-soft);
 }
 
 .enemy-knight .enemy-extra-b,
@@ -2217,7 +2194,7 @@ button.drop-row span:last-child {
   height: 54px;
   border-radius: 16px;
   background: linear-gradient(135deg, #5a2630, #9f3d3a);
-  border: 2px solid #d8ae4b;
+  border: 2px solid var(--gold-soft);
 }
 
 .enemy-ratguard .enemy-body {
@@ -2275,7 +2252,7 @@ button.drop-row span:last-child {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: radial-gradient(circle, #d8d0bc 0 28%, #25232c 30% 100%);
+  background: radial-gradient(circle, var(--parchment) 0 28%, #25232c 30% 100%);
   border: 2px solid #a678c2;
 }
 
@@ -2298,7 +2275,7 @@ button.drop-row span:last-child {
     radial-gradient(circle at 50% 18%, rgba(182, 132, 96, 0.32), transparent 18%),
     linear-gradient(135deg, #655d55, #292827 60%, #87483c 61%);
   border-color: #b68460;
-  box-shadow: inset 0 -18px 0 rgba(0, 0, 0, 0.24);
+  box-shadow: inset 0 -18px 0 var(--shadow-mid);
 }
 
 .enemy-brute .enemy-body::after {
@@ -2328,9 +2305,9 @@ button.drop-row span:last-child {
   height: 70px;
   border-radius: 10px;
   background:
-    radial-gradient(circle at 50% 14%, #d8d0bc 0 23%, transparent 24%),
+    radial-gradient(circle at 50% 14%, var(--parchment) 0 23%, transparent 24%),
     linear-gradient(180deg, #5b4034, #1a1715);
-  border: 2px solid #d8d0bc;
+  border: 2px solid var(--parchment);
   transform: rotate(-24deg);
 }
 
@@ -2414,13 +2391,13 @@ button.drop-row span:last-child {
   background:
     linear-gradient(90deg, transparent 0 18%, rgba(216, 174, 75, 0.5) 19% 24%, transparent 25% 74%, rgba(216, 174, 75, 0.42) 75% 80%, transparent 81%),
     linear-gradient(135deg, #9faab5, #425061 54%, #1f2932 100%);
-  border-color: #d8ae4b;
-  box-shadow: inset -12px -8px 0 rgba(0, 0, 0, 0.22), 0 0 18px rgba(216, 174, 75, 0.18);
+  border-color: var(--gold-soft);
+  box-shadow: inset -12px -8px 0 var(--shadow-soft), 0 0 18px rgba(216, 174, 75, 0.18);
 }
 
 .enemy-iron-hound .enemy-body::before {
   background: linear-gradient(135deg, #aeb7c2, #303c48);
-  border-color: #d8ae4b;
+  border-color: var(--gold-soft);
 }
 
 .enemy-iron-hound .enemy-extra-a,
@@ -2465,7 +2442,7 @@ button.drop-row span:last-child {
     linear-gradient(150deg, transparent 0 26%, rgba(99, 233, 172, 0.18) 27% 34%, transparent 35%),
     linear-gradient(135deg, #1f2730, #0c1118 62%, #243b35 63%);
   border-color: #63e9ac;
-  box-shadow: 0 0 24px rgba(99, 233, 172, 0.14), inset -12px -8px 0 rgba(0, 0, 0, 0.24);
+  box-shadow: 0 0 24px rgba(99, 233, 172, 0.14), inset -12px -8px 0 var(--shadow-mid);
 }
 
 .enemy-plague-crow .enemy-body::after {
@@ -2474,7 +2451,7 @@ button.drop-row span:last-child {
   width: 34px;
   height: 12px;
   border-radius: 0 80% 80% 0;
-  background: linear-gradient(90deg, #d8d0bc, #8c7248);
+  background: linear-gradient(90deg, var(--parchment), #8c7248);
   box-shadow: none;
 }
 
@@ -2552,17 +2529,17 @@ button.drop-row span:last-child {
   background:
     linear-gradient(90deg, transparent 0 30%, rgba(239, 100, 107, 0.48) 31% 37%, transparent 38% 62%, rgba(240, 192, 79, 0.38) 63% 68%, transparent 69%),
     linear-gradient(135deg, #5f5045, #272321 58%, #6a2922 59%);
-  border-color: #ef646b;
-  box-shadow: inset 0 -12px 0 rgba(0, 0, 0, 0.22), 0 0 18px rgba(239, 100, 107, 0.18);
+  border-color: var(--red-soft);
+  box-shadow: inset 0 -12px 0 var(--shadow-soft), 0 0 18px rgba(239, 100, 107, 0.18);
 }
 
 .enemy-ash-marauder .enemy-extra-a {
   background: linear-gradient(135deg, #2e2622, #5b2b28);
-  border-color: #ef646b;
+  border-color: var(--red-soft);
 }
 
 .enemy-ash-marauder .enemy-extra-b {
-  background: linear-gradient(180deg, #ffe2a3 0 12%, #ef646b 13% 36%, #5b2b28 37%);
+  background: linear-gradient(180deg, #ffe2a3 0 12%, var(--red-soft) 13% 36%, #5b2b28 37%);
   box-shadow: 0 0 16px rgba(239, 100, 107, 0.48);
 }
 
@@ -2572,7 +2549,7 @@ button.drop-row span:last-child {
     linear-gradient(155deg, transparent 0 20%, rgba(239, 100, 107, 0.45) 21% 27%, transparent 28% 44%, rgba(240, 192, 79, 0.32) 45% 50%, transparent 51%),
     linear-gradient(135deg, #5b4034, #2d1b19 54%, #120b0a 100%);
   border-color: #ef9b4d;
-  box-shadow: inset -10px -8px 0 rgba(0, 0, 0, 0.22), 0 0 24px rgba(239, 100, 107, 0.24);
+  box-shadow: inset -10px -8px 0 var(--shadow-soft), 0 0 24px rgba(239, 100, 107, 0.24);
 }
 
 .enemy-ember-stalker .enemy-body::before {
@@ -2586,15 +2563,15 @@ button.drop-row span:last-child {
 }
 
 .enemy-ember-stalker .enemy-eye {
-  background: #f0c04f;
-  box-shadow: 0 0 14px #ef646b;
+  background: var(--gold-bright);
+  box-shadow: 0 0 14px var(--red-soft);
 }
 
 .enemy-crown-sentinel .enemy-body {
   background:
     linear-gradient(90deg, transparent 0 14%, rgba(216, 174, 75, 0.68) 15% 22%, transparent 23% 76%, rgba(52, 213, 216, 0.38) 77% 84%, transparent 85%),
     linear-gradient(135deg, #d8dee9, #687487 52%, #16212b 53%);
-  border-color: #f0c04f;
+  border-color: var(--gold-bright);
   box-shadow: 0 0 24px rgba(240, 192, 79, 0.2);
 }
 
@@ -2602,7 +2579,7 @@ button.drop-row span:last-child {
   background:
     linear-gradient(90deg, transparent 0 43%, #1b222b 44% 56%, transparent 57%),
     linear-gradient(135deg, #f7f0ce, #8996a8);
-  border-color: #f0c04f;
+  border-color: var(--gold-bright);
 }
 
 .enemy-crown-sentinel .enemy-extra-a::before {
@@ -2612,12 +2589,12 @@ button.drop-row span:last-child {
   top: -16px;
   width: 40px;
   height: 18px;
-  background: linear-gradient(135deg, #f0c04f, #8f6a20);
+  background: linear-gradient(135deg, var(--gold-bright), #8f6a20);
   clip-path: polygon(0 100%, 18% 20%, 34% 100%, 50% 0, 66% 100%, 82% 20%, 100% 100%);
 }
 
 .enemy-crown-sentinel .enemy-extra-b {
-  background: linear-gradient(135deg, #14343b, #34d5d8);
+  background: linear-gradient(135deg, #14343b, var(--aqua));
 }
 
 .enemy-bone-acolyte .enemy-body {
@@ -2625,19 +2602,19 @@ button.drop-row span:last-child {
     radial-gradient(circle at 50% 24%, rgba(216, 208, 188, 0.45), transparent 18%),
     linear-gradient(90deg, transparent 0 43%, rgba(216, 208, 188, 0.62) 44% 56%, transparent 57%),
     linear-gradient(135deg, #2a2d35, #101216 55%, #493d35 56%);
-  border-color: #d8d0bc;
+  border-color: var(--parchment);
 }
 
 .enemy-bone-acolyte .enemy-extra-a {
   background:
     radial-gradient(circle at 35% 42%, #111318 0 8%, transparent 9%),
     radial-gradient(circle at 65% 42%, #111318 0 8%, transparent 9%),
-    radial-gradient(circle, #d8d0bc 0 34%, #25232c 36% 100%);
-  border-color: #d8d0bc;
+    radial-gradient(circle, var(--parchment) 0 34%, #25232c 36% 100%);
+  border-color: var(--parchment);
 }
 
 .enemy-bone-acolyte .enemy-extra-b {
-  background: linear-gradient(180deg, #f0d9ff 0 10%, #d8d0bc 11% 28%, #5f4477 29%);
+  background: linear-gradient(180deg, #f0d9ff 0 10%, var(--parchment) 11% 28%, #5f4477 29%);
 }
 
 .enemy-crypt-brute .enemy-body {
@@ -2655,7 +2632,7 @@ button.drop-row span:last-child {
 
 .enemy-crypt-brute .enemy-extra-b {
   background:
-    repeating-linear-gradient(180deg, #d8d0bc 0 7px, #3a332e 8px 13px);
+    repeating-linear-gradient(180deg, var(--parchment) 0 7px, #3a332e 8px 13px);
   border-color: #96a173;
 }
 
@@ -2663,14 +2640,14 @@ button.drop-row span:last-child {
   background:
     repeating-linear-gradient(90deg, transparent 0 12px, rgba(216, 208, 188, 0.28) 13px 16px),
     linear-gradient(135deg, #949da8, #3e4854 54%, #161f27 55%);
-  border-color: #d8d0bc;
+  border-color: var(--parchment);
 }
 
 .enemy-chain-warden .enemy-extra-a {
   background:
     linear-gradient(90deg, transparent 0 43%, #0e151c 44% 56%, transparent 57%),
-    linear-gradient(135deg, #d8d0bc, #6e7883);
-  border-color: #d8d0bc;
+    linear-gradient(135deg, var(--parchment), #6e7883);
+  border-color: var(--parchment);
 }
 
 .enemy-chain-warden .enemy-extra-b {
@@ -2678,7 +2655,7 @@ button.drop-row span:last-child {
   border-radius: 999px 999px 18px 18px;
   background:
     repeating-linear-gradient(180deg, #9aa7b7 0 6px, #1b222b 7px 11px);
-  border-color: #d8d0bc;
+  border-color: var(--parchment);
 }
 
 .enemy-oath-forger .enemy-body {
@@ -2687,8 +2664,8 @@ button.drop-row span:last-child {
     linear-gradient(90deg, transparent 0 17%, rgba(239, 100, 107, 0.48) 18% 26%, transparent 27% 73%, rgba(240, 192, 79, 0.42) 74% 82%, transparent 83%),
     radial-gradient(circle at 50% 18%, rgba(240, 192, 79, 0.34), transparent 18%),
     linear-gradient(135deg, #6d5b48, #2d2622 60%, #8d3328 61%);
-  border-color: #f0c04f;
-  box-shadow: inset 0 -18px 0 rgba(0, 0, 0, 0.24), 0 0 24px rgba(239, 100, 107, 0.2);
+  border-color: var(--gold-bright);
+  box-shadow: inset 0 -18px 0 var(--shadow-mid), 0 0 24px rgba(239, 100, 107, 0.2);
 }
 
 .enemy-oath-forger .enemy-extra-b {
@@ -2698,8 +2675,8 @@ button.drop-row span:last-child {
   height: 82px;
   border-radius: 10px;
   background:
-    linear-gradient(90deg, transparent 0 18%, #f0c04f 19% 81%, transparent 82%),
-    linear-gradient(180deg, #3a332e 0 24%, #d8d0bc 25% 42%, #3a332e 43%);
+    linear-gradient(90deg, transparent 0 18%, var(--gold-bright) 19% 81%, transparent 82%),
+    linear-gradient(180deg, #3a332e 0 24%, var(--parchment) 25% 42%, #3a332e 43%);
   transform: rotate(-28deg);
   box-shadow: 0 0 18px rgba(239, 100, 107, 0.36);
 }
@@ -2710,7 +2687,7 @@ button.drop-row span:last-child {
   background:
     linear-gradient(90deg, transparent 0 14%, rgba(216, 174, 75, 0.72) 15% 23%, transparent 24% 76%, rgba(216, 174, 75, 0.52) 77% 85%, transparent 86%),
     linear-gradient(135deg, #e8edf4, #6f7b88 52%, #1a1f28 53%);
-  border-color: #f0c04f;
+  border-color: var(--gold-bright);
   box-shadow: 0 0 32px rgba(240, 192, 79, 0.26);
 }
 
@@ -2718,7 +2695,7 @@ button.drop-row span:last-child {
   background:
     linear-gradient(90deg, transparent 0 43%, #131923 44% 56%, transparent 57%),
     linear-gradient(135deg, #f8efc5, #7d8790);
-  border-color: #f0c04f;
+  border-color: var(--gold-bright);
 }
 
 .enemy-iron-duke .enemy-extra-a::before {
@@ -2728,7 +2705,7 @@ button.drop-row span:last-child {
   top: -20px;
   width: 52px;
   height: 24px;
-  background: linear-gradient(135deg, #f0c04f, #7b5520);
+  background: linear-gradient(135deg, var(--gold-bright), #7b5520);
   clip-path: polygon(0 100%, 10% 24%, 26% 72%, 50% 0, 74% 72%, 90% 24%, 100% 100%);
 }
 
@@ -2749,13 +2726,13 @@ button.drop-row span:last-child {
 }
 
 .enemy-ember-priest .enemy-extra-a {
-  background: radial-gradient(circle, #f0c04f 0 18%, #3a2323 20% 100%);
+  background: radial-gradient(circle, var(--gold-bright) 0 18%, #3a2323 20% 100%);
   border-color: #ef9b4d;
   box-shadow: 0 0 18px rgba(239, 100, 107, 0.48);
 }
 
 .enemy-ember-priest .enemy-extra-b {
-  background: linear-gradient(180deg, #ffe2a3 0 10%, #ef646b 11% 28%, #4f2130 29%);
+  background: linear-gradient(180deg, #ffe2a3 0 10%, var(--red-soft) 11% 28%, #4f2130 29%);
   box-shadow: 0 -8px 20px rgba(239, 100, 107, 0.72), 0 0 0 3px rgba(239, 100, 107, 0.12);
 }
 
@@ -2766,8 +2743,8 @@ button.drop-row span:last-child {
     radial-gradient(circle at 76% 56%, #d3a483 0 7%, transparent 8%),
     linear-gradient(90deg, transparent 0 25%, rgba(216, 174, 75, 0.5) 26% 33%, transparent 34% 62%, rgba(216, 174, 75, 0.34) 63% 70%, transparent 71%),
     linear-gradient(135deg, #72523f, #2e241d 62%, #17100e 100%);
-  border-color: #f0c04f;
-  box-shadow: inset -16px -10px 0 rgba(0, 0, 0, 0.24), 0 0 28px rgba(240, 192, 79, 0.18);
+  border-color: var(--gold-bright);
+  box-shadow: inset -16px -10px 0 var(--shadow-mid), 0 0 28px rgba(240, 192, 79, 0.18);
 }
 
 .enemy-crown-beast .enemy-body::before {
@@ -2777,14 +2754,14 @@ button.drop-row span:last-child {
   top: -18px;
   width: 42px;
   height: 24px;
-  background: linear-gradient(135deg, #f0c04f, #7b5520);
+  background: linear-gradient(135deg, var(--gold-bright), #7b5520);
   clip-path: polygon(0 100%, 14% 20%, 30% 80%, 50% 0, 70% 80%, 86% 20%, 100% 100%);
   z-index: 3;
 }
 
 .enemy-crown-beast .enemy-extra-a,
 .enemy-crown-beast .enemy-extra-b {
-  background: linear-gradient(90deg, #f7ead2, #d8ae4b);
+  background: linear-gradient(90deg, #f7ead2, var(--gold-soft));
 }
 
 .enemy-hollow-champion .enemy-body {
@@ -2801,7 +2778,7 @@ button.drop-row span:last-child {
 }
 
 .enemy-hollow-champion .enemy-extra-b {
-  background: linear-gradient(180deg, #f4df93, #34d5d8 42%, #3b254d);
+  background: linear-gradient(180deg, #f4df93, var(--aqua) 42%, #3b254d);
   box-shadow: 0 0 22px rgba(52, 213, 216, 0.65);
 }
 
@@ -3013,7 +2990,7 @@ button.drop-row span:last-child {
   background:
     linear-gradient(90deg, rgba(52, 213, 216, 0.1), transparent 46%),
     linear-gradient(120deg, rgba(242, 193, 78, 0.08), transparent 70%),
-    #0c1723;
+    var(--panel-dark);
   border: 1px solid var(--line);
   border-radius: 8px;
   box-shadow: inset 0 0 28px rgba(52, 213, 216, 0.04);
@@ -3222,7 +3199,7 @@ button.drop-row span:last-child {
   min-width: 160px;
   min-height: 40px;
   background: #2b4c78;
-  border-color: #49b6ff;
+  border-color: var(--blue);
   font-weight: 800;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
@@ -3276,7 +3253,7 @@ button.drop-row span:last-child {
 
 .rarity-rare {
   border-color: rgba(120, 174, 228, 0.75);
-  background: linear-gradient(90deg, rgba(120, 174, 228, 0.1), transparent 42%), #0c1723;
+  background: linear-gradient(90deg, rgba(120, 174, 228, 0.1), transparent 42%), var(--panel-dark);
 }
 
 .rarity-rare::before {
@@ -3285,7 +3262,7 @@ button.drop-row span:last-child {
 
 .rarity-epic {
   border-color: rgba(183, 139, 224, 0.8);
-  background: linear-gradient(90deg, rgba(183, 139, 224, 0.12), transparent 42%), #0c1723;
+  background: linear-gradient(90deg, rgba(183, 139, 224, 0.12), transparent 42%), var(--panel-dark);
 }
 
 .rarity-epic::before {
@@ -3294,7 +3271,7 @@ button.drop-row span:last-child {
 
 .rarity-legendary {
   border-color: rgba(226, 184, 85, 0.9);
-  background: linear-gradient(90deg, rgba(226, 184, 85, 0.15), transparent 44%), #0c1723;
+  background: linear-gradient(90deg, rgba(226, 184, 85, 0.15), transparent 44%), var(--panel-dark);
   box-shadow: inset 0 0 0 1px rgba(226, 184, 85, 0.12);
 }
 
@@ -3509,7 +3486,7 @@ button.drop-row span:last-child {
   padding: 9px 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #0c1723;
+  background: var(--panel-dark);
 }
 
 .save-summary span {
@@ -3568,14 +3545,6 @@ button.drop-row span:last-child {
   font-size: 13px;
 }
 
-.modal-head-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
 .log-window {
   width: min(620px, 100%);
 }
@@ -3591,7 +3560,7 @@ button.drop-row span:last-child {
 
 .log div {
   padding: 7px 9px;
-  background: #0c1723;
+  background: var(--panel-dark);
   border-left: 3px solid var(--line);
   border-radius: 0 6px 6px 0;
 }
@@ -3687,10 +3656,6 @@ button.drop-row span:last-child {
   width: min(900px, 100%);
 }
 
-.zone-modal-options {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
 .equipment-detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3719,7 +3684,7 @@ button.drop-row span:last-child {
   border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(216, 174, 75, 0.14), rgba(52, 213, 216, 0.08)),
-    #0c1723;
+    var(--panel-dark);
 }
 
 .player-stats-hero h3 {
@@ -3740,7 +3705,7 @@ button.drop-row span:last-child {
 .player-stat-sources > div {
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #0c1723;
+  background: var(--panel-dark);
 }
 
 .player-stat-currency span {
@@ -3776,7 +3741,7 @@ button.drop-row span:last-child {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #0c1723;
+  background: var(--panel-dark);
 }
 
 .player-build-switch > strong {

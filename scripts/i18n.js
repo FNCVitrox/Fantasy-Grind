@@ -1134,16 +1134,15 @@ function defaultLanguage() {
     return "de";
 }
 
-let languageOverride = null;
 
 // Führt fn in einer bestimmten Sprache aus (z. B. um Log-Einträge in DE und EN zu erzeugen).
 function withLanguage(language, fn) {
-    const previous = languageOverride;
-    languageOverride = normalizeLanguage(language);
+    const previous = ui.languageOverride;
+    ui.languageOverride = normalizeLanguage(language);
     try {
         return fn();
     } finally {
-        languageOverride = previous;
+        ui.languageOverride = previous;
     }
 }
 
@@ -1205,7 +1204,7 @@ function normalizeLogEntry(entry) {
 }
 
 function currentLanguage() {
-    if (languageOverride) return languageOverride;
+    if (ui.languageOverride) return ui.languageOverride;
     if (typeof state !== "undefined" && state && state.language) {
         return normalizeLanguage(state.language);
     }
@@ -1275,7 +1274,7 @@ function clearRenderCache() {
         delete renderCache[key];
     });
     if (typeof tooltipHtmlCache !== "undefined") tooltipHtmlCache.clear();
-    if (typeof bestiaryListDirty !== "undefined") bestiaryListDirty = true;
+    if (typeof ui !== "undefined") ui.bestiaryListDirty = true;
 }
 
 function mapLabel(map, key, fallback = key) {
@@ -1594,13 +1593,6 @@ function setStaticText(selector, key) {
     if (!document.querySelectorAll) return;
     document.querySelectorAll(selector).forEach((element) => {
         element.textContent = t(key, element.textContent);
-    });
-}
-
-function setStaticAria(selector, key) {
-    if (!document.querySelectorAll) return;
-    document.querySelectorAll(selector).forEach((element) => {
-        element.setAttribute("aria-label", t(key, element.getAttribute("aria-label") || ""));
     });
 }
 
