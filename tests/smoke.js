@@ -584,9 +584,16 @@ assert(
 
 suite("save storage and quest completion");
 
-vm.runInContext("state.gold = 123; save();", context);
-assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1"]).gold, 123);
-assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1-backup"]).gold, 123);
+vm.runInContext("state.gold = 77; saveWithBackup(); state.gold = 123; save();", context);
+assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1"]).gold, 123, "save() should write the main save immediately");
+assert.strictEqual(JSON.parse(storage["fantasy-grind-save-v1-backup"]).gold, 77, "save() should not rewrite the backup on every action");
+// Speichern sparsam (Punkt 10): ohne Änderung kein Schreiben, Backup nur bei wichtigen Momenten oder alle 5 Minuten.
+assert(vm.runInContext("(() => { const original = localStorage.setItem; let writes = 0; localStorage.setItem = (key, value) => { writes += 1; return original(key, value); }; save(); save(); localStorage.setItem = original; return writes === 0; })()", context), "saving an unchanged state should not write anything");
+assert(vm.runInContext("(() => { const original = localStorage.setItem; const keys = []; localStorage.setItem = (key, value) => { keys.push(key); return original(key, value); }; state.gold = 124; save(); localStorage.setItem = original; return keys.length === 1 && keys[0] === saveKey; })()", context), "one action should write exactly one key");
+assert(vm.runInContext("(() => { state.gold = 200; saveWithBackup(); state.gold = 201; requestSaveBackup(); save(); return JSON.parse(localStorage.getItem(saveBackupKey)).gold === 201 && JSON.parse(localStorage.getItem(savePreviousKey)).gold === 200; })()", context), "important moments should rotate backup and previous backup");
+assert(vm.runInContext("(() => { state.gold = 300; saveWithBackup(); saveTiming.lastBackupAt -= saveTiming.backupIntervalMs; state.gold = 301; save(); return JSON.parse(localStorage.getItem(saveBackupKey)).gold === 301; })()", context), "backup should refresh after the backup interval");
+assert(vm.runInContext("(() => { state.gold = 400; queueSave(); queueSave(); const pending = Boolean(saveTiming.pendingTimer) && JSON.parse(localStorage.getItem(saveKey)).gold !== 400; flushQueuedSave(); return pending && !saveTiming.pendingTimer && JSON.parse(localStorage.getItem(saveKey)).gold === 400; })()", context), "queued saves should bundle and flush on demand");
+assert(read("scripts/events.js").includes('window.addEventListener("pagehide", () => save());') && read("scripts/events.js").includes('document.visibilityState === "hidden"'), "pending saves should be written when the page is hidden or closed");
 assert(vm.runInContext("window.name.includes('fantasy-grind-save-v1')", context), "save should also be mirrored into window.name for preview reloads");
 assert(vm.runInContext("indexedDbName === 'FantasyGrindSaves' && indexedDbStoreName === 'saves'", context), "IndexedDB save mirror should use stable database names");
 assert(vm.runInContext("browserStorageStatus().indexedDB.label === 'IndexedDB' && browserStorageStatus().indexedDB.ok === false && saveDiagnostics.indexedDbMirror === 'nicht verfuegbar'", context), "IndexedDB mirror should fail softly when the browser API is unavailable");

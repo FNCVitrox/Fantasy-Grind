@@ -463,7 +463,12 @@ $("importSaveTopBtn").addEventListener("click", importSave);
 $("saveFileInput").addEventListener("change", importSaveFile);
 
 void bootGame();
-window.addEventListener("beforeunload", save);
+// Offenen Speichervorgang beim Verlassen sofort schreiben (pagehide/visibilitychange greifen auch auf dem Handy).
+window.addEventListener("beforeunload", () => save());
+window.addEventListener("pagehide", () => save());
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") save();
+});
 window.addEventListener("scroll", hideFloatingTooltip, { passive: true, capture: true });
 
 async function bootGame() {

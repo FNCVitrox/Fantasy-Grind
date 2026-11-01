@@ -195,12 +195,22 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Neu: `npm run visual:baseline` / `npm run visual:check` als Sicherheitsnetz für spätere Design-Arbeit.
     - Absicherung: `npm test` schlägt fehl, wenn eine CSS-Klasse nirgends benutzt wird.
 
-- [ ] **10. Spielstand schlanker speichern**
+- [x] **10. Spielstand schlanker speichern** ✅ erledigt in v0.8.131
   - Wo: `scripts/save-system.js` → `save()`
   - Wie:
     - Backup und Vorgänger-Save nur noch alle 5 Minuten oder bei Levelaufstieg schreiben, nicht bei jedem Speichern.
     - Häufige Speichervorgänge bündeln (300 ms Debounce).
   - Fertig wenn: Pro Aktion wird höchstens einmal in den localStorage geschrieben. Die bestehenden Save-Tests bleiben grün.
+  - Ergebnis:
+    - Vorher schrieb jedes Speichern 3 Schlüssel an je 4 Orte: localStorage, sessionStorage, `window.name` (dort wurden jedes Mal alle Stände neu verpackt) und IndexedDB. Pro Kampf waren das rund 340 KB bei 21 KB Spielstand.
+    - Jetzt gilt:
+      - Gespeichert wird nur der Hauptstand und nur, wenn sich etwas geändert hat.
+      - Backup und Vorgänger werden alle 5 Minuten weitergereicht, und sofort bei wichtigen Momenten (Level-up, Boss, seltene Beute, Schmied, Mira, Import).
+      - Kampfenden werden auf 300 ms gebündelt.
+    - Gemessen bei 20 übersprungenen Kämpfen: 3 statt 60 Schreibvorgänge, rund 0,2 MB statt 6,8 MB (−97 %). Im normalen Spiel sind es etwa −69 % pro Kampf.
+    - Sicherheit: Offenes Speichern wird bei `beforeunload`, `pagehide` und `visibilitychange` sofort geschrieben. Geprüft wurde ein Reload direkt nach dem Kampf, es ging nichts verloren.
+    - Die Wiederherstellungskette Haupt → Backup → Vorgänger bleibt erhalten.
+    - Absicherung: 6 neue Tests (ein Schlüssel pro Aktion, kein Schreiben ohne Änderung, Backup-Rotation, Intervall, Bündeln, Speichern beim Verlassen).
 
 ### Phase 3 – Gameplay-Flow
 
@@ -330,7 +340,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 | Phase | Punkte | Erledigt |
 |---|---|---|
 | 1 – Bugs | 1–5 | 5/5 ✅ |
-| 2 – Code | 6–10 | 4/5 |
+| 2 – Code | 6–10 | 5/5 ✅ |
 | 3 – Gameplay | 11–15 | 0/5 |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |
 | 5 – Inhalt | 22–24 | 0/3 |

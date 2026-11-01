@@ -607,7 +607,7 @@ async function fight() {
     setControlsDisabled(false);
     resetFightButton();
     prepareNextEncounter(enemy.baseId || ui.selectedEnemy);
-    save();
+    queueSave();
     safeRender();
   }
 }

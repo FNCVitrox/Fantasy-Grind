@@ -656,6 +656,8 @@ function log(message, type = "", extra = {}) {
 
 // reason: Funktion, die den Grund in der aktuellen Sprache liefert (oder ein fester Text).
 function remindSaveBackup(reason) {
+  // Wichtiger Moment: beim nächsten Speichern auch Backup und vorheriges Backup weiterreichen.
+  if (typeof requestSaveBackup === "function") requestSaveBackup();
   const isReminder = (entry) => entry?.kind === "saveReminder" || (typeof entry === "string" && entry.startsWith("Tipp: Spielstand herunterladen"));
   if (state.log.slice(0, 8).some(isReminder)) return;
   log(() => t("save.backupTip", "Tipp: Spielstand herunterladen - {reason}", { reason: typeof reason === "function" ? reason() : String(reason) }), "drop", { kind: "saveReminder" });
