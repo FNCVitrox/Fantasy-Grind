@@ -133,9 +133,8 @@ async function runAutoFarm() {
     const threshold = normalizeSettings(state.settings).autoFarmRestPercent / 100;
     if (state.hp < state.maxHp * threshold) rest();
     const winsBefore = state.combatStats?.wins || 0;
-    const pending = fight();
-    ui.skipCombat = true;
-    await pending;
+    // Normales Kampftempo (kein automatisches Überspringen), damit Auto-Farmen die Balance nicht aushebelt.
+    await fight();
     ui.autoFarmLosses = (state.combatStats?.wins || 0) > winsBefore ? 0 : ui.autoFarmLosses + 1;
     await wait(autoFarmDelayMs);
   }

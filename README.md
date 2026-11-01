@@ -6,7 +6,7 @@ Aktueller Stand: spielbarer Alpha-Prototyp.
 
 ## Version
 
-Alpha v0.8.137
+Alpha v0.8.138
 
 ## Spielen
 
@@ -64,6 +64,14 @@ Macht 108 Screenshots (27 Spielzustände auf 4 Bildschirmgrössen, mit festem Zu
 npm i -D pngjs pixelmatch@5   # einmalig, zusätzlich zu playwright
 npm run visual:baseline       # vor der Änderung: Ist-Zustand speichern
 npm run visual:check          # nach der Änderung: vergleichen (Unterschiede in .visual/diff)
+```
+
+### Balance-Simulation
+
+Spielt einen Spieler von Level 1 bis 20 mit den echten Spielfunktionen (Beute, Quests, Schmied, Risiko-Einschätzung) und zeigt Kämpfe und Spielzeit pro Level. Ziel: 2–4 Stunden bis Level 20, keine Stufe mehr als doppelt so lang wie die vorherige. Läuft in `npm test` mit (nur Warnung), einzeln mit:
+
+```powershell
+npm run balance
 ```
 
 ## Version erhöhen

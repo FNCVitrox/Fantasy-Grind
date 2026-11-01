@@ -605,7 +605,7 @@ function normalizeParagon(paragon) {
 }
 
 function paragonXpNeeded(level = state.paragon?.level || 0) {
-  return 20000 + level * 1500;
+  return (20000 + level * 1500) * xpCurveMultiplier;
 }
 
 function gainParagonXp(amount) {

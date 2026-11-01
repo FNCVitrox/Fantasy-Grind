@@ -284,10 +284,18 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
       - Auto-Farmen: 19 Siege in 9 Sekunden, automatisch gerastet, Stopp per Knopf.
     - Absicherung: 6 Logik-Tests und ein Auto-Farmen-Test in `npm run test:ui`.
 
-- [ ] **15. Balancing prüfen**
+- [x] **15. Balancing prüfen** ✅ erledigt in v0.8.138
   - Wie: Ein Skript `tests/balance-sim.js` simuliert mit Node einen Spieler von Level 1–20, inklusive Quests, Loot und Rasten. Es gibt Kämpfe pro Level, Tode und Gold aus.
   - Ziel: 2–4 Stunden bis Level 20 statt ~50 Minuten. Keine Level-Stufe soll mehr als doppelt so lange dauern wie die vorherige.
   - Fertig wenn: Die Simulation liegt im Zielbereich und läuft als Teil von `npm test`, mit Warnung statt Fehler.
+  - Ergebnis:
+    - `tests/balance-sim.js` spielt mit den echten Spielfunktionen: Auto-Loot, Material, Ruhm, Quests, Schmied-Upgrades und Risiko-Einschätzung. Gewählt wird jeweils der Gegner mit der besten XP pro Minute bei mindestens 90 % Siegchance.
+    - Vorher: 0,55 Stunden bis Level 20.
+    - Geändert: XP-Bedarf pro Level ×5 (`xpCurveMultiplier`, die Form der Kurve bleibt gleich), Paragon-Stufen im gleichen Verhältnis.
+    - Jetzt: **2,87 Stunden** und 3'306 Kämpfe. Die Kurve steigt gleichmässig von 1 auf 10–14 Minuten pro Level, keine Stufe dauert mehr als doppelt so lang wie die vorherige.
+    - Folgeanpassung: Auto-Farmen kämpft jetzt im normalen Tempo statt übersprungen, sonst wäre es etwa 5-mal schneller als aktives Spielen.
+    - Bestehende Spielstände behalten Level und XP. Bis zum nächsten Level dauert es danach länger.
+    - Läuft in `npm test` mit (nur Warnung), einzeln mit `npm run balance`.
 
 ### Phase 4 – Grafik & Spielgefühl
 
@@ -382,7 +390,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 |---|---|---|
 | 1 – Bugs | 1–5 | 5/5 ✅ |
 | 2 – Code | 6–10 | 5/5 ✅ |
-| 3 – Gameplay | 11–15 | 4/5 |
+| 3 – Gameplay | 11–15 | 5/5 ✅ |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |
 | 5 – Inhalt | 22–24 | 0/3 |
 | 6 – Steam | 25–28 | 0/4 |
