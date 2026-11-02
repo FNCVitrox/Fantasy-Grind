@@ -71,7 +71,39 @@ function renderCombatPanel() {
     ? manualMode ? t("combat.inProgress", "Kampf läuft") : (ui.skipCombat ? t("combat.skipping", "Überspringe...") : t("combat.skip", "Skip"))
     : t("combat.start", "Kampf starten");
   setText("fightBtn", fightText);
-  setDisabled("fightBtn", ui.isFighting ? (manualMode || ui.skipCombat) : state.pendingLoot.length > 0);
+  setDisabled("fightBtn", ui.autoFarm || (ui.isFighting ? (manualMode || ui.skipCombat) : state.pendingLoot.length > 0));
+  renderAutoFarmControls(manualMode);
+}
+
+function renderAutoFarmControls(manualMode = isManualCombatMode()) {
+  const button = $("autoFarmBtn");
+  if (!button) return;
+  button.textContent = ui.autoFarm ? t("autoFarm.stop", "Auto-Farmen stoppen") : t("autoFarm.start", "Auto-Farmen");
+  button.classList.toggle("is-on", ui.autoFarm);
+  button.setAttribute("aria-pressed", ui.autoFarm ? "true" : "false");
+  button.disabled = !ui.autoFarm && (manualMode || ui.isFighting);
+  button.title = manualMode ? t("autoFarm.manualHint", "Auto-Farmen gibt es nur im Auto-Kampf.") : t("autoFarm.hint", "Kämpft automatisch weiter und rastet unter der eingestellten Lebensgrenze.");
+  const select = $("autoFarmRest");
+  if (select) select.value = String(normalizeSettings(state.settings).autoFarmRestPercent);
+}
+
+function renderOfflineSummary(result) {
+  const materials = Object.entries(result.materials || {})
+    .map(([id, amount]) => `<span>${amount} ${labelFor(materialLabel, id)}</span>`)
+    .join("");
+  $("offlineSummary").innerHTML = `
+    <p>${escapeHtml(t("offline.intro", "Deine Gefährten haben in {duration} gegen {enemy} weitergekämpft.", {
+      duration: formatDuration(result.countedMs),
+      enemy: enemyDisplayName(enemies[result.enemyId], result.enemyId),
+    }))}${result.capped ? ` ${escapeHtml(t("offline.capped", "(höchstens 8 Stunden werden gezählt)"))}` : ""}</p>
+    <div class="offline-stats">
+      <div><span>${t("offline.wins", "Siege")}</span><strong>${result.wins}/${result.fights}</strong></div>
+      <div><span>${t("common.xp", "XP")}</span><strong>+${result.xp}</strong></div>
+      <div><span>${t("common.gold", "Gold")}</span><strong>+${result.gold}</strong></div>
+      ${result.levelsGained ? `<div><span>${t("common.level", "Level")}</span><strong>+${result.levelsGained}</strong></div>` : ""}
+    </div>
+    ${materials ? `<div class="offline-materials">${materials}</div>` : ""}
+    <p class="offline-hint">${escapeHtml(t("offline.hint", "Offline gibt es die halbe Ausbeute und keine Items. Aktiv spielen lohnt sich mehr."))}</p>`;
 }
 
 function renderCombatModeToggle() {
@@ -253,6 +285,46 @@ function classIconClass(classId) {
   return `class-portrait-icon class-icon-${safeClass}`;
 }
 
+// Endgame-Bereich (Punkt 13): Paragon-Stufe, Punkte verteilen, Turm-Rekord.
+function renderParagonSection() {
+  const paragon = normalizeParagon(state.paragon);
+  const tower = normalizeTower(state.tower);
+  if (state.level < 20) {
+    return `<section class="paragon-panel is-locked">
+      <strong>${t("paragon.title", "Paragon")}</strong>
+      <span>${t("paragon.locked", "Ab Level 20: weitere XP geben Paragon-Stufen und Punkte für dauerhafte Boni.")}</span>
+    </section>`;
+  }
+  const needed = paragonXpNeeded(paragon.level);
+  const percent = Math.max(2, Math.min(100, (paragon.xp / needed) * 100));
+  const statRow = (id, label, perPoint) => {
+    const value = paragon.points[id];
+    const max = paragonStats[id].max;
+    const canSpend = paragon.unspent > 0 && value < max;
+    return `<div class="paragon-stat">
+      <span>${escapeHtml(label)}</span>
+      <b>+${Math.round(value * perPoint * 100)}%</b>
+      <small>${value}/${max}</small>
+      <button type="button" data-paragon-spend="${id}" ${canSpend ? "" : "disabled"} aria-label="${escapeAttr(t("paragon.spendAria", "Punkt in {stat} setzen", { stat: label }))}">+</button>
+    </div>`;
+  };
+  return `<section class="paragon-panel">
+    <div class="paragon-head">
+      <strong>${t("paragon.levelLabel", "Paragon-Stufe {level}", { level: paragon.level })}</strong>
+      <span>${paragon.unspent ? t("paragon.unspent", "{count} Punkte frei", { count: paragon.unspent }) : t("paragon.noPoints", "Keine freien Punkte")}</span>
+    </div>
+    <div class="bar-label"><span>${t("paragon.xp", "Paragon-XP")}</span><b>${paragon.xp}/${needed}</b></div>
+    <div class="bar xp"><span style="width:${percent}%"></span></div>
+    <div class="paragon-stats">
+      ${statRow("might", t("paragon.might", "Macht (Schaden)"), paragonStats.might.perPoint)}
+      ${statRow("guard", t("paragon.guard", "Wehr (Verteidigung)"), paragonStats.guard.perPoint)}
+      ${statRow("vitality", t("paragon.vitality", "Lebenskraft (Leben)"), paragonStats.vitality.perPoint)}
+      ${statRow("fortune", t("paragon.fortune", "Glück (Gold)"), paragonStats.fortune.perPoint)}
+    </div>
+    <span class="paragon-tower">${t("paragon.towerRecord", "Endloser Turm: Rekord Stockwerk {best}, nächstes Stockwerk {floor}", { best: tower.best, floor: tower.floor })}</span>
+  </section>`;
+}
+
 function renderPlayerStatsDetails(stats = totalStats()) {
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
   const durabilityAverage = equippedDurabilityAverage();
@@ -275,6 +347,8 @@ function renderPlayerStatsDetails(stats = totalStats()) {
     stats.critChance,
     stats.critDamage,
     durabilityAverage,
+    JSON.stringify(state.paragon || {}),
+    JSON.stringify(state.tower || {}),
     setStats.damage,
     setStats.defense,
     setStats.maxHp,
@@ -335,6 +409,7 @@ function renderPlayerStatsDetails(stats = totalStats()) {
       ${renderPlayerStat(t("stat.critChance", "Crit Chance"), formatPercent(stats.critChance))}
       ${renderPlayerStat(t("stat.critDamage", "Crit Damage"), formatPercent(stats.critDamage))}
     </section>
+    ${renderParagonSection()}
     <section class="player-stat-sources">
       <div>
         <strong>${t("main.buildBonus", "Build-Bonus")}</strong>
@@ -441,6 +516,13 @@ function renderEnemies(stats = totalStats()) {
 }
 
 function renderEnemyCardMeta(enemy, enemyId) {
+  if (enemy?.towerFloor) {
+    const tower = normalizeTower(state.tower);
+    return `<span class="enemy-card-extra">
+    <small class="enemy-tag first-clear">${escapeHtml(t("tower.record", "Rekord: Stockwerk {best}", { best: tower.best }))}</small>
+    <small class="enemy-tag">${escapeHtml(t("tower.nextMilestone", "Schatz bei Stockwerk {floor}", { floor: Math.ceil(tower.floor / 5) * 5 }))}</small>
+  </span>`;
+  }
   if (!enemy?.boss) return "";
   const firstClearLabel = bossFirstClearClaimed(enemy.baseId || enemyId)
     ? t("bestiary.firstWinClaimedShort", "Erster Sieg geholt")
@@ -661,7 +743,7 @@ function zoneUnlockSignature() {
 
 function zoneEncounterSignature(zoneId) {
   return (zones[zoneId]?.enemies || [])
-    .map((id) => `${id}:${state.nextEncounters[id]?.elite ? 1 : 0}`)
+    .map((id) => `${id}:${state.nextEncounters[id]?.elite ? 1 : 0}${id === "towerWarden" ? `:${normalizeTower(state.tower).floor}` : ""}`)
     .join(",");
 }
 
@@ -1154,6 +1236,7 @@ function renderSmithHome() {
     ${renderSmithGreetingMarkup()}
     ${renderStationFocus("smith")}
     <div class="smith-mastery" id="smithMastery"></div>
+    <div class="smith-backpack" id="smithBackpack"></div>
     <div class="smith-choice-grid">
       <button type="button" data-smith-view="upgrade">
         <strong>${t("smith.upgrade", "Verbessern")}</strong>
@@ -1169,8 +1252,32 @@ function renderSmithHome() {
       </button>
     </div>
   `);
-  if (shellChanged) elementCache.delete("smithMastery");
+  if (shellChanged) {
+    elementCache.delete("smithMastery");
+    elementCache.delete("smithBackpack");
+  }
   renderSmithMastery();
+  renderSmithBackpack();
+}
+
+function renderSmithBackpack() {
+  if (!$("smithBackpack")) return;
+  const capacity = inventoryCapacity();
+  const maxed = capacity >= inventoryMaxCapacity;
+  const cost = inventoryExpandCost();
+  const signature = `${currentLanguage()}|${capacity}|${state.gold}|${state.materials.leather || 0}|${state.inventory.length}`;
+  renderCachedHtml("smithBackpack", signature, () => `
+    <div class="smith-backpack-card">
+      <div>
+        <strong>${t("smith.backpackTitle", "Rucksack erweitern")}</strong>
+        <span>${t("smith.backpackStatus", "{used}/{capacity} Plätze belegt", { used: state.inventory.length, capacity })}</span>
+      </div>
+      ${maxed
+        ? `<em>${t("smith.backpackMaxed", "Maximale Grösse erreicht")}</em>`
+        : `<button type="button" data-expand-inventory ${canExpandInventory() ? "" : "disabled"}>
+            +${inventoryExpandStep} · ${cost.gold} ${t("common.gold", "Gold")} · ${cost.materials.leather} ${labelFor(materialLabel, "leather")}
+          </button>`}
+    </div>`);
 }
 
 function renderStationFocus(station) {
@@ -1502,8 +1609,10 @@ function renderSmithSalvage() {
 
 function renderInventory() {
   const lockedCount = (state.inventory || []).filter(isInventoryItemLocked).length;
-  renderCachedHtml("inventorySummary", `${currentLanguage()}|${state.inventory.length}|${lockedCount}|${state.gold}`, () =>
-    `<span>${t("common.items", "Items")}: <strong>${state.inventory.length}</strong></span><span>${lockedCount ? t("merchant.lockedCount", "{count} geschützt", { count: lockedCount }) : t("inventory.sellHint", "Verkauf beim Händler")}</span>`
+  const capacity = inventoryCapacity();
+  const full = isInventoryFull();
+  renderCachedHtml("inventorySummary", `${currentLanguage()}|${state.inventory.length}|${capacity}|${lockedCount}|${state.gold}|${lootSettingsSignature()}`, () =>
+    `<span class="${full ? "inventory-full" : ""}">${t("common.items", "Items")}: <strong>${state.inventory.length}/${capacity}</strong>${full ? ` · ${t("inventory.full", "Rucksack voll – neue Beute wird verkauft")}` : ""}</span><span>${lockedCount ? t("merchant.lockedCount", "{count} geschützt", { count: lockedCount }) : t("inventory.sellHint", "Verkauf beim Händler")}</span>${renderLootSettingToggles()}`
   );
   const signature = `${currentLanguage()}|${inventorySignature()}|${equipmentSignature()}`;
   renderCachedList(
@@ -1513,6 +1622,23 @@ function renderInventory() {
     () => `<div class="inventory-empty">${t("inventory.emptyShort", "Noch keine Items im Inventar.")}</div>`,
     renderInventoryItemCard,
   );
+}
+
+function lootSettingsSignature() {
+  const settings = normalizeSettings(state.settings);
+  return `${settings.autoLoot ? 1 : 0}${settings.autoSellCommon ? 1 : 0}`;
+}
+
+// Schalter für Auto-Loot und Junk-Filter (Rucksack und Beute-Fenster).
+function renderLootSettingToggles() {
+  const settings = normalizeSettings(state.settings);
+  const toggle = (key, label, hint) => `<button type="button" class="setting-toggle ${settings[key] ? "is-on" : ""}" data-setting-toggle="${key}" aria-pressed="${settings[key] ? "true" : "false"}" title="${escapeAttr(hint)}">
+      <span class="setting-toggle-switch" aria-hidden="true"></span><span>${escapeHtml(label)}</span>
+    </button>`;
+  return `<div class="loot-settings">
+    ${toggle("autoLoot", t("settings.autoLoot", "Auto-Loot"), t("settings.autoLootHint", "Nimmt nach jedem Sieg automatisch das beste Item. Verbesserungen werden angelegt."))}
+    ${toggle("autoSellCommon", t("settings.autoSellCommon", "Gewöhnliches verkaufen"), t("settings.autoSellCommonHint", "Gewöhnliche Beute wird sofort verkauft statt eingelagert."))}
+  </div>`;
 }
 
 function renderInventoryItemCard(itemId, index) {

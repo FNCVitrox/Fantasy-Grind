@@ -214,7 +214,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 
 ### Phase 3 – Gameplay-Flow
 
-- [ ] **11. Auto-Loot und Inventarlimit**
+- [x] **11. Auto-Loot und Inventarlimit** ✅ erledigt in v0.8.134
   - Wo: `scripts/core.js` → `createLootChoices`, `chooseLoot` (Zeile 3391), Einstellungen im State
   - Wie:
     - Neue Option „Auto-Loot“: Das beste Item gemäss Vergleich wird automatisch genommen, der Rest wird nach Wahl zerlegt oder verkauft.
@@ -222,31 +222,80 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Junk-Filter: „Gewöhnliche Items automatisch verkaufen“.
     - Kämpfe sind nicht mehr blockiert, solange Auto-Loot aktiv ist.
   - Fertig wenn: 100 Kämpfe am Stück sind ohne Klick auf Loot möglich, und das Inventar bleibt unter dem Limit.
+  - Ergebnis:
+    - Schalter „Auto-Loot“ und „Gewöhnliches verkaufen“ im Rucksack und im Beute-Fenster (Kopfzeile).
+    - Auto-Loot nimmt das Angebot mit der grössten Verbesserung gegenüber dem getragenen Teil und legt Verbesserungen direkt an. Die übrigen Angebote verfallen wie beim manuellen Wählen, damit Auto-Loot nicht stärker ist als selber spielen.
+    - Rucksack: 60 Plätze, beim Schmied in 10er-Schritten bis 120 erweiterbar (Gold und Lederreste, Kosten steigen).
+    - Ist der Rucksack voll, wird neue Beute verkauft statt blockiert, und der Knopf zeigt dann „Verkaufen +X“.
+    - Im Auto-Modus wird bei vollem Rucksack das ersetzte, schlechtere Teil verkauft. Beim manuellen Anlegen geht nie etwas verloren.
+    - Geprüft: 100 Siege ohne Klick, kein Beute-Fenster, Rucksack maximal 60/60, die Ausrüstung wird von selbst besser.
+    - Mitbehoben: 3 Schmied-Begrüssungen hatten keinen englischen Text.
+    - Absicherung: 8 Logik-Tests, ein Test für alle Schmied-Begrüssungen und der 100-Kämpfe-Test in `npm run test:ui`.
 
-- [ ] **12. Mehr Gegner pro Gebiet**
+- [x] **12. Mehr Gegner pro Gebiet** ✅ erledigt in v0.8.135
   - Wo: `scripts/data-world.js`, `scripts/data-drops.js`, `scripts/i18n-en.js`
   - Wie: Pro Gebiet von 3 auf 5–6 Gegner erweitern, also etwa 12 neue Gegner. Jeder bekommt eine eigene Fähigkeit aus `enemyAbilityCatalog` oder eine neue, dazu eine Loot-Tabelle, Drops und einen Bestiarium-Eintrag.
   - Fertig wenn: Jedes Level von 1–20 hat mindestens 2 passende Gegner, und das Bestiarium zeigt alle an.
+  - Ergebnis:
+    - 8 neue Gegner, damit hat jedes offene Gebiet 5 statt 3:
+      - Wilddieb (2) und Moorwolf (4) im Wald
+      - Armbrust-Wegelagerer (7) und Söldnerhauptmann (9, Elite) auf der Räuberstraße
+      - Moorghul (11) und Seuchenhexe (14, Elite) in den Feldern
+      - Aschenhund (16) und Aschen-Kriegsherr (20, Elite) im Aschengrund
+    - Jeder Gegner hat Fähigkeiten, Material-Drops, eine Unikat-Beute, eine eigene Farbvariante und Namen in DE und EN. Dazu kommen 5 neue Quests.
+    - Abdeckung: Vorher hatten die Level 1, 13 und 20 nur einen passenden Gegner. Jetzt hat jedes Level 2–5 (Gegner 2 Level darunter bis 1 Level darüber).
+    - Balance geprüft: Die Belohnung im Verhältnis zur Stärke liegt bei allen neuen Gegnern genau zwischen ihren Nachbarn. Die neuen Unikate bestehen den Item-Budget-Test.
+    - Damit der Kampf-Button am Laptop sichtbar bleibt, ist die Gegnerliste bei breiter Mittelspalte jetzt zweispaltig, mit kompakten Karten: Name und Risiko oben, Details darunter.
+    - Absicherung: Tests für die Abdeckung (jedes Level mindestens 2) und für mindestens 5 Gegner pro Gebiet.
 
-- [ ] **13. Endgame nach Level 20**
+- [x] **13. Endgame nach Level 20** ✅ erledigt in v0.8.136
   - Wie:
     - **Paragon-Level:** XP nach Level 20 geben Paragon-Punkte, die man in kleine Werte investieren kann.
     - **Endlos-Turm:** Stockwerke mit steigender Skalierung, Bestenliste lokal.
     - **Wöchentliche Herausforderungen:** zum Beispiel feste Modifikatoren pro Woche.
   - Fertig wenn: Nach Level 20 gibt es mindestens 2 Fortschrittsziele, die weiter belohnen.
+  - Ergebnis:
+    - **Paragon:** XP nach Level 20 geben weiterhin Ruhm und zusätzlich Paragon-Stufen (20'000 XP, pro Stufe +1'500). Jede Stufe bringt einen Punkt für Macht (+2 % Schaden), Wehr (+2 % Verteidigung), Lebenskraft (+3 % Leben) oder Glück (+3 % Gold), je höchstens 25. Verteilt werden die Punkte im Spielerwerte-Fenster.
+    - **Endloser Turm** (ab Level 20, 30 Ruhm):
+      - Der Turmwächter wird pro Stockwerk stärker (+7 % Leben und Schaden), die Belohnung wächst schneller (+10 %).
+      - Alle 5 Stockwerke gibt es einen Turmschatz (Gold und Ruhm), dazu einen Rekord.
+      - Ausserdem: eine Unikat-Kette (Turmsiegel), eine Erstsieg-Belohnung und eine Quest.
+    - Schwierigkeit geprüft: Stockwerk 1 entspricht etwa dem stärksten normalen Gegner. Ein Level-20-Charakter mit Schmied-Upgrades gewinnt 8 von 8.
+    - Mitbehoben: 19 Gegnerfähigkeiten standen in Kampftexten fest auf Deutsch („nutzt Zweite Phase“).
+    - Absicherung: 6 Endgame-Tests, ein statischer Test gegen feste Fähigkeitsnamen und ein Bosskampf im Sprach-Browsertest.
 
-- [ ] **14. Idle-/Offline-Fortschritt**
+- [x] **14. Idle-/Offline-Fortschritt** ✅ erledigt in v0.8.137
   - Wo: Neues Modul `scripts/idle.js`, Zeitstempel im State
   - Wie:
     - Beim Öffnen die Zeit seit dem letzten Spielen berechnen und Kämpfe gegen den gewählten Gegner simulieren (vereinfacht, ohne Animation, maximal 8 Stunden).
     - Ein Begrüssungs-Fenster zeigt den Ertrag.
     - Zusätzlich „Auto-Farmen“: Kämpfe laufen in Schleife, bis die Lebenspunkte unter einem einstellbaren Prozentsatz liegen, dann wird automatisch gerastet.
   - Fertig wenn: Nach 1 Stunde Pause gibt es einen plausiblen Ertrag, und Auto-Farmen stoppt sicher bei wenig Leben.
+  - Ergebnis:
+    - **Offline-Ertrag** (neues Modul `idle.js`):
+      - Ab 5 Minuten Pause, höchstens 8 Stunden gezählt.
+      - Gerechnet wird mit einem Kampf pro 8 Sekunden gegen den gewählten Gegner, nie gegen Bosse oder den Turm (dann der stärkste passende normale Gegner).
+      - Die Siegchance kommt aus der Risiko-Einschätzung. Die Ausbeute ist halb so hoch wie aktiv: XP, Gold, Material, keine Items.
+      - Ein Begrüssungsfenster zeigt den Ertrag.
+      - Der Zeitstempel wird nur beim ohnehin nötigen Speichern oder beim Verlassen der Seite geschrieben.
+    - **Auto-Farmen:** Ein Knopf neben „Kampf starten“ mit der Rast-Schwelle 30/50/70 %. Unter der Schwelle wird automatisch gerastet. Gestoppt wird sicher bei wartender Beute ohne Auto-Loot, bei Ausrüstung unter 10 %, nach 3 Niederlagen in Folge oder bei einem gesperrten Gebiet. Im manuellen Kampf ist Auto-Farmen nicht verfügbar.
+    - Geprüft:
+      - 2 Stunden Pause ergaben einen Ertrag samt Fenster, ein erneutes Laden direkt danach keinen zweiten.
+      - Auto-Farmen: 19 Siege in 9 Sekunden, automatisch gerastet, Stopp per Knopf.
+    - Absicherung: 6 Logik-Tests und ein Auto-Farmen-Test in `npm run test:ui`.
 
-- [ ] **15. Balancing prüfen**
+- [x] **15. Balancing prüfen** ✅ erledigt in v0.8.138
   - Wie: Ein Skript `tests/balance-sim.js` simuliert mit Node einen Spieler von Level 1–20, inklusive Quests, Loot und Rasten. Es gibt Kämpfe pro Level, Tode und Gold aus.
   - Ziel: 2–4 Stunden bis Level 20 statt ~50 Minuten. Keine Level-Stufe soll mehr als doppelt so lange dauern wie die vorherige.
   - Fertig wenn: Die Simulation liegt im Zielbereich und läuft als Teil von `npm test`, mit Warnung statt Fehler.
+  - Ergebnis:
+    - `tests/balance-sim.js` spielt mit den echten Spielfunktionen: Auto-Loot, Material, Ruhm, Quests, Schmied-Upgrades und Risiko-Einschätzung. Gewählt wird jeweils der Gegner mit der besten XP pro Minute bei mindestens 90 % Siegchance.
+    - Vorher: 0,55 Stunden bis Level 20.
+    - Geändert: XP-Bedarf pro Level ×5 (`xpCurveMultiplier`, die Form der Kurve bleibt gleich), Paragon-Stufen im gleichen Verhältnis.
+    - Jetzt: **2,87 Stunden** und 3'306 Kämpfe. Die Kurve steigt gleichmässig von 1 auf 10–14 Minuten pro Level, keine Stufe dauert mehr als doppelt so lang wie die vorherige.
+    - Folgeanpassung: Auto-Farmen kämpft jetzt im normalen Tempo statt übersprungen, sonst wäre es etwa 5-mal schneller als aktives Spielen.
+    - Bestehende Spielstände behalten Level und XP. Bis zum nächsten Level dauert es danach länger.
+    - Läuft in `npm test` mit (nur Warnung), einzeln mit `npm run balance`.
 
 ### Phase 4 – Grafik & Spielgefühl
 
@@ -341,7 +390,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 |---|---|---|
 | 1 – Bugs | 1–5 | 5/5 ✅ |
 | 2 – Code | 6–10 | 5/5 ✅ |
-| 3 – Gameplay | 11–15 | 0/5 |
+| 3 – Gameplay | 11–15 | 5/5 ✅ |
 | 4 – Grafik & Gefühl | 16–21 | 0/6 |
 | 5 – Inhalt | 22–24 | 0/3 |
 | 6 – Steam | 25–28 | 0/4 |

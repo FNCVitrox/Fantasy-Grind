@@ -3905,3 +3905,307 @@ button.drop-row span:last-child {
 .battle-result.loss span {
   color: #ff7467;
 }
+
+/* Auto-Loot / Junk-Filter Schalter (Punkt 11) */
+.loot-settings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.loot-head-side {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.loot-head-side .loot-settings {
+  justify-content: flex-end;
+}
+
+.setting-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 12px 6px 8px;
+  font-size: 13px;
+}
+
+.setting-toggle-switch {
+  position: relative;
+  width: 30px;
+  height: 16px;
+  flex: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.setting-toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.setting-toggle.is-on {
+  border-color: var(--green);
+}
+
+.setting-toggle.is-on .setting-toggle-switch {
+  background: rgba(63, 214, 163, 0.35);
+}
+
+.setting-toggle.is-on .setting-toggle-switch::after {
+  transform: translateX(14px);
+  background: var(--green);
+}
+
+.inventory-full {
+  color: var(--red-soft);
+}
+
+.smith-backpack-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-deep);
+}
+
+.smith-backpack-card > div {
+  display: grid;
+  gap: 2px;
+}
+
+.smith-backpack-card span,
+.smith-backpack-card em {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Neue Gegner (Punkt 12): Farbvarianten der Grundformen */
+.enemy-poacher .enemy-body {
+  background: linear-gradient(135deg, #6f8a4c, #3c4d2a 54%, #1d2616 100%);
+  border-color: #9fb873;
+}
+
+.enemy-poacher .enemy-body::before {
+  background: linear-gradient(135deg, #6f8a4c, #1d2616);
+  border-color: #9fb873;
+}
+
+.enemy-bog-wolf .enemy-body {
+  background: linear-gradient(135deg, #6f8f86, #355049 54%, #18241f 100%);
+  border-color: #8fb5a6;
+}
+
+.enemy-bog-wolf .enemy-body::before {
+  background: linear-gradient(135deg, #6f8f86, #18241f);
+  border-color: #8fb5a6;
+}
+
+.enemy-crossbow-brigand .enemy-body {
+  background: linear-gradient(135deg, #9a7a52, #5a4128 54%, #2a1d12 100%);
+  border-color: #d0a86a;
+}
+
+.enemy-crossbow-brigand .enemy-body::before {
+  background: linear-gradient(135deg, #9a7a52, #2a1d12);
+  border-color: #d0a86a;
+}
+
+.enemy-mercenary-captain .enemy-body {
+  background: linear-gradient(135deg, #b8b0a0, #6b5e48 54%, #2e271c 100%);
+  border-color: var(--gold-soft);
+}
+
+.enemy-mercenary-captain .enemy-body::before {
+  background: linear-gradient(135deg, #b8b0a0, #2e271c);
+  border-color: var(--gold-soft);
+}
+
+.enemy-bog-ghoul .enemy-body {
+  background: linear-gradient(135deg, #7d9a6a, #3e5233 54%, #1a2415 100%);
+  border-color: #a9c98f;
+}
+
+.enemy-bog-ghoul .enemy-body::before {
+  background: linear-gradient(135deg, #7d9a6a, #1a2415);
+  border-color: #a9c98f;
+}
+
+.enemy-plague-witch .enemy-body {
+  background: linear-gradient(135deg, #8d6aa8, #4a3060 54%, #20142c 100%);
+  border-color: #c79be6;
+}
+
+.enemy-plague-witch .enemy-body::before {
+  background: linear-gradient(135deg, #8d6aa8, #20142c);
+  border-color: #c79be6;
+}
+
+.enemy-cinder-hound .enemy-body {
+  background: linear-gradient(135deg, #c2633c, #6b2c18 54%, #2a120a 100%);
+  border-color: #f0a060;
+}
+
+.enemy-cinder-hound .enemy-body::before {
+  background: linear-gradient(135deg, #c2633c, #2a120a);
+  border-color: #f0a060;
+}
+
+.enemy-ashen-warlord .enemy-body {
+  background: linear-gradient(135deg, #8f8f96, #3c3a40 54%, #141316 100%);
+  border-color: #e07a4a;
+}
+
+.enemy-ashen-warlord .enemy-body::before {
+  background: linear-gradient(135deg, #8f8f96, #141316);
+  border-color: #e07a4a;
+}
+
+/* Endgame: Paragon und Turm (Punkt 13) */
+.paragon-panel {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(176, 137, 255, 0.45);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(176, 137, 255, 0.12), transparent 60%), var(--panel-deep);
+}
+
+.paragon-panel.is-locked span,
+.paragon-head span,
+.paragon-tower,
+.paragon-stat small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.paragon-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.paragon-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 6px;
+}
+
+.paragon-stat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.paragon-stat b {
+  color: var(--purple);
+}
+
+.paragon-stat button {
+  min-width: 32px;
+  min-height: 30px;
+  padding: 2px 8px;
+}
+
+.enemy-tower-warden .enemy-body {
+  background: linear-gradient(135deg, #8a7fb0, #3d3566 54%, #17132b 100%);
+  border-color: var(--purple);
+}
+
+.enemy-tower-warden .enemy-body::before {
+  background: linear-gradient(135deg, #a99ad6, #241e40);
+  border-color: var(--purple);
+}
+
+/* Auto-Farmen und Offline-Ertrag (Punkt 14) */
+.auto-farm-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.auto-farm-button.is-on {
+  border-color: var(--green);
+  background: rgba(63, 214, 163, 0.16);
+}
+
+.auto-farm-rest {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.auto-farm-rest select {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-deep);
+  color: var(--text);
+}
+
+.offline-window {
+  width: min(560px, 100%);
+}
+
+.offline-summary {
+  display: grid;
+  gap: 12px;
+}
+
+.offline-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.offline-stats div {
+  display: grid;
+  gap: 2px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-deep);
+}
+
+.offline-stats span,
+.offline-hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.offline-materials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.offline-materials span {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 13px;
+}

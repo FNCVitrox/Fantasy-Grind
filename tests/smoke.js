@@ -39,7 +39,7 @@ assert.deepStrictEqual = (actual, expected, message) => {
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 // Spiellogik ist auf mehrere Dateien verteilt; statische Prüfungen durchsuchen alle zusammen.
-const logicFiles = ["scripts/combat.js", "scripts/combat-risk.js", "scripts/loot.js", "scripts/smith.js", "scripts/arcanist.js", "scripts/progression.js", "scripts/core.js"];
+const logicFiles = ["scripts/combat.js", "scripts/combat-risk.js", "scripts/loot.js", "scripts/smith.js", "scripts/arcanist.js", "scripts/idle.js", "scripts/progression.js", "scripts/core.js"];
 const readLogic = () => logicFiles.map(read).join("\n");
 
 const html = read("index.html");
@@ -64,6 +64,7 @@ const scripts = [
   "scripts/loot.js",
   "scripts/smith.js",
   "scripts/arcanist.js",
+  "scripts/idle.js",
   "scripts/progression.js",
   "scripts/core.js",
   "scripts/render.js",
@@ -83,7 +84,7 @@ for (const ignored of ["node_modules/", ".vs/", ".env", "*.log", "Fantasy-Grind-
 }
 
 const htmlIds = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
-const dynamicIds = new Set(["bestiaryDetail", "bestiarySearch", "smithGreeting", "smithGreetingText", "smithMastery", "battleResult"]);
+const dynamicIds = new Set(["smithBackpack", "bestiaryDetail", "bestiarySearch", "smithGreeting", "smithGreetingText", "smithMastery", "battleResult"]);
 const referencedIds = new Set(
   [...scripts.join("\n").matchAll(/\$\("([^"]+)"\)/g)].map((match) => match[1]),
 );
@@ -108,6 +109,7 @@ assert.deepStrictEqual(scriptOrder, [
   "scripts/loot.js",
   "scripts/smith.js",
   "scripts/arcanist.js",
+  "scripts/idle.js",
   "scripts/progression.js",
   "scripts/core.js",
   "scripts/render.js",
@@ -210,6 +212,21 @@ assert(/function hideFloatingTooltip\(\) \{[\s\S]{0,300}if \(!tooltip\.classList
     .map((text) => `${file}: ${text}`));
   assert.deepStrictEqual(rawLabels, [], "UI labels in game logic should be translated with t()");
 }
+// Jede zufällige Schmied-Begrüssung braucht einen englischen Text (sonst erscheint Deutsch in der EN-Version).
+{
+  const dialogueSource = read("scripts/render.js").match(/const smithDialogues = (\{[\s\S]*?\n\});/)[1];
+  const dialogues = vm.runInNewContext(`(${dialogueSource})`);
+  const enContext = { window: {}, document: {} };
+  vm.createContext(enContext);
+  vm.runInContext(read("scripts/i18n.js").replace(/^const translations/m, "var translations"), enContext);
+  vm.runInContext(read("scripts/i18n-en.js"), enContext);
+  const missing = Object.entries(dialogues).flatMap(([rank, lines]) => lines.flatMap((line, index) => ["title", "text"]
+    .map((field) => `smith.dialogue.${rank}.${index}.${field}`)
+    .filter((key) => !(key in enContext.translations.en))));
+  assert.deepStrictEqual(missing, [], "every smith greeting should have an English translation");
+}
+// Gegnerfähigkeiten in Kampftexten laufen über ihre Übersetzung, nicht über feste deutsche Namen.
+assert(!/defensive\.push\("/.test(read("scripts/combat.js")), "enemy ability names in combat texts should be translated");
 // Sprache: keine festen Texte ohne Übersetzung (Punkt 2 im Arbeitsplan).
 {
   const i18nContext = { console, window: {}, document: {} };
@@ -344,6 +361,33 @@ assert.strictEqual(vm.runInContext("itemUpgradeFrameClass({ upgrade: 20 })", con
 assert(vm.runInContext("state = defaultState(); state.customItems.frameTest = { ...items.trainingSword, id: 'frameTest', upgrade: 10, name: 'Übungsschwert +10' }; state.inventory = ['frameTest']; renderInventoryItemCard('frameTest', 0).includes('upgrade-frame-runic')", context), "upgraded item cards should render special upgrade frames");
 
 suite("quest board and inventory flows");
+// Offline-Fortschritt und Auto-Farmen (Punkt 14)
+assert(vm.runInContext("(() => { state = defaultState(); ui.selectedZone = 'meadow'; ui.selectedEnemy = 'wolf'; return calculateOfflineProgress(4 * 60 * 1000) === null && calculateOfflineProgress(NaN) === null; })()", context), "offline progress should need at least 5 minutes away");
+assert(vm.runInContext("(() => { state = defaultState(); state.level = 3; syncDerivedStats(); ui.selectedZone = 'meadow'; ui.selectedEnemy = 'wolf'; const hour = calculateOfflineProgress(60 * 60 * 1000); const day = calculateOfflineProgress(24 * 60 * 60 * 1000); return hour.fights === 450 && hour.wins > 0 && hour.wins <= hour.fights && hour.xp <= hour.wins * enemies.wolf.xp * 0.5 && day.capped && day.fights === 3600; })()", context), "offline progress should count fights per time, cap at 8 hours and give half yield");
+assert(vm.runInContext("(() => { state = defaultState(); state.level = 16; state.renown = 40; ui.selectedZone = 'ironhold'; ui.selectedEnemy = 'ironDuke'; const id = offlineFarmEnemyId(); return !enemies[id].boss && enemies[id].level <= 17; })()", context), "offline farming should never farm bosses");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; ui.selectedZone = 'meadow'; ui.selectedEnemy = 'wolf'; const gold = state.gold; const result = calculateOfflineProgress(2 * 60 * 60 * 1000); applyOfflineProgress(result); return state.gold === gold + result.gold && (state.xp > 0 || state.level > 1); })()", context), "applying offline progress should grant gold and XP");
+assert(vm.runInContext("(() => { state = defaultState(); ui.selectedZone = 'meadow'; ui.autoFarmLosses = 0; state.pendingLoot = [{ id: 'x', slot: 'ring' }]; state.settings.autoLoot = false; const loot = autoFarmStopReason() === 'loot'; state.settings.autoLoot = true; const ok = autoFarmStopReason() === ''; ui.autoFarmLosses = 3; const losses = autoFarmStopReason() === 'losses'; ui.autoFarmLosses = 0; state.pendingLoot = []; return loot && ok && losses; })()", context), "auto-farm should stop on waiting loot (without auto-loot) and after 3 defeats");
+assert(vm.runInContext("(() => { const s = normalizeSettings({ autoFarmRestPercent: 500 }); const t = normalizeSettings({ autoFarmRestPercent: 'x' }); return s.autoFarmRestPercent === 90 && t.autoFarmRestPercent === 50; })()", context), "auto-farm rest threshold should be clamped");
+// Endgame (Punkt 13): Paragon und Endloser Turm
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.level = 20; const renown = state.renown; gainXp(paragonXpNeeded(0) + 10); return state.paragon.level === 1 && state.paragon.unspent === 1 && state.paragon.xp === 10 && state.renown > renown; })()", context), "XP after level 20 should grant paragon levels and still renown");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.level = 20; state.paragon = normalizeParagon({ level: 30, unspent: 30 }); const before = totalStats().damage; for (let i = 0; i < 30; i += 1) spendParagonPoint('might'); return state.paragon.points.might === 25 && state.paragon.unspent === 5 && totalStats().damage > before; })()", context), "paragon points should raise stats and stop at the cap");
+assert(vm.runInContext("(() => { const p = normalizeParagon({ level: 2, unspent: 9, points: { might: 99, guard: -3 } }); return p.points.might === 25 && p.points.guard === 0 && p.unspent === 0; })()", context), "paragon data from saves should be sanitized");
+assert(vm.runInContext("(() => { state = defaultState(); state.tower = { floor: 6, best: 5 }; const scaled = getPreparedEncounter('towerWarden'); return scaled.towerFloor === 6 && scaled.hp > enemies.towerWarden.hp && scaled.xp > enemies.towerWarden.xp && enemyDisplayName(scaled, 'towerWarden').includes('6'); })()", context), "tower warden should scale with the current floor");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.tower = { floor: 5, best: 4 }; const gold = state.gold; onTowerVictory(); return state.tower.floor === 6 && state.tower.best === 5 && state.gold > gold; })()", context), "tower victories should advance floors and pay milestone treasure every 5 floors");
+assert(vm.runInContext("zones.tower.unlock.level === 20 && zones.tower.enemies.includes('towerWarden')", context), "the endless tower should unlock at level 20");
+// Mehr Gegner (Punkt 12): jedes Level 1-20 hat mindestens 2 passende Gegner (2 Level darunter bis 1 Level darüber) in offenen Gebieten.
+assert(vm.runInContext("(() => { const open = [...new Set(Object.values(zones).filter((zone) => zone.type === 'zone').flatMap((zone) => zone.enemies))]; return Array.from({ length: 20 }, (_, index) => index + 1).every((level) => open.filter((id) => enemies[id].level >= level - 2 && enemies[id].level <= level + 1).length >= 2); })()", context), "every level should have at least two fitting enemies");
+assert(vm.runInContext("Object.values(zones).filter((zone) => zone.type === 'zone').every((zone) => zone.enemies.length >= 5)", context), "every open zone should have at least five enemies");
+
+// Auto-Loot und Rucksack-Limit (Punkt 11)
+assert(vm.runInContext("(() => { const s = normalizeSettings({ autoLoot: 'ja', autoSellCommon: true, extra: 1 }); return s.autoLoot === false && s.autoSellCommon === true && !('extra' in s); })()", context), "settings should be normalized to known booleans");
+assert(vm.runInContext("normalizeInventoryCapacity(undefined) === 60 && normalizeInventoryCapacity(999) === 120 && normalizeInventoryCapacity(73) === 70 && normalizeInventoryCapacity(10) === 60", context), "inventory capacity should be clamped to 60-120 in steps of 10");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.level = 10; state.settings.autoLoot = true; createLootChoices({ ...enemies.boar, baseId: 'boar' }, 'boar'); return state.pendingLoot.length === 0; })()", context), "auto-loot should resolve loot choices without a click");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.level = 10; const score = () => Object.values(state.equipment).reduce((sum, id) => sum + (getItem(id) ? itemScore(getItem(id)) : 0), 0); const before = score(); state.settings.autoLoot = true; for (let i = 0; i < 12; i += 1) createLootChoices({ ...enemies.crownSentinel, baseId: 'crownSentinel' }, 'crownSentinel'); return score() > before; })()", context), "auto-loot should equip clear upgrades");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.settings.autoLoot = true; for (let i = 0; i < 90; i += 1) createLootChoices({ ...enemies.boar, baseId: 'boar' }, 'boar'); return state.inventory.length <= inventoryCapacity(); })()", context), "auto-loot should never push the backpack over its limit");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.inventory = Array.from({ length: 60 }, () => state.equipment.ring); const gold = state.gold; const item = { ...generateLootItem(enemies.wolf, 'wolf') }; state.pendingLoot = [item]; chooseLoot(0, false); return state.inventory.length === 60 && state.gold > gold && state.pendingLoot.length === 0; })()", context), "a full backpack should sell new loot instead of blocking");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.settings.autoSellCommon = true; const gold = state.gold; const item = { ...generateLootItem(enemies.wolf, 'wolf'), quality: 'common' }; state.pendingLoot = [item]; chooseLoot(0, false); return !state.inventory.includes(item.id) && state.gold > gold; })()", context), "junk filter should sell common loot");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; renderLog = () => {}; state.gold = 0; const failed = expandInventory() === false; state.gold = 5000; state.materials.leather = 40; const ok = expandInventory() && inventoryCapacity() === 70; state.inventoryCapacity = 120; return failed && ok && expandInventory() === false; })()", context), "backpack expansion should cost gold and leather and stop at 120");
 
 assert(vm.runInContext("state = defaultState(); questAvailable(getQuestById('wolves')) && !questAvailable(getQuestById('fields'))", context), "early quest board should only offer reachable quest targets");
 assert(vm.runInContext("state.level = 9; state.renown = 8; ui.selectedZone = 'fields'; questAvailable(getQuestById('fields'))", context), "field quests should unlock when the field zone is selected");
@@ -605,7 +649,7 @@ assert(vm.runInContext("(() => { const original = localStorage.setItem; const ke
 assert(vm.runInContext("(() => { state.gold = 200; saveWithBackup(); state.gold = 201; requestSaveBackup(); save(); return JSON.parse(localStorage.getItem(saveBackupKey)).gold === 201 && JSON.parse(localStorage.getItem(savePreviousKey)).gold === 200; })()", context), "important moments should rotate backup and previous backup");
 assert(vm.runInContext("(() => { state.gold = 300; saveWithBackup(); saveTiming.lastBackupAt -= saveTiming.backupIntervalMs; state.gold = 301; save(); return JSON.parse(localStorage.getItem(saveBackupKey)).gold === 301; })()", context), "backup should refresh after the backup interval");
 assert(vm.runInContext("(() => { state.gold = 400; queueSave(); queueSave(); const pending = Boolean(saveTiming.pendingTimer) && JSON.parse(localStorage.getItem(saveKey)).gold !== 400; flushQueuedSave(); return pending && !saveTiming.pendingTimer && JSON.parse(localStorage.getItem(saveKey)).gold === 400; })()", context), "queued saves should bundle and flush on demand");
-assert(read("scripts/events.js").includes('window.addEventListener("pagehide", () => save());') && read("scripts/events.js").includes('document.visibilityState === "hidden"'), "pending saves should be written when the page is hidden or closed");
+assert(read("scripts/events.js").includes('window.addEventListener("pagehide", () => save({ touch: true }));') && read("scripts/events.js").includes('document.visibilityState === "hidden"'), "pending saves should be written when the page is hidden or closed");
 assert(vm.runInContext("window.name.includes('fantasy-grind-save-v1')", context), "save should also be mirrored into window.name for preview reloads");
 assert(vm.runInContext("indexedDbName === 'FantasyGrindSaves' && indexedDbStoreName === 'saves'", context), "IndexedDB save mirror should use stable database names");
 assert(vm.runInContext("browserStorageStatus().indexedDB.label === 'IndexedDB' && browserStorageStatus().indexedDB.ok === false && saveDiagnostics.indexedDbMirror === 'nicht verfuegbar'", context), "IndexedDB mirror should fail softly when the browser API is unavailable");
@@ -645,10 +689,10 @@ assert(vm.runInContext("state = defaultState(); render = () => {}; createLootCho
 assert(vm.runInContext("state = defaultState(); renderBestiaryList().includes('completion-bar')", context), "bestiary cards should keep the visual loot progress bar");
 assert(vm.runInContext("state = defaultState(); const html = renderBestiaryList(); html.includes('Sammlung: 0/') && !html.includes('Level 1') && !html.includes('44 Leben')", context), "bestiary cards should show compact collection progress instead of level and hp");
 assert(vm.runInContext("(() => { state = defaultState(); ui.selectedBestiaryType = 'zone'; ui.selectedBestiaryZone = 'meadow'; ui.selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('data-bestiary-type=\"zone\"') && bestiaryHtml.includes('data-bestiary-type=\"dungeon\"') && bestiaryHtml.includes('Grauwacht-Wald') && !bestiaryHtml.includes('Krypta der Grauwacht'); })()", context), "bestiary should separate normal zones from dungeons");
-assert(vm.runInContext("(() => { state = defaultState(); ui.selectedBestiaryType = 'zone'; ui.selectedBestiaryZone = 'meadow'; ui.selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('bestiary-section-head--zone') && bestiaryHtml.includes('Normale Gebiete') && bestiaryHtml.includes('Funde') && bestiaryHtml.includes('3 Gegner'); })()", context), "bestiary zone tab should show a dedicated normal-zone summary");
+assert(vm.runInContext("(() => { state = defaultState(); ui.selectedBestiaryType = 'zone'; ui.selectedBestiaryZone = 'meadow'; ui.selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('bestiary-section-head--zone') && bestiaryHtml.includes('Normale Gebiete') && bestiaryHtml.includes('Funde') && bestiaryHtml.includes('5 Gegner'); })()", context), "bestiary zone tab should show a dedicated normal-zone summary");
 assert(vm.runInContext("(() => { state = defaultState(); ui.selectedBestiaryType = 'dungeon'; ui.selectedBestiaryZone = 'meadow'; ui.selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return ui.selectedBestiaryZone === 'crypt' && ui.selectedBestiaryEnemy === 'ratguard' && bestiaryHtml.includes('Krypta der Grauwacht') && !bestiaryHtml.includes('Grauwacht-Wald'); })()", context), "bestiary dungeon tab should select the first dungeon when needed");
 assert(vm.runInContext("(() => { state = defaultState(); ui.selectedBestiaryType = 'dungeon'; ui.selectedBestiaryZone = 'crypt'; ui.selectedBestiaryEnemy = 'ratguard'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('bestiary-section-head--dungeon') && bestiaryHtml.includes('Dungeon-Bosse') && bestiaryHtml.includes('bestiary-section-summary') && bestiaryHtml.includes('Erste Siege') && bestiaryHtml.includes('Feste Drops'); })()", context), "bestiary dungeon tab should summarize boss progress");
-assert(vm.runInContext("(() => { state = defaultState(); state.language = 'en'; ui.selectedBestiaryType = 'zone'; ui.selectedBestiaryZone = 'meadow'; ui.selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('Open Zones') && bestiaryHtml.includes('3 enemies'); })()", context), "bestiary section split should be translated in English");
+assert(vm.runInContext("(() => { state = defaultState(); state.language = 'en'; ui.selectedBestiaryType = 'zone'; ui.selectedBestiaryZone = 'meadow'; ui.selectedBestiaryEnemy = 'wolf'; const bestiaryHtml = renderBestiaryList(); return bestiaryHtml.includes('Open Zones') && bestiaryHtml.includes('5 enemies'); })()", context), "bestiary section split should be translated in English");
 assert.strictEqual(vm.runInContext("previewUpgradedItem({ slot: 'chest', quality: 'rare', name: 'Testpanzer +10', damage: 0, defense: 10, upgrade: 10 }).defense", context), 12);
 assert.strictEqual(vm.runInContext("previewUpgradedItem({ slot: 'weapon', quality: 'rare', name: 'Testklinge +20', damage: 10, defense: 0, critChance: 0.1, critDamage: 0.2, upgrade: 20 }).critDamage", context), 0.21);
 assert(vm.runInContext("(() => { function clone(id) { return { ...items[id], id }; } function upgradeTo(item, target) { let copy = { ...item }; while ((copy.upgrade || 0) < target) copy = previewUpgradedItem(copy); return copy; } function equipBest(level, upgrade) { const ids = new Set(Object.values(defaultState().equipment)); Object.values(enemies).filter((enemy) => enemy.level <= level).forEach((enemy) => enemy.drops.forEach((drop) => ids.add(drop.id))); state.equipment = { ...state.equipment }; state.customItems = {}; equipmentSlots.forEach((slot) => { const best = [...ids].map(clone).filter((item) => item.slot === slot).sort((a, b) => itemScore(b) - itemScore(a))[0]; if (!best) return; const item = upgradeTo(best, upgrade); item.id = `power-${slot}`; state.customItems[item.id] = item; state.equipment[slot] = item.id; }); } state = defaultState(); state.level = 16; state.build = 'damage'; equipBest(16, 10); syncDerivedStats(); state.hp = state.maxHp; return riskFor(enemies.ironDuke, totalStats()) !== 'Einfach'; })()", context), "iron duke should remain threatening against level 16 upgraded damage builds");

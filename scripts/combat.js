@@ -400,85 +400,85 @@ function enemyDamageTakenMultiplier(enemy, enemyHp, rounds, hit) {
   enemyAbilityIds(enemy).forEach((id) => {
     if (id === "mistForm" && rounds % 4 === 0) {
       multiplier *= 0.55;
-      defensive.push("Nebelform");
+      defensive.push(enemyAbilityLabel("mistForm"));
     }
     if (id === "emberDodge" && rounds % 3 === 0) {
       multiplier *= 0.7;
-      defensive.push("Glutausweichen");
+      defensive.push(enemyAbilityLabel("emberDodge"));
     }
     if (id === "crownShield" && rounds % 4 === 0) {
       multiplier *= 0.55;
-      defensive.push("Kronenschild");
+      defensive.push(enemyAbilityLabel("crownShield"));
     }
     if (id === "guardStance" && rounds % 4 === 0) {
       multiplier *= 0.65;
-      defensive.push("Schildhaltung");
+      defensive.push(enemyAbilityLabel("guardStance"));
     }
     if (id === "boneArmor" && rounds % 4 === 0) {
       multiplier *= 0.65;
-      defensive.push("Knochenpanzer");
+      defensive.push(enemyAbilityLabel("boneArmor"));
     }
     if (id === "hardenArmor" && rounds % 4 === 0) {
       multiplier *= 0.6;
-      defensive.push("Rüstung härten");
+      defensive.push(enemyAbilityLabel("hardenArmor"));
     }
     if (id === "ironWall" && rounds % 4 === 0) {
       multiplier *= 0.55;
-      defensive.push("Eisenwand");
+      defensive.push(enemyAbilityLabel("ironWall"));
     }
     if (id === "eliteGuard" && rounds % 4 === 0) {
       multiplier *= 0.75;
-      defensive.push("Elite-Deckung");
+      defensive.push(enemyAbilityLabel("eliteGuard"));
     }
   });
 
   if (passives.includes("prisonDiscipline") && rounds % 5 === 0) {
     multiplier *= 0.75;
-    defensive.push("Kerkerdisziplin");
+    defensive.push(enemyAbilityLabel("prisonDiscipline"));
   }
   if (passives.includes("cellAuthority") && (rounds <= 2 || rounds % 5 === 0)) {
     multiplier *= 0.86;
-    defensive.push("Kerkerautorität");
+    defensive.push(enemyAbilityLabel("cellAuthority"));
   }
   if (passives.includes("graveBargain") && enemyHp <= enemy.hp * 0.5) {
     multiplier *= 0.92;
-    defensive.push("Grabpakt");
+    defensive.push(enemyAbilityLabel("graveBargain"));
   }
   if (passives.includes("lastGuard") && enemyHp <= enemy.hp * 0.3) {
     multiplier *= 0.8;
-    defensive.push("Standhaft");
+    defensive.push(enemyAbilityLabel("lastGuard"));
   }
   if (passives.includes("heavyBody") && hit <= enemy.level * 2) {
     multiplier *= 0.8;
-    defensive.push("Schwerer Körper");
+    defensive.push(enemyAbilityLabel("heavyBody"));
   }
   if (passives.includes("bruteBulk") && hit <= enemy.level * 2.6) {
     multiplier *= 0.78;
-    defensive.push("Massiger Leib");
+    defensive.push(enemyAbilityLabel("bruteBulk"));
   }
   if (passives.includes("wardenPressure") && rounds % 4 === 0) {
     multiplier *= 0.8;
-    defensive.push("Kettendruck");
+    defensive.push(enemyAbilityLabel("wardenPressure"));
   }
   if (passives.includes("oathHeat") && enemyHp <= enemy.hp * 0.5) {
     multiplier *= 0.9;
-    defensive.push("Eidglut");
+    defensive.push(enemyAbilityLabel("oathHeat"));
   }
   if (passives.includes("dukePride") && enemyHp <= enemy.hp * 0.45) {
     multiplier *= 0.9;
-    defensive.push("Herzogsstolz");
+    defensive.push(enemyAbilityLabel("dukePride"));
   }
   if (passives.includes("royalHide")) {
     multiplier *= 0.9;
   }
   if (passives.includes("secondPhase") && enemyHp <= enemy.hp * 0.5) {
     multiplier *= 0.82;
-    defensive.push("Zweite Phase");
+    defensive.push(enemyAbilityLabel("secondPhase"));
   }
 
   if (passives.includes("hollowSecondWind") && enemyHp <= enemy.hp * 0.5) {
     multiplier *= 0.8;
-    defensive.push("Leere zweite Phase");
+    defensive.push(enemyAbilityLabel("hollowSecondWind"));
   }
 
   return { multiplier: Math.max(0.25, multiplier), defensive };
@@ -923,7 +923,7 @@ async function finishActionCombat(combat) {
 
 function grantActionCombatRewards(combat) {
   state.hp = Math.max(1, combat.playerHp);
-  const goldBonus = combat.enchantStats.goldBonus + combat.effectSummary.goldBonus + (combat.combatEvent?.goldBonus || 0);
+  const goldBonus = combat.enchantStats.goldBonus + combat.effectSummary.goldBonus + (combat.combatEvent?.goldBonus || 0) + paragonBonuses().gold;
   const rewardScale = combatRewardScale(combat.enemy);
   const gold = scaledCombatReward(Math.max(1, Math.floor(random(combat.enemy.gold[0], combat.enemy.gold[1]) * (1 + goldBonus))), combat.enemy);
   const xp = scaledCombatReward(Math.max(1, Math.floor(combat.enemy.xp * (1 + combat.enchantStats.xpBonus + combat.effectSummary.xpBonus))), combat.enemy);
@@ -946,6 +946,7 @@ function grantActionCombatRewards(combat) {
   }
   if (firstClearReward) log(() => t("combat.firstClearLog", "Erster Dungeon-Sieg: {reward}.", { reward: bossFirstClearRewardText(combat.enemy) }), "drop");
   if (combat.enemy.boss) remindSaveBackup(() => t("save.backupBossReason", "du hast einen Dungeon-Boss besiegt."));
+  if (combat.enemy.towerFloor) onTowerVictory();
   notifyReadyAchievements();
 }
 
@@ -992,7 +993,7 @@ function resetFightButton() {
 }
 
 function getPreparedEncounter(enemyId) {
-  const base = enemies[enemyId];
+  const base = enemyId === "towerWarden" && enemies[enemyId] ? scaleTowerEnemy(enemies[enemyId]) : enemies[enemyId];
   if (state.nextEncounters[enemyId]?.elite && !base.elite) {
     return createEliteEnemy(base, enemyId);
   }
@@ -1036,4 +1037,9 @@ function createEliteEnemy(base, enemyId) {
     eliteVariant: true,
     tags: { ...base.tags, elite: 1 },
   };
+}
+
+// Übersetzter Name einer Gegnerfähigkeit (für Kampftexte wie "{Gegner} nutzt {Fähigkeit}").
+function enemyAbilityLabel(abilityId) {
+  return entityName("enemyAbility", abilityId, enemyAbilityCatalog[abilityId]?.name || abilityId);
 }

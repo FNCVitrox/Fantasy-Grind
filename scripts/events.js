@@ -40,6 +40,27 @@ $("merchantList").addEventListener("click", (event) => {
   if (sell) sellInventoryItem(Number(sell.dataset.sell));
 });
 
+// Auto-Loot / Junk-Filter: Schalter im Rucksack und im Beute-Fenster
+["inventorySummary", "lootSettings"].forEach((id) => {
+  $(id).addEventListener("click", (event) => {
+    const toggle = event.target.closest("[data-setting-toggle]");
+    if (toggle) toggleSetting(toggle.dataset.settingToggle);
+  });
+});
+
+$("smithHome").addEventListener("click", (event) => {
+  if (event.target.closest("[data-expand-inventory]")) expandInventory();
+});
+
+$("playerStatsDetails").addEventListener("click", (event) => {
+  const spend = event.target.closest("[data-paragon-spend]");
+  if (spend) spendParagonPoint(spend.dataset.paragonSpend);
+});
+
+$("autoFarmBtn").addEventListener("click", toggleAutoFarm);
+$("autoFarmRest").addEventListener("change", (event) => setAutoFarmRestPercent(event.target.value));
+$("closeOfflineBtn").addEventListener("click", () => closeModal("offlineModal"));
+
 $("lootChoices").addEventListener("click", (event) => {
   const equipLoot = event.target.closest("[data-equip-loot]");
   if (equipLoot) {
@@ -464,10 +485,11 @@ $("saveFileInput").addEventListener("change", importSaveFile);
 
 void bootGame();
 // Offenen Speichervorgang beim Verlassen sofort schreiben (pagehide/visibilitychange greifen auch auf dem Handy).
-window.addEventListener("beforeunload", () => save());
-window.addEventListener("pagehide", () => save());
+window.addEventListener("beforeunload", () => save({ touch: true }));
+window.addEventListener("pagehide", () => save({ touch: true }));
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") save();
+  if (document.visibilityState === "hidden") save({ touch: true });
+  if (document.visibilityState === "visible") checkOfflineProgress();
 });
 window.addEventListener("scroll", hideFloatingTooltip, { passive: true, capture: true });
 
@@ -478,6 +500,7 @@ async function bootGame() {
   scheduleStudioSplashHide();
   // Englisch im Hintergrund nachladen, damit neue Log-Einträge sofort in beiden Sprachen gespeichert werden.
   void ensureLanguagePack("en");
+  checkOfflineProgress();
 }
 
 function setupStudioSplash() {
@@ -630,6 +653,8 @@ function closeModal(id) {
 function setControlsDisabled(disabled) {
   document.querySelectorAll("button").forEach((button) => {
     if (button.id === "openSaveMenuBtn") return;
+    if (button.id === "autoFarmBtn") return;
+    if (button.id === "closeOfflineBtn") return;
     if (button.id === "languageToggleBtn") return;
     if (button.id === "exportSaveTopBtn") return;
     if (button.id === "importSaveTopBtn") return;

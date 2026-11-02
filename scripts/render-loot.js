@@ -7,6 +7,7 @@ function renderLootChoices() {
 
   openLootModal(modal);
   updateLootHeader();
+  renderCachedHtml("lootSettings", `${currentLanguage()}|${lootSettingsSignature()}`, renderLootSettingToggles);
 
   const signature = lootChoicesSignature();
   if (renderCache.lootChoices === signature) return;
@@ -59,7 +60,9 @@ function renderLootCard(item, index) {
     </div>
     ${renderLootCompare(compare)}
     <div class="loot-actions">
-      <button type="button" data-loot="${index}">${t("loot.toInventory", "Ins Inventar")}</button>
+      <button type="button" data-loot="${index}">${isInventoryFull() || (state.settings?.autoSellCommon && quality === "common")
+        ? t("loot.sellNow", "Verkaufen +{gold}", { gold: sellValue(item) })
+        : t("loot.toInventory", "Ins Inventar")}</button>
       <button type="button" data-equip-loot="${index}">${t("loot.equip", "Ausrüsten")}</button>
     </div>
   </div>`;
@@ -88,7 +91,7 @@ function renderCompareSpans(compare, limit = 0) {
 }
 
 function lootChoicesSignature() {
-  return `${currentLanguage()}|${state.pendingLoot.map((item) => {
+  return `${currentLanguage()}|${isInventoryFull() ? 1 : 0}|${lootSettingsSignature()}|${state.pendingLoot.map((item) => {
     if (!item) return "empty";
     return [
       item.id,

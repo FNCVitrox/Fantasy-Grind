@@ -1,4 +1,22 @@
 ﻿let state;
+// Rucksack: Grundgrösse und Erweiterung beim Schmied (Punkt 11).
+const inventoryBaseCapacity = 60;
+const inventoryMaxCapacity = 120;
+const inventoryExpandStep = 10;
+// Offline-Fortschritt und Auto-Farmen (Punkt 14)
+const offlineMinMs = 5 * 60 * 1000;
+const offlineMaxMs = 8 * 60 * 60 * 1000;
+const offlineSecondsPerFight = 8;
+const offlineEfficiency = 0.5;
+const autoFarmDelayMs = 450;
+// Paragon-Punkte nach Level 20 (Punkt 13): maximal 25 pro Wert, Bonus pro Punkt.
+const paragonStats = {
+  might: { max: 25, perPoint: 0.02 },
+  guard: { max: 25, perPoint: 0.02 },
+  vitality: { max: 25, perPoint: 0.03 },
+  fortune: { max: 25, perPoint: 0.03 },
+};
+
 const preparedCombatEvents = new Map();
 const tooltipItemCache = new Map();
 const tooltipHtmlCache = new Map();
@@ -223,6 +241,11 @@ function defaultState() {
     bossDropPity: {},
     inventory: [],
     lockedItems: [],
+    inventoryCapacity: inventoryBaseCapacity,
+    paragon: defaultParagon(),
+    lastActiveAt: 0,
+    tower: defaultTower(),
+    settings: defaultSettings(),
     materials: emptyMaterials(),
     discoveredLoot: {},
     defeatedBosses: [],
@@ -602,13 +625,14 @@ function totalStats() {
   const setStats = activeSetBonusStats();
   const build = activeBuild();
   const classStats = activeClass().statBonuses || {};
+  const paragon = typeof paragonBonuses === "function" ? paragonBonuses() : { damage: 0, defense: 0, maxHp: 0 };
   const baseDamage = 7 + state.level * 2.25 + itemDamage + setStats.damage + enchantStats.damage;
   const baseDefense = 2 + state.level * 1.45 + itemDefense + setStats.defense + enchantStats.defense;
   const baseHp = 90 + state.level * 6.5 + setStats.maxHp + enchantStats.maxHp;
   return {
-    damage: Math.floor(baseDamage * (classStats.damageMultiplier || 1) * (build.damageMultiplier || 1)),
-    defense: Math.floor(baseDefense * (classStats.defenseMultiplier || 1) * (build.defenseMultiplier || 1)),
-    maxHp: Math.floor(baseHp * (classStats.maxHpMultiplier || 1) * (build.maxHpMultiplier || 1)),
+    damage: Math.floor(baseDamage * (classStats.damageMultiplier || 1) * (build.damageMultiplier || 1) * (1 + paragon.damage)),
+    defense: Math.floor(baseDefense * (classStats.defenseMultiplier || 1) * (build.defenseMultiplier || 1) * (1 + paragon.defense)),
+    maxHp: Math.floor(baseHp * (classStats.maxHpMultiplier || 1) * (build.maxHpMultiplier || 1) * (1 + paragon.maxHp)),
     critChance: Math.min(0.65, 0.05 + itemCritChance + enchantStats.critChance + (classStats.critChanceBonus || 0) + (build.critChanceBonus || 0)),
     critDamage: Math.min(3.2, 1.5 + itemCritDamage + enchantStats.critDamage + (classStats.critDamageBonus || 0) + (build.critDamageBonus || 0)),
   };

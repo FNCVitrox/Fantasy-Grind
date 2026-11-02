@@ -583,3 +583,30 @@ function repairCostForSlot(slot) {
   const baseCost = missing * repairSlotMultiplier(slot) * qualityMultiplier * upgradeMultiplier * (0.42 + state.level * 0.025);
   return Math.ceil(baseCost * (1 - renownRepairDiscount()));
 }
+
+// Rucksack erweitern (+10 Plätze, bis 120). Kosten steigen mit jeder Stufe.
+function inventoryExpandCost() {
+  const step = Math.round((inventoryCapacity() - inventoryBaseCapacity) / inventoryExpandStep);
+  return { gold: 400 + step * 350, materials: { leather: 4 + step * 2 } };
+}
+
+function canExpandInventory() {
+  return inventoryCapacity() < inventoryMaxCapacity && canPayCost(inventoryExpandCost());
+}
+
+function expandInventory() {
+  if (inventoryCapacity() >= inventoryMaxCapacity) return false;
+  const cost = inventoryExpandCost();
+  if (!canPayCost(cost)) {
+    log(() => t("smith.backpackCostMissingLog", "Borin Glutbart knurrt: Für mehr Platz fehlen noch Gold oder Lederreste."), "bad");
+    render();
+    return false;
+  }
+  spendCost(cost);
+  state.inventoryCapacity = normalizeInventoryCapacity(inventoryCapacity() + inventoryExpandStep);
+  const capacity = state.inventoryCapacity;
+  log(() => t("smith.backpackExpandedLog", "Borin näht neue Taschen an: Rucksack hat jetzt {capacity} Plätze.", { capacity }), "drop");
+  save();
+  render();
+  return true;
+}
