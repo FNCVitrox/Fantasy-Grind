@@ -2,8 +2,8 @@
 
 Start (aus dem Projektordner):  python3 tools/pixelart/build.py
 Ausgabe:
-  assets/sprites/hero-<klasse>-<build>.png   Sprite-Sheet 192x64 (3 Frames: Ruhe A, Ruhe B, Angriff)
-  assets/sprites/enemy-<id>.png              Sprite-Sheet 192x64, zum Helden schauend (gespiegelt)
+  assets/sprites/hero-<klasse>-<build>.png   Sprite-Sheet 512x64 (8 Frames: 4x Ruhe, Ausholen, Schlag, Nachschwung, getroffen)
+  assets/sprites/enemy-<id>.png              Sprite-Sheet 512x64, zum Helden schauend (gespiegelt)
   assets/backgrounds/<gebiet>.png            Kampfbühne 256x96
   assets/icons/items.png                     Icon-Atlas 8x 16x16 (weapon, offhand, chest, pants, boots, necklace, ring, material)
 """
@@ -16,7 +16,8 @@ from PIL import Image, ImageOps
 sys.path.insert(0, os.path.dirname(__file__))
 
 from backgrounds import BACKGROUNDS  # noqa: E402
-from characters import ENEMIES, FRAMES, HERO_LOOKS, draw_character, enemy_spec, hero_spec  # noqa: E402
+from specs import ENEMIES, HERO_LOOKS, enemy_spec, hero_spec  # noqa: E402
+from figures import FRAMES, draw as draw_character  # noqa: E402
 from icons import ICONS  # noqa: E402
 from pixel import sheet  # noqa: E402
 

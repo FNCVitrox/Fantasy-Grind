@@ -374,9 +374,11 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 ### Zusatz – Pixel-Art statt Code-Formen (auf Wunsch nach Phase 4)
 
 - [x] **Echte Grafik als Pixel-Art**
-  - Ergebnis (v0.8.145):
+  - Ergebnis (v0.8.145, überarbeitet in v0.8.146):
     - Neuer Generator `tools/pixelart/` (Python mit Pillow, Start: `python3 tools/pixelart/build.py`). Er zeichnet jedes Bild Pixel für Pixel: Farbrampen mit Farbton-Verschiebung, Licht von oben links, farbige Konturen.
-    - 41 Figuren als PNG-Sprite-Sheets (64×64, 3 Frames: zwei Ruhe-Frames und ein Angriff): 29 Gegner und 12 Helden (4 Klassen × 3 Builds). Im Spiel scharf auf 128 px (Handy 96 px) vergrössert.
+    - 41 Figuren als PNG-Sprite-Sheets: 29 Gegner und 12 Helden (4 Klassen × 3 Builds). Im Spiel scharf auf 128 px (Handy 96 px) vergrössert.
+    - Überarbeitung (v0.8.146): Die Figuren werden jetzt aus Volumen-Körpern gebaut (`render3d.py` + `figures.py`): Ellipsoide und sich verjüngende Kapseln bekommen pro Pixel Tiefe und Licht, dazu Metallglanz, Schlagschatten zwischen Teilen, Innenkanten und farbige Konturen. Ergebnis: runde, plastische Figuren statt flacher Klötzchen.
+    - 8 Frames pro Figur: 4 Ruhe-Frames (Atmen, Schwanz, Flügel), Ausholen, Schlag, Nachschwung, getroffen.
     - 8 Hintergründe für die Kampfbühne, einer pro Gebiet (Wald, Strasse, verfluchte Felder, Aschengrund, Krypta, Festung, Turm, Kathedrale).
     - 8 Item-Icons als Pixel-Art (Atlas `assets/icons/items.png`), Rahmen und Leuchten nach Seltenheit wie bisher.
     - Charakter-Porträt und Klassenwahl zeigen die Pixel-Figur.

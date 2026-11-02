@@ -350,13 +350,13 @@ const pngSize = (file) => {
   for (const id of enemyIds) {
     const file = `assets/sprites/enemy-${id}.png`;
     assert(fs.existsSync(path.join(root, file)), `missing pixel sprite for enemy ${id}`);
-    assert.deepStrictEqual(pngSize(file), [192, 64], `${file} should be a 3-frame 64x64 sheet`);
+    assert.deepStrictEqual(pngSize(file), [512, 64], `${file} should be an 8-frame 64x64 sheet`);
   }
   const enemyHashes = enemyIds.map((id) => require("crypto").createHash("md5").update(fs.readFileSync(path.join(root, `assets/sprites/enemy-${id}.png`))).digest("hex"));
   assert.strictEqual(new Set(enemyHashes).size, enemyHashes.length, "every enemy needs its own pixel sprite");
   for (const classId of ["warrior", "mage", "rogue", "archer"]) {
     for (const build of ["tank", "damage", "bruiser"]) {
-      assert.deepStrictEqual(pngSize(`assets/sprites/hero-${classId}-${build}.png`), [192, 64], `missing hero sprite ${classId}/${build}`);
+      assert.deepStrictEqual(pngSize(`assets/sprites/hero-${classId}-${build}.png`), [512, 64], `missing hero sprite ${classId}/${build}`);
     }
   }
   for (const zoneId of JSON.parse(vm.runInContext("JSON.stringify(Object.keys(zones))", context))) {
@@ -366,7 +366,8 @@ const pngSize = (file) => {
   assert(vm.runInContext("enemySpriteHtml('wolf')", context).includes("assets/sprites/enemy-wolf.png"), "enemy sprite html should point to the PNG");
   assert(vm.runInContext("heroSpriteHtml('warrior', 'tank')", context).includes("hero-warrior-tank.png"), "hero sprite html should follow class and build");
   assert(vm.runInContext("enemySpriteHtml('unknownEnemy')", context).includes("enemy-wolf.png"), "unknown enemies fall back to a safe sprite");
-  assert(css.includes("image-rendering: pixelated") && css.includes("@keyframes px-idle") && css.includes("@keyframes px-die"), "pixel sprites need crisp scaling, idle and death animation");
+  assert(css.includes("image-rendering: pixelated") && css.includes("@keyframes px-idle") && css.includes("@keyframes px-attack") && css.includes("@keyframes px-die") && css.includes("background-size: 800% 100%"), "pixel sprites need crisp scaling, 4-frame idle, 3-frame attack, hit and death");
+  assert(fs.existsSync(path.join(root, "tools/pixelart/render3d.py")) && fs.existsSync(path.join(root, "tools/pixelart/figures.py")), "volume renderer and figure definitions should be in the repo");
   assert(!/<svg|sprite-svg|\.spr-/.test(read("scripts/sprites.js") + css), "no SVG or CSS shape sprites should remain");
   assert(fs.existsSync(path.join(root, "tools/pixelart/build.py")), "pixel-art generator should be part of the repo");
 }
