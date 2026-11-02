@@ -425,7 +425,7 @@
   .sprite-art {
     width: 96px;
     height: 96px;
-    margin-bottom: -8px;
+    margin: -18px 0 -6px;
   }
 
   .damage-number {
@@ -1012,8 +1012,8 @@
 
 
   .sprite-art {
-    width: 88px;
-    height: 88px;
+    width: 96px;
+    height: 96px;
   }
 
   .combat-health {

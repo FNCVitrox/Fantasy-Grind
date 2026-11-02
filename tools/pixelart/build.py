@@ -2,8 +2,9 @@
 
 Start (aus dem Projektordner):  python3 tools/pixelart/build.py
 Ausgabe:
-  assets/sprites/hero-<klasse>-<build>.png   Sprite-Sheet 512x64 (8 Frames: 4x Ruhe, Ausholen, Schlag, Nachschwung, getroffen)
-  assets/sprites/enemy-<id>.png              Sprite-Sheet 512x64, zum Helden schauend (gespiegelt)
+  assets/sprites/hero-<klasse>-<build>.png   Sprite-Sheet 384x48 (8 Frames: 4x Ruhe, Ausholen, Schlag, Nachschwung, getroffen)
+  assets/sprites/enemy-<id>.png              Sprite-Sheet 384x48, zum Helden schauend (gespiegelt)
+Figuren: CC0-Paket 0x72 DungeonTileset II (vendor/0x72) plus handgezeichnete Ergänzungen (handmade.py).
   assets/backgrounds/<gebiet>.png            Kampfbühne 256x96
   assets/icons/items.png                     Icon-Atlas 8x 16x16 (weapon, offhand, chest, pants, boots, necklace, ring, material)
 """
@@ -16,10 +17,8 @@ from PIL import Image, ImageOps
 sys.path.insert(0, os.path.dirname(__file__))
 
 from backgrounds import BACKGROUNDS  # noqa: E402
-from specs import ENEMIES, HERO_LOOKS, enemy_spec, hero_spec  # noqa: E402
-from figures import FRAMES, draw as draw_character  # noqa: E402
+from pack import HEROES, build_frames, enemy_looks, sheet as pack_sheet  # noqa: E402
 from icons import ICONS  # noqa: E402
-from pixel import sheet  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -36,15 +35,11 @@ def save_png(img, path):
 
 def main():
     count = 0
-    for class_id in HERO_LOOKS:
-        for build in ("tank", "damage", "bruiser"):
-            spec = hero_spec(class_id, build)
-            save_png(sheet([draw_character(spec, frame) for frame in FRAMES]), out("sprites", f"hero-{class_id}-{build}.png"))
-            count += 1
-    for enemy_id in ENEMIES:
-        spec = enemy_spec(enemy_id)
-        frames = [ImageOps.mirror(draw_character(spec, frame)) for frame in FRAMES]
-        save_png(sheet(frames), out("sprites", f"enemy-{enemy_id}.png"))
+    for (class_id, build), look in HEROES.items():
+        save_png(pack_sheet(build_frames(look)), out("sprites", f"hero-{class_id}-{build}.png"))
+        count += 1
+    for enemy_id, look in enemy_looks().items():
+        save_png(pack_sheet(build_frames(look), mirror=True), out("sprites", f"enemy-{enemy_id}.png"))
         count += 1
     for zone_id, painter in BACKGROUNDS.items():
         save_png(painter().img.convert("RGB"), out("backgrounds", f"{zone_id}.png"))

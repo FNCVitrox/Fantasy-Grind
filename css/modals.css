@@ -1353,13 +1353,14 @@ button.drop-row span:last-child {
   background: linear-gradient(90deg, #8b1e2d, var(--red-soft));
 }
 
-/* Pixel-Art-Figuren: Sprite-Sheet mit 8 Frames (0-3 Ruhe, 4 Ausholen, 5 Schlag, 6 Nachschwung, 7 getroffen), scharf skaliert.
+/* Pixel-Art-Figuren (CC0-Paket 0x72 + eigene Ergänzungen): Sprite-Sheet mit 8 Frames à 48x48
+   (0-3 Ruhe, 4 Ausholen, 5 Schlag, 6 Nachschwung, 7 getroffen), scharf um Faktor 3 vergrössert.
    Frame n liegt bei background-position-x = n * 100% / 7. */
 .sprite-art {
   position: relative;
-  width: 128px;
-  height: 128px;
-  margin: -18px 0 -10px;
+  width: 144px;
+  height: 144px;
+  margin: -30px 0 -8px;
   transform-origin: center bottom;
 }
 

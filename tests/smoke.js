@@ -350,13 +350,13 @@ const pngSize = (file) => {
   for (const id of enemyIds) {
     const file = `assets/sprites/enemy-${id}.png`;
     assert(fs.existsSync(path.join(root, file)), `missing pixel sprite for enemy ${id}`);
-    assert.deepStrictEqual(pngSize(file), [512, 64], `${file} should be an 8-frame 64x64 sheet`);
+    assert.deepStrictEqual(pngSize(file), [384, 48], `${file} should be an 8-frame 48x48 sheet`);
   }
   const enemyHashes = enemyIds.map((id) => require("crypto").createHash("md5").update(fs.readFileSync(path.join(root, `assets/sprites/enemy-${id}.png`))).digest("hex"));
   assert.strictEqual(new Set(enemyHashes).size, enemyHashes.length, "every enemy needs its own pixel sprite");
   for (const classId of ["warrior", "mage", "rogue", "archer"]) {
     for (const build of ["tank", "damage", "bruiser"]) {
-      assert.deepStrictEqual(pngSize(`assets/sprites/hero-${classId}-${build}.png`), [512, 64], `missing hero sprite ${classId}/${build}`);
+      assert.deepStrictEqual(pngSize(`assets/sprites/hero-${classId}-${build}.png`), [384, 48], `missing hero sprite ${classId}/${build}`);
     }
   }
   for (const zoneId of JSON.parse(vm.runInContext("JSON.stringify(Object.keys(zones))", context))) {
@@ -367,7 +367,8 @@ const pngSize = (file) => {
   assert(vm.runInContext("heroSpriteHtml('warrior', 'tank')", context).includes("hero-warrior-tank.png"), "hero sprite html should follow class and build");
   assert(vm.runInContext("enemySpriteHtml('unknownEnemy')", context).includes("enemy-wolf.png"), "unknown enemies fall back to a safe sprite");
   assert(css.includes("image-rendering: pixelated") && css.includes("@keyframes px-idle") && css.includes("@keyframes px-attack") && css.includes("@keyframes px-die") && css.includes("background-size: 800% 100%"), "pixel sprites need crisp scaling, 4-frame idle, 3-frame attack, hit and death");
-  assert(fs.existsSync(path.join(root, "tools/pixelart/render3d.py")) && fs.existsSync(path.join(root, "tools/pixelart/figures.py")), "volume renderer and figure definitions should be in the repo");
+  assert(fs.existsSync(path.join(root, "tools/pixelart/pack.py")) && fs.existsSync(path.join(root, "tools/pixelart/vendor/0x72/LICENSE.md")), "sprite packer and the CC0 license note of the 0x72 pack should be in the repo");
+  assert(read("CREDITS.md").includes("0x72") && read("CREDITS.md").includes("CC0"), "credits should name the 0x72 DungeonTileset II (CC0)");
   assert(!/<svg|sprite-svg|\.spr-/.test(read("scripts/sprites.js") + css), "no SVG or CSS shape sprites should remain");
   assert(fs.existsSync(path.join(root, "tools/pixelart/build.py")), "pixel-art generator should be part of the repo");
 }

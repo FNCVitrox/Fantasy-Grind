@@ -374,15 +374,13 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 ### Zusatz – Pixel-Art statt Code-Formen (auf Wunsch nach Phase 4)
 
 - [x] **Echte Grafik als Pixel-Art**
-  - Ergebnis (v0.8.145, überarbeitet in v0.8.146):
-    - Neuer Generator `tools/pixelart/` (Python mit Pillow, Start: `python3 tools/pixelart/build.py`). Er zeichnet jedes Bild Pixel für Pixel: Farbrampen mit Farbton-Verschiebung, Licht von oben links, farbige Konturen.
-    - 41 Figuren als PNG-Sprite-Sheets: 29 Gegner und 12 Helden (4 Klassen × 3 Builds). Im Spiel scharf auf 128 px (Handy 96 px) vergrössert.
-    - Überarbeitung (v0.8.146): Die Figuren werden jetzt aus Volumen-Körpern gebaut (`render3d.py` + `figures.py`): Ellipsoide und sich verjüngende Kapseln bekommen pro Pixel Tiefe und Licht, dazu Metallglanz, Schlagschatten zwischen Teilen, Innenkanten und farbige Konturen. Ergebnis: runde, plastische Figuren statt flacher Klötzchen.
-    - 8 Frames pro Figur: 4 Ruhe-Frames (Atmen, Schwanz, Flügel), Ausholen, Schlag, Nachschwung, getroffen.
-    - 8 Hintergründe für die Kampfbühne, einer pro Gebiet (Wald, Strasse, verfluchte Felder, Aschengrund, Krypta, Festung, Turm, Kathedrale).
-    - 8 Item-Icons als Pixel-Art (Atlas `assets/icons/items.png`), Rahmen und Leuchten nach Seltenheit wie bisher.
-    - Charakter-Porträt und Klassenwahl zeigen die Pixel-Figur.
-    - Die SVG-Figuren und CSS-Formen aus Punkt 17 sind entfernt. smoke.js prüft jede PNG-Datei (vorhanden, richtige Grösse, jede Figur einzigartig).
+  - Ergebnis (v0.8.147):
+    - Figuren aus dem professionellen CC0-Paket **0x72 DungeonTileset II** (https://0x72.itch.io/dungeontileset-ii), frei nutzbar auch für Steam. Originaldateien und Lizenzhinweis in `tools/pixelart/vendor/0x72/`, Nennung in `CREDITS.md`.
+    - Was im Paket fehlt, ist im gleichen Stil von Hand Pixel für Pixel ergänzt (`tools/pixelart/handmade.py`): Wolf (4 Farbvarianten: Wald, Moor, Eisen, Asche), Keiler, Seuchenkrähe, Schilde, Krone.
+    - `tools/pixelart/pack.py` setzt alles zu Sprite-Sheets zusammen: 8 Frames à 48×48 (4 Ruhe, Ausholen, Schlag, Nachschwung, getroffen). Waffen aus dem Paket kommen in die Hand und schwingen beim Angriff; Bogen schiessen Pfeile, Stäbe sprühen Funken, Wölfe beissen mit offenem Maul. Umfärbungen unterscheiden Varianten, Hauttöne bleiben dabei erhalten.
+    - Zuordnung (Aussehen, Namen bleiben): z. B. Wegräuber = maskierter Ork, Feldschemen = Kürbiskopf-Vogelscheuche, Seuchenhexe = Pestdoktor, Moorghul = Sumpfwesen, Eidschmied = Zwerg mit Kriegshammer, Bestie der Krone = Dämon mit Krone, Gruftschläger = Riesen-Zombie.
+    - Im Spiel scharf auf das 3-Fache (Handy 2-Fache) vergrössert.
+    - 8 Hintergründe und Item-Icons bleiben eigene Pixel-Art. Die selbst programmierten Figuren-Versuche (flach, dann Volumen) sind entfernt.
 
 ### Phase 5 – Mehr Inhalt
 
