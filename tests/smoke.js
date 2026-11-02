@@ -69,6 +69,7 @@ const scripts = [
   "scripts/core.js",
   "scripts/sprites.js",
   "scripts/fx.js",
+  "scripts/audio.js",
   "scripts/render.js",
   "scripts/render-loot.js",
   "scripts/data-achievements.js",
@@ -116,6 +117,7 @@ assert.deepStrictEqual(scriptOrder, [
   "scripts/core.js",
   "scripts/sprites.js",
   "scripts/fx.js",
+  "scripts/audio.js",
   "scripts/render.js",
   "scripts/render-loot.js",
   "scripts/events.js",
@@ -381,6 +383,22 @@ for (const fn of ["fxShake", "fxHitParticles", "fxLootRain", "fxLevelUp", "fxCou
   assert(read("scripts/render.js").includes('fxCountTo("gold", state.gold)'), "gold should count up");
   assert(css.includes("body.reduced-effects") && css.includes("@media (prefers-reduced-motion: reduce)"), "effects must respect the switch and prefers-reduced-motion");
   assert(read("scripts/render.js").includes('settingsChoiceHtml("reducedEffects"'), "settings should offer the reduced effects switch");
+}
+// Punkt 20: Sound und Musik (WebAudio), standardmässig an aber leise, Einstellungen im Spielstand.
+{
+  const defaults = vm.runInContext("defaultSettings()", context);
+  assert(defaults.muted === false && defaults.soundVolume > 0 && defaults.soundVolume <= 40 && defaults.musicVolume > 0 && defaults.musicVolume <= 30, "sound should be on but quiet by default");
+  assert.strictEqual(vm.runInContext("normalizeSettings({ soundVolume: 140, musicVolume: -5 }).soundVolume", context), 100, "volume clamps to 100");
+  assert.strictEqual(vm.runInContext("normalizeSettings({ soundVolume: 140, musicVolume: -5 }).musicVolume", context), 0, "volume clamps to 0");
+  assert.strictEqual(vm.runInContext("normalizeSettings({ autoFarmRestPercent: 5 }).autoFarmRestPercent", context), 10, "rest percent keeps its own range");
+  let audioThrew = false;
+  try { vm.runInContext("audioPlay('crit'); audioPlay('loot', 'legendary'); audioSyncMusic();", context); } catch (error) { audioThrew = error; }
+  assert(!audioThrew, "audio must be a silent no-op without an AudioContext");
+  const zoneTypes = JSON.parse(vm.runInContext("JSON.stringify([...new Set(Object.values(zones).map((zone) => zone.type))])", context));
+  for (const type of zoneTypes) assert(vm.runInContext(`Boolean(audioThemes[${JSON.stringify(type)}])`, context), `missing music theme for zone type ${type}`);
+  const audioSource = read("scripts/audio.js");
+  for (const sfx of ["hit", "crit", "loot", "levelUp", "click"]) assert(audioSource.includes(`case "${sfx}":`), `missing sound effect ${sfx}`);
+  assert(!/\.(mp3|ogg|wav)\b/.test(audioSource), "sounds are generated, no audio files needed");
 }
 assert(read("scripts/render.js").includes("heroSpriteSvg(") && read("scripts/render.js").includes("enemySpriteSvg("), "render should draw hero and enemy as SVG sprites");
 assert(read("scripts/render.js").includes("hero-class-${characterClass}") && read("scripts/render.js").includes("heroSpriteName"), "combat hero sprite should follow the selected class and update its label");

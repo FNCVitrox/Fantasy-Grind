@@ -95,6 +95,7 @@ function fxLootRain(items) {
 function fxLevelUp(label) {
   const layer = fxLayer();
   if (!layer) return;
+  if (typeof audioPlay === "function") audioPlay("levelUp");
   const banner = fxSpawn(layer, "fx-level-banner", {}, 2200);
   banner.textContent = label;
   if (fxReduced()) return;

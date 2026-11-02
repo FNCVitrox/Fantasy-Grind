@@ -903,6 +903,7 @@ async function finishActionCombat(combat) {
   hideBattleEventBadge();
   $("battleStage").className = "battle-stage";
   $("battleStage").classList.add(combat.playerHp > 0 ? "victory" : "defeat");
+  if (typeof audioPlay === "function") audioPlay(combat.playerHp > 0 ? "victory" : "defeat");
   showBattleResult(combat.playerHp > 0, combat.enemyName, combat.rounds, combatAnimationSummary(combat.events));
   if (ui.skipCombat) {
     // Übersprungen: sofort weiter, Ergebnis-Banner blendet sich nebenher aus.

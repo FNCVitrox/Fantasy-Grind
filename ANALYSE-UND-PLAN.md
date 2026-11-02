@@ -350,12 +350,17 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Loot-Regen und Levelaufstieg laufen in einer Ebene über allen Fenstern, weil das Beute-Fenster sofort nach dem Sieg aufgeht.
     - Neues Einstellungsfenster (Schnellzugriff „Einstellungen“) mit Schalter Effekte Voll/Reduziert, gespeichert im Spielstand. `prefers-reduced-motion` reduziert ebenfalls; das Level-Banner bleibt dann als ruhige Einblendung.
 
-- [ ] **20. Sound und Musik**
+- [x] **20. Sound und Musik**
   - Wie:
     - Kleine Soundeffekte (Treffer, Krit, Loot, Levelaufstieg, Klick), mit der WebAudio-API erzeugt oder mit freien Lizenzen (CC0)
     - Eine ruhige Musikschleife pro Gebietstyp
     - Lautstärke-Regler und Stummschalten in den Einstellungen
   - Fertig wenn: Sound ist standardmässig an, aber leise, und die Einstellungen werden gespeichert.
+  - Ergebnis (v0.8.143):
+    - Neues Modul `scripts/audio.js`, alles mit WebAudio erzeugt, keine Audiodateien. Startet nach der ersten Eingabe (Browser-Vorgabe).
+    - Sounds: Treffer, Krit, Held getroffen, Beute (heller und länger je Seltenheit), Levelaufstieg, Sieg, Niederlage, leiser Klick bei Knöpfen.
+    - Musik: ruhige, sich ständig leicht verändernde Schleife je Gebietstyp (Gebiet: Dur-Pentatonik, Dungeon und Turm: dunkles Moll). Pausiert, wenn der Tab im Hintergrund ist.
+    - Einstellungen: Ton An/Aus, Effekte-Lautstärke (Standard 35 %), Musik-Lautstärke (Standard 20 %), gespeichert im Spielstand. Regler wirken sofort beim Ziehen.
 
 - [ ] **21. Einstellungen-Menü**
   - Wie: Ein Menü für Sprache, Lautstärke, Effekte, Auto-Loot, Kampftempo (1×/2×/4×) und Spielstand.

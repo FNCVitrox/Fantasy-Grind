@@ -16,6 +16,7 @@ function renderPlayerHud(language = currentLanguage()) {
   fxCountTo("gold", state.gold);
   fxCountTo("renown", state.renown);
   if (typeof document !== "undefined" && document.body?.classList) document.body.classList.toggle("reduced-effects", normalizeSettings(state.settings).reducedEffects);
+  if (typeof audioSyncMusic === "function") audioSyncMusic();
   setText("characterSummaryMeta", `${t("common.level", "Level")} ${state.level}`);
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
   setText("xpText", state.level >= 20 ? t("common.max", "Max") : `${state.xp}/${needed}`);
@@ -2745,7 +2746,21 @@ function settingsRowHtml(title, hint, control) {
 
 function settingsGroups(settings) {
   const systemReduced = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const range = (key, label, hint) => settingsRowHtml(label, hint, `<label class="settings-range"><input type="range" min="0" max="100" step="5" value="${settings[key]}" data-setting-range="${key}" aria-label="${escapeAttr(label)}"><output>${settings[key]}%</output></label>`);
   return [
+    {
+      id: "sound",
+      title: t("settings.sound", "Ton"),
+      rows: [
+        settingsRowHtml(
+          t("settings.mute", "Ton"),
+          t("settings.muteHint", "Alle Sounds und die Musik ein- oder ausschalten."),
+          settingsChoiceHtml("muted", [["false", t("settings.on", "An")], ["true", t("settings.off", "Aus")]], settings.muted),
+        ),
+        range("soundVolume", t("settings.soundVolume", "Effekte-Lautstärke"), t("settings.soundVolumeHint", "Treffer, Krits, Beute, Levelaufstieg und Klicks.")),
+        range("musicVolume", t("settings.musicVolume", "Musik-Lautstärke"), t("settings.musicVolumeHint", "Ruhige Musik, je nach Gebiet oder Dungeon.")),
+      ],
+    },
     {
       id: "display",
       title: t("settings.display", "Darstellung"),

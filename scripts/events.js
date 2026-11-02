@@ -495,6 +495,11 @@ $("closeClassModalBtn").addEventListener("click", closeClassModal);
 $("classModal").addEventListener("click", (event) => {
   if (event.target.id === "classModal") closeClassModal();
 });
+// Leiser Klick bei jedem Knopf (Kampfaktionen haben eigene Treffer-Sounds).
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("button");
+  if (button && !button.disabled && !button.closest("#combatActions")) audioPlay("click");
+});
 $("openSettingsBtn").addEventListener("click", () => {
   renderSettings();
   openModal("settingsModal");
@@ -510,7 +515,15 @@ $("settingsModal").addEventListener("click", (event) => {
 });
 $("settingsModal").addEventListener("input", (event) => {
   const range = event.target.closest("[data-setting-range]");
+  if (!range) return;
+  setSettingValue(range.dataset.settingRange, range.value, { live: true });
+  const output = range.parentElement?.querySelector("output");
+  if (output) output.textContent = `${normalizeSettings(state.settings)[range.dataset.settingRange]}%`;
+});
+$("settingsModal").addEventListener("change", (event) => {
+  const range = event.target.closest("[data-setting-range]");
   if (range) setSettingValue(range.dataset.settingRange, range.value);
+  if (range) audioPlay("click");
 });
 $("openSaveMenuBtn").addEventListener("click", () => {
   renderSaveSummary();
@@ -765,6 +778,7 @@ function showCombatAnimationEvent(stage, event, activeCombatEvent, enemyName, pl
   if (event.damage > 0) {
     spawnDamage(event.damage, side, event.critical);
     fxHitParticles(side, event.critical);
+    audioPlay(event.critical ? "crit" : event.actor === "hero" ? "hit" : "heroHurt");
     if (event.critical) fxShake(event.actor === "hero" ? 1 : 1.4);
   }
 }

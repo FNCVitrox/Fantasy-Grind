@@ -231,6 +231,10 @@ function queueLootBatch(items) {
   const equipmentItems = items.filter((item) => item && equipmentSlots.includes(item.slot));
   if (!equipmentItems.length) return;
   if (typeof fxLootRain === "function") fxLootRain(equipmentItems);
+  if (typeof audioPlay === "function") {
+    const rank = { common: 0, rare: 1, epic: 2, legendary: 3 };
+    audioPlay("loot", equipmentItems.reduce((best, item) => (rank[item.quality] || 0) > (rank[best] || 0) ? item.quality : best, "common"));
+  }
   if (state.pendingLoot.length) {
     state.lootQueue.push(equipmentItems);
   } else {
@@ -242,29 +246,37 @@ function queueLootBatch(items) {
 // --- Einstellungen, Rucksack-Limit und Auto-Loot (Punkt 11) ---
 
 function defaultSettings() {
-  return { autoLoot: false, autoSellCommon: false, autoFarmRestPercent: 50, reducedEffects: false };
+  return { autoLoot: false, autoSellCommon: false, autoFarmRestPercent: 50, reducedEffects: false, muted: false, soundVolume: 35, musicVolume: 20 };
 }
 
 function normalizeSettings(settings) {
   const source = settings && typeof settings === "object" ? settings : {};
   const defaults = defaultSettings();
+  const ranges = { autoFarmRestPercent: [10, 90], soundVolume: [0, 100], musicVolume: [0, 100] };
   return Object.fromEntries(Object.keys(defaults).map((key) => {
     if (typeof defaults[key] === "number") {
       const value = Number(source[key]);
-      return [key, Number.isFinite(value) ? Math.min(90, Math.max(10, Math.round(value))) : defaults[key]];
+      const [min, max] = ranges[key] || [0, 100];
+      return [key, Number.isFinite(value) && source[key] !== null && source[key] !== "" ? Math.min(max, Math.max(min, Math.round(value))) : defaults[key]];
     }
     return [key, typeof source[key] === "boolean" ? source[key] : defaults[key]];
   }));
 }
 
 // Setzt eine Einstellung aus dem Einstellungsfenster (Werte kommen als Text aus data-value).
-function setSettingValue(key, rawValue) {
+// options.live: beim Ziehen eines Reglers nur Wert übernehmen, ohne das Fenster neu aufzubauen.
+function setSettingValue(key, rawValue, options = {}) {
   state.settings = normalizeSettings(state.settings);
   if (!(key in state.settings)) return;
   const current = state.settings[key];
   const value = typeof current === "boolean" ? rawValue === true || rawValue === "true" : Number(rawValue);
   state.settings = normalizeSettings({ ...state.settings, [key]: value });
   if (key === "autoLoot" && state.settings.autoLoot && state.pendingLoot.length) resolveAutoLoot();
+  if (typeof audioApplyVolumes === "function") audioApplyVolumes();
+  if (options.live) {
+    queueSave();
+    return;
+  }
   save();
   render();
 }
