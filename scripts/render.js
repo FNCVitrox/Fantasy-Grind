@@ -220,6 +220,14 @@ function itemSlot(item) {
   return equipmentSlots.includes(item?.slot) ? item.slot : "ring";
 }
 
+// Kleines SVG-Icon je Slot, Rahmen und Leuchten nach Seltenheit (Punkt 18).
+function itemIconHtml(item, options = {}) {
+  const slot = equipmentSlots.includes(options.slot || item?.slot) ? (options.slot || item.slot) : "material";
+  const quality = item ? itemQuality(item) : "empty";
+  const size = options.size ? ` item-icon-${options.size}` : "";
+  return `<span class="item-icon item-icon-${slot} icon-quality-${quality}${size}" aria-hidden="true"></span>`;
+}
+
 function labelFor(map, key, fallback = t("common.unknown", "Unbekannt")) {
   return escapeHtml(mapLabel(map, key, map[key] || fallback));
 }
@@ -887,6 +895,7 @@ function renderEquipment() {
     const item = getItem(id);
     if (!item) {
       return `<button class="equipment-chip empty-slot" type="button" data-open-equipment>
+        ${itemIconHtml(null, { slot })}
         <strong>${labelFor(slotLabel, slot)}</strong>
         <span>${t("common.empty", "Leer")}</span>
       </button>`;
@@ -899,6 +908,7 @@ function renderEquipment() {
     const statText = itemStatText(item);
     const enchantText = itemEnchantmentsText(item);
     return `<button class="equipment-chip rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}" type="button" data-open-equipment>
+      ${itemIconHtml(item)}
       <strong>${labelFor(slotLabel, slot)}</strong>
       <span class="quality-${quality}" title="${escapeAttr(itemName)}">${escapeHtml(itemName)}</span>
       <small>${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</small>
@@ -939,7 +949,7 @@ function renderEquipmentDetails() {
     const enchantText = itemEnchantmentsText(item);
     return `<div class="slot rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
       <strong>${labelFor(slotLabel, slot)}</strong>
-      <p class="quality-${quality}">${escapeHtml(itemDisplayName(item, id))} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</p>
+      <p class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, id))} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</p>
       ${item.set ? `<p class="set-line set-hover-row"><span>${escapeHtml(setDisplayName(item.set))}</span><span class="tooltip-source" data-set-tooltip-key="${setKey}"></span></p>` : ""}
       ${statText ? `<p>${statText}</p>` : ""}
       ${enchantText ? `<p>${enchantText}</p>` : ""}
@@ -1498,7 +1508,7 @@ function renderSmithUpgrade() {
       : `<p>${cost.gold} ${t("common.gold", "Gold")}${discountText}</p><p class="smith-material-cost">${materialText}</p>`;
     return `<div class="smith-card rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
       <div class="smith-item-main">
-        <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</span></strong>
+        <strong>${itemIconHtml(item)}${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</span></strong>
         <p>+${item.upgrade || 0}/${limit}${statText ? ` · ${statText}` : ""} · ${t("main.durability", "Haltbarkeit")} ${itemDurability(itemId)}%</p>
       </div>
       <button class="upgrade-preview" type="button" data-upgrade="${slot}" ${disabled ? "disabled" : ""}>
@@ -1581,7 +1591,7 @@ function renderSmithEnchant() {
       : "";
     return `<div class="enchant-card rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
       <div>
-        <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</span></strong>
+        <strong>${itemIconHtml(item)}${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</span></strong>
         <p>${labelFor(qualityLabel, quality)} · Slots ${Math.min(savedEnchantments.length, slotLimit)}/${slotLimit}${inactiveEnchantments.length ? ` · ${inactiveEnchantments.length} ${t("enchant.locked", "gesperrt")}` : ""}</p>
         <p>${enchantmentText}${lockedText}</p>
       </div>
@@ -1615,7 +1625,7 @@ function renderSmithSalvage() {
         const materials = Object.entries(salvageValue(item)).map(([id, amount]) => `${amount} ${labelFor(materialLabel, id)}`).join(" · ");
         const bonusChance = Math.round(renownSalvageBonusChance(item) * 100);
         return `<div class="salvage-row rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
-          <span><strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong><small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${materials}${bonusChance ? ` · ${bonusChance}% ${t("smith.bonus", "Bonus")}` : ""}</small></span>
+          <span><strong class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, itemId))}</strong><small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${materials}${bonusChance ? ` · ${bonusChance}% ${t("smith.bonus", "Bonus")}` : ""}</small></span>
           <button type="button" data-salvage="${index}">${t("smith.salvage", "Zerlegen")}</button>
         </div>`;
       }).join("")
@@ -1669,7 +1679,7 @@ function renderInventoryItemCard(itemId, index) {
   const locked = isInventoryItemLocked(itemId);
   return `<div class="inventory-item rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)} ${locked ? "item-locked" : ""}">
     <div class="inventory-item-head">
-      <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
+      <strong class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, itemId))}</strong>
       ${locked ? `<span class="lock-note">${t("merchant.lockedItem", "Geschützt")}</span>` : ""}
     </div>
     <div class="inventory-item-meta">
@@ -1719,7 +1729,7 @@ function renderMerchantItemRow(itemId, index) {
   const locked = isInventoryItemLocked(itemId);
   return `<div class="merchant-row rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)} ${locked ? "item-locked" : ""}">
     <span>
-      <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
+      <strong class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, itemId))}</strong>
       <small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${itemDurability(itemId)}%${locked ? ` · ${t("merchant.lockedItem", "Geschützt")}` : ""}</small>
     </span>
     <b>${sellValue(item)} ${t("common.gold", "Gold")}</b>
@@ -2046,7 +2056,7 @@ function renderBossRewardPanel(enemyId, enemy) {
     const item = getItem(drop.id);
     const quality = itemQuality(item);
     return `<div class="boss-reward-drop">
-      <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, drop.id))}</strong>
+      <strong class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, drop.id))}</strong>
       <span>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, itemSlot(item))} · ${formatChance(drop.chance)}</span>
     </div>`;
   }).join("");
@@ -2135,7 +2145,7 @@ function renderFixedDropRow(enemyId, drop) {
   const known = Boolean(discovered);
   const status = known ? ((discovered.count || 0) <= 1 ? t("common.new", "Neu") : t("common.known", "Bekannt")) : t("common.unknown", "Unbekannt");
   return `<button class="drop-row bestiary-item-row ${known ? "item-hover-row" : "locked-drop"}" type="button" data-bestiary-item="${escapeAttr(key)}" ${known ? `data-tooltip-key="${cacheTooltipItem(item)}"` : ""}>
-    <span><b class="quality-${quality}">${escapeHtml(itemDisplayName(item, drop.id))}</b><small>${t("bestiary.fixedDrop", "Fester Drop")} · ${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(drop.chance)}</small></span>
+    <span><b class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, drop.id))}</b><small>${t("bestiary.fixedDrop", "Fester Drop")} · ${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(drop.chance)}</small></span>
     <span>${status}</span>
   </button>`;
 }
@@ -2240,7 +2250,7 @@ function renderGeneratedDropRow(template, discoveredLookup) {
   const status = found ? ((found.count || 0) <= 1 ? t("common.new", "Neu") : t("common.known", "Bekannt")) : t("common.unknown", "Unbekannt");
   const hoverClass = found ? "item-hover-row" : "locked-drop";
   return `<button class="drop-row discovered-drop bestiary-item-row ${hoverClass} ${ui.selectedBestiaryItemKey === key ? "active" : ""}" type="button" data-bestiary-item="${escapeAttr(key)}" ${found ? `data-tooltip-key="${cacheTooltipItem(found)}"` : ""}>
-    <span><b class="quality-${quality}">${escapeHtml(itemDisplayName(item, item.id))}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(template.dropChance)}</small></span>
+    <span><b class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, item.id))}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(template.dropChance)}</small></span>
     <span>${status}</span>
   </button>`;
 }
@@ -2488,7 +2498,7 @@ function renderItemTooltip(item) {
   const statText = itemStatText(item);
   const enchantText = itemEnchantmentsText(item);
   return `<div class="item-tooltip">
-    <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, item.id))}</strong>
+    <strong class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, item.id))}</strong>
     <span>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)}</span>
     ${item.set ? `<span>Set: ${escapeHtml(setDisplayName(item.set))}</span>` : ""}
     ${upgradeLine}
@@ -2712,7 +2722,7 @@ function renderRepairRow(slot) {
   const quality = itemQuality(item);
   return `<div class="repair-row rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
     <div>
-      <strong class="quality-${quality}">${labelFor(slotLabel, slot)} · ${escapeHtml(itemDisplayName(item, state.equipment[slot]))}</strong>
+      <strong class="quality-${quality}">${itemIconHtml(item)}${labelFor(slotLabel, slot)} · ${escapeHtml(itemDisplayName(item, state.equipment[slot]))}</strong>
       <p>${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${durability}% · ${t("equipment.repair", "Reparatur")}: ${cost} ${t("common.gold", "Gold")}</p>
     </div>
     <button type="button" data-repair-slot="${slot}" ${disabled}>${label}</button>

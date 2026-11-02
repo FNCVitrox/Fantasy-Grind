@@ -2841,3 +2841,82 @@ button.drop-row span:last-child {
   border-radius: 999px;
   font-size: 13px;
 }
+
+/* Item-Icons (Punkt 18): ein Symbol je Slot, Rahmen und Leuchten nach Seltenheit. */
+.item-icon {
+  --icon-color: #d5d0c0;
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 1.45em;
+  height: 1.45em;
+  margin-right: 0.4em;
+  vertical-align: -0.38em;
+  border: 1px solid color-mix(in srgb, var(--icon-color) 70%, transparent);
+  border-radius: 5px;
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--icon-color) 22%, transparent), rgba(3, 9, 15, 0.75) 75%);
+}
+
+.item-icon::before {
+  content: "";
+  position: absolute;
+  inset: 16%;
+  background: var(--icon-color);
+  -webkit-mask: var(--item-icon) center / contain no-repeat;
+  mask: var(--item-icon) center / contain no-repeat;
+}
+
+.icon-quality-empty {
+  --icon-color: #6f7f8f;
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.icon-quality-rare { --icon-color: #78aee4; }
+.icon-quality-epic { --icon-color: #b78be0; box-shadow: 0 0 6px rgba(183, 139, 224, 0.55); }
+.icon-quality-legendary { --icon-color: #e2b855; box-shadow: 0 0 8px rgba(226, 184, 85, 0.7); animation: item-icon-glow 2.2s ease-in-out infinite; }
+
+.item-icon-large {
+  width: 2.1em;
+  height: 2.1em;
+  margin-right: 0.5em;
+  vertical-align: -0.62em;
+  border-radius: 8px;
+  border-width: 2px;
+}
+
+@keyframes item-icon-glow {
+  50% { box-shadow: 0 0 14px rgba(226, 184, 85, 0.95); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-quality-legendary { animation: none; }
+}
+
+.item-icon-weapon { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M19 2h3v3L11.5 15.5l-3-3zM5.5 12l6.5 6.5-1.6 1.6-6.5-6.5zM8 17l-4.5 4.5-1.4-1.4L6.6 15.6z'/%3E%3C/svg%3E"); }
+.item-icon-offhand { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5zm0 3.2L7 7v4c0 3.3 2 6.3 5 7.7z'/%3E%3C/svg%3E"); }
+.item-icon-chest { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M8 3l4 2 4-2 5 3-2 5-2-1v11H7V10l-2 1-2-5zm1 9v2h6v-2z'/%3E%3C/svg%3E"); }
+.item-icon-pants { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M6 3h12l1 18h-5l-2-11-2 11H5zm1 2v1.5h10V5z'/%3E%3C/svg%3E"); }
+.item-icon-boots { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M7 3h6v9l6 3c1.4.7 2 1.9 2 3v3H5v-5l2-1z'/%3E%3C/svg%3E"); }
+.item-icon-necklace { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M5 3h2c0 5 2 7 5 7s5-2 5-7h2c0 6-3 9-7 9S5 9 5 3zm7 10l4 4-4 5-4-5z'/%3E%3C/svg%3E"); }
+.item-icon-ring { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 8a7 7 0 1 1 0 14a7 7 0 1 1 0-14zm0 3a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM9 2h6l2 3-5 4-5-4z'/%3E%3C/svg%3E"); }
+.item-icon-material { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M7 3h10l4 6-9 12L3 9zm1.2 2L6 8.6h4.2L11 5zm4.8 0l.8 3.6H18L15.8 5z'/%3E%3C/svg%3E"); }
+
+/* Ausrüstungsleiste: Icon als Wasserzeichen in der Ecke, damit die Slot-Namen ihren Platz behalten. */
+.equipment-chip .item-icon {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.equipment-chip > strong,
+.equipment-chip > span:not(.item-icon),
+.equipment-chip > small {
+  position: relative;
+  z-index: 1;
+}

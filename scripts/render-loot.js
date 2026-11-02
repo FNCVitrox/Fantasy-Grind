@@ -44,7 +44,7 @@ function renderLootCard(item, index) {
 
   return `<div class="loot-card rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
     <div class="loot-card-head">
-      <strong class="loot-card-title quality-${quality}">${escapeHtml(itemDisplayName(item, item.id))}</strong>
+      <strong class="loot-card-title quality-${quality}">${itemIconHtml(item, { size: "large" })}${escapeHtml(itemDisplayName(item, item.id))}</strong>
       <div class="loot-card-badge">${discovery ? `<span class="discovery-badge ${discovery.className}">${discovery.text}</span>` : ""}</div>
       <p class="loot-card-meta">${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)}</p>
       <p class="loot-card-set ${item.set ? "set-line" : "empty"}">${item.set ? escapeHtml(setDisplayName(item.set)) : "&nbsp;"}</p>

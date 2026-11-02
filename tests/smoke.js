@@ -351,6 +351,20 @@ assert.strictEqual(new Set(heroSvgs).size, heroSvgs.length, "every class/build c
 assert(heroSvgs.every((svg) => svg.includes("spr-weapon") && !/undefined|NaN/.test(svg)), "hero SVG sprites need a weapon and valid values");
 assert(!/\.(hero|enemy)-body\b|\.enemy-extra|\.hero-helm|\.hero-sword|\.hero-shield/.test(css), "old CSS shape sprites should be removed");
 assert(css.includes("@keyframes spr-breathe") && css.includes("@keyframes spr-die") && css.includes(".spr-weapon"), "SVG sprites need idle, attack and death animations");
+// Punkt 18: Jede Itemkarte hat ein Icon (Slot-Symbol, Rahmen nach Seltenheit).
+for (const slot of [...JSON.parse(vm.runInContext("JSON.stringify(equipmentSlots)", context)), "material"]) {
+  assert(css.includes(`.item-icon-${slot} { --item-icon: url("data:image/svg+xml,`), `Missing item icon for slot: ${slot}`);
+}
+for (const quality of ["rare", "epic", "legendary", "empty"]) assert(css.includes(`.icon-quality-${quality}`), `Missing icon quality style: ${quality}`);
+{
+  const renderSource = read("scripts/render.js") + read("scripts/render-loot.js");
+  const itemNameSites = [...renderSource.matchAll(/escapeHtml\(itemDisplayName\(item, (?:id|itemId|item\.id|drop\.id|state\.equipment\[slot\])\)\)/g)].length;
+  const iconSites = (renderSource.match(/itemIconHtml\(/g) || []).length - 1;
+  assert(iconSites >= 14, `item cards should render icons (found ${iconSites})`);
+  assert(vm.runInContext("itemIconHtml(items.trainingSword)", context).includes("item-icon-weapon icon-quality-common"), "weapon icon should use slot and quality classes");
+  assert(vm.runInContext("itemIconHtml(null, { slot: 'ring' })", context).includes("icon-quality-empty"), "empty slots should get a faded icon");
+  assert(itemNameSites > 0, "item name sites should be found");
+}
 assert(read("scripts/render.js").includes("heroSpriteSvg(") && read("scripts/render.js").includes("enemySpriteSvg("), "render should draw hero and enemy as SVG sprites");
 assert(read("scripts/render.js").includes("hero-class-${characterClass}") && read("scripts/render.js").includes("heroSpriteName"), "combat hero sprite should follow the selected class and update its label");
 assert(css.includes(".class-choice-list {") && html.includes('class="class-choice-list"'), "class chooser should have dedicated layout CSS");

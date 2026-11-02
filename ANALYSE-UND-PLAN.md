@@ -326,11 +326,15 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Rund 1550 Zeilen alte CSS-Formen gelöscht.
     - smoke.js prüft: Jede Gegner-Klasse hat eine Variante, jede Figur ist vollständig und einzigartig, keine alten CSS-Formen mehr.
 
-- [ ] **18. Item-Icons**
+- [x] **18. Item-Icons**
   - Wie:
     - Ein SVG-Icon pro Slot-Typ, dazu Varianten nach Seltenheit (Rahmenfarbe, Leuchten bei episch und legendär).
     - Die Icons auf Lootkarten, im Inventar, in der Ausrüstung und beim Schmied anzeigen.
   - Fertig wenn: Jede Itemkarte hat ein Icon.
+  - Ergebnis (v0.8.141):
+    - `itemIconHtml(item)` in `render.js`: 7 Slot-Symbole plus Material, als SVG-Maske in CSS. Farbe und Rahmen nach Seltenheit, Leuchten bei episch, pulsierendes Leuchten bei legendär (aus bei reduzierten Bewegungen).
+    - Überall eingebaut: Beute (gross), Rucksack, Händler, Schmied (Verbessern, Zerlegen), Arkanistin, Reparatur, Ausrüstungsleiste (als Eck-Symbol, damit Slot-Namen lesbar bleiben), Ausrüstungsfenster, Bestiarium-Drops, Boss-Belohnungen, Item-Tooltip. Leere Slots zeigen ein blasses Symbol.
+    - smoke.js prüft Icons je Slot und Seltenheit sowie die Einbindung in die Itemkarten.
 
 - [ ] **19. „Juice“ im Kampf**
   - Wie:
