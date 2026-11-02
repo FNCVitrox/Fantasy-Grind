@@ -1293,13 +1293,6 @@ button.drop-row span:last-child {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
 }
 
-.enemy-sprite.elite-variant .enemy-body {
-  transform: scale(1.1);
-  border-color: #e2b855;
-  box-shadow: 0 0 24px rgba(226, 184, 85, 0.45), inset 0 0 18px rgba(226, 184, 85, 0.16), 0 0 0 3px rgba(226, 184, 85, 0.12);
-  filter: saturate(1.2) brightness(1.08);
-}
-
 .enemy-sprite.elite-variant b {
   color: #f1c96b;
 }
@@ -1356,1430 +1349,160 @@ button.drop-row span:last-child {
   background: linear-gradient(90deg, #8b1e2d, var(--red-soft));
 }
 
-.hero-body,
-.enemy-body {
+/* SVG-Figuren (Punkt 17): Farben kommen als --sp-* vom <svg>, Bewegung aus CSS. */
+.sprite-art {
   position: relative;
-  width: 76px;
-  height: 86px;
+  width: 118px;
+  height: 112px;
+  margin-bottom: -6px;
+  transform-origin: center bottom;
 }
 
-.hero-body {
-  border-radius: 30px 30px 16px 16px;
-  background: linear-gradient(135deg, #9aa7b7, #354254 55%, #8a2f2f 56%);
-  border: 2px solid #c8d0dc;
-}
-
-.hero-helm {
-  position: absolute;
-  left: 15px;
-  top: -18px;
-  width: 46px;
-  height: 34px;
-  border-radius: 22px 22px 10px 10px;
-  background: linear-gradient(135deg, #e5e9ef, #768394);
-  border: 2px solid #f1c96b;
-}
-
-.hero-shield {
-  position: absolute;
-  left: -19px;
-  top: 27px;
-  width: 32px;
-  height: 42px;
-  border-radius: 18px 18px 20px 20px;
-  background: linear-gradient(135deg, #b95548, #5f2220);
-  border: 2px solid var(--gold-soft);
-}
-
-.hero-sword {
-  position: absolute;
-  right: -18px;
-  top: -10px;
-  width: 8px;
-  height: 88px;
-  border-radius: 4px;
-  background: linear-gradient(180deg, #f5f7fb, #7c8792);
-  transform: rotate(26deg);
-  transform-origin: bottom;
-}
-
-.hero-body::before,
-.hero-body::after,
-.hero-helm::before,
-.hero-shield::after,
-.hero-sword::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-}
-
-.hero-body::before {
-  left: 17px;
-  top: 26px;
-  width: 42px;
-  height: 12px;
-  border-radius: 999px;
-  background: rgba(5, 11, 18, 0.82);
-  box-shadow: 0 21px 0 -4px rgba(242, 193, 78, 0.34);
-}
-
-.hero-body::after {
-  left: 28px;
-  bottom: -8px;
-  width: 20px;
-  height: 14px;
-  border-radius: 0 0 8px 8px;
-  background: linear-gradient(90deg, #273240, #111821);
-}
-
-.hero-helm::before {
-  left: 12px;
-  top: 10px;
-  width: 22px;
-  height: 5px;
-  border-radius: 999px;
-  background: rgba(7, 17, 27, 0.82);
-}
-
-.hero-shield::after {
-  inset: 8px 9px;
-  border-radius: inherit;
-  border: 2px solid rgba(242, 193, 78, 0.42);
-}
-
-.hero-sword::after {
-  left: -7px;
-  top: 13px;
-  width: 22px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--gold-soft);
-}
-
-.hero-build-tank .hero-body {
-  width: 84px;
-  background: linear-gradient(135deg, #b7c1ce, #40516a 48%, #27384f 49%, #2d405f 100%);
-  border-color: var(--gold-soft);
-  box-shadow: inset 0 0 0 3px var(--gold-line-faint), 0 0 22px rgba(73, 182, 255, 0.14);
-}
-
-.hero-build-tank .hero-body::before {
-  left: 20px;
-  width: 44px;
-  box-shadow: 0 22px 0 -4px rgba(73, 182, 255, 0.34);
-}
-
-.hero-build-tank .hero-helm {
-  left: 17px;
-  width: 50px;
-  background: linear-gradient(135deg, #eef2f7, #8a98a8);
-}
-
-.hero-build-tank .hero-helm::before {
-  width: 26px;
-  background: #172335;
-}
-
-.hero-build-tank .hero-shield {
-  left: -25px;
-  top: 22px;
-  width: 42px;
-  height: 52px;
-  border-radius: 18px 18px 24px 24px;
-  background: linear-gradient(135deg, var(--gold-soft), #5c6a78 48%, #233142 49%);
-}
-
-.hero-build-tank .hero-shield::after {
-  inset: 7px 10px;
-  border-color: rgba(231, 238, 247, 0.62);
-  box-shadow: inset 0 0 10px rgba(73, 182, 255, 0.2);
-}
-
-.hero-build-tank .hero-sword {
-  right: -12px;
-  top: 8px;
-  height: 72px;
-  opacity: 0.82;
-}
-
-.hero-build-damage .hero-body {
-  width: 68px;
-  background:
-    linear-gradient(110deg, transparent 0 38%, rgba(240, 192, 79, 0.4) 39% 45%, transparent 46%),
-    linear-gradient(135deg, #c7ced8, #273240 45%, #8d252b 46%, #3a1116 100%);
-  border-color: #e8edf4;
-  box-shadow: 0 0 20px rgba(240, 192, 79, 0.18);
-}
-
-.hero-build-damage .hero-body::before {
-  left: 14px;
-  width: 40px;
-  box-shadow: 0 19px 0 -4px rgba(239, 100, 107, 0.45);
-}
-
-.hero-build-damage .hero-helm {
-  left: 11px;
-  width: 44px;
-  border-color: #f3d279;
-}
-
-.hero-build-damage .hero-helm::before {
-  background: linear-gradient(90deg, #0b1119 0 35%, transparent 36% 45%, #0b1119 46% 100%);
-}
-
-.hero-build-damage .hero-shield {
-  left: -13px;
-  top: 35px;
-  width: 22px;
-  height: 30px;
-  opacity: 0.72;
-}
-
-.hero-build-damage .hero-sword {
-  right: -27px;
-  top: -18px;
-  width: 9px;
-  height: 104px;
-  background: linear-gradient(180deg, #fff7c7, var(--gold-bright) 28%, #d7e1ec 29%, #7c8792);
-  filter: drop-shadow(0 0 8px rgba(240, 192, 79, 0.45));
-}
-
-.hero-build-damage .hero-sword::after {
-  left: -12px;
-  top: 55px;
-  width: 32px;
-  background: linear-gradient(90deg, var(--gold-bright), var(--red-soft));
-}
-
-.hero-build-bruiser .hero-body {
-  background:
-    radial-gradient(circle at 68% 24%, rgba(216, 174, 75, 0.34), transparent 12%),
-    linear-gradient(135deg, #8e9aaa, #303b4c 48%, #963333 49%, #5b2220 100%);
-  border-color: #d2b06b;
-}
-
-.hero-build-bruiser .hero-body::before {
-  box-shadow: 0 21px 0 -4px rgba(185, 85, 72, 0.48);
-}
-
-.hero-build-bruiser .hero-shield {
-  left: -23px;
-  width: 36px;
-  background: linear-gradient(135deg, #c06a45, #5f2220);
-}
-
-.hero-build-bruiser .hero-sword {
-  height: 90px;
-  width: 10px;
-  background: linear-gradient(180deg, #e8edf4, #9aa7b7 54%, #6a3f2d 55%);
-  transform: rotate(20deg);
-}
-
-.hero-build-bruiser .hero-sword::after {
-  left: -10px;
-  width: 30px;
-  background: #b68460;
-}
-
-.hero-class-warrior .hero-body {
-  filter: drop-shadow(0 8px 14px var(--shadow-soft));
-}
-
-.hero-class-warrior.hero-build-tank .hero-body {
-  box-shadow: inset 0 0 0 3px var(--gold-line-faint), 0 0 22px rgba(73, 182, 255, 0.14);
-}
-
-.hero-class-warrior.hero-build-damage .hero-body {
-  filter: drop-shadow(0 8px 14px var(--shadow-mid)) saturate(1.08);
-}
-
-.hero-class-warrior.hero-build-bruiser .hero-body {
-  filter: drop-shadow(0 8px 14px var(--shadow-soft)) contrast(1.04);
-}
-
-.hero-class-mage .hero-body {
-  width: 68px;
-  height: 92px;
-  border-radius: 28px 28px 18px 18px;
-  background:
-    radial-gradient(circle at 50% 24%, rgba(183, 126, 236, 0.42), transparent 21%),
-    linear-gradient(110deg, rgba(201, 232, 255, 0.2) 0 22%, transparent 23% 64%, rgba(63, 214, 220, 0.35) 65% 70%, transparent 71%),
-    linear-gradient(135deg, #2d214f, #111521 54%, #1d4151 55%);
-  border-color: #b77eec;
-  box-shadow: 0 0 24px rgba(183, 126, 236, 0.28), inset 0 0 18px rgba(63, 214, 220, 0.1);
-}
-
-.hero-class-mage .hero-body::before {
-  left: 18px;
-  top: 30px;
-  width: 34px;
-  height: 9px;
-  background: rgba(255, 217, 111, 0.9);
-  box-shadow: 0 20px 0 -5px rgba(183, 126, 236, 0.45);
-}
-
-.hero-class-mage .hero-body::after {
-  left: 22px;
-  bottom: -10px;
-  width: 26px;
-  height: 16px;
-  border-radius: 0 0 14px 14px;
-  background: linear-gradient(90deg, #161b31, #081018);
-}
-
-.hero-class-mage .hero-helm {
-  left: 9px;
-  top: -20px;
-  width: 50px;
-  height: 38px;
-  border-radius: 26px 26px 12px 12px;
-  background: linear-gradient(135deg, #55408b, #18243c);
-  border-color: #d0a7ff;
-}
-
-.hero-class-mage .hero-helm::before {
-  left: 16px;
-  top: 13px;
-  width: 22px;
-  height: 6px;
-  background: linear-gradient(90deg, #ffe07f, #75e9ff);
-  box-shadow: 0 0 10px rgba(117, 233, 255, 0.65);
-}
-
-.hero-class-mage .hero-shield {
-  left: -18px;
-  top: 34px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 34%, #fff3b0, #3fd6dc 48%, #3a2567 72%);
-  border-color: #9ee8ff;
-  box-shadow: 0 0 18px rgba(63, 214, 220, 0.52);
-}
-
-.hero-class-mage .hero-shield::after {
-  inset: -7px;
-  border: 2px solid rgba(183, 126, 236, 0.36);
-  border-radius: 50%;
-}
-
-.hero-class-mage .hero-sword {
-  right: -28px;
-  top: -16px;
-  width: 9px;
-  height: 96px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #ffe07f, #75e9ff 26%, #49306d 27% 100%);
-  transform: rotate(-13deg);
-  filter: drop-shadow(0 0 10px rgba(117, 233, 255, 0.48));
-}
-
-.hero-class-mage .hero-sword::after {
-  left: -8px;
-  top: -6px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff3b0, #b77eec 58%, transparent 62%);
-}
-
-.hero-class-mage.hero-build-tank .hero-body {
-  background:
-    radial-gradient(circle at 50% 24%, rgba(116, 173, 224, 0.46), transparent 22%),
-    linear-gradient(135deg, #d9f4ff, #2c5d76 43%, #182943 44%);
-  border-color: #9ee8ff;
-  box-shadow: 0 0 24px rgba(116, 173, 224, 0.34), inset 0 0 22px rgba(201, 232, 255, 0.14);
-}
-
-.hero-class-mage.hero-build-tank .hero-helm {
-  background: linear-gradient(135deg, #d9f4ff, #4a76a4);
-  border-color: #c9e8ff;
-}
-
-.hero-class-mage.hero-build-tank .hero-shield {
-  width: 34px;
-  height: 34px;
-  background: radial-gradient(circle, #f8fbff, #74ade0 54%, #1c3552 74%);
-}
-
-.hero-class-mage.hero-build-damage .hero-body {
-  background:
-    radial-gradient(circle at 50% 22%, rgba(255, 192, 79, 0.5), transparent 21%),
-    linear-gradient(135deg, #52202b, #1c1422 52%, var(--red-soft) 53% 58%, #381019 59%);
-  border-color: var(--gold-bright);
-  box-shadow: 0 0 28px rgba(239, 100, 107, 0.34);
-}
-
-.hero-class-mage.hero-build-damage .hero-sword {
-  background: linear-gradient(180deg, #fff3b0, var(--gold-bright) 28%, #8b1e2d 29% 100%);
-  filter: drop-shadow(0 0 12px rgba(240, 192, 79, 0.62));
-}
-
-.hero-class-mage.hero-build-bruiser .hero-body {
-  background:
-    radial-gradient(circle at 50% 24%, rgba(183, 126, 236, 0.5), transparent 22%),
-    linear-gradient(135deg, #341d4a, #0c1018 52%, #5c2d7a 53%);
-  border-color: #b77eec;
-}
-
-.hero-class-rogue .hero-body {
-  width: 62px;
-  height: 88px;
-  border-radius: 28px 28px 12px 12px;
-  background:
-    linear-gradient(125deg, rgba(63, 214, 163, 0.34) 0 14%, transparent 15% 62%, rgba(5, 11, 18, 0.55) 63%),
-    linear-gradient(135deg, #1e3943, #0e1721 48%, #284331 49%);
-  border-color: var(--green);
-  box-shadow: 0 0 20px rgba(63, 214, 163, 0.18);
-}
-
-.hero-class-rogue .hero-body::before {
-  left: 15px;
-  top: 28px;
-  width: 34px;
-  height: 9px;
-  background: rgba(5, 11, 18, 0.88);
-  box-shadow: 0 20px 0 -5px rgba(63, 214, 163, 0.42);
-}
-
-.hero-class-rogue .hero-body::after {
-  left: 22px;
-  bottom: -9px;
-  width: 20px;
-  height: 15px;
-  border-radius: 0 0 10px 10px;
-  background: #071019;
-}
-
-.hero-class-rogue .hero-helm {
-  left: 10px;
-  top: -15px;
-  width: 42px;
-  height: 31px;
-  border-radius: 18px 18px 10px 10px;
-  background: linear-gradient(135deg, #263d4a, #081018);
-  border-color: var(--green);
-}
-
-.hero-class-rogue .hero-helm::before {
-  left: 9px;
-  top: 11px;
-  width: 25px;
-  height: 5px;
-  background: linear-gradient(90deg, #071019 0 42%, transparent 43% 52%, #071019 53%);
-}
-
-.hero-class-rogue .hero-shield {
-  left: -15px;
-  top: 39px;
-  width: 16px;
-  height: 42px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #d9f4ff, var(--green) 38%, #0b1721 39%);
-  border-color: #75e9ff;
-  transform: rotate(35deg);
-}
-
-.hero-class-rogue .hero-shield::after {
-  display: none;
-}
-
-.hero-class-rogue .hero-sword {
-  right: -21px;
-  top: 13px;
-  width: 8px;
-  height: 62px;
-  background: linear-gradient(180deg, #e8edf4, #7c8792 62%, #4f312c 63%);
-  transform: rotate(38deg);
-}
-
-.hero-class-rogue .hero-sword::after {
-  left: -8px;
-  top: 31px;
-  width: 24px;
-  background: var(--green);
-}
-
-.hero-class-rogue.hero-build-tank .hero-body {
-  background:
-    linear-gradient(135deg, #203247, #0a121c 50%, #30465f 51%);
-  border-color: #74ade0;
-  box-shadow: 0 0 22px rgba(116, 173, 224, 0.22);
-}
-
-.hero-class-rogue.hero-build-tank .hero-shield {
-  width: 22px;
-  height: 52px;
-  background: linear-gradient(180deg, #9ee8ff, #375879 42%, #09131f 43%);
-}
-
-.hero-class-rogue.hero-build-damage .hero-body {
-  background:
-    linear-gradient(122deg, rgba(239, 100, 107, 0.36) 0 16%, transparent 17% 62%, rgba(5, 11, 18, 0.6) 63%),
-    linear-gradient(135deg, #3b1623, #101018 48%, var(--green) 49%);
-  border-color: var(--red-soft);
-}
-
-.hero-class-rogue.hero-build-damage .hero-sword {
-  height: 72px;
-  filter: drop-shadow(0 0 9px rgba(239, 100, 107, 0.44));
-}
-
-.hero-class-rogue.hero-build-bruiser .hero-body {
-  background:
-    linear-gradient(125deg, rgba(185, 85, 72, 0.3) 0 16%, transparent 17% 62%, rgba(5, 11, 18, 0.54) 63%),
-    linear-gradient(135deg, #17332c, #0a1218 48%, #40283a 49%);
-  border-color: #b77eec;
-}
-
-.hero-class-archer .hero-body {
-  width: 66px;
-  height: 88px;
-  border-radius: 28px 28px 14px 14px;
-  background:
-    linear-gradient(110deg, transparent 0 38%, rgba(216, 174, 75, 0.38) 39% 45%, transparent 46%),
-    linear-gradient(135deg, #526145, #17211f 50%, #2d4b61 51%);
-  border-color: #74ade0;
-  box-shadow: 0 0 20px rgba(116, 173, 224, 0.2);
-}
-
-.hero-class-archer .hero-body::before {
-  left: 15px;
-  top: 29px;
-  width: 36px;
-  height: 9px;
-  background: rgba(5, 11, 18, 0.86);
-  box-shadow: 0 20px 0 -5px rgba(240, 192, 79, 0.42);
-}
-
-.hero-class-archer .hero-body::after {
-  left: 23px;
-  bottom: -10px;
-  width: 22px;
-  height: 16px;
-  border-radius: 0 0 12px 12px;
-  background: #111821;
-}
-
-.hero-class-archer .hero-helm {
-  left: 10px;
-  top: -16px;
-  width: 46px;
-  height: 33px;
-  border-radius: 22px 22px 9px 9px;
-  background: linear-gradient(135deg, #526145, #1b2b2c);
-  border-color: var(--gold-soft);
-}
-
-.hero-class-archer .hero-helm::before {
-  left: 11px;
-  top: 12px;
-  width: 24px;
-  height: 5px;
-  background: rgba(5, 11, 18, 0.84);
-}
-
-.hero-class-archer .hero-shield {
-  left: -25px;
-  top: 10px;
-  width: 40px;
-  height: 82px;
-  border: 4px solid var(--gold-soft);
-  border-left-color: transparent;
-  border-radius: 50%;
-  background: transparent;
-  transform: rotate(8deg);
-}
-
-.hero-class-archer .hero-shield::after {
-  left: 15px;
-  top: 10px;
-  width: 2px;
-  height: 62px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(232, 237, 244, 0.86);
-}
-
-.hero-class-archer .hero-sword {
-  right: -18px;
-  top: 12px;
-  width: 7px;
-  height: 78px;
-  background: linear-gradient(180deg, #f5f7fb, var(--gold-soft) 10%, #7c4b32 11% 100%);
-  transform: rotate(-58deg);
-  filter: drop-shadow(0 0 8px rgba(216, 174, 75, 0.3));
-}
-
-.hero-class-archer .hero-sword::after {
-  left: -14px;
-  top: 13px;
-  width: 28px;
-  height: 5px;
-  background: #e8edf4;
-  clip-path: polygon(0 50%, 78% 0, 100% 50%, 78% 100%);
-}
-
-.hero-class-archer.hero-build-tank .hero-body {
-  background:
-    linear-gradient(135deg, #315549, #12211f 50%, #263c2e 51%);
-  border-color: var(--green);
-}
-
-.hero-class-archer.hero-build-tank .hero-shield {
-  border-color: var(--green);
-  border-left-color: transparent;
-}
-
-.hero-class-archer.hero-build-damage .hero-body {
-  background:
-    linear-gradient(110deg, transparent 0 38%, rgba(240, 192, 79, 0.58) 39% 45%, transparent 46%),
-    linear-gradient(135deg, #4f3f24, #111821 50%, #243f63 51%);
-  border-color: var(--gold-bright);
-  box-shadow: 0 0 24px rgba(240, 192, 79, 0.24);
-}
-
-.hero-class-archer.hero-build-damage .hero-sword {
-  height: 88px;
-  filter: drop-shadow(0 0 12px rgba(240, 192, 79, 0.48));
-}
-
-.hero-class-archer.hero-build-bruiser .hero-body {
-  background:
-    linear-gradient(110deg, transparent 0 37%, rgba(116, 173, 224, 0.44) 38% 46%, transparent 47%),
-    linear-gradient(135deg, #23394a, #111821 50%, #315549 51%);
-  border-color: #75e9ff;
-}
-
-.hero-class-archer.hero-build-bruiser .hero-sword {
-  width: 10px;
-}
-
-.enemy-body {
-  border-radius: 46% 46% 36% 36%;
-  background: linear-gradient(135deg, #5a6b3d, #232b25 65%);
-  border: 2px solid #86a564;
-}
-
-.enemy-body::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-}
-
-.enemy-extra,
-.enemy-eye {
-  position: absolute;
+.sprite-svg {
   display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.35));
 }
 
-.enemy-eye {
-  left: 30px;
-  top: 28px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #f1c96b;
-  box-shadow: 20px 0 0 #f1c96b, 0 0 12px var(--gold-soft), 20px 0 12px var(--gold-soft);
+.spr-eye {
+  fill: var(--sp-glow);
+  filter: drop-shadow(0 0 2px var(--sp-glow));
 }
 
-.enemy-wolf .enemy-body {
-  width: 92px;
-  height: 62px;
-  margin-top: 24px;
-  border-radius: 48% 38% 32% 44%;
-  background:
-    radial-gradient(circle at 70% 34%, rgba(222, 230, 238, 0.14), transparent 18%),
-    linear-gradient(155deg, transparent 0 22%, rgba(12, 19, 25, 0.42) 23% 28%, transparent 29% 44%, rgba(12, 19, 25, 0.32) 45% 50%, transparent 51%),
-    linear-gradient(135deg, #7e8992, #35414b 54%, #1f2932 100%);
-  border-color: #9aa7b7;
-  box-shadow: inset -10px -8px 0 rgba(0, 0, 0, 0.18);
+.spr-orb {
+  fill: var(--sp-glow);
+  filter: drop-shadow(0 0 5px var(--sp-glow));
+  animation: spr-pulse 1.8s ease-in-out infinite;
 }
 
-.enemy-wolf .enemy-body::before {
-  content: "";
-  position: absolute;
-  right: -24px;
-  top: 10px;
-  width: 38px;
-  height: 34px;
-  border-radius: 42% 58% 48% 42%;
-  background: linear-gradient(135deg, #7f8992, #26313a);
-  border: 2px solid #9aa7b7;
-  z-index: 1;
+.spr-rune {
+  fill: none;
+  stroke: var(--sp-glow);
+  stroke-width: 2;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px var(--sp-glow));
+  animation: spr-pulse 2.4s ease-in-out infinite;
 }
 
-.enemy-wolf .enemy-body::after {
-  right: -29px;
-  top: 29px;
-  width: 19px;
-  height: 8px;
-  border-radius: 0 0 12px 12px;
-  background: linear-gradient(90deg, #e9e2d1 0 28%, transparent 29% 38%, #e9e2d1 39% 68%, transparent 69%);
-  transform: rotate(4deg);
+.spr-shine {
+  stroke: rgba(255, 255, 255, 0.55);
+  fill: none;
 }
 
-.enemy-wolf .enemy-extra-a::after,
-.enemy-wolf .enemy-extra-b::after {
-  content: "";
-  position: absolute;
-  left: -4px;
-  top: 9px;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-bottom: 9px solid #26313a;
+.spr-rig {
+  transform-origin: 60px 102px;
+  animation: spr-breathe 2.8s ease-in-out infinite;
 }
 
-.enemy-wolf .enemy-extra-a,
-.enemy-wolf .enemy-extra-b {
-  top: -4px;
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-bottom: 22px solid #8c96a0;
-  z-index: 2;
+.enemy-sprite .spr-rig {
+  animation-delay: -1.3s;
 }
 
-.enemy-wolf .enemy-extra-a {
-  right: -16px;
-  transform: rotate(18deg);
+.spr-float {
+  animation: spr-float 2.6s ease-in-out infinite;
 }
 
-.enemy-wolf .enemy-extra-b {
-  right: 2px;
-  transform: rotate(-10deg);
+.spr-wing {
+  animation: spr-flap 0.9s ease-in-out infinite;
 }
 
-.enemy-wolf .enemy-eye {
-  left: auto;
-  right: -12px;
-  top: 22px;
-  width: 8px;
-  height: 8px;
-  box-shadow: 0 0 10px var(--gold-soft);
+.spr-tail {
+  transform-origin: 32px 62px;
+  animation: spr-wag 1.6s ease-in-out infinite;
 }
 
-.enemy-bandit .enemy-body {
-  border-radius: 28px 28px 16px 16px;
-  background:
-    linear-gradient(90deg, transparent 0 32%, rgba(216, 174, 75, 0.45) 33% 39%, transparent 40% 58%, rgba(216, 174, 75, 0.35) 59% 65%, transparent 66%),
-    linear-gradient(135deg, #7d5940, #30251f 58%, #5a2c2b 59%);
-  border-color: #a7794c;
-  box-shadow: inset 0 -12px 0 rgba(0, 0, 0, 0.18);
+.spr-weapon {
+  transition: transform 160ms ease;
 }
 
-.enemy-bandit .enemy-body::after {
-  left: 18px;
-  top: 29px;
-  width: 40px;
-  height: 12px;
-  border-radius: 10px;
-  background: #171313;
-  box-shadow: 9px 20px 0 -3px rgba(167, 121, 76, 0.75);
+.battle-stage.hero-attacks .hero-sprite .spr-weapon,
+.battle-stage.enemy-attacks .enemy-sprite .spr-weapon {
+  animation: spr-swing 420ms ease-in-out;
 }
 
-.enemy-bandit .enemy-extra-a {
-  left: 11px;
-  top: -13px;
-  width: 54px;
-  height: 24px;
-  border-radius: 22px 22px 7px 7px;
-  background: #2b1f1b;
-  border: 2px solid #a7794c;
+.battle-stage.hero-attacks .hero-sprite .spr-head,
+.battle-stage.enemy-attacks .enemy-sprite .spr-head {
+  animation: spr-head-lunge 420ms ease-in-out;
 }
 
-.enemy-bandit .enemy-extra-b {
-  right: -16px;
-  top: 9px;
-  width: 8px;
-  height: 70px;
-  border-radius: 6px;
-  background: linear-gradient(180deg, #eee5cf 0 12%, #8f979d 13% 76%, #4f2c20 77%);
-  transform: rotate(-20deg);
-  box-shadow: -5px 44px 0 -1px #2a1713;
+.battle-stage.enemy-hit .enemy-sprite .sprite-svg,
+.battle-stage.hero-hit .hero-sprite .sprite-svg {
+  animation: spr-hit-flash 360ms ease-out;
 }
 
-.enemy-boar .enemy-body {
-  width: 96px;
-  height: 64px;
-  margin-top: 24px;
-  border-radius: 54% 46% 35% 42%;
-  background:
-    radial-gradient(circle at 76% 56%, #c28d76 0 7%, transparent 8%),
-    linear-gradient(160deg, transparent 0 18%, rgba(20, 13, 11, 0.5) 19% 23%, transparent 24% 42%, rgba(20, 13, 11, 0.38) 43% 47%, transparent 48%),
-    linear-gradient(135deg, #8b5c45, #3b2a23 62%, #241a17 100%);
-  border-color: #b68460;
-  box-shadow: inset -14px -8px 0 rgba(0, 0, 0, 0.2);
+.battle-stage.victory .enemy-sprite .sprite-art {
+  animation: spr-die 700ms ease-in forwards;
 }
 
-.enemy-boar .enemy-body::after {
-  right: -10px;
-  top: 29px;
-  width: 26px;
-  height: 18px;
-  border-radius: 46%;
-  background: #9b6956;
-  border: 2px solid #d0a07c;
+.battle-stage.defeat .hero-sprite .sprite-art {
+  animation: spr-die-hero 700ms ease-in forwards;
 }
 
-.enemy-boar .enemy-extra-a,
-.enemy-boar .enemy-extra-b {
-  right: -21px;
-  top: 35px;
-  width: 34px;
-  height: 9px;
-  border-radius: 50%;
-  background: #e0d7c4;
-  z-index: 2;
+.enemy-sprite.elite-variant .sprite-art {
+  transform: scale(1.1);
 }
 
-.enemy-boar .enemy-extra-a {
-  transform: rotate(24deg);
+.enemy-sprite.elite-variant .sprite-svg {
+  filter: drop-shadow(0 0 8px rgba(226, 184, 85, 0.55)) drop-shadow(0 3px 2px rgba(0, 0, 0, 0.35));
 }
 
-.enemy-boar .enemy-extra-b {
-  top: 46px;
-  transform: rotate(-18deg);
+@keyframes spr-breathe {
+  50% { transform: scale(1.012, 0.975); }
 }
 
-.enemy-boar .enemy-eye {
-  left: auto;
-  right: 10px;
-  top: 22px;
-  width: 9px;
-  height: 9px;
-  box-shadow: 0 0 10px var(--gold-soft);
+@keyframes spr-float {
+  50% { transform: translateY(-5px); }
 }
 
-.enemy-knight .enemy-body,
-.enemy-ratguard .enemy-body {
-  border-radius: 20px 20px 12px 12px;
-  background:
-    linear-gradient(90deg, transparent 0 16%, rgba(241, 201, 107, 0.55) 17% 22%, transparent 23% 77%, rgba(241, 201, 107, 0.42) 78% 83%, transparent 84%),
-    linear-gradient(135deg, #c4cbd4, #596675 54%, #20262d 55%);
-  border-color: #d8dee9;
-  box-shadow: inset 0 -14px 0 var(--shadow-soft), 0 0 18px rgba(216, 222, 233, 0.12);
+@keyframes spr-flap {
+  50% { transform: rotate(-14deg) scaleY(0.85); }
 }
 
-.enemy-knight .enemy-body::after,
-.enemy-ratguard .enemy-body::after {
-  left: 22px;
-  top: 26px;
-  width: 32px;
-  height: 8px;
-  border-radius: 8px;
-  background: #101820;
-  box-shadow: 0 18px 0 -3px rgba(216, 174, 75, 0.58);
+@keyframes spr-wag {
+  50% { transform: rotate(10deg); }
 }
 
-.enemy-knight .enemy-extra-a,
-.enemy-ratguard .enemy-extra-a {
-  left: 14px;
-  top: -24px;
-  width: 48px;
-  height: 44px;
-  border-radius: 22px 22px 12px 12px;
-  background:
-    linear-gradient(90deg, transparent 0 43%, #1b222b 44% 56%, transparent 57%),
-    linear-gradient(135deg, #eef2f6, #7a8796);
-  border: 2px solid var(--gold-soft);
+@keyframes spr-pulse {
+  50% { opacity: 0.6; }
 }
 
-.enemy-knight .enemy-extra-b,
-.enemy-ratguard .enemy-extra-b {
-  left: -18px;
-  top: 18px;
-  width: 28px;
-  height: 54px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #5a2630, #9f3d3a);
-  border: 2px solid var(--gold-soft);
+@keyframes spr-swing {
+  0% { transform: rotate(0deg); }
+  35% { transform: rotate(-38deg); }
+  60% { transform: rotate(52deg); }
+  100% { transform: rotate(0deg); }
 }
 
-.enemy-ratguard .enemy-body {
-  background:
-    linear-gradient(90deg, transparent 0 15%, rgba(150, 161, 115, 0.6) 16% 24%, transparent 25% 76%, rgba(150, 161, 115, 0.42) 77% 84%, transparent 85%),
-    linear-gradient(135deg, #788698, #28303b 52%, #3f4d37 53%);
-  border-color: #96a173;
+@keyframes spr-head-lunge {
+  45% { transform: translateX(3px); }
 }
 
-.enemy-ratguard .enemy-extra-a::before,
-.enemy-ratguard .enemy-extra-a::after {
-  content: "";
-  position: absolute;
-  top: -12px;
-  width: 12px;
-  height: 21px;
-  border-radius: 8px 8px 0 0;
-  background: #7d8790;
-  border: 2px solid #96a173;
+@keyframes spr-hit-flash {
+  0% { filter: brightness(2.2) saturate(0.4) drop-shadow(0 0 6px #ff6a6a); }
+  100% { filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.35)); }
 }
 
-.enemy-ratguard .enemy-extra-a::before {
-  left: 4px;
-  transform: rotate(-16deg);
+@keyframes spr-die {
+  0% { transform: none; opacity: 1; }
+  30% { transform: translateY(-4px) rotate(4deg); filter: brightness(1.8); }
+  100% { transform: translateY(14px) rotate(16deg) scale(0.9); opacity: 0.15; filter: grayscale(1); }
 }
 
-.enemy-ratguard .enemy-extra-a::after {
-  right: 4px;
-  transform: rotate(16deg);
+@keyframes spr-die-hero {
+  100% { transform: translateY(10px) rotate(-12deg) scale(0.94); opacity: 0.55; filter: grayscale(0.6); }
 }
 
-.enemy-acolyte .enemy-body {
-  border-radius: 34px 34px 18px 18px;
-  background:
-    radial-gradient(circle at 50% 28%, rgba(166, 120, 194, 0.38), transparent 18%),
-    linear-gradient(90deg, transparent 0 45%, rgba(199, 180, 228, 0.48) 46% 54%, transparent 55%),
-    linear-gradient(135deg, #343846, #111318 55%, #4c3b6b 56%);
-  border-color: #a678c2;
-  box-shadow: 0 0 22px rgba(166, 120, 194, 0.18), inset 0 -14px 0 rgba(0, 0, 0, 0.2);
-}
-
-.enemy-acolyte .enemy-body::after {
-  left: 25px;
-  top: 34px;
-  width: 26px;
-  height: 7px;
-  border-radius: 8px;
-  background: #d9c8ef;
-  box-shadow: 0 17px 0 -2px rgba(166, 120, 194, 0.8);
-}
-
-.enemy-acolyte .enemy-extra-a {
-  left: 15px;
-  top: -26px;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--parchment) 0 28%, #25232c 30% 100%);
-  border: 2px solid #a678c2;
-}
-
-.enemy-acolyte .enemy-extra-b {
-  right: -20px;
-  top: 6px;
-  width: 9px;
-  height: 82px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #f0d9ff 0 10%, #c7b4e4 11% 28%, #5f4477 29%);
-  box-shadow: 0 -8px 14px rgba(166, 120, 194, 0.8), 0 0 0 3px rgba(166, 120, 194, 0.14);
-}
-
-.enemy-brute .enemy-body {
-  width: 92px;
-  height: 100px;
-  border-radius: 38px 38px 18px 18px;
-  background:
-    linear-gradient(90deg, transparent 0 18%, rgba(216, 208, 188, 0.38) 19% 25%, transparent 26% 74%, rgba(216, 208, 188, 0.3) 75% 81%, transparent 82%),
-    radial-gradient(circle at 50% 18%, rgba(182, 132, 96, 0.32), transparent 18%),
-    linear-gradient(135deg, #655d55, #292827 60%, #87483c 61%);
-  border-color: #b68460;
-  box-shadow: inset 0 -18px 0 var(--shadow-mid);
-}
-
-.enemy-brute .enemy-body::after {
-  left: 24px;
-  top: 34px;
-  width: 42px;
-  height: 10px;
-  border-radius: 8px;
-  background: #181716;
-  box-shadow: 0 24px 0 -3px rgba(216, 208, 188, 0.5);
-}
-
-.enemy-brute .enemy-extra-a {
-  left: 13px;
-  top: -18px;
-  width: 66px;
-  height: 28px;
-  border-radius: 30px 30px 8px 8px;
-  background: #3a332e;
-  border: 2px solid #b68460;
-}
-
-.enemy-brute .enemy-extra-b {
-  right: -25px;
-  top: 28px;
-  width: 20px;
-  height: 70px;
-  border-radius: 10px;
-  background:
-    radial-gradient(circle at 50% 14%, var(--parchment) 0 23%, transparent 24%),
-    linear-gradient(180deg, #5b4034, #1a1715);
-  border: 2px solid var(--parchment);
-  transform: rotate(-24deg);
-}
-
-.enemy-champion .enemy-body {
-  width: 92px;
-  height: 104px;
-  border-radius: 40px 40px 14px 14px;
-  background:
-    radial-gradient(circle at 50% 20%, rgba(226, 184, 85, 0.28), transparent 17%),
-    linear-gradient(90deg, transparent 0 18%, rgba(226, 184, 85, 0.5) 19% 24%, transparent 25% 75%, rgba(166, 120, 194, 0.5) 76% 81%, transparent 82%),
-    linear-gradient(135deg, #252a32, #4c3b6b 48%, #101116 49%);
-  border-color: #e2b855;
-  box-shadow: 0 0 28px rgba(226, 184, 85, 0.28);
-}
-
-.enemy-champion .enemy-body::after {
-  left: 23px;
-  top: 31px;
-  width: 46px;
-  height: 10px;
-  border-radius: 9px;
-  background: linear-gradient(90deg, #f1c96b 0 28%, transparent 29% 38%, #f1c96b 39% 68%, transparent 69%);
-  box-shadow: 0 26px 0 -3px rgba(226, 184, 85, 0.65), 0 0 16px rgba(226, 184, 85, 0.55);
-}
-
-.enemy-champion .enemy-extra-a {
-  left: 15px;
-  top: -30px;
-  width: 62px;
-  height: 34px;
-  background: linear-gradient(135deg, #e2b855, #7b5520);
-  clip-path: polygon(0 100%, 8% 28%, 26% 76%, 50% 0, 74% 76%, 92% 28%, 100% 100%);
-}
-
-.enemy-champion .enemy-extra-b {
-  right: -21px;
-  top: -4px;
-  width: 10px;
-  height: 108px;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #f4df93, #a678c2 45%, #3b254d);
-  transform: rotate(-14deg);
-  box-shadow: 0 0 18px rgba(166, 120, 194, 0.9);
-}
-
-.enemy-champion .enemy-extra-b::before {
-  content: "";
-  position: absolute;
-  left: -9px;
-  top: 16px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 2px solid rgba(244, 223, 147, 0.85);
-  box-shadow: 0 0 18px rgba(226, 184, 85, 0.7);
-}
-
-.enemy-road-thief .enemy-body {
-  background:
-    linear-gradient(115deg, transparent 0 26%, rgba(116, 173, 224, 0.34) 27% 33%, transparent 34%),
-    linear-gradient(135deg, #5b4732, #202027 58%, #25384a 59%);
-  border-color: #74ade0;
-}
-
-.enemy-road-thief .enemy-extra-a {
-  background: linear-gradient(135deg, #182231, #384d62);
-  border-color: #74ade0;
-  clip-path: polygon(0 100%, 12% 28%, 50% 0, 88% 28%, 100% 100%);
-}
-
-.enemy-road-thief .enemy-extra-b {
-  right: -20px;
-  top: 23px;
-  height: 58px;
-  background: linear-gradient(180deg, #d7e1ec 0 28%, #74ade0 29% 48%, #2a1713 49%);
-  transform: rotate(-32deg);
-}
-
-.enemy-iron-hound .enemy-body {
-  width: 98px;
-  background:
-    linear-gradient(90deg, transparent 0 18%, rgba(216, 174, 75, 0.5) 19% 24%, transparent 25% 74%, rgba(216, 174, 75, 0.42) 75% 80%, transparent 81%),
-    linear-gradient(135deg, #9faab5, #425061 54%, #1f2932 100%);
-  border-color: var(--gold-soft);
-  box-shadow: inset -12px -8px 0 var(--shadow-soft), 0 0 18px rgba(216, 174, 75, 0.18);
-}
-
-.enemy-iron-hound .enemy-body::before {
-  background: linear-gradient(135deg, #aeb7c2, #303c48);
-  border-color: var(--gold-soft);
-}
-
-.enemy-iron-hound .enemy-extra-a,
-.enemy-iron-hound .enemy-extra-b {
-  border-bottom-color: #b6c0ca;
-}
-
-.enemy-iron-hound .enemy-eye {
-  background: #74ade0;
-  box-shadow: 0 0 12px #74ade0;
-}
-
-.enemy-old-knight .enemy-body {
-  background:
-    linear-gradient(90deg, transparent 0 18%, rgba(150, 161, 115, 0.5) 19% 25%, transparent 26%),
-    linear-gradient(135deg, #9ca6a4, #505a58 52%, #263229 53%);
-  border-color: #96a173;
-  filter: saturate(0.9);
-}
-
-.enemy-old-knight .enemy-extra-a {
-  border-color: #96a173;
-  background:
-    linear-gradient(90deg, transparent 0 36%, #1b222b 37% 48%, transparent 49%),
-    linear-gradient(135deg, #d7ddd8, #69736f);
-}
-
-.enemy-old-knight .enemy-extra-b {
-  width: 24px;
-  height: 50px;
-  background: linear-gradient(135deg, #2d405f, #1d2b37);
-  border-color: #96a173;
-}
-
-.enemy-plague-crow .enemy-body {
-  width: 98px;
-  height: 64px;
-  margin-top: 24px;
-  border-radius: 58% 42% 34% 48%;
-  background:
-    radial-gradient(circle at 78% 33%, rgba(99, 233, 172, 0.36), transparent 10%),
-    linear-gradient(150deg, transparent 0 26%, rgba(99, 233, 172, 0.18) 27% 34%, transparent 35%),
-    linear-gradient(135deg, #1f2730, #0c1118 62%, #243b35 63%);
-  border-color: #63e9ac;
-  box-shadow: 0 0 24px rgba(99, 233, 172, 0.14), inset -12px -8px 0 var(--shadow-mid);
-}
-
-.enemy-plague-crow .enemy-body::after {
-  right: -24px;
-  top: 25px;
-  width: 34px;
-  height: 12px;
-  border-radius: 0 80% 80% 0;
-  background: linear-gradient(90deg, var(--parchment), #8c7248);
-  box-shadow: none;
-}
-
-.enemy-plague-crow .enemy-extra-a {
-  left: auto;
-  right: -8px;
-  top: 4px;
-  width: 30px;
-  height: 24px;
-  border-radius: 60% 48% 42% 38%;
-  background: #151b23;
-  border-color: #63e9ac;
-}
-
-.enemy-plague-crow .enemy-extra-b {
-  left: 4px;
-  right: auto;
-  top: 18px;
-  width: 58px;
-  height: 28px;
-  border-radius: 58% 16% 58% 24%;
-  background: linear-gradient(135deg, #2c3640, #070a0e);
-  transform: rotate(-18deg);
-  box-shadow: 18px 18px 0 -8px rgba(99, 233, 172, 0.32);
-}
-
-.enemy-plague-crow .enemy-eye {
-  left: auto;
-  right: 9px;
-  top: 14px;
-  width: 7px;
-  height: 7px;
-  background: #63e9ac;
-  box-shadow: 0 0 12px #63e9ac;
-}
-
-.enemy-field-wraith .enemy-body {
-  height: 96px;
-  border-radius: 40px 40px 34px 34px;
-  background:
-    radial-gradient(circle at 50% 28%, rgba(116, 173, 224, 0.45), transparent 18%),
-    linear-gradient(180deg, rgba(199, 180, 228, 0.2), transparent 24%),
-    linear-gradient(135deg, rgba(84, 98, 122, 0.85), rgba(18, 20, 30, 0.78) 56%, rgba(76, 59, 107, 0.82) 57%);
-  border-color: rgba(116, 173, 224, 0.72);
-  box-shadow: 0 0 28px rgba(116, 173, 224, 0.22);
-}
-
-.enemy-field-wraith .enemy-body::after {
-  left: 14px;
-  top: 70px;
-  width: 48px;
-  height: 22px;
-  border-radius: 0 0 50% 50%;
-  background: linear-gradient(90deg, transparent 0 14%, rgba(116, 173, 224, 0.42) 15% 32%, transparent 33% 48%, rgba(166, 120, 194, 0.4) 49% 66%, transparent 67%);
-  box-shadow: none;
-}
-
-.enemy-field-wraith .enemy-extra-a {
-  background: radial-gradient(circle, #bfe9ff 0 24%, #1b2433 26% 100%);
-  border-color: rgba(116, 173, 224, 0.72);
-}
-
-.enemy-field-wraith .enemy-extra-b {
-  right: -12px;
-  top: 18px;
-  width: 48px;
-  height: 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(116, 173, 224, 0.72), transparent);
-  transform: rotate(-24deg);
-  box-shadow: 0 18px 18px rgba(116, 173, 224, 0.22);
-}
-
-.enemy-ash-marauder .enemy-body {
-  background:
-    linear-gradient(90deg, transparent 0 30%, rgba(239, 100, 107, 0.48) 31% 37%, transparent 38% 62%, rgba(240, 192, 79, 0.38) 63% 68%, transparent 69%),
-    linear-gradient(135deg, #5f5045, #272321 58%, #6a2922 59%);
-  border-color: var(--red-soft);
-  box-shadow: inset 0 -12px 0 var(--shadow-soft), 0 0 18px rgba(239, 100, 107, 0.18);
-}
-
-.enemy-ash-marauder .enemy-extra-a {
-  background: linear-gradient(135deg, #2e2622, #5b2b28);
-  border-color: var(--red-soft);
-}
-
-.enemy-ash-marauder .enemy-extra-b {
-  background: linear-gradient(180deg, #ffe2a3 0 12%, var(--red-soft) 13% 36%, #5b2b28 37%);
-  box-shadow: 0 0 16px rgba(239, 100, 107, 0.48);
-}
-
-.enemy-ember-stalker .enemy-body {
-  background:
-    radial-gradient(circle at 72% 34%, rgba(255, 226, 163, 0.22), transparent 16%),
-    linear-gradient(155deg, transparent 0 20%, rgba(239, 100, 107, 0.45) 21% 27%, transparent 28% 44%, rgba(240, 192, 79, 0.32) 45% 50%, transparent 51%),
-    linear-gradient(135deg, #5b4034, #2d1b19 54%, #120b0a 100%);
-  border-color: #ef9b4d;
-  box-shadow: inset -10px -8px 0 var(--shadow-soft), 0 0 24px rgba(239, 100, 107, 0.24);
-}
-
-.enemy-ember-stalker .enemy-body::before {
-  background: linear-gradient(135deg, #6a4434, #1c1110);
-  border-color: #ef9b4d;
-}
-
-.enemy-ember-stalker .enemy-extra-a,
-.enemy-ember-stalker .enemy-extra-b {
-  border-bottom-color: #8d4a32;
-}
-
-.enemy-ember-stalker .enemy-eye {
-  background: var(--gold-bright);
-  box-shadow: 0 0 14px var(--red-soft);
-}
-
-.enemy-crown-sentinel .enemy-body {
-  background:
-    linear-gradient(90deg, transparent 0 14%, rgba(216, 174, 75, 0.68) 15% 22%, transparent 23% 76%, rgba(52, 213, 216, 0.38) 77% 84%, transparent 85%),
-    linear-gradient(135deg, #d8dee9, #687487 52%, #16212b 53%);
-  border-color: var(--gold-bright);
-  box-shadow: 0 0 24px rgba(240, 192, 79, 0.2);
-}
-
-.enemy-crown-sentinel .enemy-extra-a {
-  background:
-    linear-gradient(90deg, transparent 0 43%, #1b222b 44% 56%, transparent 57%),
-    linear-gradient(135deg, #f7f0ce, #8996a8);
-  border-color: var(--gold-bright);
-}
-
-.enemy-crown-sentinel .enemy-extra-a::before {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: -16px;
-  width: 40px;
-  height: 18px;
-  background: linear-gradient(135deg, var(--gold-bright), #8f6a20);
-  clip-path: polygon(0 100%, 18% 20%, 34% 100%, 50% 0, 66% 100%, 82% 20%, 100% 100%);
-}
-
-.enemy-crown-sentinel .enemy-extra-b {
-  background: linear-gradient(135deg, #14343b, var(--aqua));
-}
-
-.enemy-bone-acolyte .enemy-body {
-  background:
-    radial-gradient(circle at 50% 24%, rgba(216, 208, 188, 0.45), transparent 18%),
-    linear-gradient(90deg, transparent 0 43%, rgba(216, 208, 188, 0.62) 44% 56%, transparent 57%),
-    linear-gradient(135deg, #2a2d35, #101216 55%, #493d35 56%);
-  border-color: var(--parchment);
-}
-
-.enemy-bone-acolyte .enemy-extra-a {
-  background:
-    radial-gradient(circle at 35% 42%, #111318 0 8%, transparent 9%),
-    radial-gradient(circle at 65% 42%, #111318 0 8%, transparent 9%),
-    radial-gradient(circle, var(--parchment) 0 34%, #25232c 36% 100%);
-  border-color: var(--parchment);
-}
-
-.enemy-bone-acolyte .enemy-extra-b {
-  background: linear-gradient(180deg, #f0d9ff 0 10%, var(--parchment) 11% 28%, #5f4477 29%);
-}
-
-.enemy-crypt-brute .enemy-body {
-  background:
-    linear-gradient(90deg, transparent 0 16%, rgba(150, 161, 115, 0.48) 17% 25%, transparent 26% 74%, rgba(216, 208, 188, 0.32) 75% 82%, transparent 83%),
-    radial-gradient(circle at 48% 18%, rgba(216, 208, 188, 0.34), transparent 18%),
-    linear-gradient(135deg, #4f5a50, #252927 60%, #44322d 61%);
-  border-color: #96a173;
-}
-
-.enemy-crypt-brute .enemy-extra-a {
-  background: linear-gradient(135deg, #202522, #596757);
-  border-color: #96a173;
-}
-
-.enemy-crypt-brute .enemy-extra-b {
-  background:
-    repeating-linear-gradient(180deg, var(--parchment) 0 7px, #3a332e 8px 13px);
-  border-color: #96a173;
-}
-
-.enemy-chain-warden .enemy-body {
-  background:
-    repeating-linear-gradient(90deg, transparent 0 12px, rgba(216, 208, 188, 0.28) 13px 16px),
-    linear-gradient(135deg, #949da8, #3e4854 54%, #161f27 55%);
-  border-color: var(--parchment);
-}
-
-.enemy-chain-warden .enemy-extra-a {
-  background:
-    linear-gradient(90deg, transparent 0 43%, #0e151c 44% 56%, transparent 57%),
-    linear-gradient(135deg, var(--parchment), #6e7883);
-  border-color: var(--parchment);
-}
-
-.enemy-chain-warden .enemy-extra-b {
-  width: 34px;
-  border-radius: 999px 999px 18px 18px;
-  background:
-    repeating-linear-gradient(180deg, #9aa7b7 0 6px, #1b222b 7px 11px);
-  border-color: var(--parchment);
-}
-
-.enemy-oath-forger .enemy-body {
-  width: 96px;
-  background:
-    linear-gradient(90deg, transparent 0 17%, rgba(239, 100, 107, 0.48) 18% 26%, transparent 27% 73%, rgba(240, 192, 79, 0.42) 74% 82%, transparent 83%),
-    radial-gradient(circle at 50% 18%, rgba(240, 192, 79, 0.34), transparent 18%),
-    linear-gradient(135deg, #6d5b48, #2d2622 60%, #8d3328 61%);
-  border-color: var(--gold-bright);
-  box-shadow: inset 0 -18px 0 var(--shadow-mid), 0 0 24px rgba(239, 100, 107, 0.2);
-}
-
-.enemy-oath-forger .enemy-extra-b {
-  right: -32px;
-  top: 18px;
-  width: 28px;
-  height: 82px;
-  border-radius: 10px;
-  background:
-    linear-gradient(90deg, transparent 0 18%, var(--gold-bright) 19% 81%, transparent 82%),
-    linear-gradient(180deg, #3a332e 0 24%, var(--parchment) 25% 42%, #3a332e 43%);
-  transform: rotate(-28deg);
-  box-shadow: 0 0 18px rgba(239, 100, 107, 0.36);
-}
-
-.enemy-iron-duke .enemy-body {
-  width: 84px;
-  height: 98px;
-  background:
-    linear-gradient(90deg, transparent 0 14%, rgba(216, 174, 75, 0.72) 15% 23%, transparent 24% 76%, rgba(216, 174, 75, 0.52) 77% 85%, transparent 86%),
-    linear-gradient(135deg, #e8edf4, #6f7b88 52%, #1a1f28 53%);
-  border-color: var(--gold-bright);
-  box-shadow: 0 0 32px rgba(240, 192, 79, 0.26);
-}
-
-.enemy-iron-duke .enemy-extra-a {
-  background:
-    linear-gradient(90deg, transparent 0 43%, #131923 44% 56%, transparent 57%),
-    linear-gradient(135deg, #f8efc5, #7d8790);
-  border-color: var(--gold-bright);
-}
-
-.enemy-iron-duke .enemy-extra-a::before {
-  content: "";
-  position: absolute;
-  left: -2px;
-  top: -20px;
-  width: 52px;
-  height: 24px;
-  background: linear-gradient(135deg, var(--gold-bright), #7b5520);
-  clip-path: polygon(0 100%, 10% 24%, 26% 72%, 50% 0, 74% 72%, 90% 24%, 100% 100%);
-}
-
-.enemy-iron-duke .enemy-extra-b {
-  left: -24px;
-  width: 34px;
-  height: 68px;
-  background: linear-gradient(135deg, #712d31, #1d2430);
-}
-
-.enemy-ember-priest .enemy-body {
-  background:
-    radial-gradient(circle at 50% 20%, rgba(240, 192, 79, 0.5), transparent 18%),
-    linear-gradient(90deg, transparent 0 43%, rgba(239, 100, 107, 0.6) 44% 56%, transparent 57%),
-    linear-gradient(135deg, #3a2a2d, #161216 55%, #6b3229 56%);
-  border-color: #ef9b4d;
-  box-shadow: 0 0 24px rgba(239, 100, 107, 0.22);
-}
-
-.enemy-ember-priest .enemy-extra-a {
-  background: radial-gradient(circle, var(--gold-bright) 0 18%, #3a2323 20% 100%);
-  border-color: #ef9b4d;
-  box-shadow: 0 0 18px rgba(239, 100, 107, 0.48);
-}
-
-.enemy-ember-priest .enemy-extra-b {
-  background: linear-gradient(180deg, #ffe2a3 0 10%, var(--red-soft) 11% 28%, #4f2130 29%);
-  box-shadow: 0 -8px 20px rgba(239, 100, 107, 0.72), 0 0 0 3px rgba(239, 100, 107, 0.12);
-}
-
-.enemy-crown-beast .enemy-body {
-  width: 108px;
-  height: 72px;
-  background:
-    radial-gradient(circle at 76% 56%, #d3a483 0 7%, transparent 8%),
-    linear-gradient(90deg, transparent 0 25%, rgba(216, 174, 75, 0.5) 26% 33%, transparent 34% 62%, rgba(216, 174, 75, 0.34) 63% 70%, transparent 71%),
-    linear-gradient(135deg, #72523f, #2e241d 62%, #17100e 100%);
-  border-color: var(--gold-bright);
-  box-shadow: inset -16px -10px 0 var(--shadow-mid), 0 0 28px rgba(240, 192, 79, 0.18);
-}
-
-.enemy-crown-beast .enemy-body::before {
-  content: "";
-  position: absolute;
-  right: -8px;
-  top: -18px;
-  width: 42px;
-  height: 24px;
-  background: linear-gradient(135deg, var(--gold-bright), #7b5520);
-  clip-path: polygon(0 100%, 14% 20%, 30% 80%, 50% 0, 70% 80%, 86% 20%, 100% 100%);
-  z-index: 3;
-}
-
-.enemy-crown-beast .enemy-extra-a,
-.enemy-crown-beast .enemy-extra-b {
-  background: linear-gradient(90deg, #f7ead2, var(--gold-soft));
-}
-
-.enemy-hollow-champion .enemy-body {
-  background:
-    radial-gradient(circle at 50% 18%, rgba(166, 120, 194, 0.5), transparent 17%),
-    linear-gradient(90deg, transparent 0 18%, rgba(226, 184, 85, 0.44) 19% 24%, transparent 25% 75%, rgba(52, 213, 216, 0.36) 76% 81%, transparent 82%),
-    linear-gradient(135deg, #141922, #33234d 48%, #07080d 49%);
-  border-color: #d5a7ff;
-  box-shadow: 0 0 34px rgba(166, 120, 194, 0.36);
-}
-
-.enemy-hollow-champion .enemy-extra-a {
-  background: linear-gradient(135deg, #d5a7ff, #5d3a7a);
-}
-
-.enemy-hollow-champion .enemy-extra-b {
-  background: linear-gradient(180deg, #f4df93, var(--aqua) 42%, #3b254d);
-  box-shadow: 0 0 22px rgba(52, 213, 216, 0.65);
+@media (prefers-reduced-motion: reduce) {
+  .spr-rig,
+  .spr-float,
+  .spr-wing,
+  .spr-tail,
+  .spr-orb,
+  .spr-rune {
+    animation: none;
+  }
 }
 
 .sprite-shadow {
@@ -3995,87 +2718,6 @@ button.drop-row span:last-child {
   font-size: 13px;
 }
 
-/* Neue Gegner (Punkt 12): Farbvarianten der Grundformen */
-.enemy-poacher .enemy-body {
-  background: linear-gradient(135deg, #6f8a4c, #3c4d2a 54%, #1d2616 100%);
-  border-color: #9fb873;
-}
-
-.enemy-poacher .enemy-body::before {
-  background: linear-gradient(135deg, #6f8a4c, #1d2616);
-  border-color: #9fb873;
-}
-
-.enemy-bog-wolf .enemy-body {
-  background: linear-gradient(135deg, #6f8f86, #355049 54%, #18241f 100%);
-  border-color: #8fb5a6;
-}
-
-.enemy-bog-wolf .enemy-body::before {
-  background: linear-gradient(135deg, #6f8f86, #18241f);
-  border-color: #8fb5a6;
-}
-
-.enemy-crossbow-brigand .enemy-body {
-  background: linear-gradient(135deg, #9a7a52, #5a4128 54%, #2a1d12 100%);
-  border-color: #d0a86a;
-}
-
-.enemy-crossbow-brigand .enemy-body::before {
-  background: linear-gradient(135deg, #9a7a52, #2a1d12);
-  border-color: #d0a86a;
-}
-
-.enemy-mercenary-captain .enemy-body {
-  background: linear-gradient(135deg, #b8b0a0, #6b5e48 54%, #2e271c 100%);
-  border-color: var(--gold-soft);
-}
-
-.enemy-mercenary-captain .enemy-body::before {
-  background: linear-gradient(135deg, #b8b0a0, #2e271c);
-  border-color: var(--gold-soft);
-}
-
-.enemy-bog-ghoul .enemy-body {
-  background: linear-gradient(135deg, #7d9a6a, #3e5233 54%, #1a2415 100%);
-  border-color: #a9c98f;
-}
-
-.enemy-bog-ghoul .enemy-body::before {
-  background: linear-gradient(135deg, #7d9a6a, #1a2415);
-  border-color: #a9c98f;
-}
-
-.enemy-plague-witch .enemy-body {
-  background: linear-gradient(135deg, #8d6aa8, #4a3060 54%, #20142c 100%);
-  border-color: #c79be6;
-}
-
-.enemy-plague-witch .enemy-body::before {
-  background: linear-gradient(135deg, #8d6aa8, #20142c);
-  border-color: #c79be6;
-}
-
-.enemy-cinder-hound .enemy-body {
-  background: linear-gradient(135deg, #c2633c, #6b2c18 54%, #2a120a 100%);
-  border-color: #f0a060;
-}
-
-.enemy-cinder-hound .enemy-body::before {
-  background: linear-gradient(135deg, #c2633c, #2a120a);
-  border-color: #f0a060;
-}
-
-.enemy-ashen-warlord .enemy-body {
-  background: linear-gradient(135deg, #8f8f96, #3c3a40 54%, #141316 100%);
-  border-color: #e07a4a;
-}
-
-.enemy-ashen-warlord .enemy-body::before {
-  background: linear-gradient(135deg, #8f8f96, #141316);
-  border-color: #e07a4a;
-}
-
 /* Endgame: Paragon und Turm (Punkt 13) */
 .paragon-panel {
   display: grid;
@@ -4125,16 +2767,6 @@ button.drop-row span:last-child {
   min-width: 32px;
   min-height: 30px;
   padding: 2px 8px;
-}
-
-.enemy-tower-warden .enemy-body {
-  background: linear-gradient(135deg, #8a7fb0, #3d3566 54%, #17132b 100%);
-  border-color: var(--purple);
-}
-
-.enemy-tower-warden .enemy-body::before {
-  background: linear-gradient(135deg, #a99ad6, #241e40);
-  border-color: var(--purple);
 }
 
 /* Auto-Farmen und Offline-Ertrag (Punkt 14) */

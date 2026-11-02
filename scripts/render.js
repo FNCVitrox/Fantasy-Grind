@@ -200,6 +200,12 @@ function renderHeroBuildVisual() {
   const characterClass = Object.prototype.hasOwnProperty.call(classCatalog, state.characterClass) ? state.characterClass : "warrior";
   const className = `combatant hero-sprite hero-class-${characterClass} hero-build-${build}`;
   if ($("heroSprite").className !== className) $("heroSprite").className = className;
+  const art = $("heroSpriteArt");
+  const artKey = `${characterClass}:${build}`;
+  if (art && art.dataset.sprite !== artKey) {
+    art.innerHTML = heroSpriteSvg(characterClass, build);
+    art.dataset.sprite = artKey;
+  }
   const heroName = entityName("class", characterClass, classCatalog[characterClass].name);
   setText("heroSpriteName", heroName);
   const health = $("heroSprite")?.querySelector(".hero-health");
@@ -721,6 +727,11 @@ function setBattleEnemyVisual(enemy) {
   setText("enemySpriteName", enemyDisplayName(enemy, enemy.baseId || ui.selectedEnemy));
   const className = `combatant enemy-sprite ${enemy.sprite}${enemy.eliteVariant ? " elite-variant" : ""}`;
   if ($("enemySprite").className !== className) $("enemySprite").className = className;
+  const art = $("enemySpriteArt");
+  if (art && art.dataset.sprite !== enemy.sprite) {
+    art.innerHTML = enemySpriteSvg(enemy.sprite);
+    art.dataset.sprite = enemy.sprite;
+  }
   updateBattleHealth(state.hp, state.maxHp, enemy.hp, enemy.hp);
 }
 

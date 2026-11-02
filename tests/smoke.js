@@ -67,6 +67,7 @@ const scripts = [
   "scripts/idle.js",
   "scripts/progression.js",
   "scripts/core.js",
+  "scripts/sprites.js",
   "scripts/render.js",
   "scripts/render-loot.js",
   "scripts/data-achievements.js",
@@ -112,6 +113,7 @@ assert.deepStrictEqual(scriptOrder, [
   "scripts/idle.js",
   "scripts/progression.js",
   "scripts/core.js",
+  "scripts/sprites.js",
   "scripts/render.js",
   "scripts/render-loot.js",
   "scripts/events.js",
@@ -334,18 +336,22 @@ suite("sprite and visual class contracts");
 const enemySprites = JSON.parse(vm.runInContext("JSON.stringify(Object.values(enemies).map((enemy) => enemy.sprite))", context));
 assert.strictEqual(new Set(enemySprites).size, enemySprites.length, "enemy sprite class combinations should be unique");
 const spriteTokens = [...new Set(enemySprites.flatMap((sprite) => sprite.split(/\s+/)).filter(Boolean))];
+const spriteVariantKeys = JSON.parse(vm.runInContext("JSON.stringify(Object.keys(spriteVariants))", context));
 for (const token of spriteTokens) {
-  assert(css.includes(`.${token}`), `Missing CSS sprite class: ${token}`);
+  assert(spriteVariantKeys.includes(token), `Missing SVG sprite variant: ${token}`);
 }
-for (const build of ["tank", "damage", "bruiser"]) {
-  assert(css.includes(`.hero-build-${build}`), `Missing hero build sprite CSS: ${build}`);
-}
-for (const classId of ["warrior", "mage", "rogue", "archer"]) {
-  assert(css.includes(`.hero-class-${classId}`), `Missing hero class sprite CSS: ${classId}`);
-  for (const build of ["tank", "damage", "bruiser"]) {
-    assert(css.includes(`.hero-class-${classId}.hero-build-${build}`), `Missing class/build sprite CSS: ${classId}/${build}`);
-  }
-}
+// Jeder Gegner bekommt eine eigene SVG-Figur (keine CSS-Grundformen mehr).
+const enemySvgs = JSON.parse(vm.runInContext("JSON.stringify(Object.values(enemies).map((enemy) => enemySpriteSvg(enemy.sprite)))", context));
+assert(enemySvgs.every((svg) => svg.startsWith("<svg") && svg.includes('class="spr-rig"') && svg.includes("spr-eye") && svg.endsWith("</svg>")), "every enemy needs a complete SVG sprite with rig and glowing eyes");
+assert.strictEqual(new Set(enemySvgs).size, enemySvgs.length, "every enemy SVG sprite should look different");
+assert(enemySvgs.every((svg) => svg.includes('translate(120 0) scale(-1 1)')), "enemy sprites should face the hero (mirrored)");
+assert(enemySvgs.every((svg) => !/undefined|NaN/.test(svg)), "enemy SVG sprites must not contain undefined values");
+const heroSvgs = JSON.parse(vm.runInContext("JSON.stringify(['warrior','mage','rogue','archer'].flatMap((c) => ['tank','damage','bruiser'].map((b) => heroSpriteSvg(c, b))))", context));
+assert.strictEqual(new Set(heroSvgs).size, heroSvgs.length, "every class/build combination needs its own hero SVG");
+assert(heroSvgs.every((svg) => svg.includes("spr-weapon") && !/undefined|NaN/.test(svg)), "hero SVG sprites need a weapon and valid values");
+assert(!/\.(hero|enemy)-body\b|\.enemy-extra|\.hero-helm|\.hero-sword|\.hero-shield/.test(css), "old CSS shape sprites should be removed");
+assert(css.includes("@keyframes spr-breathe") && css.includes("@keyframes spr-die") && css.includes(".spr-weapon"), "SVG sprites need idle, attack and death animations");
+assert(read("scripts/render.js").includes("heroSpriteSvg(") && read("scripts/render.js").includes("enemySpriteSvg("), "render should draw hero and enemy as SVG sprites");
 assert(read("scripts/render.js").includes("hero-class-${characterClass}") && read("scripts/render.js").includes("heroSpriteName"), "combat hero sprite should follow the selected class and update its label");
 assert(css.includes(".class-choice-list {") && html.includes('class="class-choice-list"'), "class chooser should have dedicated layout CSS");
 assert(css.includes(".smith-avatar::before") && css.includes(".enchant-avatar::after"), "Borin and Mira avatars should have detailed CSS silhouettes");

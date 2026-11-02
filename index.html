@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=0.8.139" />
-    <link rel="stylesheet" href="./css/modals.css?v=0.8.139" />
-    <link rel="stylesheet" href="./css/responsive.css?v=0.8.139" />
+    <link rel="stylesheet" href="./css/base.css?v=0.8.140" />
+    <link rel="stylesheet" href="./css/modals.css?v=0.8.140" />
+    <link rel="stylesheet" href="./css/responsive.css?v=0.8.140" />
   </head>
   <body data-mobile-tab="fight">
     <div class="studio-splash" id="studioSplash" role="status" aria-live="polite" aria-label="Nemurenai Game Studio präsentiert Fantasy Grind" data-i18n-aria="aria.splash" tabindex="0">
@@ -17,7 +17,7 @@
         <span>presents</span>
       </div>
     </div>
-    <div class="version-badge" aria-label="Spielversion" data-i18n-aria="aria.version">Alpha v0.8.139</div>
+    <div class="version-badge" aria-label="Spielversion" data-i18n-aria="aria.version">Alpha v0.8.140</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus" data-i18n-aria="aria.gameStatus">
         <div>
@@ -118,11 +118,7 @@
             </div>
             <div class="combatant hero-sprite" id="heroSprite">
               <div class="sprite-shadow"></div>
-              <div class="hero-body">
-                <span class="hero-helm"></span>
-                <span class="hero-shield"></span>
-                <span class="hero-sword"></span>
-              </div>
+              <div class="sprite-art" id="heroSpriteArt"></div>
               <b id="heroSpriteName">Krieger</b>
               <div class="combat-health hero-health" aria-label="Krieger Leben" data-i18n-aria="aria.heroHealth">
                 <div class="combat-health-label"><span>Leben</span><strong id="battleHeroHpText">0/0</strong></div>
@@ -140,11 +136,7 @@
             </div>
             <div class="combatant enemy-sprite enemy-wolf" id="enemySprite">
               <div class="sprite-shadow"></div>
-              <div class="enemy-body">
-                <span class="enemy-extra enemy-extra-a"></span>
-                <span class="enemy-extra enemy-extra-b"></span>
-                <span class="enemy-eye"></span>
-              </div>
+              <div class="sprite-art" id="enemySpriteArt"></div>
               <b id="enemySpriteName">Waldwolf</b>
               <div class="combat-health enemy-health" aria-label="Gegner Leben" data-i18n-aria="aria.enemyHealth">
                 <div class="combat-health-label"><span>Leben</span><strong id="battleEnemyHpText">0/0</strong></div>
@@ -465,25 +457,26 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=0.8.139"></script>
-    <script src="./scripts/data-loader.js?v=0.8.139"></script>
-    <script src="./scripts/data-player.js?v=0.8.139"></script>
-    <script src="./scripts/data-world.js?v=0.8.139"></script>
-    <script src="./scripts/data-items.js?v=0.8.139"></script>
-    <script src="./scripts/data-quests.js?v=0.8.139"></script>
-    <script src="./scripts/data-labels.js?v=0.8.139"></script>
-    <script src="./scripts/i18n.js?v=0.8.139"></script>
-    <script src="./scripts/save-system.js?v=0.8.139"></script>
-    <script src="./scripts/combat.js?v=0.8.139"></script>
-    <script src="./scripts/combat-risk.js?v=0.8.139"></script>
-    <script src="./scripts/loot.js?v=0.8.139"></script>
-    <script src="./scripts/smith.js?v=0.8.139"></script>
-    <script src="./scripts/arcanist.js?v=0.8.139"></script>
-    <script src="./scripts/idle.js?v=0.8.139"></script>
-    <script src="./scripts/progression.js?v=0.8.139"></script>
-    <script src="./scripts/core.js?v=0.8.139"></script>
-    <script src="./scripts/render.js?v=0.8.139"></script>
-    <script src="./scripts/render-loot.js?v=0.8.139"></script>
-    <script src="./scripts/events.js?v=0.8.139"></script>
+    <script src="./scripts/data.js?v=0.8.140"></script>
+    <script src="./scripts/data-loader.js?v=0.8.140"></script>
+    <script src="./scripts/data-player.js?v=0.8.140"></script>
+    <script src="./scripts/data-world.js?v=0.8.140"></script>
+    <script src="./scripts/data-items.js?v=0.8.140"></script>
+    <script src="./scripts/data-quests.js?v=0.8.140"></script>
+    <script src="./scripts/data-labels.js?v=0.8.140"></script>
+    <script src="./scripts/i18n.js?v=0.8.140"></script>
+    <script src="./scripts/save-system.js?v=0.8.140"></script>
+    <script src="./scripts/combat.js?v=0.8.140"></script>
+    <script src="./scripts/combat-risk.js?v=0.8.140"></script>
+    <script src="./scripts/loot.js?v=0.8.140"></script>
+    <script src="./scripts/smith.js?v=0.8.140"></script>
+    <script src="./scripts/arcanist.js?v=0.8.140"></script>
+    <script src="./scripts/idle.js?v=0.8.140"></script>
+    <script src="./scripts/progression.js?v=0.8.140"></script>
+    <script src="./scripts/core.js?v=0.8.140"></script>
+    <script src="./scripts/sprites.js?v=0.8.140"></script>
+    <script src="./scripts/render.js?v=0.8.140"></script>
+    <script src="./scripts/render-loot.js?v=0.8.140"></script>
+    <script src="./scripts/events.js?v=0.8.140"></script>
   </body>
 </html>

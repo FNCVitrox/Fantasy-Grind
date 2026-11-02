@@ -420,14 +420,10 @@
     text-align: center;
   }
 
-  .hero-body,
-  .enemy-body {
-    transform: scale(0.78);
-    transform-origin: center bottom;
-  }
 
-  .enemy-sprite.elite-variant .enemy-body {
-    transform: scale(0.86);
+  .sprite-art {
+    width: 88px;
+    height: 80px;
   }
 
   .damage-number {
@@ -1012,13 +1008,10 @@
     padding-inline: 5px;
   }
 
-  .hero-body,
-  .enemy-body {
-    transform: scale(0.68);
-  }
 
-  .enemy-sprite.elite-variant .enemy-body {
-    transform: scale(0.76);
+  .sprite-art {
+    width: 78px;
+    height: 72px;
   }
 
   .combat-health {

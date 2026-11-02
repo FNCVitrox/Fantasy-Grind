@@ -313,12 +313,18 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Nebenbei: Der „Menü“-Knopf war im englischen Modus nicht übersetzt.
     - `tests/ui-layout.js` prüft auf allen Handy-Grössen Kampf-Button über der Tab-Leiste und jeden Tab.
 
-- [ ] **17. Charaktere und Gegner als SVG-Sprites**
+- [x] **17. Charaktere und Gegner als SVG-Sprites**
   - Wo: Neuer Ordner `assets/sprites/`, `render.js` (`renderHeroBuildVisual`, `setBattleEnemyVisual`)
   - Wie:
     - Eigene SVG-Figuren im einheitlichen Stil für den Krieger (3 Build-Varianten) und alle Gegner und Bosse.
     - Animationen mit CSS: Idle-Atmen, Angriff, Treffer-Wackeln, Tod.
   - Fertig wenn: Kein Gegner nutzt mehr CSS-Grundformen, und alle Sprite-Tests in smoke.js sind angepasst und grün.
+  - Ergebnis (v0.8.140):
+    - Neues Modul `scripts/sprites.js` statt `assets/sprites/`: Die Figuren werden aus SVG-Teilen gebaut (6 Formen: Mensch, Wolf, Keiler, Krähe, Schemen, Ratte; 9 Köpfe; 10 Waffen; 6 Nebenhand-Teile; Extras wie Umhang, Köcher, Runen). Externe SVG-Dateien hätten sich wegen der CSP (`connect-src 'none'`) und unter `file://` nicht einfärben lassen.
+    - Alle 29 Gegner haben eine eigene Figur, alle schauen zum Helden. Held: 4 Klassen × 3 Builds, beim Krieger Schild (Wächter), Zweihänder (Berserker) oder Schwert und Buckler (Veteran).
+    - Animationen: Atmen, Schweben, Flügel, Schwanz, Waffenschwung beim Angriff, Treffer-Blitz, Tod des Gegners, Niederlage des Helden. Ruhige Animationen sind bei `prefers-reduced-motion` aus.
+    - Rund 1550 Zeilen alte CSS-Formen gelöscht.
+    - smoke.js prüft: Jede Gegner-Klasse hat eine Variante, jede Figur ist vollständig und einzigartig, keine alten CSS-Formen mehr.
 
 - [ ] **18. Item-Icons**
   - Wie:
