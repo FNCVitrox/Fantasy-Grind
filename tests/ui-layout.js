@@ -1,6 +1,7 @@
 // Browser-Test: Hauptseite auf vielen Bildschirmgrössen.
 // - Ausrüstungs-Slots: kein abgeschnittener Text (Punkt 3 im Arbeitsplan)
-// - Kampf-Button ab 1280x768 ohne Scrollen sichtbar
+// - Kampf-Button ab 1280x768 ohne Scrollen sichtbar, auf dem Handy (≤620 px) über der Tab-Leiste
+// - Handy-Tabs zeigen jeweils den richtigen Bereich
 // - kein horizontaler Überlauf der Seite
 // Start: npm run test:ui
 let chromium;try{({chromium}=require('playwright'))}catch(e){console.log('Playwright fehlt: npm i -D playwright && npx playwright install chromium');process.exit(0)}
@@ -15,11 +16,14 @@ for(const lang of ['de','en'])for(const [w,h] of VIEWS){const p=await b.newPage(
   await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
   // Slot-Namen und Detailzeilen dürfen nie abgeschnitten sein; Item-Namen nur, wenn der volle Name als Tooltip (title) vorhanden ist.
   const trunc=[];document.querySelectorAll('#equipment .equipment-chip').forEach(c=>c.querySelectorAll(':scope > strong, :scope > span:not(.equipment-hover-detail), :scope > small').forEach(el=>{const s=getComputedStyle(el);if(s.display==='none')return;const cut=el.scrollWidth>el.clientWidth+1||el.scrollHeight>el.clientHeight+1;if(!cut)return;if(el.tagName==='SPAN'&&el.getAttribute('title')===el.textContent.trim())return;trunc.push(el.textContent.trim())}));
-  const f=[...document.querySelectorAll('button')].find(x=>/Kampf starten|Start fight/.test(x.textContent));const fb=f?Math.round(f.getBoundingClientRect().bottom):-1;
-  return {trunc,fb,vh:innerHeight,vw:innerWidth,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth};},lang);
+  const f=[...document.querySelectorAll('button')].find(x=>/Kampf starten|Start fight/.test(x.textContent));const fb=f?Math.round(f.getBoundingClientRect().bottom):-1;const tb=document.getElementById('mobileTabbar');const tabTop=tb&&getComputedStyle(tb).display!=='none'?Math.round(tb.getBoundingClientRect().top):innerHeight;
+  let tabs=null;if(tabTop<innerHeight){const vis=s=>{const e=document.querySelector(s);return !!e&&e.getClientRects().length>0};tabs={};for(const t of ['hero','quests','fight']){document.querySelector('#mobileTabbar [data-mobile-tab="'+t+'"]').click();tabs[t]=[vis('#fightBtn'),vis('#equipment'),vis('#quests')].join('')}}
+  return {trunc,fb,tabTop,tabs,vh:innerHeight,vw:innerWidth,overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth};},lang);
  const errs=[];if(r.trunc.length)errs.push('abgeschnitten: '+r.trunc.slice(0,3).join(' | '));
  if(w>=1280&&h>=768&&r.fb>r.vh)errs.push(`Kampf-Button unter dem Rand (${r.fb}>${r.vh})`);
  if(r.overflow)errs.push('horizontaler Überlauf');
+ if(w<=620&&r.fb>r.tabTop)errs.push(`Handy: Kampf-Button unter der Tab-Leiste (${r.fb}>${r.tabTop})`);
+ if(w<=620&&(!r.tabs||r.tabs.hero!=='falsetruefalse'||r.tabs.quests!=='falsefalsetrue'||r.tabs.fight!=='truefalsefalse'))errs.push('Handy-Tabs falsch: '+JSON.stringify(r.tabs));
  if(errs.length){fails++;console.log(lang,w+'x'+h,errs.join('; '))}
  await p.close();}
 console.log(fails?'LAYOUT-TEST FEHLGESCHLAGEN: '+fails:'LAYOUT-TEST BESTANDEN: Ausrüstung lesbar, Kampf-Button erreichbar');await b.close();process.exit(fails?1:0);})();

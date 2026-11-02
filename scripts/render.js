@@ -12,9 +12,12 @@
 }
 
 function renderPlayerHud(language = currentLanguage()) {
-  setText("level", state.level);
-  setText("gold", state.gold);
-  setText("renown", state.renown);
+  fxCountTo("level", state.level);
+  fxCountTo("gold", state.gold);
+  fxCountTo("renown", state.renown);
+  if (typeof document !== "undefined" && document.body?.classList) document.body.classList.toggle("reduced-effects", normalizeSettings(state.settings).reducedEffects);
+  if (typeof audioSyncMusic === "function") audioSyncMusic();
+  if (typeof document !== "undefined" && document.body?.dataset) document.body.dataset.combatSpeed = String(ui.autoFarm ? 1 : normalizeSettings(state.settings).combatSpeed);
   setText("characterSummaryMeta", `${t("common.level", "Level")} ${state.level}`);
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
   setText("xpText", state.level >= 20 ? t("common.max", "Max") : `${state.xp}/${needed}`);
@@ -49,6 +52,7 @@ const modalRenderers = {
   achievementsModal: () => renderAchievements(),
   smithModal: () => renderSmith(),
   saveModal: () => renderSaveSummary(),
+  settingsModal: () => renderSettings(),
   repairModal: () => renderRepairModal(),
   equipmentModal: () => renderEquipmentDetails(),
   playerStatsModal: (stats) => renderPlayerStatsDetails(stats),
@@ -200,6 +204,12 @@ function renderHeroBuildVisual() {
   const characterClass = Object.prototype.hasOwnProperty.call(classCatalog, state.characterClass) ? state.characterClass : "warrior";
   const className = `combatant hero-sprite hero-class-${characterClass} hero-build-${build}`;
   if ($("heroSprite").className !== className) $("heroSprite").className = className;
+  const art = $("heroSpriteArt");
+  const artKey = `${characterClass}:${build}`;
+  if (art && art.dataset.sprite !== artKey) {
+    art.innerHTML = heroSpriteSvg(characterClass, build);
+    art.dataset.sprite = artKey;
+  }
   const heroName = entityName("class", characterClass, classCatalog[characterClass].name);
   setText("heroSpriteName", heroName);
   const health = $("heroSprite")?.querySelector(".hero-health");
@@ -212,6 +222,14 @@ function itemQuality(item) {
 
 function itemSlot(item) {
   return equipmentSlots.includes(item?.slot) ? item.slot : "ring";
+}
+
+// Kleines SVG-Icon je Slot, Rahmen und Leuchten nach Seltenheit (Punkt 18).
+function itemIconHtml(item, options = {}) {
+  const slot = equipmentSlots.includes(options.slot || item?.slot) ? (options.slot || item.slot) : "material";
+  const quality = item ? itemQuality(item) : "empty";
+  const size = options.size ? ` item-icon-${options.size}` : "";
+  return `<span class="item-icon item-icon-${slot} icon-quality-${quality}${size}" aria-hidden="true"></span>`;
 }
 
 function labelFor(map, key, fallback = t("common.unknown", "Unbekannt")) {
@@ -542,6 +560,11 @@ function renderQuestNotice() {
   const button = $("openQuestBoardBtn");
   const count = (state.unseenQuests || []).filter((id) => state.questBoard.includes(id)).length;
   if (button) button.classList.toggle("has-new-quests", count > 0);
+  const tabNotice = $("mobileQuestNotice");
+  if (tabNotice) {
+    tabNotice.hidden = count <= 0;
+    setText("mobileQuestNotice", count);
+  }
   if (!notice) return;
   notice.hidden = true;
   setText("questNotice", count);
@@ -716,6 +739,11 @@ function setBattleEnemyVisual(enemy) {
   setText("enemySpriteName", enemyDisplayName(enemy, enemy.baseId || ui.selectedEnemy));
   const className = `combatant enemy-sprite ${enemy.sprite}${enemy.eliteVariant ? " elite-variant" : ""}`;
   if ($("enemySprite").className !== className) $("enemySprite").className = className;
+  const art = $("enemySpriteArt");
+  if (art && art.dataset.sprite !== enemy.sprite) {
+    art.innerHTML = enemySpriteSvg(enemy.sprite);
+    art.dataset.sprite = enemy.sprite;
+  }
   updateBattleHealth(state.hp, state.maxHp, enemy.hp, enemy.hp);
 }
 
@@ -871,6 +899,7 @@ function renderEquipment() {
     const item = getItem(id);
     if (!item) {
       return `<button class="equipment-chip empty-slot" type="button" data-open-equipment>
+        ${itemIconHtml(null, { slot })}
         <strong>${labelFor(slotLabel, slot)}</strong>
         <span>${t("common.empty", "Leer")}</span>
       </button>`;
@@ -883,6 +912,7 @@ function renderEquipment() {
     const statText = itemStatText(item);
     const enchantText = itemEnchantmentsText(item);
     return `<button class="equipment-chip rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}" type="button" data-open-equipment>
+      ${itemIconHtml(item)}
       <strong>${labelFor(slotLabel, slot)}</strong>
       <span class="quality-${quality}" title="${escapeAttr(itemName)}">${escapeHtml(itemName)}</span>
       <small>${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</small>
@@ -923,7 +953,7 @@ function renderEquipmentDetails() {
     const enchantText = itemEnchantmentsText(item);
     return `<div class="slot rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
       <strong>${labelFor(slotLabel, slot)}</strong>
-      <p class="quality-${quality}">${escapeHtml(itemDisplayName(item, id))} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</p>
+      <p class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, id))} · ${labelFor(qualityLabel, quality)} · +${item.upgrade || 0}</p>
       ${item.set ? `<p class="set-line set-hover-row"><span>${escapeHtml(setDisplayName(item.set))}</span><span class="tooltip-source" data-set-tooltip-key="${setKey}"></span></p>` : ""}
       ${statText ? `<p>${statText}</p>` : ""}
       ${enchantText ? `<p>${enchantText}</p>` : ""}
@@ -1482,7 +1512,7 @@ function renderSmithUpgrade() {
       : `<p>${cost.gold} ${t("common.gold", "Gold")}${discountText}</p><p class="smith-material-cost">${materialText}</p>`;
     return `<div class="smith-card rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
       <div class="smith-item-main">
-        <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</span></strong>
+        <strong>${itemIconHtml(item)}${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</span></strong>
         <p>+${item.upgrade || 0}/${limit}${statText ? ` · ${statText}` : ""} · ${t("main.durability", "Haltbarkeit")} ${itemDurability(itemId)}%</p>
       </div>
       <button class="upgrade-preview" type="button" data-upgrade="${slot}" ${disabled ? "disabled" : ""}>
@@ -1565,7 +1595,7 @@ function renderSmithEnchant() {
       : "";
     return `<div class="enchant-card rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
       <div>
-        <strong>${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</span></strong>
+        <strong>${itemIconHtml(item)}${labelFor(slotLabel, slot)} · <span class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</span></strong>
         <p>${labelFor(qualityLabel, quality)} · Slots ${Math.min(savedEnchantments.length, slotLimit)}/${slotLimit}${inactiveEnchantments.length ? ` · ${inactiveEnchantments.length} ${t("enchant.locked", "gesperrt")}` : ""}</p>
         <p>${enchantmentText}${lockedText}</p>
       </div>
@@ -1599,7 +1629,7 @@ function renderSmithSalvage() {
         const materials = Object.entries(salvageValue(item)).map(([id, amount]) => `${amount} ${labelFor(materialLabel, id)}`).join(" · ");
         const bonusChance = Math.round(renownSalvageBonusChance(item) * 100);
         return `<div class="salvage-row rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
-          <span><strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong><small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${materials}${bonusChance ? ` · ${bonusChance}% ${t("smith.bonus", "Bonus")}` : ""}</small></span>
+          <span><strong class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, itemId))}</strong><small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${materials}${bonusChance ? ` · ${bonusChance}% ${t("smith.bonus", "Bonus")}` : ""}</small></span>
           <button type="button" data-salvage="${index}">${t("smith.salvage", "Zerlegen")}</button>
         </div>`;
       }).join("")
@@ -1653,7 +1683,7 @@ function renderInventoryItemCard(itemId, index) {
   const locked = isInventoryItemLocked(itemId);
   return `<div class="inventory-item rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)} ${locked ? "item-locked" : ""}">
     <div class="inventory-item-head">
-      <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
+      <strong class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, itemId))}</strong>
       ${locked ? `<span class="lock-note">${t("merchant.lockedItem", "Geschützt")}</span>` : ""}
     </div>
     <div class="inventory-item-meta">
@@ -1703,7 +1733,7 @@ function renderMerchantItemRow(itemId, index) {
   const locked = isInventoryItemLocked(itemId);
   return `<div class="merchant-row rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)} ${locked ? "item-locked" : ""}">
     <span>
-      <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, itemId))}</strong>
+      <strong class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, itemId))}</strong>
       <small>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${itemDurability(itemId)}%${locked ? ` · ${t("merchant.lockedItem", "Geschützt")}` : ""}</small>
     </span>
     <b>${sellValue(item)} ${t("common.gold", "Gold")}</b>
@@ -2030,7 +2060,7 @@ function renderBossRewardPanel(enemyId, enemy) {
     const item = getItem(drop.id);
     const quality = itemQuality(item);
     return `<div class="boss-reward-drop">
-      <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, drop.id))}</strong>
+      <strong class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, drop.id))}</strong>
       <span>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, itemSlot(item))} · ${formatChance(drop.chance)}</span>
     </div>`;
   }).join("");
@@ -2119,7 +2149,7 @@ function renderFixedDropRow(enemyId, drop) {
   const known = Boolean(discovered);
   const status = known ? ((discovered.count || 0) <= 1 ? t("common.new", "Neu") : t("common.known", "Bekannt")) : t("common.unknown", "Unbekannt");
   return `<button class="drop-row bestiary-item-row ${known ? "item-hover-row" : "locked-drop"}" type="button" data-bestiary-item="${escapeAttr(key)}" ${known ? `data-tooltip-key="${cacheTooltipItem(item)}"` : ""}>
-    <span><b class="quality-${quality}">${escapeHtml(itemDisplayName(item, drop.id))}</b><small>${t("bestiary.fixedDrop", "Fester Drop")} · ${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(drop.chance)}</small></span>
+    <span><b class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, drop.id))}</b><small>${t("bestiary.fixedDrop", "Fester Drop")} · ${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(drop.chance)}</small></span>
     <span>${status}</span>
   </button>`;
 }
@@ -2224,7 +2254,7 @@ function renderGeneratedDropRow(template, discoveredLookup) {
   const status = found ? ((found.count || 0) <= 1 ? t("common.new", "Neu") : t("common.known", "Bekannt")) : t("common.unknown", "Unbekannt");
   const hoverClass = found ? "item-hover-row" : "locked-drop";
   return `<button class="drop-row discovered-drop bestiary-item-row ${hoverClass} ${ui.selectedBestiaryItemKey === key ? "active" : ""}" type="button" data-bestiary-item="${escapeAttr(key)}" ${found ? `data-tooltip-key="${cacheTooltipItem(found)}"` : ""}>
-    <span><b class="quality-${quality}">${escapeHtml(itemDisplayName(item, item.id))}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(template.dropChance)}</small></span>
+    <span><b class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, item.id))}</b><small>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, slot)} · ${t("common.chance", "Chance")} ${formatChance(template.dropChance)}</small></span>
     <span>${status}</span>
   </button>`;
 }
@@ -2472,7 +2502,7 @@ function renderItemTooltip(item) {
   const statText = itemStatText(item);
   const enchantText = itemEnchantmentsText(item);
   return `<div class="item-tooltip">
-    <strong class="quality-${quality}">${escapeHtml(itemDisplayName(item, item.id))}</strong>
+    <strong class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, item.id))}</strong>
     <span>${labelFor(slotLabel, slot)} · ${labelFor(qualityLabel, quality)}</span>
     ${item.set ? `<span>Set: ${escapeHtml(setDisplayName(item.set))}</span>` : ""}
     ${upgradeLine}
@@ -2696,9 +2726,108 @@ function renderRepairRow(slot) {
   const quality = itemQuality(item);
   return `<div class="repair-row rarity-card rarity-${quality} ${itemUpgradeFrameClass(item)}">
     <div>
-      <strong class="quality-${quality}">${labelFor(slotLabel, slot)} · ${escapeHtml(itemDisplayName(item, state.equipment[slot]))}</strong>
+      <strong class="quality-${quality}">${itemIconHtml(item)}${labelFor(slotLabel, slot)} · ${escapeHtml(itemDisplayName(item, state.equipment[slot]))}</strong>
       <p>${labelFor(qualityLabel, quality)} · ${t("main.durability", "Haltbarkeit")}: ${durability}% · ${t("equipment.repair", "Reparatur")}: ${cost} ${t("common.gold", "Gold")}</p>
     </div>
     <button type="button" data-repair-slot="${slot}" ${disabled}>${label}</button>
   </div>`;
+}
+
+// Einstellungsfenster (Punkte 19–21): alle Optionen an einem Ort, gespeichert in state.settings.
+function settingsChoiceHtml(key, options, current) {
+  return `<div class="settings-choice" role="group">${options.map(([value, label]) => {
+    const active = String(current) === String(value);
+    return `<button type="button" data-setting-choice="${key}" data-value="${value}" aria-pressed="${active ? "true" : "false"}" class="${active ? "is-active" : ""}">${escapeHtml(label)}</button>`;
+  }).join("")}</div>`;
+}
+
+function settingsRowHtml(title, hint, control) {
+  return `<div class="settings-row"><div class="settings-label"><strong>${escapeHtml(title)}</strong>${hint ? `<small>${escapeHtml(hint)}</small>` : ""}</div>${control}</div>`;
+}
+
+function settingsGroups(settings) {
+  const systemReduced = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const range = (key, label, hint) => settingsRowHtml(label, hint, `<label class="settings-range"><input type="range" min="0" max="100" step="5" value="${settings[key]}" data-setting-range="${key}" aria-label="${escapeAttr(label)}"><output>${settings[key]}%</output></label>`);
+  const onOff = (key) => settingsChoiceHtml(key, [["true", t("settings.on", "An")], ["false", t("settings.off", "Aus")]], settings[key]);
+  const language = currentLanguage();
+  return [
+    {
+      id: "game",
+      title: t("settings.game", "Spiel"),
+      rows: [
+        settingsRowHtml(t("nav.language", "Sprache"), "", settingsChoiceHtml("language", [["de", "Deutsch"], ["en", "English"]], language)),
+        settingsRowHtml(
+          t("settings.combatSpeed", "Kampftempo"),
+          t("settings.combatSpeedHint", "Wie schnell Kämpfe ablaufen. Auto-Farmen läuft immer im normalen Tempo."),
+          settingsChoiceHtml("combatSpeed", [["1", "1×"], ["2", "2×"], ["4", "4×"]], settings.combatSpeed),
+        ),
+      ],
+    },
+    {
+      id: "loot",
+      title: t("settings.lootGroup", "Beute"),
+      rows: [
+        settingsRowHtml(t("settings.autoLoot", "Auto-Loot"), t("settings.autoLootHint", ""), onOff("autoLoot")),
+        settingsRowHtml(t("settings.autoSellCommon", "Gewöhnliches verkaufen"), t("settings.autoSellCommonHint", ""), onOff("autoSellCommon")),
+        settingsRowHtml(
+          t("autoFarm.restAt", "Rasten unter"),
+          t("settings.restHint", "Auto-Farmen rastet am Lagerplatz, wenn das Leben darunter fällt."),
+          settingsChoiceHtml("autoFarmRestPercent", [["30", "30%"], ["50", "50%"], ["70", "70%"]], settings.autoFarmRestPercent),
+        ),
+      ],
+    },
+    {
+      id: "sound",
+      title: t("settings.sound", "Ton"),
+      rows: [
+        settingsRowHtml(
+          t("settings.mute", "Ton"),
+          t("settings.muteHint", "Alle Sounds und die Musik ein- oder ausschalten."),
+          settingsChoiceHtml("muted", [["false", t("settings.on", "An")], ["true", t("settings.off", "Aus")]], settings.muted),
+        ),
+        range("soundVolume", t("settings.soundVolume", "Effekte-Lautstärke"), t("settings.soundVolumeHint", "Treffer, Krits, Beute, Levelaufstieg und Klicks.")),
+        range("musicVolume", t("settings.musicVolume", "Musik-Lautstärke"), t("settings.musicVolumeHint", "Ruhige Musik, je nach Gebiet oder Dungeon.")),
+      ],
+    },
+    {
+      id: "display",
+      title: t("settings.display", "Darstellung"),
+      rows: [
+        settingsRowHtml(
+          t("settings.effects", "Effekte"),
+          systemReduced ? t("settings.effectsSystem", "Dein System verlangt weniger Bewegung, Effekte sind deshalb reduziert.") : t("settings.effectsHint", "Wackeln, Funken, Loot-Regen und Lichtsäule."),
+          settingsChoiceHtml("reducedEffects", [["false", t("settings.effectsFull", "Voll")], ["true", t("settings.effectsReduced", "Reduziert")]], settings.reducedEffects),
+        ),
+      ],
+    },
+    {
+      id: "save",
+      title: t("save.title", "Spielstand"),
+      rows: [
+        settingsRowHtml(
+          t("settings.saveDownload", "Letzte Sicherung"),
+          formatSaveDate(state.lastSaveExportAt),
+          `<div class="settings-actions">
+            <button type="button" data-settings-action="export">${escapeHtml(t("settings.export", "Herunterladen"))}</button>
+            <button type="button" data-settings-action="import">${escapeHtml(t("settings.import", "Laden"))}</button>
+            <button type="button" class="danger-action" data-settings-action="newGame">${escapeHtml(t("settings.newGame", "Neu beginnen"))}</button>
+          </div>`,
+        ),
+      ],
+    },
+  ];
+}
+
+function renderSettings() {
+  const body = $("settingsBody");
+  if (!body) return;
+  const settings = normalizeSettings(state.settings);
+  const html = settingsGroups(settings)
+    .map((group) => `<section class="settings-group settings-group-${group.id}"><h3>${escapeHtml(group.title)}</h3>${group.rows.join("")}</section>`)
+    .join("");
+  if (renderCache.settings === html) return;
+  renderCache.settings = html;
+  const focused = document.activeElement?.dataset?.settingRange;
+  body.innerHTML = html;
+  if (focused) body.querySelector(`[data-setting-range="${focused}"]`)?.focus();
 }

@@ -14,7 +14,7 @@ if(process.env.RICH)await p.evaluate(async()=>{state.level=15;state.gold=999999;
 const ids=await p.evaluate(()=>[...document.querySelectorAll('.modal-overlay')].map(m=>m.id));
 for(const id of ids){
  const r=await p.evaluate(async(id)=>{document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));
-  try{ const btn={zoneModal:'openZoneBtn',bestiaryModal:'openBestiaryBtn',inventoryModal:'openInventoryBtn',merchantModal:'openMerchantBtn',smithModal:'openSmithBtn',questBoardModal:'openQuestBoardBtn',achievementsModal:'openAchievementsBtn',saveModal:'openSaveMenuBtn'}[id]; if(btn&&$(btn)&&!$(btn).disabled){$(btn).click()} else openModal(id); render(); }catch(e){return {err:e.message}}
+  try{ const btn={zoneModal:'openZoneBtn',bestiaryModal:'openBestiaryBtn',inventoryModal:'openInventoryBtn',merchantModal:'openMerchantBtn',smithModal:'openSmithBtn',questBoardModal:'openQuestBoardBtn',achievementsModal:'openAchievementsBtn',saveModal:'openSaveMenuBtn',settingsModal:'openSettingsBtn'}[id]; if(btn&&$(btn)&&!$(btn).disabled){$(btn).click()} else openModal(id); render(); }catch(e){return {err:e.message}}
   await new Promise(r=>setTimeout(r,350));
   const vw=document.documentElement.clientWidth;const vh=window.innerHeight;const m=document.getElementById(id);const win=m.querySelector('.modal-window')||m;
   const wr=win.getBoundingClientRect();const off=[];

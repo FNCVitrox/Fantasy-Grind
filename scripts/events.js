@@ -316,7 +316,32 @@ function setMobileMenuOpen(isOpen) {
   if (!menu || !button) return;
   menu.classList.toggle("open", isOpen);
   button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  const tabMenu = document.querySelector('#mobileTabbar [data-mobile-tab="menu"]');
+  if (tabMenu) tabMenu.setAttribute("aria-expanded", isOpen ? "true" : "false");
 }
+
+// Untere Tab-Leiste (nur Handy): Kampf · Ausrüstung · Quests · Menü.
+function setMobileTab(tab) {
+  if (!["fight", "hero", "quests"].includes(tab)) return;
+  document.body.dataset.mobileTab = tab;
+  document.querySelectorAll("#mobileTabbar [data-mobile-tab]").forEach((button) => {
+    if (button.dataset.mobileTab === "menu") return;
+    button.setAttribute("aria-pressed", button.dataset.mobileTab === tab ? "true" : "false");
+  });
+  window.scrollTo({ top: 0 });
+}
+
+$("mobileTabbar").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-mobile-tab]");
+  if (!button) return;
+  event.stopPropagation();
+  if (button.dataset.mobileTab === "menu") {
+    setMobileMenuOpen(!$("topbarActions").classList.contains("open"));
+    return;
+  }
+  setMobileMenuOpen(false);
+  setMobileTab(button.dataset.mobileTab);
+});
 
 $("mobileMenuBtn").addEventListener("click", (event) => {
   event.stopPropagation();
@@ -328,7 +353,7 @@ $("topbarActions").addEventListener("click", (event) => {
 });
 
 document.addEventListener("click", (event) => {
-  if (event.target.closest("#topbarActions, #mobileMenuBtn")) return;
+  if (event.target.closest("#topbarActions, #mobileMenuBtn, #mobileTabbar")) return;
   setMobileMenuOpen(false);
 });
 
@@ -469,6 +494,47 @@ $("playerStatsModal").addEventListener("click", (event) => {
 $("closeClassModalBtn").addEventListener("click", closeClassModal);
 $("classModal").addEventListener("click", (event) => {
   if (event.target.id === "classModal") closeClassModal();
+});
+// Leiser Klick bei jedem Knopf (Kampfaktionen haben eigene Treffer-Sounds).
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("button");
+  if (button && !button.disabled && !button.closest("#combatActions")) audioPlay("click");
+});
+$("openSettingsBtn").addEventListener("click", () => {
+  renderSettings();
+  openModal("settingsModal");
+});
+$("closeSettingsBtn").addEventListener("click", () => closeModal("settingsModal"));
+$("settingsModal").addEventListener("click", (event) => {
+  if (event.target.id === "settingsModal") {
+    closeModal("settingsModal");
+    return;
+  }
+  const choice = event.target.closest("[data-setting-choice]");
+  if (choice?.dataset.settingChoice === "language") {
+    void setLanguage(choice.dataset.value);
+    return;
+  }
+  if (choice) setSettingValue(choice.dataset.settingChoice, choice.dataset.value);
+  const action = event.target.closest("[data-settings-action]")?.dataset.settingsAction;
+  if (action === "export") exportSave();
+  if (action === "import") importSave();
+  if (action === "newGame") {
+    closeModal("settingsModal");
+    startNewGame();
+  }
+});
+$("settingsModal").addEventListener("input", (event) => {
+  const range = event.target.closest("[data-setting-range]");
+  if (!range) return;
+  setSettingValue(range.dataset.settingRange, range.value, { live: true });
+  const output = range.parentElement?.querySelector("output");
+  if (output) output.textContent = `${normalizeSettings(state.settings)[range.dataset.settingRange]}%`;
+});
+$("settingsModal").addEventListener("change", (event) => {
+  const range = event.target.closest("[data-setting-range]");
+  if (range) setSettingValue(range.dataset.settingRange, range.value);
+  if (range) audioPlay("click");
 });
 $("openSaveMenuBtn").addEventListener("click", () => {
   renderSaveSummary();
@@ -653,6 +719,8 @@ function closeModal(id) {
 function setControlsDisabled(disabled) {
   document.querySelectorAll("button").forEach((button) => {
     if (button.id === "openSaveMenuBtn") return;
+    if (button.closest("#settingsModal, #mobileTabbar")) return;
+    if (button.id === "openSettingsBtn") return;
     if (button.id === "autoFarmBtn") return;
     if (button.id === "closeOfflineBtn") return;
     if (button.id === "languageToggleBtn") return;
@@ -690,8 +758,14 @@ function setControlsDisabled(disabled) {
   });
 }
 
+// Kampftempo 1×/2×/4× aus den Einstellungen; Auto-Farmen bleibt beim normalen Tempo (Balance, Punkt 15).
+function combatSpeedFactor() {
+  return ui.autoFarm ? 1 : normalizeSettings(state.settings).combatSpeed;
+}
+
 function waitCombat(ms) {
   if (ui.skipCombat) return Promise.resolve();
+  ms /= combatSpeedFactor();
 
   return new Promise((resolve) => {
     const started = performance.now();
@@ -705,6 +779,7 @@ function waitCombat(ms) {
 }
 
 function waitResult(ms) {
+  ms /= combatSpeedFactor();
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
@@ -718,7 +793,12 @@ function showCombatAnimationEvent(stage, event, activeCombatEvent, enemyName, pl
     : t("combat.enemyHit", "{enemy} trifft für {damage}.", { enemy: enemyName, damage: event.damage }));
   updateBattleHealth(event.playerHp, playerMaxHp, event.enemyHp, enemyMaxHp);
   highlightAbilityUse(event.abilityId);
-  if (event.damage > 0) spawnDamage(event.damage, side, event.critical);
+  if (event.damage > 0) {
+    spawnDamage(event.damage, side, event.critical);
+    fxHitParticles(side, event.critical);
+    audioPlay(event.critical ? "crit" : event.actor === "hero" ? "hit" : "heroHurt");
+    if (event.critical) fxShake(event.actor === "hero" ? 1 : 1.4);
+  }
 }
 
 function setBattleStageClass(stage, classNames = "", activeCombatEvent = null) {

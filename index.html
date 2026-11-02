@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests" />
     <title>Fantasy Grind</title>
-    <link rel="stylesheet" href="./css/base.css?v=0.8.138" />
-    <link rel="stylesheet" href="./css/modals.css?v=0.8.138" />
-    <link rel="stylesheet" href="./css/responsive.css?v=0.8.138" />
+    <link rel="stylesheet" href="./css/base.css?v=0.8.144" />
+    <link rel="stylesheet" href="./css/modals.css?v=0.8.144" />
+    <link rel="stylesheet" href="./css/responsive.css?v=0.8.144" />
   </head>
-  <body>
+  <body data-mobile-tab="fight">
     <div class="studio-splash" id="studioSplash" role="status" aria-live="polite" aria-label="Nemurenai Game Studio präsentiert Fantasy Grind" data-i18n-aria="aria.splash" tabindex="0">
       <div class="studio-splash-inner">
         <img src="./assets/nemurenai-logo-transparent.png" alt="Nemurenai Game Studio" width="360" height="360" />
@@ -17,16 +17,14 @@
         <span>presents</span>
       </div>
     </div>
-    <div class="version-badge" aria-label="Spielversion" data-i18n-aria="aria.version">Alpha v0.8.138</div>
+    <div class="version-badge" aria-label="Spielversion" data-i18n-aria="aria.version">Alpha v0.8.144</div>
     <main class="shell">
       <section class="topbar" aria-label="Spielstatus" data-i18n-aria="aria.gameStatus">
         <div>
           <p class="eyebrow">Fantasy Grind</p>
           <h1>Grauwacht</h1>
         </div>
-        <button class="mobile-menu-toggle" id="mobileMenuBtn" type="button" aria-expanded="false" aria-controls="topbarActions">
-          Menü
-        </button>
+        <button class="mobile-menu-toggle" id="mobileMenuBtn" type="button" aria-expanded="false" aria-controls="topbarActions" data-i18n="mobile.menu">Menü</button>
         <div class="topbar-actions" id="topbarActions" aria-label="Schnellzugriff" data-i18n-aria="aria.quickAccess">
           <button class="book-button camp-button" id="restBtn" type="button" aria-label="Am Lagerplatz heilen" data-i18n-aria="aria.restCamp">
             <span>Lagerplatz</span>
@@ -56,6 +54,9 @@
           </button>
           <button class="book-button save-menu-button" id="openSaveMenuBtn" type="button" aria-label="Spielstand öffnen" data-i18n-aria="aria.openSave">
             <span>Save</span>
+          </button>
+          <button class="book-button settings-button" id="openSettingsBtn" type="button" aria-label="Einstellungen öffnen" data-i18n-aria="aria.openSettings">
+            <span data-i18n="nav.settings">Einstellungen</span>
           </button>
           <button class="book-button language-button" id="languageToggleBtn" type="button" aria-label="Sprache wechseln" data-i18n-aria="language.aria">
             <span id="languageButtonLabel">Sprache</span>
@@ -120,11 +121,7 @@
             </div>
             <div class="combatant hero-sprite" id="heroSprite">
               <div class="sprite-shadow"></div>
-              <div class="hero-body">
-                <span class="hero-helm"></span>
-                <span class="hero-shield"></span>
-                <span class="hero-sword"></span>
-              </div>
+              <div class="sprite-art" id="heroSpriteArt"></div>
               <b id="heroSpriteName">Krieger</b>
               <div class="combat-health hero-health" aria-label="Krieger Leben" data-i18n-aria="aria.heroHealth">
                 <div class="combat-health-label"><span>Leben</span><strong id="battleHeroHpText">0/0</strong></div>
@@ -142,11 +139,7 @@
             </div>
             <div class="combatant enemy-sprite enemy-wolf" id="enemySprite">
               <div class="sprite-shadow"></div>
-              <div class="enemy-body">
-                <span class="enemy-extra enemy-extra-a"></span>
-                <span class="enemy-extra enemy-extra-b"></span>
-                <span class="enemy-eye"></span>
-              </div>
+              <div class="sprite-art" id="enemySpriteArt"></div>
               <b id="enemySpriteName">Waldwolf</b>
               <div class="combat-health enemy-health" aria-label="Gegner Leben" data-i18n-aria="aria.enemyHealth">
                 <div class="combat-health-label"><span>Leben</span><strong id="battleEnemyHpText">0/0</strong></div>
@@ -207,6 +200,12 @@
       </section>
 
     </main>
+    <nav class="mobile-tabbar" id="mobileTabbar" aria-label="Bereiche" data-i18n-aria="mobile.tabsAria">
+      <button type="button" data-mobile-tab="fight" aria-pressed="true"><span class="mobile-tab-icon tab-icon-fight" aria-hidden="true"></span><span data-i18n="mobile.fight">Kampf</span></button>
+      <button type="button" data-mobile-tab="hero" aria-pressed="false"><span class="mobile-tab-icon tab-icon-hero" aria-hidden="true"></span><span data-i18n="mobile.hero">Ausrüstung</span></button>
+      <button type="button" data-mobile-tab="quests" aria-pressed="false"><span class="mobile-tab-icon tab-icon-quests" aria-hidden="true"></span><span data-i18n="mobile.quests">Quests</span><em class="quest-notice mobile-tab-notice" id="mobileQuestNotice" hidden>0</em></button>
+      <button type="button" data-mobile-tab="menu" aria-expanded="false" aria-controls="topbarActions"><span class="mobile-tab-icon tab-icon-menu" aria-hidden="true"></span><span data-i18n="mobile.menu">Menü</span></button>
+    </nav>
     <div class="modal-overlay" id="lootModal" aria-hidden="true">
       <div class="modal-window loot-window" role="dialog" aria-modal="true" aria-labelledby="lootTitle">
         <div class="modal-window-head">
@@ -370,6 +369,18 @@
         <div class="offline-summary" id="offlineSummary"></div>
       </div>
     </div>
+    <div class="modal-overlay" id="settingsModal" aria-hidden="true">
+      <div class="modal-window settings-window" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="modal-window-head">
+          <div>
+            <p class="eyebrow" data-i18n="settings.eyebrow">Optionen</p>
+            <h2 id="settingsTitle" data-i18n="settings.title">Einstellungen</h2>
+          </div>
+          <button class="modal-close" id="closeSettingsBtn" type="button" aria-label="Einstellungen schliessen" data-i18n-aria="aria.closeSettings">Schließen</button>
+        </div>
+        <div class="settings-body" id="settingsBody"></div>
+      </div>
+    </div>
     <div class="modal-overlay" id="combatLogModal" aria-hidden="true">
       <div class="modal-window combat-log-window" role="dialog" aria-modal="true" aria-labelledby="combatLogTitle">
         <div class="modal-window-head">
@@ -461,25 +472,28 @@
       </div>
     </div>
     <div class="floating-tooltip" id="floatingTooltip" aria-hidden="true"></div>
-    <script src="./scripts/data.js?v=0.8.138"></script>
-    <script src="./scripts/data-loader.js?v=0.8.138"></script>
-    <script src="./scripts/data-player.js?v=0.8.138"></script>
-    <script src="./scripts/data-world.js?v=0.8.138"></script>
-    <script src="./scripts/data-items.js?v=0.8.138"></script>
-    <script src="./scripts/data-quests.js?v=0.8.138"></script>
-    <script src="./scripts/data-labels.js?v=0.8.138"></script>
-    <script src="./scripts/i18n.js?v=0.8.138"></script>
-    <script src="./scripts/save-system.js?v=0.8.138"></script>
-    <script src="./scripts/combat.js?v=0.8.138"></script>
-    <script src="./scripts/combat-risk.js?v=0.8.138"></script>
-    <script src="./scripts/loot.js?v=0.8.138"></script>
-    <script src="./scripts/smith.js?v=0.8.138"></script>
-    <script src="./scripts/arcanist.js?v=0.8.138"></script>
-    <script src="./scripts/idle.js?v=0.8.138"></script>
-    <script src="./scripts/progression.js?v=0.8.138"></script>
-    <script src="./scripts/core.js?v=0.8.138"></script>
-    <script src="./scripts/render.js?v=0.8.138"></script>
-    <script src="./scripts/render-loot.js?v=0.8.138"></script>
-    <script src="./scripts/events.js?v=0.8.138"></script>
+    <script src="./scripts/data.js?v=0.8.144"></script>
+    <script src="./scripts/data-loader.js?v=0.8.144"></script>
+    <script src="./scripts/data-player.js?v=0.8.144"></script>
+    <script src="./scripts/data-world.js?v=0.8.144"></script>
+    <script src="./scripts/data-items.js?v=0.8.144"></script>
+    <script src="./scripts/data-quests.js?v=0.8.144"></script>
+    <script src="./scripts/data-labels.js?v=0.8.144"></script>
+    <script src="./scripts/i18n.js?v=0.8.144"></script>
+    <script src="./scripts/save-system.js?v=0.8.144"></script>
+    <script src="./scripts/combat.js?v=0.8.144"></script>
+    <script src="./scripts/combat-risk.js?v=0.8.144"></script>
+    <script src="./scripts/loot.js?v=0.8.144"></script>
+    <script src="./scripts/smith.js?v=0.8.144"></script>
+    <script src="./scripts/arcanist.js?v=0.8.144"></script>
+    <script src="./scripts/idle.js?v=0.8.144"></script>
+    <script src="./scripts/progression.js?v=0.8.144"></script>
+    <script src="./scripts/core.js?v=0.8.144"></script>
+    <script src="./scripts/sprites.js?v=0.8.144"></script>
+    <script src="./scripts/fx.js?v=0.8.144"></script>
+    <script src="./scripts/audio.js?v=0.8.144"></script>
+    <script src="./scripts/render.js?v=0.8.144"></script>
+    <script src="./scripts/render-loot.js?v=0.8.144"></script>
+    <script src="./scripts/events.js?v=0.8.144"></script>
   </body>
 </html>

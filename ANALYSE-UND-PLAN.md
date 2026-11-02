@@ -299,28 +299,44 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 
 ### Phase 4 – Grafik & Spielgefühl
 
-- [ ] **16. Mobile: Kampf zuerst**
+- [x] **16. Mobile: Kampf zuerst**
   - Wo: `css/responsive.css`, ggf. Reihenfolge in `index.html`
   - Wie:
     - Unter 700 px die Kampfbühne mit dem „Kampf starten“-Button ganz nach oben setzen.
     - Ausrüstung in einen einklappbaren Bereich oder einen eigenen Tab verschieben.
     - Eine untere Tab-Leiste (Kampf · Ausrüstung · Quests · Menü) einführen.
   - Fertig wenn: Auf einem 390×844-Bildschirm ist der Kampf ohne Scrollen startbar.
+  - Ergebnis (v0.8.139):
+    - Untere Tab-Leiste Kampf · Ausrüstung · Quests · Menü auf Handys (bis 620 px, gleiche Grenze wie das restliche Handy-Layout). Das Menü öffnet die bisherigen Schnellzugriffe, der Quests-Tab zeigt neue Aufträge als Zahl.
+    - Kampf-Tab: XP-Leiste, Bühne, direkt darunter „Kampf starten“, dann die Gegner. Der Kampf-Button liegt auf 390×844 bei 456 px statt 1217 px.
+    - Ausrüstung-Tab: Gürtel, Charakterwerte, Build, Fähigkeiten. Quests-Tab: Gebiet, Quests, Protokoll.
+    - Nebenbei: Der „Menü“-Knopf war im englischen Modus nicht übersetzt.
+    - `tests/ui-layout.js` prüft auf allen Handy-Grössen Kampf-Button über der Tab-Leiste und jeden Tab.
 
-- [ ] **17. Charaktere und Gegner als SVG-Sprites**
+- [x] **17. Charaktere und Gegner als SVG-Sprites**
   - Wo: Neuer Ordner `assets/sprites/`, `render.js` (`renderHeroBuildVisual`, `setBattleEnemyVisual`)
   - Wie:
     - Eigene SVG-Figuren im einheitlichen Stil für den Krieger (3 Build-Varianten) und alle Gegner und Bosse.
     - Animationen mit CSS: Idle-Atmen, Angriff, Treffer-Wackeln, Tod.
   - Fertig wenn: Kein Gegner nutzt mehr CSS-Grundformen, und alle Sprite-Tests in smoke.js sind angepasst und grün.
+  - Ergebnis (v0.8.140):
+    - Neues Modul `scripts/sprites.js` statt `assets/sprites/`: Die Figuren werden aus SVG-Teilen gebaut (6 Formen: Mensch, Wolf, Keiler, Krähe, Schemen, Ratte; 9 Köpfe; 10 Waffen; 6 Nebenhand-Teile; Extras wie Umhang, Köcher, Runen). Externe SVG-Dateien hätten sich wegen der CSP (`connect-src 'none'`) und unter `file://` nicht einfärben lassen.
+    - Alle 29 Gegner haben eine eigene Figur, alle schauen zum Helden. Held: 4 Klassen × 3 Builds, beim Krieger Schild (Wächter), Zweihänder (Berserker) oder Schwert und Buckler (Veteran).
+    - Animationen: Atmen, Schweben, Flügel, Schwanz, Waffenschwung beim Angriff, Treffer-Blitz, Tod des Gegners, Niederlage des Helden. Ruhige Animationen sind bei `prefers-reduced-motion` aus.
+    - Rund 1550 Zeilen alte CSS-Formen gelöscht.
+    - smoke.js prüft: Jede Gegner-Klasse hat eine Variante, jede Figur ist vollständig und einzigartig, keine alten CSS-Formen mehr.
 
-- [ ] **18. Item-Icons**
+- [x] **18. Item-Icons**
   - Wie:
     - Ein SVG-Icon pro Slot-Typ, dazu Varianten nach Seltenheit (Rahmenfarbe, Leuchten bei episch und legendär).
     - Die Icons auf Lootkarten, im Inventar, in der Ausrüstung und beim Schmied anzeigen.
   - Fertig wenn: Jede Itemkarte hat ein Icon.
+  - Ergebnis (v0.8.141):
+    - `itemIconHtml(item)` in `render.js`: 7 Slot-Symbole plus Material, als SVG-Maske in CSS. Farbe und Rahmen nach Seltenheit, Leuchten bei episch, pulsierendes Leuchten bei legendär (aus bei reduzierten Bewegungen).
+    - Überall eingebaut: Beute (gross), Rucksack, Händler, Schmied (Verbessern, Zerlegen), Arkanistin, Reparatur, Ausrüstungsleiste (als Eck-Symbol, damit Slot-Namen lesbar bleiben), Ausrüstungsfenster, Bestiarium-Drops, Boss-Belohnungen, Item-Tooltip. Leere Slots zeigen ein blasses Symbol.
+    - smoke.js prüft Icons je Slot und Seltenheit sowie die Einbindung in die Itemkarten.
 
-- [ ] **19. „Juice“ im Kampf**
+- [x] **19. „Juice“ im Kampf**
   - Wie:
     - Bildschirm-Wackeln bei kritischen Treffern
     - Partikel bei Treffern (CSS/Canvas)
@@ -329,17 +345,31 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Zahlen beim Gold- und XP-Zuwachs hochzählen
     - Alles respektiert `prefers-reduced-motion`.
   - Fertig wenn: Jedes wichtige Ereignis hat sichtbares Feedback und es gibt einen Schalter für reduzierte Effekte.
+  - Ergebnis (v0.8.142):
+    - Neues Modul `scripts/fx.js`: Funken bei jedem Treffer (mehr und rot bei Krits), Wackeln der Bühne bei Krits, Loot-Regen in der Farbe der besten Beute (mit Lichtschein bei episch und legendär), Lichtsäule und Banner bei Level- und Paragon-Aufstieg, Gold, Ruhm und Level zählen hoch, „+N XP“ schwebt neben der XP-Leiste.
+    - Loot-Regen und Levelaufstieg laufen in einer Ebene über allen Fenstern, weil das Beute-Fenster sofort nach dem Sieg aufgeht.
+    - Neues Einstellungsfenster (Schnellzugriff „Einstellungen“) mit Schalter Effekte Voll/Reduziert, gespeichert im Spielstand. `prefers-reduced-motion` reduziert ebenfalls; das Level-Banner bleibt dann als ruhige Einblendung.
 
-- [ ] **20. Sound und Musik**
+- [x] **20. Sound und Musik**
   - Wie:
     - Kleine Soundeffekte (Treffer, Krit, Loot, Levelaufstieg, Klick), mit der WebAudio-API erzeugt oder mit freien Lizenzen (CC0)
     - Eine ruhige Musikschleife pro Gebietstyp
     - Lautstärke-Regler und Stummschalten in den Einstellungen
   - Fertig wenn: Sound ist standardmässig an, aber leise, und die Einstellungen werden gespeichert.
+  - Ergebnis (v0.8.143):
+    - Neues Modul `scripts/audio.js`, alles mit WebAudio erzeugt, keine Audiodateien. Startet nach der ersten Eingabe (Browser-Vorgabe).
+    - Sounds: Treffer, Krit, Held getroffen, Beute (heller und länger je Seltenheit), Levelaufstieg, Sieg, Niederlage, leiser Klick bei Knöpfen.
+    - Musik: ruhige, sich ständig leicht verändernde Schleife je Gebietstyp (Gebiet: Dur-Pentatonik, Dungeon und Turm: dunkles Moll). Pausiert, wenn der Tab im Hintergrund ist.
+    - Einstellungen: Ton An/Aus, Effekte-Lautstärke (Standard 35 %), Musik-Lautstärke (Standard 20 %), gespeichert im Spielstand. Regler wirken sofort beim Ziehen.
 
-- [ ] **21. Einstellungen-Menü**
+- [x] **21. Einstellungen-Menü**
   - Wie: Ein Menü für Sprache, Lautstärke, Effekte, Auto-Loot, Kampftempo (1×/2×/4×) und Spielstand.
   - Fertig wenn: Alle Optionen liegen an einem Ort und werden im Save gespeichert.
+  - Ergebnis (v0.8.144):
+    - Fenster „Einstellungen“ mit fünf Gruppen: Spiel (Sprache, Kampftempo 1×/2×/4×), Beute (Auto-Loot, Gewöhnliches verkaufen, Rasten unter), Ton (An/Aus, zwei Lautstärken), Darstellung (Effekte), Spielstand (letzte Sicherung, Herunterladen, Laden, Neu beginnen).
+    - Alles liegt in `state.settings` (Sprache wie bisher in `state.language`) und überlebt Neuladen und Export. Die Einstellungen bleiben auch während eines Kampfs bedienbar.
+    - Kampftempo verkürzt Wartezeiten und Animationen. Auto-Farmen bleibt bei 1×, damit die Balance aus Punkt 15 gilt.
+    - Neuer Browser-Test `tests/ui-settings.js` (in `npm run test:ui`): alle Optionen vorhanden, jede Änderung übersteht Neuladen, 4× ist messbar schneller (gemessen: 2,5 s gegen 0,65–0,85 s).
 
 ### Phase 5 – Mehr Inhalt
 

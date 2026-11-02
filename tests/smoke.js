@@ -67,6 +67,9 @@ const scripts = [
   "scripts/idle.js",
   "scripts/progression.js",
   "scripts/core.js",
+  "scripts/sprites.js",
+  "scripts/fx.js",
+  "scripts/audio.js",
   "scripts/render.js",
   "scripts/render-loot.js",
   "scripts/data-achievements.js",
@@ -112,6 +115,9 @@ assert.deepStrictEqual(scriptOrder, [
   "scripts/idle.js",
   "scripts/progression.js",
   "scripts/core.js",
+  "scripts/sprites.js",
+  "scripts/fx.js",
+  "scripts/audio.js",
   "scripts/render.js",
   "scripts/render-loot.js",
   "scripts/events.js",
@@ -334,18 +340,67 @@ suite("sprite and visual class contracts");
 const enemySprites = JSON.parse(vm.runInContext("JSON.stringify(Object.values(enemies).map((enemy) => enemy.sprite))", context));
 assert.strictEqual(new Set(enemySprites).size, enemySprites.length, "enemy sprite class combinations should be unique");
 const spriteTokens = [...new Set(enemySprites.flatMap((sprite) => sprite.split(/\s+/)).filter(Boolean))];
+const spriteVariantKeys = JSON.parse(vm.runInContext("JSON.stringify(Object.keys(spriteVariants))", context));
 for (const token of spriteTokens) {
-  assert(css.includes(`.${token}`), `Missing CSS sprite class: ${token}`);
+  assert(spriteVariantKeys.includes(token), `Missing SVG sprite variant: ${token}`);
 }
-for (const build of ["tank", "damage", "bruiser"]) {
-  assert(css.includes(`.hero-build-${build}`), `Missing hero build sprite CSS: ${build}`);
+// Jeder Gegner bekommt eine eigene SVG-Figur (keine CSS-Grundformen mehr).
+const enemySvgs = JSON.parse(vm.runInContext("JSON.stringify(Object.values(enemies).map((enemy) => enemySpriteSvg(enemy.sprite)))", context));
+assert(enemySvgs.every((svg) => svg.startsWith("<svg") && svg.includes('class="spr-rig"') && svg.includes("spr-eye") && svg.endsWith("</svg>")), "every enemy needs a complete SVG sprite with rig and glowing eyes");
+assert.strictEqual(new Set(enemySvgs).size, enemySvgs.length, "every enemy SVG sprite should look different");
+assert(enemySvgs.every((svg) => svg.includes('translate(120 0) scale(-1 1)')), "enemy sprites should face the hero (mirrored)");
+assert(enemySvgs.every((svg) => !/undefined|NaN/.test(svg)), "enemy SVG sprites must not contain undefined values");
+const heroSvgs = JSON.parse(vm.runInContext("JSON.stringify(['warrior','mage','rogue','archer'].flatMap((c) => ['tank','damage','bruiser'].map((b) => heroSpriteSvg(c, b))))", context));
+assert.strictEqual(new Set(heroSvgs).size, heroSvgs.length, "every class/build combination needs its own hero SVG");
+assert(heroSvgs.every((svg) => svg.includes("spr-weapon") && !/undefined|NaN/.test(svg)), "hero SVG sprites need a weapon and valid values");
+assert(!/\.(hero|enemy)-body\b|\.enemy-extra|\.hero-helm|\.hero-sword|\.hero-shield/.test(css), "old CSS shape sprites should be removed");
+assert(css.includes("@keyframes spr-breathe") && css.includes("@keyframes spr-die") && css.includes(".spr-weapon"), "SVG sprites need idle, attack and death animations");
+// Punkt 18: Jede Itemkarte hat ein Icon (Slot-Symbol, Rahmen nach Seltenheit).
+for (const slot of [...JSON.parse(vm.runInContext("JSON.stringify(equipmentSlots)", context)), "material"]) {
+  assert(css.includes(`.item-icon-${slot} { --item-icon: url("data:image/svg+xml,`), `Missing item icon for slot: ${slot}`);
 }
-for (const classId of ["warrior", "mage", "rogue", "archer"]) {
-  assert(css.includes(`.hero-class-${classId}`), `Missing hero class sprite CSS: ${classId}`);
-  for (const build of ["tank", "damage", "bruiser"]) {
-    assert(css.includes(`.hero-class-${classId}.hero-build-${build}`), `Missing class/build sprite CSS: ${classId}/${build}`);
-  }
+for (const quality of ["rare", "epic", "legendary", "empty"]) assert(css.includes(`.icon-quality-${quality}`), `Missing icon quality style: ${quality}`);
+{
+  const renderSource = read("scripts/render.js") + read("scripts/render-loot.js");
+  const itemNameSites = [...renderSource.matchAll(/escapeHtml\(itemDisplayName\(item, (?:id|itemId|item\.id|drop\.id|state\.equipment\[slot\])\)\)/g)].length;
+  const iconSites = (renderSource.match(/itemIconHtml\(/g) || []).length - 1;
+  assert(iconSites >= 14, `item cards should render icons (found ${iconSites})`);
+  assert(vm.runInContext("itemIconHtml(items.trainingSword)", context).includes("item-icon-weapon icon-quality-common"), "weapon icon should use slot and quality classes");
+  assert(vm.runInContext("itemIconHtml(null, { slot: 'ring' })", context).includes("icon-quality-empty"), "empty slots should get a faded icon");
+  assert(itemNameSites > 0, "item name sites should be found");
 }
+// Punkt 19: Spielgefühl mit Schalter für reduzierte Effekte.
+assert.strictEqual(vm.runInContext("defaultSettings().reducedEffects", context), false, "effects should be on by default");
+assert.strictEqual(vm.runInContext("normalizeSettings({ reducedEffects: 'yes' }).reducedEffects", context), false, "invalid effect setting falls back to default");
+for (const fn of ["fxShake", "fxHitParticles", "fxLootRain", "fxLevelUp", "fxCountTo", "fxFloatGain", "fxReduced"]) {
+  assert.strictEqual(vm.runInContext(`typeof ${fn}`, context), "function", `missing fx function ${fn}`);
+}
+{
+  const events = read("scripts/events.js");
+  assert(events.includes("fxHitParticles(side, event.critical)") && events.includes("if (event.critical) fxShake("), "hits should spark and crits should shake");
+  assert(read("scripts/loot.js").includes("fxLootRain(equipmentItems)"), "loot should rain in rarity color");
+  assert(read("scripts/progression.js").includes('fxLevelUp(t("fx.levelUp"') && read("scripts/progression.js").includes('fxLevelUp(t("fx.paragonUp"'), "level and paragon ups should show the light pillar");
+  assert(read("scripts/render.js").includes('fxCountTo("gold", state.gold)'), "gold should count up");
+  assert(css.includes("body.reduced-effects") && css.includes("@media (prefers-reduced-motion: reduce)"), "effects must respect the switch and prefers-reduced-motion");
+  assert(read("scripts/render.js").includes('settingsChoiceHtml("reducedEffects"'), "settings should offer the reduced effects switch");
+}
+// Punkt 20: Sound und Musik (WebAudio), standardmässig an aber leise, Einstellungen im Spielstand.
+{
+  const defaults = vm.runInContext("defaultSettings()", context);
+  assert(defaults.muted === false && defaults.soundVolume > 0 && defaults.soundVolume <= 40 && defaults.musicVolume > 0 && defaults.musicVolume <= 30, "sound should be on but quiet by default");
+  assert.strictEqual(vm.runInContext("normalizeSettings({ soundVolume: 140, musicVolume: -5 }).soundVolume", context), 100, "volume clamps to 100");
+  assert.strictEqual(vm.runInContext("normalizeSettings({ soundVolume: 140, musicVolume: -5 }).musicVolume", context), 0, "volume clamps to 0");
+  assert.strictEqual(vm.runInContext("normalizeSettings({ autoFarmRestPercent: 5 }).autoFarmRestPercent", context), 10, "rest percent keeps its own range");
+  let audioThrew = false;
+  try { vm.runInContext("audioPlay('crit'); audioPlay('loot', 'legendary'); audioSyncMusic();", context); } catch (error) { audioThrew = error; }
+  assert(!audioThrew, "audio must be a silent no-op without an AudioContext");
+  const zoneTypes = JSON.parse(vm.runInContext("JSON.stringify([...new Set(Object.values(zones).map((zone) => zone.type))])", context));
+  for (const type of zoneTypes) assert(vm.runInContext(`Boolean(audioThemes[${JSON.stringify(type)}])`, context), `missing music theme for zone type ${type}`);
+  const audioSource = read("scripts/audio.js");
+  for (const sfx of ["hit", "crit", "loot", "levelUp", "click"]) assert(audioSource.includes(`case "${sfx}":`), `missing sound effect ${sfx}`);
+  assert(!/\.(mp3|ogg|wav)\b/.test(audioSource), "sounds are generated, no audio files needed");
+}
+assert(read("scripts/render.js").includes("heroSpriteSvg(") && read("scripts/render.js").includes("enemySpriteSvg("), "render should draw hero and enemy as SVG sprites");
 assert(read("scripts/render.js").includes("hero-class-${characterClass}") && read("scripts/render.js").includes("heroSpriteName"), "combat hero sprite should follow the selected class and update its label");
 assert(css.includes(".class-choice-list {") && html.includes('class="class-choice-list"'), "class chooser should have dedicated layout CSS");
 assert(css.includes(".smith-avatar::before") && css.includes(".enchant-avatar::after"), "Borin and Mira avatars should have detailed CSS silhouettes");

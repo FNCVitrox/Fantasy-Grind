@@ -31,7 +31,7 @@ async function scan(where){const res=await p.evaluate(({src,flags,L})=>{const rx
  for(const r of res){if(ALLOW_EXACT.has(r))continue;if(ALLOW.some(a=>a.test(r)&&!RX.test(r.replace(a,''))))continue;if(!found.has(r))found.set(r,where)}}
 await scan('main');
 const ids=await p.evaluate(()=>[...document.querySelectorAll('.modal-overlay')].map(m=>m.id));
-const btn={zoneModal:'openZoneBtn',bestiaryModal:'openBestiaryBtn',inventoryModal:'openInventoryBtn',merchantModal:'openMerchantBtn',smithModal:'openSmithBtn',questBoardModal:'openQuestBoardBtn',achievementsModal:'openAchievementsBtn',saveModal:'openSaveMenuBtn',logModal:'openLogBtn',playerStatsModal:'openPlayerStatsBtn',classModal:'openClassModalBtn'};
+const btn={zoneModal:'openZoneBtn',bestiaryModal:'openBestiaryBtn',inventoryModal:'openInventoryBtn',merchantModal:'openMerchantBtn',smithModal:'openSmithBtn',questBoardModal:'openQuestBoardBtn',achievementsModal:'openAchievementsBtn',saveModal:'openSaveMenuBtn',settingsModal:'openSettingsBtn',logModal:'openLogBtn',playerStatsModal:'openPlayerStatsBtn',classModal:'openClassModalBtn'};
 for(const id of ids){await p.evaluate(({id,b})=>{document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));if(b&&$(b))$(b).click();else openModal(id);render();},{id,b:btn[id]});await p.waitForTimeout(250);await scan(id);}
 // Kampf ausführen und erneut prüfen (Kampftexte, Log)
 await p.evaluate(async()=>{document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));ui.selectedZone='meadow';ui.selectedEnemy='wolf';state.level=15;syncDerivedStats();state.hp=state.maxHp;const pr=fight();ui.skipCombat=true;await pr;});await p.waitForTimeout(300);await scan('after-fight');
