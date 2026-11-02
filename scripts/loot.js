@@ -230,6 +230,7 @@ function fixedDropRolls(enemy, enemyId) {
 function queueLootBatch(items) {
   const equipmentItems = items.filter((item) => item && equipmentSlots.includes(item.slot));
   if (!equipmentItems.length) return;
+  if (typeof fxLootRain === "function") fxLootRain(equipmentItems);
   if (state.pendingLoot.length) {
     state.lootQueue.push(equipmentItems);
   } else {
@@ -241,7 +242,7 @@ function queueLootBatch(items) {
 // --- Einstellungen, Rucksack-Limit und Auto-Loot (Punkt 11) ---
 
 function defaultSettings() {
-  return { autoLoot: false, autoSellCommon: false, autoFarmRestPercent: 50 };
+  return { autoLoot: false, autoSellCommon: false, autoFarmRestPercent: 50, reducedEffects: false };
 }
 
 function normalizeSettings(settings) {
@@ -254,6 +255,18 @@ function normalizeSettings(settings) {
     }
     return [key, typeof source[key] === "boolean" ? source[key] : defaults[key]];
   }));
+}
+
+// Setzt eine Einstellung aus dem Einstellungsfenster (Werte kommen als Text aus data-value).
+function setSettingValue(key, rawValue) {
+  state.settings = normalizeSettings(state.settings);
+  if (!(key in state.settings)) return;
+  const current = state.settings[key];
+  const value = typeof current === "boolean" ? rawValue === true || rawValue === "true" : Number(rawValue);
+  state.settings = normalizeSettings({ ...state.settings, [key]: value });
+  if (key === "autoLoot" && state.settings.autoLoot && state.pendingLoot.length) resolveAutoLoot();
+  save();
+  render();
 }
 
 function toggleSetting(key) {

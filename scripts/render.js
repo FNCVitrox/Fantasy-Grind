@@ -12,9 +12,10 @@
 }
 
 function renderPlayerHud(language = currentLanguage()) {
-  setText("level", state.level);
-  setText("gold", state.gold);
-  setText("renown", state.renown);
+  fxCountTo("level", state.level);
+  fxCountTo("gold", state.gold);
+  fxCountTo("renown", state.renown);
+  if (typeof document !== "undefined" && document.body?.classList) document.body.classList.toggle("reduced-effects", normalizeSettings(state.settings).reducedEffects);
   setText("characterSummaryMeta", `${t("common.level", "Level")} ${state.level}`);
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
   setText("xpText", state.level >= 20 ? t("common.max", "Max") : `${state.xp}/${needed}`);
@@ -49,6 +50,7 @@ const modalRenderers = {
   achievementsModal: () => renderAchievements(),
   smithModal: () => renderSmith(),
   saveModal: () => renderSaveSummary(),
+  settingsModal: () => renderSettings(),
   repairModal: () => renderRepairModal(),
   equipmentModal: () => renderEquipmentDetails(),
   playerStatsModal: (stats) => renderPlayerStatsDetails(stats),
@@ -2727,4 +2729,47 @@ function renderRepairRow(slot) {
     </div>
     <button type="button" data-repair-slot="${slot}" ${disabled}>${label}</button>
   </div>`;
+}
+
+// Einstellungsfenster (Punkte 19–21): alle Optionen an einem Ort, gespeichert in state.settings.
+function settingsChoiceHtml(key, options, current) {
+  return `<div class="settings-choice" role="group">${options.map(([value, label]) => {
+    const active = String(current) === String(value);
+    return `<button type="button" data-setting-choice="${key}" data-value="${value}" aria-pressed="${active ? "true" : "false"}" class="${active ? "is-active" : ""}">${escapeHtml(label)}</button>`;
+  }).join("")}</div>`;
+}
+
+function settingsRowHtml(title, hint, control) {
+  return `<div class="settings-row"><div class="settings-label"><strong>${escapeHtml(title)}</strong>${hint ? `<small>${escapeHtml(hint)}</small>` : ""}</div>${control}</div>`;
+}
+
+function settingsGroups(settings) {
+  const systemReduced = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return [
+    {
+      id: "display",
+      title: t("settings.display", "Darstellung"),
+      rows: [
+        settingsRowHtml(
+          t("settings.effects", "Effekte"),
+          systemReduced ? t("settings.effectsSystem", "Dein System verlangt weniger Bewegung, Effekte sind deshalb reduziert.") : t("settings.effectsHint", "Wackeln, Funken, Loot-Regen und Lichtsäule."),
+          settingsChoiceHtml("reducedEffects", [["false", t("settings.effectsFull", "Voll")], ["true", t("settings.effectsReduced", "Reduziert")]], settings.reducedEffects),
+        ),
+      ],
+    },
+  ];
+}
+
+function renderSettings() {
+  const body = $("settingsBody");
+  if (!body) return;
+  const settings = normalizeSettings(state.settings);
+  const html = settingsGroups(settings)
+    .map((group) => `<section class="settings-group settings-group-${group.id}"><h3>${escapeHtml(group.title)}</h3>${group.rows.join("")}</section>`)
+    .join("");
+  if (renderCache.settings === html) return;
+  renderCache.settings = html;
+  const focused = document.activeElement?.dataset?.settingRange;
+  body.innerHTML = html;
+  if (focused) body.querySelector(`[data-setting-range="${focused}"]`)?.focus();
 }

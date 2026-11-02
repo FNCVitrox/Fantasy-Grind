@@ -2920,3 +2920,285 @@ button.drop-row span:last-child {
   position: relative;
   z-index: 1;
 }
+
+/* Spielgefühl (Punkt 19): Wackeln, Funken, Loot-Regen, Lichtsäule, hochzählende Werte. */
+.battle-stage.fx-shake {
+  animation: fx-shake 360ms ease-out;
+}
+
+.fx-spark,
+.fx-loot,
+.fx-loot-flash,
+.fx-level-pillar,
+.fx-level-mote,
+.fx-level-banner {
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.fx-spark {
+  top: 46%;
+  width: var(--fx-size, 5px);
+  height: var(--fx-size, 5px);
+  border-radius: 50%;
+  background: var(--fx-color);
+  box-shadow: 0 0 8px var(--fx-color);
+  animation: fx-spark 620ms ease-out forwards;
+}
+
+.fx-spark.fx-right {
+  right: 24%;
+}
+
+.fx-spark.fx-left {
+  left: 24%;
+}
+
+.fx-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fx-loot {
+  top: -12px;
+  left: var(--x);
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--fx-color);
+  box-shadow: 0 0 10px var(--fx-color);
+  opacity: 0;
+  transform: rotate(45deg);
+  animation: fx-loot 1100ms cubic-bezier(0.3, 0.6, 0.5, 1) var(--delay) forwards;
+}
+
+.fx-loot-legendary,
+.fx-loot-epic {
+  width: 9px;
+  height: 9px;
+}
+
+.fx-loot-flash {
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--fx-color) 40%, transparent), transparent 60%);
+  animation: fx-fade 900ms ease-out forwards;
+}
+
+.fx-level-pillar {
+  left: calc(var(--cx) - 34px);
+  top: calc(var(--bottom) - var(--height));
+  width: 68px;
+  height: var(--height);
+  border-radius: 30px 30px 8px 8px;
+  background: linear-gradient(0deg, rgba(255, 236, 160, 0.85), rgba(255, 226, 120, 0.35) 55%, transparent);
+  filter: blur(2px);
+  mix-blend-mode: screen;
+  transform-origin: bottom;
+  animation: fx-pillar 1400ms ease-out forwards;
+}
+
+.fx-level-mote {
+  left: var(--cx);
+  top: var(--bottom);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff3c4;
+  box-shadow: 0 0 6px #ffe08a;
+  opacity: 0;
+  animation: fx-rise 1100ms ease-out var(--delay) forwards;
+}
+
+.fx-level-banner {
+  top: max(16px, env(safe-area-inset-top));
+  left: 50%;
+  padding: 8px 22px;
+  border: 1px solid rgba(242, 193, 78, 0.8);
+  border-radius: 999px;
+  background: rgba(20, 16, 6, 0.88);
+  color: var(--gold);
+  font-weight: 900;
+  font-size: 20px;
+  white-space: nowrap;
+  box-shadow: 0 0 24px rgba(242, 193, 78, 0.45);
+  transform: translateX(-50%);
+  animation: fx-banner 1900ms ease-out forwards;
+}
+
+.character-status > div,
+.bar-label {
+  position: relative;
+}
+
+.fx-gain {
+  position: absolute;
+  right: 6px;
+  top: -4px;
+  z-index: 4;
+  color: #87f3b8;
+  font-size: 12px;
+  font-weight: 900;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  animation: fx-gain 1050ms ease-out forwards;
+}
+
+.bar.xp span {
+  transition: width 600ms ease-out;
+}
+
+@keyframes fx-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(calc(var(--fx-shake, 6px) * -1), 2px); }
+  40% { transform: translate(var(--fx-shake, 6px), -2px); }
+  60% { transform: translate(calc(var(--fx-shake, 6px) * -0.5), 1px); }
+  80% { transform: translate(calc(var(--fx-shake, 6px) * 0.3), 0); }
+}
+
+@keyframes fx-spark {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
+
+@keyframes fx-loot {
+  0% { opacity: 0; transform: translate(0, -10px) rotate(45deg); }
+  15% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--drift), var(--fall)) rotate(225deg); }
+}
+
+@keyframes fx-fade {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes fx-pillar {
+  0% { opacity: 0; transform: scaleY(0.1); }
+  25% { opacity: 1; transform: scaleY(1); }
+  100% { opacity: 0; transform: scaleY(1.05); }
+}
+
+@keyframes fx-rise {
+  0% { opacity: 0; transform: translateY(0); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(calc(var(--rise) * -1)); }
+}
+
+@keyframes fx-banner {
+  0% { opacity: 0; transform: translate(-50%, 8px) scale(0.8); }
+  15% { opacity: 1; transform: translate(-50%, 0) scale(1.08); }
+  25% { transform: translate(-50%, 0) scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -6px); }
+}
+
+@keyframes fx-gain {
+  0% { opacity: 0; transform: translateY(4px); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-14px); }
+}
+
+/* Reduzierte Effekte: Einstellung oder Systemvorgabe. Banner bleibt, Bewegung entfällt. */
+body.reduced-effects .spr-rig,
+body.reduced-effects .spr-float,
+body.reduced-effects .spr-wing,
+body.reduced-effects .spr-tail,
+body.reduced-effects .spr-orb,
+body.reduced-effects .spr-rune,
+body.reduced-effects .icon-quality-legendary,
+body.reduced-effects .battle-stage.fx-shake {
+  animation: none;
+}
+
+body.reduced-effects .fx-level-banner {
+  animation: fx-fade 1900ms linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .battle-stage.fx-shake {
+    animation: none;
+  }
+
+  .fx-level-banner {
+    animation: fx-fade 1900ms linear forwards;
+  }
+}
+
+/* Einstellungsfenster */
+.settings-window {
+  width: min(640px, calc(100vw - 24px));
+}
+
+.settings-body {
+  display: grid;
+  gap: 14px;
+}
+
+.settings-group {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-group h3 {
+  margin: 0;
+  color: var(--gold);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-deep);
+}
+
+.settings-label {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.settings-label small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.settings-choice {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(3, 9, 15, 0.6);
+}
+
+.settings-choice button {
+  min-height: 34px;
+  padding: 4px 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.settings-choice button.is-active {
+  border-color: rgba(242, 193, 78, 0.7);
+  background: rgba(242, 193, 78, 0.16);
+  color: var(--gold);
+}
+

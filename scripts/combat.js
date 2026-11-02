@@ -929,6 +929,7 @@ function grantActionCombatRewards(combat) {
   const xp = scaledCombatReward(Math.max(1, Math.floor(combat.enemy.xp * (1 + combat.enchantStats.xpBonus + combat.effectSummary.xpBonus))), combat.enemy);
   state.gold += gold;
   gainXp(xp);
+  if (typeof fxFloatGain === "function") fxFloatGain("xpText", `+${xp} XP`);
   grantMaterials(combat.enemy.baseId || ui.selectedEnemy, combat.enemy.eliteVariant);
   createLootChoices(combat.enemy, combat.enemy.baseId || ui.selectedEnemy);
   state.combatStats = normalizeCombatStats(state.combatStats);

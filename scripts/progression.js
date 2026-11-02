@@ -9,6 +9,7 @@ function gainXp(amount) {
   }
 
   state.xp += amount;
+  const levelBefore = state.level;
   while (state.level < 20 && state.xp >= xpForLevel(state.level)) {
     state.xp -= xpForLevel(state.level);
     state.level += 1;
@@ -18,6 +19,7 @@ function gainXp(amount) {
     log(() => t("progress.levelUpLog", "Level {level} erreicht. Deine Wunden schließen sich, aber der nächste Schritt wird schwerer.", { level: reachedLevel }), "good");
     remindSaveBackup(() => t("save.backupLevelReason", "du hast gerade ein Level geschafft."));
   }
+  if (state.level > levelBefore && typeof fxLevelUp === "function") fxLevelUp(t("fx.levelUp", "Level {level}!", { level: state.level }));
 }
 
 function renownRank() {
@@ -611,6 +613,7 @@ function paragonXpNeeded(level = state.paragon?.level || 0) {
 function gainParagonXp(amount) {
   state.paragon = normalizeParagon(state.paragon);
   state.paragon.xp += Math.max(0, Math.floor(amount));
+  const paragonBefore = state.paragon.level;
   while (state.paragon.xp >= paragonXpNeeded(state.paragon.level)) {
     state.paragon.xp -= paragonXpNeeded(state.paragon.level);
     state.paragon.level += 1;
@@ -619,6 +622,7 @@ function gainParagonXp(amount) {
     log(() => t("paragon.levelUpLog", "Paragon-Stufe {level} erreicht. Ein neuer Punkt wartet in den Spielerwerten.", { level: reached }), "good");
     remindSaveBackup(() => t("save.backupParagonReason", "du hast eine Paragon-Stufe erreicht."));
   }
+  if (state.paragon.level > paragonBefore && typeof fxLevelUp === "function") fxLevelUp(t("fx.paragonUp", "Paragon {level}!", { level: state.paragon.level }));
 }
 
 function spendParagonPoint(statId) {

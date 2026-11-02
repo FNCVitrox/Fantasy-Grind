@@ -495,6 +495,23 @@ $("closeClassModalBtn").addEventListener("click", closeClassModal);
 $("classModal").addEventListener("click", (event) => {
   if (event.target.id === "classModal") closeClassModal();
 });
+$("openSettingsBtn").addEventListener("click", () => {
+  renderSettings();
+  openModal("settingsModal");
+});
+$("closeSettingsBtn").addEventListener("click", () => closeModal("settingsModal"));
+$("settingsModal").addEventListener("click", (event) => {
+  if (event.target.id === "settingsModal") {
+    closeModal("settingsModal");
+    return;
+  }
+  const choice = event.target.closest("[data-setting-choice]");
+  if (choice) setSettingValue(choice.dataset.settingChoice, choice.dataset.value);
+});
+$("settingsModal").addEventListener("input", (event) => {
+  const range = event.target.closest("[data-setting-range]");
+  if (range) setSettingValue(range.dataset.settingRange, range.value);
+});
 $("openSaveMenuBtn").addEventListener("click", () => {
   renderSaveSummary();
   openModal("saveModal");
@@ -678,6 +695,8 @@ function closeModal(id) {
 function setControlsDisabled(disabled) {
   document.querySelectorAll("button").forEach((button) => {
     if (button.id === "openSaveMenuBtn") return;
+    if (button.closest("#settingsModal, #mobileTabbar")) return;
+    if (button.id === "openSettingsBtn") return;
     if (button.id === "autoFarmBtn") return;
     if (button.id === "closeOfflineBtn") return;
     if (button.id === "languageToggleBtn") return;
@@ -743,7 +762,11 @@ function showCombatAnimationEvent(stage, event, activeCombatEvent, enemyName, pl
     : t("combat.enemyHit", "{enemy} trifft für {damage}.", { enemy: enemyName, damage: event.damage }));
   updateBattleHealth(event.playerHp, playerMaxHp, event.enemyHp, enemyMaxHp);
   highlightAbilityUse(event.abilityId);
-  if (event.damage > 0) spawnDamage(event.damage, side, event.critical);
+  if (event.damage > 0) {
+    spawnDamage(event.damage, side, event.critical);
+    fxHitParticles(side, event.critical);
+    if (event.critical) fxShake(event.actor === "hero" ? 1 : 1.4);
+  }
 }
 
 function setBattleStageClass(stage, classNames = "", activeCombatEvent = null) {

@@ -336,7 +336,7 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Überall eingebaut: Beute (gross), Rucksack, Händler, Schmied (Verbessern, Zerlegen), Arkanistin, Reparatur, Ausrüstungsleiste (als Eck-Symbol, damit Slot-Namen lesbar bleiben), Ausrüstungsfenster, Bestiarium-Drops, Boss-Belohnungen, Item-Tooltip. Leere Slots zeigen ein blasses Symbol.
     - smoke.js prüft Icons je Slot und Seltenheit sowie die Einbindung in die Itemkarten.
 
-- [ ] **19. „Juice“ im Kampf**
+- [x] **19. „Juice“ im Kampf**
   - Wie:
     - Bildschirm-Wackeln bei kritischen Treffern
     - Partikel bei Treffern (CSS/Canvas)
@@ -345,6 +345,10 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Zahlen beim Gold- und XP-Zuwachs hochzählen
     - Alles respektiert `prefers-reduced-motion`.
   - Fertig wenn: Jedes wichtige Ereignis hat sichtbares Feedback und es gibt einen Schalter für reduzierte Effekte.
+  - Ergebnis (v0.8.142):
+    - Neues Modul `scripts/fx.js`: Funken bei jedem Treffer (mehr und rot bei Krits), Wackeln der Bühne bei Krits, Loot-Regen in der Farbe der besten Beute (mit Lichtschein bei episch und legendär), Lichtsäule und Banner bei Level- und Paragon-Aufstieg, Gold, Ruhm und Level zählen hoch, „+N XP“ schwebt neben der XP-Leiste.
+    - Loot-Regen und Levelaufstieg laufen in einer Ebene über allen Fenstern, weil das Beute-Fenster sofort nach dem Sieg aufgeht.
+    - Neues Einstellungsfenster (Schnellzugriff „Einstellungen“) mit Schalter Effekte Voll/Reduziert, gespeichert im Spielstand. `prefers-reduced-motion` reduziert ebenfalls; das Level-Banner bleibt dann als ruhige Einblendung.
 
 - [ ] **20. Sound und Musik**
   - Wie:

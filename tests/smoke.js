@@ -68,6 +68,7 @@ const scripts = [
   "scripts/progression.js",
   "scripts/core.js",
   "scripts/sprites.js",
+  "scripts/fx.js",
   "scripts/render.js",
   "scripts/render-loot.js",
   "scripts/data-achievements.js",
@@ -114,6 +115,7 @@ assert.deepStrictEqual(scriptOrder, [
   "scripts/progression.js",
   "scripts/core.js",
   "scripts/sprites.js",
+  "scripts/fx.js",
   "scripts/render.js",
   "scripts/render-loot.js",
   "scripts/events.js",
@@ -364,6 +366,21 @@ for (const quality of ["rare", "epic", "legendary", "empty"]) assert(css.include
   assert(vm.runInContext("itemIconHtml(items.trainingSword)", context).includes("item-icon-weapon icon-quality-common"), "weapon icon should use slot and quality classes");
   assert(vm.runInContext("itemIconHtml(null, { slot: 'ring' })", context).includes("icon-quality-empty"), "empty slots should get a faded icon");
   assert(itemNameSites > 0, "item name sites should be found");
+}
+// Punkt 19: Spielgefühl mit Schalter für reduzierte Effekte.
+assert.strictEqual(vm.runInContext("defaultSettings().reducedEffects", context), false, "effects should be on by default");
+assert.strictEqual(vm.runInContext("normalizeSettings({ reducedEffects: 'yes' }).reducedEffects", context), false, "invalid effect setting falls back to default");
+for (const fn of ["fxShake", "fxHitParticles", "fxLootRain", "fxLevelUp", "fxCountTo", "fxFloatGain", "fxReduced"]) {
+  assert.strictEqual(vm.runInContext(`typeof ${fn}`, context), "function", `missing fx function ${fn}`);
+}
+{
+  const events = read("scripts/events.js");
+  assert(events.includes("fxHitParticles(side, event.critical)") && events.includes("if (event.critical) fxShake("), "hits should spark and crits should shake");
+  assert(read("scripts/loot.js").includes("fxLootRain(equipmentItems)"), "loot should rain in rarity color");
+  assert(read("scripts/progression.js").includes('fxLevelUp(t("fx.levelUp"') && read("scripts/progression.js").includes('fxLevelUp(t("fx.paragonUp"'), "level and paragon ups should show the light pillar");
+  assert(read("scripts/render.js").includes('fxCountTo("gold", state.gold)'), "gold should count up");
+  assert(css.includes("body.reduced-effects") && css.includes("@media (prefers-reduced-motion: reduce)"), "effects must respect the switch and prefers-reduced-motion");
+  assert(read("scripts/render.js").includes('settingsChoiceHtml("reducedEffects"'), "settings should offer the reduced effects switch");
 }
 assert(read("scripts/render.js").includes("heroSpriteSvg(") && read("scripts/render.js").includes("enemySpriteSvg("), "render should draw hero and enemy as SVG sprites");
 assert(read("scripts/render.js").includes("hero-class-${characterClass}") && read("scripts/render.js").includes("heroSpriteName"), "combat hero sprite should follow the selected class and update its label");
