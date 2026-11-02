@@ -542,6 +542,11 @@ function renderQuestNotice() {
   const button = $("openQuestBoardBtn");
   const count = (state.unseenQuests || []).filter((id) => state.questBoard.includes(id)).length;
   if (button) button.classList.toggle("has-new-quests", count > 0);
+  const tabNotice = $("mobileQuestNotice");
+  if (tabNotice) {
+    tabNotice.hidden = count <= 0;
+    setText("mobileQuestNotice", count);
+  }
   if (!notice) return;
   notice.hidden = true;
   setText("questNotice", count);

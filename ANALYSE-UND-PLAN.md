@@ -299,13 +299,19 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 
 ### Phase 4 – Grafik & Spielgefühl
 
-- [ ] **16. Mobile: Kampf zuerst**
+- [x] **16. Mobile: Kampf zuerst**
   - Wo: `css/responsive.css`, ggf. Reihenfolge in `index.html`
   - Wie:
     - Unter 700 px die Kampfbühne mit dem „Kampf starten“-Button ganz nach oben setzen.
     - Ausrüstung in einen einklappbaren Bereich oder einen eigenen Tab verschieben.
     - Eine untere Tab-Leiste (Kampf · Ausrüstung · Quests · Menü) einführen.
   - Fertig wenn: Auf einem 390×844-Bildschirm ist der Kampf ohne Scrollen startbar.
+  - Ergebnis (v0.8.139):
+    - Untere Tab-Leiste Kampf · Ausrüstung · Quests · Menü auf Handys (bis 620 px, gleiche Grenze wie das restliche Handy-Layout). Das Menü öffnet die bisherigen Schnellzugriffe, der Quests-Tab zeigt neue Aufträge als Zahl.
+    - Kampf-Tab: XP-Leiste, Bühne, direkt darunter „Kampf starten“, dann die Gegner. Der Kampf-Button liegt auf 390×844 bei 456 px statt 1217 px.
+    - Ausrüstung-Tab: Gürtel, Charakterwerte, Build, Fähigkeiten. Quests-Tab: Gebiet, Quests, Protokoll.
+    - Nebenbei: Der „Menü“-Knopf war im englischen Modus nicht übersetzt.
+    - `tests/ui-layout.js` prüft auf allen Handy-Grössen Kampf-Button über der Tab-Leiste und jeden Tab.
 
 - [ ] **17. Charaktere und Gegner als SVG-Sprites**
   - Wo: Neuer Ordner `assets/sprites/`, `render.js` (`renderHeroBuildVisual`, `setBattleEnemyVisual`)

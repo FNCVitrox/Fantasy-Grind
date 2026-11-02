@@ -6,7 +6,7 @@ Aktueller Stand: spielbarer Alpha-Prototyp.
 
 ## Version
 
-Alpha v0.8.138
+Alpha v0.8.139
 
 ## Spielen
 

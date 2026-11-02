@@ -316,7 +316,32 @@ function setMobileMenuOpen(isOpen) {
   if (!menu || !button) return;
   menu.classList.toggle("open", isOpen);
   button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  const tabMenu = document.querySelector('#mobileTabbar [data-mobile-tab="menu"]');
+  if (tabMenu) tabMenu.setAttribute("aria-expanded", isOpen ? "true" : "false");
 }
+
+// Untere Tab-Leiste (nur Handy): Kampf · Ausrüstung · Quests · Menü.
+function setMobileTab(tab) {
+  if (!["fight", "hero", "quests"].includes(tab)) return;
+  document.body.dataset.mobileTab = tab;
+  document.querySelectorAll("#mobileTabbar [data-mobile-tab]").forEach((button) => {
+    if (button.dataset.mobileTab === "menu") return;
+    button.setAttribute("aria-pressed", button.dataset.mobileTab === tab ? "true" : "false");
+  });
+  window.scrollTo({ top: 0 });
+}
+
+$("mobileTabbar").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-mobile-tab]");
+  if (!button) return;
+  event.stopPropagation();
+  if (button.dataset.mobileTab === "menu") {
+    setMobileMenuOpen(!$("topbarActions").classList.contains("open"));
+    return;
+  }
+  setMobileMenuOpen(false);
+  setMobileTab(button.dataset.mobileTab);
+});
 
 $("mobileMenuBtn").addEventListener("click", (event) => {
   event.stopPropagation();
@@ -328,7 +353,7 @@ $("topbarActions").addEventListener("click", (event) => {
 });
 
 document.addEventListener("click", (event) => {
-  if (event.target.closest("#topbarActions, #mobileMenuBtn")) return;
+  if (event.target.closest("#topbarActions, #mobileMenuBtn, #mobileTabbar")) return;
   setMobileMenuOpen(false);
 });
 

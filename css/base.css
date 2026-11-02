@@ -201,6 +201,10 @@ button:disabled {
   gap: 10px;
 }
 
+.mobile-tabbar {
+  display: none;
+}
+
 .mobile-menu-toggle {
   display: none;
 }
