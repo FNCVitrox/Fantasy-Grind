@@ -362,9 +362,14 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Musik: ruhige, sich ständig leicht verändernde Schleife je Gebietstyp (Gebiet: Dur-Pentatonik, Dungeon und Turm: dunkles Moll). Pausiert, wenn der Tab im Hintergrund ist.
     - Einstellungen: Ton An/Aus, Effekte-Lautstärke (Standard 35 %), Musik-Lautstärke (Standard 20 %), gespeichert im Spielstand. Regler wirken sofort beim Ziehen.
 
-- [ ] **21. Einstellungen-Menü**
+- [x] **21. Einstellungen-Menü**
   - Wie: Ein Menü für Sprache, Lautstärke, Effekte, Auto-Loot, Kampftempo (1×/2×/4×) und Spielstand.
   - Fertig wenn: Alle Optionen liegen an einem Ort und werden im Save gespeichert.
+  - Ergebnis (v0.8.144):
+    - Fenster „Einstellungen“ mit fünf Gruppen: Spiel (Sprache, Kampftempo 1×/2×/4×), Beute (Auto-Loot, Gewöhnliches verkaufen, Rasten unter), Ton (An/Aus, zwei Lautstärken), Darstellung (Effekte), Spielstand (letzte Sicherung, Herunterladen, Laden, Neu beginnen).
+    - Alles liegt in `state.settings` (Sprache wie bisher in `state.language`) und überlebt Neuladen und Export. Die Einstellungen bleiben auch während eines Kampfs bedienbar.
+    - Kampftempo verkürzt Wartezeiten und Animationen. Auto-Farmen bleibt bei 1×, damit die Balance aus Punkt 15 gilt.
+    - Neuer Browser-Test `tests/ui-settings.js` (in `npm run test:ui`): alle Optionen vorhanden, jede Änderung übersteht Neuladen, 4× ist messbar schneller (gemessen: 2,5 s gegen 0,65–0,85 s).
 
 ### Phase 5 – Mehr Inhalt
 

@@ -3221,3 +3221,38 @@ body.reduced-effects .fx-level-banner {
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.settings-actions button {
+  min-height: 36px;
+  padding: 6px 14px;
+}
+
+/* Kampftempo: Animationen passend zu den kürzeren Wartezeiten. */
+body[data-combat-speed="2"] .battle-stage * {
+  animation-duration: 210ms !important;
+}
+
+body[data-combat-speed="4"] .battle-stage * {
+  animation-duration: 110ms !important;
+}
+
+body[data-combat-speed="2"] .battle-stage .spr-rig,
+body[data-combat-speed="4"] .battle-stage .spr-rig,
+body[data-combat-speed="2"] .battle-stage .spr-float,
+body[data-combat-speed="4"] .battle-stage .spr-float,
+body[data-combat-speed="2"] .battle-stage .spr-wing,
+body[data-combat-speed="4"] .battle-stage .spr-wing,
+body[data-combat-speed="2"] .battle-stage .spr-tail,
+body[data-combat-speed="4"] .battle-stage .spr-tail,
+body[data-combat-speed="2"] .battle-stage .spr-orb,
+body[data-combat-speed="4"] .battle-stage .spr-orb,
+body[data-combat-speed="2"] .battle-stage .spr-rune,
+body[data-combat-speed="4"] .battle-stage .spr-rune {
+  animation-duration: revert !important;
+}

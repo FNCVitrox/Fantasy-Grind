@@ -17,6 +17,7 @@ function renderPlayerHud(language = currentLanguage()) {
   fxCountTo("renown", state.renown);
   if (typeof document !== "undefined" && document.body?.classList) document.body.classList.toggle("reduced-effects", normalizeSettings(state.settings).reducedEffects);
   if (typeof audioSyncMusic === "function") audioSyncMusic();
+  if (typeof document !== "undefined" && document.body?.dataset) document.body.dataset.combatSpeed = String(ui.autoFarm ? 1 : normalizeSettings(state.settings).combatSpeed);
   setText("characterSummaryMeta", `${t("common.level", "Level")} ${state.level}`);
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
   setText("xpText", state.level >= 20 ? t("common.max", "Max") : `${state.xp}/${needed}`);
@@ -2747,7 +2748,34 @@ function settingsRowHtml(title, hint, control) {
 function settingsGroups(settings) {
   const systemReduced = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const range = (key, label, hint) => settingsRowHtml(label, hint, `<label class="settings-range"><input type="range" min="0" max="100" step="5" value="${settings[key]}" data-setting-range="${key}" aria-label="${escapeAttr(label)}"><output>${settings[key]}%</output></label>`);
+  const onOff = (key) => settingsChoiceHtml(key, [["true", t("settings.on", "An")], ["false", t("settings.off", "Aus")]], settings[key]);
+  const language = currentLanguage();
   return [
+    {
+      id: "game",
+      title: t("settings.game", "Spiel"),
+      rows: [
+        settingsRowHtml(t("nav.language", "Sprache"), "", settingsChoiceHtml("language", [["de", "Deutsch"], ["en", "English"]], language)),
+        settingsRowHtml(
+          t("settings.combatSpeed", "Kampftempo"),
+          t("settings.combatSpeedHint", "Wie schnell Kämpfe ablaufen. Auto-Farmen läuft immer im normalen Tempo."),
+          settingsChoiceHtml("combatSpeed", [["1", "1×"], ["2", "2×"], ["4", "4×"]], settings.combatSpeed),
+        ),
+      ],
+    },
+    {
+      id: "loot",
+      title: t("settings.lootGroup", "Beute"),
+      rows: [
+        settingsRowHtml(t("settings.autoLoot", "Auto-Loot"), t("settings.autoLootHint", ""), onOff("autoLoot")),
+        settingsRowHtml(t("settings.autoSellCommon", "Gewöhnliches verkaufen"), t("settings.autoSellCommonHint", ""), onOff("autoSellCommon")),
+        settingsRowHtml(
+          t("autoFarm.restAt", "Rasten unter"),
+          t("settings.restHint", "Auto-Farmen rastet am Lagerplatz, wenn das Leben darunter fällt."),
+          settingsChoiceHtml("autoFarmRestPercent", [["30", "30%"], ["50", "50%"], ["70", "70%"]], settings.autoFarmRestPercent),
+        ),
+      ],
+    },
     {
       id: "sound",
       title: t("settings.sound", "Ton"),
@@ -2769,6 +2797,21 @@ function settingsGroups(settings) {
           t("settings.effects", "Effekte"),
           systemReduced ? t("settings.effectsSystem", "Dein System verlangt weniger Bewegung, Effekte sind deshalb reduziert.") : t("settings.effectsHint", "Wackeln, Funken, Loot-Regen und Lichtsäule."),
           settingsChoiceHtml("reducedEffects", [["false", t("settings.effectsFull", "Voll")], ["true", t("settings.effectsReduced", "Reduziert")]], settings.reducedEffects),
+        ),
+      ],
+    },
+    {
+      id: "save",
+      title: t("save.title", "Spielstand"),
+      rows: [
+        settingsRowHtml(
+          t("settings.saveDownload", "Letzte Sicherung"),
+          formatSaveDate(state.lastSaveExportAt),
+          `<div class="settings-actions">
+            <button type="button" data-settings-action="export">${escapeHtml(t("settings.export", "Herunterladen"))}</button>
+            <button type="button" data-settings-action="import">${escapeHtml(t("settings.import", "Laden"))}</button>
+            <button type="button" class="danger-action" data-settings-action="newGame">${escapeHtml(t("settings.newGame", "Neu beginnen"))}</button>
+          </div>`,
         ),
       ],
     },

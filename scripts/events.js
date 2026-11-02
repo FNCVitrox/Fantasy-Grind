@@ -511,7 +511,18 @@ $("settingsModal").addEventListener("click", (event) => {
     return;
   }
   const choice = event.target.closest("[data-setting-choice]");
+  if (choice?.dataset.settingChoice === "language") {
+    void setLanguage(choice.dataset.value);
+    return;
+  }
   if (choice) setSettingValue(choice.dataset.settingChoice, choice.dataset.value);
+  const action = event.target.closest("[data-settings-action]")?.dataset.settingsAction;
+  if (action === "export") exportSave();
+  if (action === "import") importSave();
+  if (action === "newGame") {
+    closeModal("settingsModal");
+    startNewGame();
+  }
 });
 $("settingsModal").addEventListener("input", (event) => {
   const range = event.target.closest("[data-setting-range]");
@@ -747,8 +758,14 @@ function setControlsDisabled(disabled) {
   });
 }
 
+// Kampftempo 1×/2×/4× aus den Einstellungen; Auto-Farmen bleibt beim normalen Tempo (Balance, Punkt 15).
+function combatSpeedFactor() {
+  return ui.autoFarm ? 1 : normalizeSettings(state.settings).combatSpeed;
+}
+
 function waitCombat(ms) {
   if (ui.skipCombat) return Promise.resolve();
+  ms /= combatSpeedFactor();
 
   return new Promise((resolve) => {
     const started = performance.now();
@@ -762,6 +779,7 @@ function waitCombat(ms) {
 }
 
 function waitResult(ms) {
+  ms /= combatSpeedFactor();
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 

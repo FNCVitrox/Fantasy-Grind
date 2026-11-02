@@ -246,7 +246,7 @@ function queueLootBatch(items) {
 // --- Einstellungen, Rucksack-Limit und Auto-Loot (Punkt 11) ---
 
 function defaultSettings() {
-  return { autoLoot: false, autoSellCommon: false, autoFarmRestPercent: 50, reducedEffects: false, muted: false, soundVolume: 35, musicVolume: 20 };
+  return { autoLoot: false, autoSellCommon: false, autoFarmRestPercent: 50, reducedEffects: false, muted: false, soundVolume: 35, musicVolume: 20, combatSpeed: 1 };
 }
 
 function normalizeSettings(settings) {
@@ -254,6 +254,10 @@ function normalizeSettings(settings) {
   const defaults = defaultSettings();
   const ranges = { autoFarmRestPercent: [10, 90], soundVolume: [0, 100], musicVolume: [0, 100] };
   return Object.fromEntries(Object.keys(defaults).map((key) => {
+    if (key === "combatSpeed") {
+      const speed = Number(source[key]);
+      return [key, [1, 2, 4].includes(speed) ? speed : defaults[key]];
+    }
     if (typeof defaults[key] === "number") {
       const value = Number(source[key]);
       const [min, max] = ranges[key] || [0, 100];
