@@ -174,7 +174,7 @@ assert(css.includes(".inventory-actions {\r\n    grid-template-columns: repeat(2
 assert(html.includes('id="openClassModalBtn"') && html.includes('id="classChoiceList"'), "character portrait should open a dedicated class chooser");
 assert(!html.includes('id="classList"'), "class chooser should not remain as a permanent sidebar list");
 assert(/renderClassChoices\(\);[\s\S]*openModal\("classModal"\)/.test(read("scripts/events.js")), "portrait class button should render and open the class modal");
-assert(html.includes('id="characterClassIcon"') && css.includes(".class-icon-warrior") && css.includes(".class-icon-mage") && css.includes(".class-icon-rogue") && css.includes(".class-icon-archer"), "all playable classes should have distinct portrait icons");
+assert(html.includes('id="characterClassIcon"') && read("scripts/render.js").includes('pixelSpriteHtml(portraitKey, "pixel-portrait")'), "the portrait should show the pixel-art hero of the current class and build");
 assert(read("scripts/render.js").includes("classIconMarkup(id)") && read("scripts/render.js").includes("classIconClass(state.characterClass)"), "class chooser and portrait should use dynamic class icons");
 assert(/manualMode \? await waitForCombatAction\(\) : chooseAutoCombatAction/.test(readLogic()), "manual and auto combat should share the same action loop");
 assert(/requestCombatAction\(button\.dataset\.combatAction\)/.test(read("scripts/events.js")), "combat action buttons should feed manual combat choices");
@@ -339,25 +339,40 @@ suite("sprite and visual class contracts");
 
 const enemySprites = JSON.parse(vm.runInContext("JSON.stringify(Object.values(enemies).map((enemy) => enemy.sprite))", context));
 assert.strictEqual(new Set(enemySprites).size, enemySprites.length, "enemy sprite class combinations should be unique");
-const spriteTokens = [...new Set(enemySprites.flatMap((sprite) => sprite.split(/\s+/)).filter(Boolean))];
-const spriteVariantKeys = JSON.parse(vm.runInContext("JSON.stringify(Object.keys(spriteVariants))", context));
-for (const token of spriteTokens) {
-  assert(spriteVariantKeys.includes(token), `Missing SVG sprite variant: ${token}`);
+// Pixel-Art: jede Figur ist ein PNG-Sprite-Sheet (3 Frames à 64x64) aus tools/pixelart/build.py.
+const pngSize = (file) => {
+  const buffer = fs.readFileSync(path.join(root, file));
+  assert(buffer.slice(1, 4).toString() === "PNG", `${file} should be a PNG`);
+  return [buffer.readUInt32BE(16), buffer.readUInt32BE(20)];
+};
+{
+  const enemyIds = JSON.parse(vm.runInContext("JSON.stringify(Object.keys(enemies))", context));
+  for (const id of enemyIds) {
+    const file = `assets/sprites/enemy-${id}.png`;
+    assert(fs.existsSync(path.join(root, file)), `missing pixel sprite for enemy ${id}`);
+    assert.deepStrictEqual(pngSize(file), [192, 64], `${file} should be a 3-frame 64x64 sheet`);
+  }
+  const enemyHashes = enemyIds.map((id) => require("crypto").createHash("md5").update(fs.readFileSync(path.join(root, `assets/sprites/enemy-${id}.png`))).digest("hex"));
+  assert.strictEqual(new Set(enemyHashes).size, enemyHashes.length, "every enemy needs its own pixel sprite");
+  for (const classId of ["warrior", "mage", "rogue", "archer"]) {
+    for (const build of ["tank", "damage", "bruiser"]) {
+      assert.deepStrictEqual(pngSize(`assets/sprites/hero-${classId}-${build}.png`), [192, 64], `missing hero sprite ${classId}/${build}`);
+    }
+  }
+  for (const zoneId of JSON.parse(vm.runInContext("JSON.stringify(Object.keys(zones))", context))) {
+    assert.deepStrictEqual(pngSize(`assets/backgrounds/${zoneId}.png`), [256, 96], `missing battle background for zone ${zoneId}`);
+  }
+  assert.deepStrictEqual(pngSize("assets/icons/items.png"), [128, 16], "item icon atlas should hold 8 icons of 16x16");
+  assert(vm.runInContext("enemySpriteHtml('wolf')", context).includes("assets/sprites/enemy-wolf.png"), "enemy sprite html should point to the PNG");
+  assert(vm.runInContext("heroSpriteHtml('warrior', 'tank')", context).includes("hero-warrior-tank.png"), "hero sprite html should follow class and build");
+  assert(vm.runInContext("enemySpriteHtml('unknownEnemy')", context).includes("enemy-wolf.png"), "unknown enemies fall back to a safe sprite");
+  assert(css.includes("image-rendering: pixelated") && css.includes("@keyframes px-idle") && css.includes("@keyframes px-die"), "pixel sprites need crisp scaling, idle and death animation");
+  assert(!/<svg|sprite-svg|\.spr-/.test(read("scripts/sprites.js") + css), "no SVG or CSS shape sprites should remain");
+  assert(fs.existsSync(path.join(root, "tools/pixelart/build.py")), "pixel-art generator should be part of the repo");
 }
-// Jeder Gegner bekommt eine eigene SVG-Figur (keine CSS-Grundformen mehr).
-const enemySvgs = JSON.parse(vm.runInContext("JSON.stringify(Object.values(enemies).map((enemy) => enemySpriteSvg(enemy.sprite)))", context));
-assert(enemySvgs.every((svg) => svg.startsWith("<svg") && svg.includes('class="spr-rig"') && svg.includes("spr-eye") && svg.endsWith("</svg>")), "every enemy needs a complete SVG sprite with rig and glowing eyes");
-assert.strictEqual(new Set(enemySvgs).size, enemySvgs.length, "every enemy SVG sprite should look different");
-assert(enemySvgs.every((svg) => svg.includes('translate(120 0) scale(-1 1)')), "enemy sprites should face the hero (mirrored)");
-assert(enemySvgs.every((svg) => !/undefined|NaN/.test(svg)), "enemy SVG sprites must not contain undefined values");
-const heroSvgs = JSON.parse(vm.runInContext("JSON.stringify(['warrior','mage','rogue','archer'].flatMap((c) => ['tank','damage','bruiser'].map((b) => heroSpriteSvg(c, b))))", context));
-assert.strictEqual(new Set(heroSvgs).size, heroSvgs.length, "every class/build combination needs its own hero SVG");
-assert(heroSvgs.every((svg) => svg.includes("spr-weapon") && !/undefined|NaN/.test(svg)), "hero SVG sprites need a weapon and valid values");
-assert(!/\.(hero|enemy)-body\b|\.enemy-extra|\.hero-helm|\.hero-sword|\.hero-shield/.test(css), "old CSS shape sprites should be removed");
-assert(css.includes("@keyframes spr-breathe") && css.includes("@keyframes spr-die") && css.includes(".spr-weapon"), "SVG sprites need idle, attack and death animations");
 // Punkt 18: Jede Itemkarte hat ein Icon (Slot-Symbol, Rahmen nach Seltenheit).
 for (const slot of [...JSON.parse(vm.runInContext("JSON.stringify(equipmentSlots)", context)), "material"]) {
-  assert(css.includes(`.item-icon-${slot} { --item-icon: url("data:image/svg+xml,`), `Missing item icon for slot: ${slot}`);
+  assert(new RegExp(`\\.item-icon-${slot} \\{ --icon-index: \\d; \\}`).test(css), `Missing item icon for slot: ${slot}`);
 }
 for (const quality of ["rare", "epic", "legendary", "empty"]) assert(css.includes(`.icon-quality-${quality}`), `Missing icon quality style: ${quality}`);
 {
@@ -400,7 +415,7 @@ for (const fn of ["fxShake", "fxHitParticles", "fxLootRain", "fxLevelUp", "fxCou
   for (const sfx of ["hit", "crit", "loot", "levelUp", "click"]) assert(audioSource.includes(`case "${sfx}":`), `missing sound effect ${sfx}`);
   assert(!/\.(mp3|ogg|wav)\b/.test(audioSource), "sounds are generated, no audio files needed");
 }
-assert(read("scripts/render.js").includes("heroSpriteSvg(") && read("scripts/render.js").includes("enemySpriteSvg("), "render should draw hero and enemy as SVG sprites");
+assert(read("scripts/render.js").includes("heroSpriteHtml(") && read("scripts/render.js").includes("enemySpriteHtml("), "render should draw hero and enemy as pixel sprites");
 assert(read("scripts/render.js").includes("hero-class-${characterClass}") && read("scripts/render.js").includes("heroSpriteName"), "combat hero sprite should follow the selected class and update its label");
 assert(css.includes(".class-choice-list {") && html.includes('class="class-choice-list"'), "class chooser should have dedicated layout CSS");
 assert(css.includes(".smith-avatar::before") && css.includes(".enchant-avatar::after"), "Borin and Mira avatars should have detailed CSS silhouettes");

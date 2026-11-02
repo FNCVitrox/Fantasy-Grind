@@ -207,7 +207,7 @@ function renderHeroBuildVisual() {
   const art = $("heroSpriteArt");
   const artKey = `${characterClass}:${build}`;
   if (art && art.dataset.sprite !== artKey) {
-    art.innerHTML = heroSpriteSvg(characterClass, build);
+    art.innerHTML = heroSpriteHtml(characterClass, build);
     art.dataset.sprite = artKey;
   }
   const heroName = entityName("class", characterClass, classCatalog[characterClass].name);
@@ -242,6 +242,12 @@ function escapeToken(value, allowed, fallback) {
 
 function renderMap() {
   const zoneData = zones[ui.selectedZone] || zones.meadow;
+  const stage = $("battleStage");
+  if (stage && stage.dataset.zone !== ui.selectedZone) {
+    stage.dataset.zone = ui.selectedZone;
+    // Inline gesetzt, damit der Pfad relativ zur Seite gilt (nicht zur CSS-Datei).
+    stage.style.backgroundImage = `linear-gradient(180deg, rgba(6, 12, 20, 0.35), rgba(6, 12, 20, 0) 30%, rgba(6, 12, 20, 0) 70%, rgba(6, 12, 20, 0.45)), url("${zoneBackgroundUrl(ui.selectedZone)}")`;
+  }
   setText("activeZoneName", zoneDisplayName(ui.selectedZone));
   setText("activeZoneRange", `${zoneKindLabel(zoneData)} · ${zoneRangeText(ui.selectedZone) || zoneData.range || t("common.unknown", "Unbekannt")}`);
   const mapSignature = `${currentLanguage()}|${ui.selectedZone}|${zoneUnlockSignature()}`;
@@ -261,7 +267,14 @@ function renderClassPanel() {
   setText("characterSummaryName", className);
   setText("characterBuildSummary", activeBuildName);
   const icon = $("characterClassIcon");
-  if (icon) icon.className = classIconClass(state.characterClass);
+  if (icon) {
+    icon.className = classIconClass(state.characterClass);
+    const portraitKey = heroSpriteFile(state.characterClass, state.build);
+    if (icon.dataset.sprite !== portraitKey) {
+      icon.innerHTML = pixelSpriteHtml(portraitKey, "pixel-portrait");
+      icon.dataset.sprite = portraitKey;
+    }
+  }
   const signature = `${currentLanguage()}|${state.characterClass}|${state.build}`;
   if (renderCache.classPanel === signature) return;
   renderCache.classPanel = signature;
@@ -294,8 +307,8 @@ function renderClassChoices() {
   `).join("");
 }
 
-function classIconMarkup(classId) {
-  return `<span class="${classIconClass(classId)}" aria-hidden="true"><span class="class-icon-mark"></span><span class="class-icon-tool"></span></span>`;
+function classIconMarkup(classId, build = "bruiser") {
+  return `<span class="${classIconClass(classId)}" aria-hidden="true">${pixelSpriteHtml(heroSpriteFile(classId, build), "pixel-portrait")}</span>`;
 }
 
 function classIconClass(classId) {
@@ -740,9 +753,10 @@ function setBattleEnemyVisual(enemy) {
   const className = `combatant enemy-sprite ${enemy.sprite}${enemy.eliteVariant ? " elite-variant" : ""}`;
   if ($("enemySprite").className !== className) $("enemySprite").className = className;
   const art = $("enemySpriteArt");
-  if (art && art.dataset.sprite !== enemy.sprite) {
-    art.innerHTML = enemySpriteSvg(enemy.sprite);
-    art.dataset.sprite = enemy.sprite;
+  const enemyId = enemy.baseId || ui.selectedEnemy;
+  if (art && art.dataset.sprite !== enemyId) {
+    art.innerHTML = enemySpriteHtml(enemyId);
+    art.dataset.sprite = enemyId;
   }
   updateBattleHealth(state.hp, state.maxHp, enemy.hp, enemy.hp);
 }

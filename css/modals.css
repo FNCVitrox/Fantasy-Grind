@@ -1053,6 +1053,10 @@ button.drop-row span:last-child {
     linear-gradient(0deg, rgba(88, 67, 44, 0.38), transparent 34%),
     linear-gradient(90deg, rgba(52, 213, 216, 0.06), transparent 35%, transparent 65%, rgba(242, 193, 78, 0.06)),
     #0a1622;
+  background-size: 100% 100%, cover;
+  background-position: center, center bottom;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
 }
 
 .battle-stage::before {
@@ -1349,158 +1353,83 @@ button.drop-row span:last-child {
   background: linear-gradient(90deg, #8b1e2d, var(--red-soft));
 }
 
-/* SVG-Figuren (Punkt 17): Farben kommen als --sp-* vom <svg>, Bewegung aus CSS. */
+/* Pixel-Art-Figuren: Sprite-Sheet mit 3 Frames (Ruhe A, Ruhe B, Angriff), scharf skaliert. */
 .sprite-art {
   position: relative;
-  width: 118px;
-  height: 112px;
-  margin-bottom: -6px;
+  width: 128px;
+  height: 128px;
+  margin: -18px 0 -10px;
   transform-origin: center bottom;
 }
 
-.sprite-svg {
+.pixel-sprite {
   display: block;
   width: 100%;
   height: 100%;
-  overflow: visible;
-  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.35));
+  background-repeat: no-repeat;
+  background-size: 300% 100%;
+  background-position: 0 0;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.35));
+  animation: px-idle 1.1s steps(1, end) infinite;
 }
 
-.spr-eye {
-  fill: var(--sp-glow);
-  filter: drop-shadow(0 0 2px var(--sp-glow));
+.enemy-sprite .pixel-sprite {
+  animation-delay: -0.55s;
 }
 
-.spr-orb {
-  fill: var(--sp-glow);
-  filter: drop-shadow(0 0 5px var(--sp-glow));
-  animation: spr-pulse 1.8s ease-in-out infinite;
+.battle-stage.hero-attacks .hero-sprite .pixel-sprite,
+.battle-stage.enemy-attacks .enemy-sprite .pixel-sprite {
+  animation: none;
+  background-position: 100% 0;
 }
 
-.spr-rune {
-  fill: none;
-  stroke: var(--sp-glow);
-  stroke-width: 2;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 3px var(--sp-glow));
-  animation: spr-pulse 2.4s ease-in-out infinite;
-}
-
-.spr-shine {
-  stroke: rgba(255, 255, 255, 0.55);
-  fill: none;
-}
-
-.spr-rig {
-  transform-origin: 60px 102px;
-  animation: spr-breathe 2.8s ease-in-out infinite;
-}
-
-.enemy-sprite .spr-rig {
-  animation-delay: -1.3s;
-}
-
-.spr-float {
-  animation: spr-float 2.6s ease-in-out infinite;
-}
-
-.spr-wing {
-  animation: spr-flap 0.9s ease-in-out infinite;
-}
-
-.spr-tail {
-  transform-origin: 32px 62px;
-  animation: spr-wag 1.6s ease-in-out infinite;
-}
-
-.spr-weapon {
-  transition: transform 160ms ease;
-}
-
-.battle-stage.hero-attacks .hero-sprite .spr-weapon,
-.battle-stage.enemy-attacks .enemy-sprite .spr-weapon {
-  animation: spr-swing 420ms ease-in-out;
-}
-
-.battle-stage.hero-attacks .hero-sprite .spr-head,
-.battle-stage.enemy-attacks .enemy-sprite .spr-head {
-  animation: spr-head-lunge 420ms ease-in-out;
-}
-
-.battle-stage.enemy-hit .enemy-sprite .sprite-svg,
-.battle-stage.hero-hit .hero-sprite .sprite-svg {
-  animation: spr-hit-flash 360ms ease-out;
+.battle-stage.enemy-hit .enemy-sprite .pixel-sprite,
+.battle-stage.hero-hit .hero-sprite .pixel-sprite {
+  animation: px-hit 320ms steps(2, end);
 }
 
 .battle-stage.victory .enemy-sprite .sprite-art {
-  animation: spr-die 700ms ease-in forwards;
+  animation: px-die 700ms steps(6, end) forwards;
 }
 
 .battle-stage.defeat .hero-sprite .sprite-art {
-  animation: spr-die-hero 700ms ease-in forwards;
+  animation: px-die-hero 700ms steps(6, end) forwards;
 }
 
-.enemy-sprite.elite-variant .sprite-art {
-  transform: scale(1.1);
+.enemy-sprite.elite-variant .pixel-sprite {
+  filter: drop-shadow(0 0 0 #e2b855) drop-shadow(0 0 6px rgba(226, 184, 85, 0.7)) drop-shadow(0 3px 0 rgba(0, 0, 0, 0.35));
 }
 
-.enemy-sprite.elite-variant .sprite-svg {
-  filter: drop-shadow(0 0 8px rgba(226, 184, 85, 0.55)) drop-shadow(0 3px 2px rgba(0, 0, 0, 0.35));
+.pixel-portrait {
+  animation: none;
+  background-position: 0 0;
+  filter: none;
 }
 
-@keyframes spr-breathe {
-  50% { transform: scale(1.012, 0.975); }
+@keyframes px-idle {
+  0% { background-position: 0 0; }
+  50% { background-position: 50% 0; }
 }
 
-@keyframes spr-float {
-  50% { transform: translateY(-5px); }
+@keyframes px-hit {
+  0% { filter: brightness(3) saturate(0); }
+  50% { filter: brightness(1.3) sepia(1) hue-rotate(-40deg) saturate(4); }
+  100% { filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.35)); }
 }
 
-@keyframes spr-flap {
-  50% { transform: rotate(-14deg) scaleY(0.85); }
-}
-
-@keyframes spr-wag {
-  50% { transform: rotate(10deg); }
-}
-
-@keyframes spr-pulse {
-  50% { opacity: 0.6; }
-}
-
-@keyframes spr-swing {
-  0% { transform: rotate(0deg); }
-  35% { transform: rotate(-38deg); }
-  60% { transform: rotate(52deg); }
-  100% { transform: rotate(0deg); }
-}
-
-@keyframes spr-head-lunge {
-  45% { transform: translateX(3px); }
-}
-
-@keyframes spr-hit-flash {
-  0% { filter: brightness(2.2) saturate(0.4) drop-shadow(0 0 6px #ff6a6a); }
-  100% { filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.35)); }
-}
-
-@keyframes spr-die {
+@keyframes px-die {
   0% { transform: none; opacity: 1; }
-  30% { transform: translateY(-4px) rotate(4deg); filter: brightness(1.8); }
-  100% { transform: translateY(14px) rotate(16deg) scale(0.9); opacity: 0.15; filter: grayscale(1); }
+  30% { transform: translateY(-4px); filter: brightness(2); }
+  100% { transform: translateY(16px) rotate(90deg) scale(0.9); opacity: 0; }
 }
 
-@keyframes spr-die-hero {
-  100% { transform: translateY(10px) rotate(-12deg) scale(0.94); opacity: 0.55; filter: grayscale(0.6); }
+@keyframes px-die-hero {
+  100% { transform: translateY(12px) rotate(-90deg); opacity: 0.5; filter: grayscale(0.7); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .spr-rig,
-  .spr-float,
-  .spr-wing,
-  .spr-tail,
-  .spr-orb,
-  .spr-rune {
+  .pixel-sprite {
     animation: none;
   }
 }
@@ -2860,16 +2789,18 @@ button.drop-row span:last-child {
 .item-icon::before {
   content: "";
   position: absolute;
-  inset: 16%;
-  background: var(--icon-color);
-  -webkit-mask: var(--item-icon) center / contain no-repeat;
-  mask: var(--item-icon) center / contain no-repeat;
+  inset: 8%;
+  background: url("../assets/icons/items.png") no-repeat;
+  background-size: 800% 100%;
+  background-position: calc(var(--icon-index, 0) * 100% / 7) 0;
+  image-rendering: pixelated;
 }
 
 .icon-quality-empty {
   --icon-color: #6f7f8f;
-  opacity: 0.6;
+  opacity: 0.55;
   border-style: dashed;
+  filter: grayscale(1);
 }
 
 .icon-quality-rare { --icon-color: #78aee4; }
@@ -2893,14 +2824,14 @@ button.drop-row span:last-child {
   .icon-quality-legendary { animation: none; }
 }
 
-.item-icon-weapon { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M19 2h3v3L11.5 15.5l-3-3zM5.5 12l6.5 6.5-1.6 1.6-6.5-6.5zM8 17l-4.5 4.5-1.4-1.4L6.6 15.6z'/%3E%3C/svg%3E"); }
-.item-icon-offhand { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5zm0 3.2L7 7v4c0 3.3 2 6.3 5 7.7z'/%3E%3C/svg%3E"); }
-.item-icon-chest { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M8 3l4 2 4-2 5 3-2 5-2-1v11H7V10l-2 1-2-5zm1 9v2h6v-2z'/%3E%3C/svg%3E"); }
-.item-icon-pants { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M6 3h12l1 18h-5l-2-11-2 11H5zm1 2v1.5h10V5z'/%3E%3C/svg%3E"); }
-.item-icon-boots { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M7 3h6v9l6 3c1.4.7 2 1.9 2 3v3H5v-5l2-1z'/%3E%3C/svg%3E"); }
-.item-icon-necklace { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M5 3h2c0 5 2 7 5 7s5-2 5-7h2c0 6-3 9-7 9S5 9 5 3zm7 10l4 4-4 5-4-5z'/%3E%3C/svg%3E"); }
-.item-icon-ring { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 8a7 7 0 1 1 0 14a7 7 0 1 1 0-14zm0 3a4 4 0 1 0 0 8a4 4 0 1 0 0-8zM9 2h6l2 3-5 4-5-4z'/%3E%3C/svg%3E"); }
-.item-icon-material { --item-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M7 3h10l4 6-9 12L3 9zm1.2 2L6 8.6h4.2L11 5zm4.8 0l.8 3.6H18L15.8 5z'/%3E%3C/svg%3E"); }
+.item-icon-weapon { --icon-index: 0; }
+.item-icon-offhand { --icon-index: 1; }
+.item-icon-chest { --icon-index: 2; }
+.item-icon-pants { --icon-index: 3; }
+.item-icon-boots { --icon-index: 4; }
+.item-icon-necklace { --icon-index: 5; }
+.item-icon-ring { --icon-index: 6; }
+.item-icon-material { --icon-index: 7; }
 
 /* Ausrüstungsleiste: Icon als Wasserzeichen in der Ecke, damit die Slot-Namen ihren Platz behalten. */
 .equipment-chip .item-icon {
@@ -3104,12 +3035,7 @@ button.drop-row span:last-child {
 }
 
 /* Reduzierte Effekte: Einstellung oder Systemvorgabe. Banner bleibt, Bewegung entfällt. */
-body.reduced-effects .spr-rig,
-body.reduced-effects .spr-float,
-body.reduced-effects .spr-wing,
-body.reduced-effects .spr-tail,
-body.reduced-effects .spr-orb,
-body.reduced-effects .spr-rune,
+body.reduced-effects .pixel-sprite,
 body.reduced-effects .icon-quality-legendary,
 body.reduced-effects .battle-stage.fx-shake {
   animation: none;
@@ -3242,17 +3168,7 @@ body[data-combat-speed="4"] .battle-stage * {
   animation-duration: 110ms !important;
 }
 
-body[data-combat-speed="2"] .battle-stage .spr-rig,
-body[data-combat-speed="4"] .battle-stage .spr-rig,
-body[data-combat-speed="2"] .battle-stage .spr-float,
-body[data-combat-speed="4"] .battle-stage .spr-float,
-body[data-combat-speed="2"] .battle-stage .spr-wing,
-body[data-combat-speed="4"] .battle-stage .spr-wing,
-body[data-combat-speed="2"] .battle-stage .spr-tail,
-body[data-combat-speed="4"] .battle-stage .spr-tail,
-body[data-combat-speed="2"] .battle-stage .spr-orb,
-body[data-combat-speed="4"] .battle-stage .spr-orb,
-body[data-combat-speed="2"] .battle-stage .spr-rune,
-body[data-combat-speed="4"] .battle-stage .spr-rune {
-  animation-duration: revert !important;
+body[data-combat-speed="2"] .battle-stage .pixel-sprite,
+body[data-combat-speed="4"] .battle-stage .pixel-sprite {
+  animation-duration: 1.1s !important;
 }

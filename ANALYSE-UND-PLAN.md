@@ -371,6 +371,17 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Kampftempo verkürzt Wartezeiten und Animationen. Auto-Farmen bleibt bei 1×, damit die Balance aus Punkt 15 gilt.
     - Neuer Browser-Test `tests/ui-settings.js` (in `npm run test:ui`): alle Optionen vorhanden, jede Änderung übersteht Neuladen, 4× ist messbar schneller (gemessen: 2,5 s gegen 0,65–0,85 s).
 
+### Zusatz – Pixel-Art statt Code-Formen (auf Wunsch nach Phase 4)
+
+- [x] **Echte Grafik als Pixel-Art**
+  - Ergebnis (v0.8.145):
+    - Neuer Generator `tools/pixelart/` (Python mit Pillow, Start: `python3 tools/pixelart/build.py`). Er zeichnet jedes Bild Pixel für Pixel: Farbrampen mit Farbton-Verschiebung, Licht von oben links, farbige Konturen.
+    - 41 Figuren als PNG-Sprite-Sheets (64×64, 3 Frames: zwei Ruhe-Frames und ein Angriff): 29 Gegner und 12 Helden (4 Klassen × 3 Builds). Im Spiel scharf auf 128 px (Handy 96 px) vergrössert.
+    - 8 Hintergründe für die Kampfbühne, einer pro Gebiet (Wald, Strasse, verfluchte Felder, Aschengrund, Krypta, Festung, Turm, Kathedrale).
+    - 8 Item-Icons als Pixel-Art (Atlas `assets/icons/items.png`), Rahmen und Leuchten nach Seltenheit wie bisher.
+    - Charakter-Porträt und Klassenwahl zeigen die Pixel-Figur.
+    - Die SVG-Figuren und CSS-Formen aus Punkt 17 sind entfernt. smoke.js prüft jede PNG-Datei (vorhanden, richtige Grösse, jede Figur einzigartig).
+
 ### Phase 5 – Mehr Inhalt
 
 - [ ] **22. Zweite Klasse: Magier** (danach Schurke und Bogenschütze)
