@@ -15,7 +15,18 @@ function equippedItemEffects() {
     .filter(Boolean);
 }
 
-function itemEffectSummary(effects = equippedItemEffects()) {
+// Eigene Effekte voller Dungeon-Sets (Punkt 23) zählen wie Item-Effekte.
+function activeSetEffects() {
+  const effects = [];
+  Object.values(activeSetCounts()).forEach(({ id, count }) => {
+    Object.entries(setBonuses[id]?.bonuses || {}).forEach(([needed, bonus]) => {
+      if (count >= Number(needed) && bonus.effect) effects.push({ id: `set:${id}:${needed}`, ...bonus.effect });
+    });
+  });
+  return effects;
+}
+
+function itemEffectSummary(effects = [...equippedItemEffects(), ...activeSetEffects()]) {
   return effects.reduce((summary, effect) => {
     summary.bleedChance += effect.bleedChance || 0;
     summary.poisonChance += effect.poisonChance || 0;
@@ -350,6 +361,13 @@ function advanceLootQueue() {
   state.pendingLoot = state.lootQueue.length ? state.lootQueue.shift() : [];
 }
 
+// Namensliste für einen Slot: zuerst klassenspezifische Namen (z. B. Stäbe für Magier), sonst die allgemeinen.
+function lootNamePool(slot, quality, classId = state?.characterClass) {
+  const classPools = typeof classLootNames !== "undefined" ? classLootNames[classId]?.[slot] : null;
+  const pools = classPools || lootNames[slot];
+  return pools[quality] || pools.common;
+}
+
 function generateLootItem(enemy, enemyId) {
   const lootPick = pickGeneratedLootTemplate(enemy);
   const slot = lootPick.slot;
@@ -383,7 +401,7 @@ function pickGeneratedLootTemplate(enemy) {
   const slot = slots.length ? slots[random(0, slots.length - 1)] : lootSlots[random(0, lootSlots.length - 1)];
   const rolledQuality = rollQuality(enemy);
   const quality = nearestAllowedQuality(rolledQuality, qualities.length ? qualities : Object.keys(qualityPower));
-  const namePool = lootNames[slot][quality] || lootNames[slot].common;
+  const namePool = lootNamePool(slot, quality);
 
   return {
     slot,

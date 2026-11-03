@@ -6,7 +6,7 @@ Aktueller Stand: spielbarer Alpha-Prototyp.
 
 ## Version
 
-Alpha v0.8.144
+Alpha v0.8.147
 
 ## Spielen
 
@@ -203,6 +203,7 @@ Der Code ist zunehmend in Bereiche getrennt, damit das Projekt wartbarer bleibt:
 - `scripts/core.js`: Spielstand, Konstanten, Migrationen alter Spielstände und Grundfunktionen (`getItem`, `totalStats`, `log`)
 - `scripts/combat.js`: Kampfablauf, Klassen, Builds, Fähigkeiten, Gegnerfähigkeiten, Kampf-Log
 - `scripts/combat-risk.js`: Risiko-Einschätzung der Gegner
+- `scripts/combat-boss.js`: Boss-Phasen der Dungeon-Bosse
 - `scripts/loot.js`: Beute, Item-Bewertung, Item-Effekte und Sets, Inventar, Verkaufen
 - `scripts/smith.js`: Schmied: Haltbarkeit, Reparatur, Upgrades, Zerlegen, Meisteraufträge
 - `scripts/arcanist.js`: Arkanistin Mira: Verzauberungen und arkane Meisteraufträge

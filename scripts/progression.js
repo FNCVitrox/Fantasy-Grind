@@ -296,6 +296,8 @@ function updateQuestProgress(enemy, enemyId = ui.selectedEnemy) {
       } else {
         state.completedQuests.push(quest.id);
       }
+      state.combatStats = normalizeCombatStats(state.combatStats);
+      state.combatStats.questsDone += 1;
       state.activeQuests = state.activeQuests.filter((id) => id !== quest.id);
       state.questBoard = state.questBoard.filter((id) => id !== quest.id);
       forgetNewQuest(quest.id);
@@ -435,7 +437,7 @@ function createQuestRewardItem(quest) {
   const slot = quest.slot || lootSlots[random(0, lootSlots.length - 1)];
   const base = Math.max(5, Math.floor(quest.rewardXp / 115) + Math.floor(state.level * 0.7));
   const power = qualityPower[quality] * 0.92;
-  const namePool = lootNames[slot][quality];
+  const namePool = lootNamePool(slot, quality);
   const stats = normalizeRolledItemStats(slot, quality, rollSlotStats(slot, base, power));
   const critStats = rollCritStats(slot, quality);
 
@@ -473,7 +475,7 @@ function isAchievementClaimed(id) {
 }
 
 function achievementProgress(achievement) {
-  const value = achievementProgressValue(achievement.metric);
+  const value = achievementProgressValue(achievement.metric, achievement);
   const target = Math.max(1, achievement.target || 1);
   return {
     value,
@@ -483,8 +485,20 @@ function achievementProgress(achievement) {
   };
 }
 
-function achievementProgressValue(metric) {
+function achievementProgressValue(metric, achievement = {}) {
   state.combatStats = normalizeCombatStats(state.combatStats);
+  const counters = ["crits", "flawlessWins", "manualWins", "abilitiesUsed", "bossPhaseWins", "goldEarned", "questsDone", "warriorWins", "mageWins"];
+  if (counters.includes(metric)) return state.combatStats[metric];
+  if (metric === "bothClassWins") return Math.min(state.combatStats.warriorWins, state.combatStats.mageWins);
+  if (metric === "deaths") return state.deaths || 0;
+  if (metric === "level") return state.level || 1;
+  if (metric === "paragonLevel") return state.paragon?.level || 0;
+  if (metric === "towerBest") return state.tower?.best || 0;
+  if (metric === "dungeonCleared") return (zones[achievement.key]?.enemies || []).filter((id) => (state.defeatedBosses || []).includes(id)).length;
+  if (metric === "distinctBosses") return Object.keys(enemies).filter((id) => enemies[id].boss && (state.defeatedBosses || []).includes(id)).length;
+  if (metric === "legendaryCount") return discoveredItemKeys((item) => itemQuality(item) === "legendary").size;
+  if (metric === "setItemCount") return discoveredItemKeys((item) => Boolean(item.set)).size;
+  if (metric === "fullDungeonSet") return Object.values(activeSetCounts()).some(({ id, count }) => setBonuses[id]?.dungeon && count >= (setBonuses[id].pieces || 6)) ? 1 : 0;
   if (metric === "eliteKills") return state.combatStats.eliteKills;
   if (metric === "bossKills") return state.combatStats.bossKills;
   if (metric === "wins") return state.combatStats.wins;
@@ -506,6 +520,17 @@ function achievementProgressValue(metric) {
 
 function discoveredItemCount() {
   return Object.values(state.discoveredLoot || {}).reduce((sum, drops) => sum + Object.keys(drops || {}).length, 0);
+}
+
+// Verschiedene entdeckte Items (nach Name), die eine Bedingung erfüllen.
+function discoveredItemKeys(predicate) {
+  const keys = new Set();
+  Object.entries(state.discoveredLoot || {}).forEach(([enemyId, drops]) => {
+    Object.values(drops || {}).forEach((item) => {
+      if (item && predicate(item, enemyId)) keys.add(item.fixed ? item.id : item.name);
+    });
+  });
+  return keys;
 }
 
 function hasDiscoveredItem(predicate) {
@@ -562,6 +587,10 @@ function claimAchievement(id) {
     achievement: achievementDisplayName(achievement),
     reward: achievementRewardText(achievement.reward),
   }), "drop");
+  if (achievement.title) {
+    if (!state.achievements.title) state.achievements.title = id;
+    log(() => t("achievements.titleUnlockedLog", "Neuer Titel freigeschaltet: {title}.", { title: achievementTitleText(id) }), "good");
+  }
   notifyReadyAchievements();
   save();
   render();
@@ -574,6 +603,49 @@ function grantAchievementReward(reward = {}) {
   Object.entries(reward.materials || {}).forEach(([id, amount]) => {
     state.materials[id] = (state.materials[id] || 0) + amount;
   });
+}
+
+// --- Titel (Punkt 24) ---
+
+function achievementTitleText(id) {
+  const fallback = achievementById(id)?.title || "";
+  return id ? t(`achievement.${id}.title`, fallback) : "";
+}
+
+function unlockedTitleIds() {
+  state.achievements = normalizeAchievements(state.achievements);
+  return achievementCatalog.filter((achievement) => achievement.title && state.achievements.claimed.includes(achievement.id)).map((achievement) => achievement.id);
+}
+
+function activeTitleText() {
+  const id = state.achievements?.title || "";
+  return id && state.achievements.claimed?.includes(id) ? achievementTitleText(id) : "";
+}
+
+function selectTitle(id) {
+  state.achievements = normalizeAchievements(state.achievements);
+  if (id && !unlockedTitleIds().includes(id)) return false;
+  state.achievements.title = id || "";
+  if (id) log(() => t("achievements.titleSelectedLog", "Titel gewählt: {title}.", { title: achievementTitleText(id) }), "good");
+  save();
+  render();
+  return true;
+}
+
+// Kampfwerte für Erfolge: Krits, Fähigkeiten, fast verlustfreie Siege, manuelle Siege, Boss-Phasen, Gold, Klassen.
+function recordCombatAchievementStats(combat, won, gold = 0) {
+  state.combatStats = normalizeCombatStats(state.combatStats);
+  const stats = state.combatStats;
+  const heroEvents = (combat.events || []).filter((event) => event.actor === "hero");
+  stats.crits += heroEvents.filter((event) => event.critical).length;
+  stats.abilitiesUsed += heroEvents.filter((event) => event.abilityId).length;
+  if (!won) return;
+  if ((combat.startHp ?? combat.playerHp) - combat.playerHp <= combat.combatStats.maxHp * 0.1) stats.flawlessWins += 1;
+  if (combat.manual) stats.manualWins += 1;
+  if (combat.bossPhase === 2) stats.bossPhaseWins += 1;
+  stats.goldEarned += Math.max(0, Math.floor(gold));
+  if (state.characterClass === "mage") stats.mageWins += 1;
+  else stats.warriorWins += 1;
 }
 
 function notifyReadyAchievements() {

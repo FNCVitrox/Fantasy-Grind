@@ -221,6 +221,7 @@ function defaultState() {
     renown: 0,
     language: defaultLanguage(),
     characterClass: "warrior",
+    classChosen: false,
     build: "damage",
     knownAbilities: [],
     durability: 100,
@@ -263,8 +264,17 @@ function defaultState() {
       itemsSalvaged: 0,
       itemsEnchanted: 0,
       rareEnchantments: 0,
+      crits: 0,
+      flawlessWins: 0,
+      manualWins: 0,
+      abilitiesUsed: 0,
+      bossPhaseWins: 0,
+      goldEarned: 0,
+      questsDone: 0,
+      warriorWins: 0,
+      mageWins: 0,
     },
-    achievements: { claimed: [], notified: [] },
+    achievements: { claimed: [], notified: [], title: "" },
     smithMastery: { limit: 5, active: null, completed: [], progress: {}, discovered: false },
     winsSinceQuestRefresh: 0,
     lastSaveExportAt: "",
@@ -335,6 +345,15 @@ function normalizeCombatStats(stats = {}) {
     itemsSalvaged: Math.max(0, Math.floor(stats.itemsSalvaged || 0)),
     itemsEnchanted: Math.max(0, Math.floor(stats.itemsEnchanted || 0)),
     rareEnchantments: Math.max(0, Math.floor(stats.rareEnchantments || 0)),
+    crits: Math.max(0, Math.floor(stats.crits || 0)),
+    flawlessWins: Math.max(0, Math.floor(stats.flawlessWins || 0)),
+    manualWins: Math.max(0, Math.floor(stats.manualWins || 0)),
+    abilitiesUsed: Math.max(0, Math.floor(stats.abilitiesUsed || 0)),
+    bossPhaseWins: Math.max(0, Math.floor(stats.bossPhaseWins || 0)),
+    goldEarned: Math.max(0, Math.floor(stats.goldEarned || 0)),
+    questsDone: Math.max(0, Math.floor(stats.questsDone || 0)),
+    warriorWins: Math.max(0, Math.floor(stats.warriorWins || 0)),
+    mageWins: Math.max(0, Math.floor(stats.mageWins || 0)),
   };
 }
 
@@ -347,9 +366,14 @@ function normalizeAchievements(achievements = {}) {
   const notified = Array.isArray(achievements.notified)
     ? achievements.notified.filter((id) => !catalogReady || ids.has(id))
     : [];
+  const uniqueClaimed = [...new Set(claimed)];
+  // Gewählter Titel (Punkt 24) bleibt nur, wenn der Erfolg abgeholt ist und (bei geladenem Katalog) einen Titel vergibt.
+  const titleId = typeof achievements.title === "string" ? achievements.title : "";
+  const titleValid = titleId && uniqueClaimed.includes(titleId) && (!catalogReady || Boolean(achievementCatalog.find((entry) => entry.id === titleId)?.title));
   return {
-    claimed: [...new Set(claimed)],
+    claimed: uniqueClaimed,
     notified: [...new Set(notified)],
+    title: titleValid ? titleId : "",
   };
 }
 
@@ -551,7 +575,7 @@ function normalizeItemQuality(item) {
   if (item.quality === "very-rare") item.quality = "epic";
   if (!["common", "rare", "epic", "legendary"].includes(item.quality)) item.quality = "common";
   const baseName = item.name?.replace(/\s\+\d+$/, "");
-  const legendaryNames = new Set(Object.values(lootNames).flatMap((byQuality) => byQuality.legendary || []));
+  const legendaryNames = new Set([lootNames, ...Object.values(classLootNames)].flatMap((pools) => Object.values(pools).flatMap((byQuality) => byQuality.legendary || [])));
   if (item.quality === "epic" && (legendaryNames.has(baseName) || ["ashenGreatsword", "crownShard"].includes(item.id))) {
     item.quality = "legendary";
   }
@@ -648,6 +672,28 @@ const classAbilityGroups = {
   flurry: ["bladeFlurry", "emberNova", "dualCut", "rapidVolley"],
   guard: ["shieldWall", "manaWard", "shadowVeil", "distanceGuard"],
   counter: ["counterBlow", "wardCounter", "riposte", "snapShot"],
+};
+
+// Eigene Mechaniken je Klasse (Punkt 22): ersetzen die allgemeine Gruppenwirkung der Fähigkeit.
+// multiplier: Schadensfaktor, lifesteal: Heilung in Anteil des Schadens, dot: Schaden über Zeit,
+// enemyWeaken: Gegner macht weniger Schaden (mehrere Züge), guard: Deckung über mehrere Gegnerzüge,
+// freeze: Gegner setzt Züge aus, armorPierce: Anteil ignorierter Rüstung, bonusVsDot/bonusPerDebuff: Zusatzschaden.
+const classAbilityEffects = {
+  manaWard: { multiplier: 1.2, enemyWeaken: { multiplier: 0.75, turns: 1 }, textKey: "combat.mage.frostLance", text: "{ability} trifft für {damage} und unterkühlt den Gegner." },
+  frostAegis: { multiplier: 0.8, guard: { value: 0.55, turns: 2 }, textKey: "combat.mage.iceArmor", text: "{ability} trifft für {damage} und schützt dich {turns} Züge lang." },
+  lastSpark: { multiplier: 0.9, freeze: 1, textKey: "combat.mage.frostPrison", text: "{ability} trifft für {damage} und friert den Gegner ein." },
+  arcaneBolt: { multiplier: 1.75, textKey: "combat.mage.fireball", text: "{ability} explodiert für {damage}." },
+  emberNova: { multiplier: 1, dot: { ratio: 0.38, turns: 3, key: "combat.dot.burn", name: "Brand" }, textKey: "combat.mage.ignite", text: "{ability} trifft für {damage} und setzt den Gegner in Brand." },
+  spellRend: { multiplier: 2.05, bonusVsDot: 0.45, textKey: "combat.mage.inferno", text: "{ability} verschlingt den Gegner für {damage}." },
+  spellRush: { multiplier: 1.2, lifesteal: 0.5, textKey: "combat.mage.soulDrain", text: "{ability} trifft für {damage} und heilt dich um {heal}." },
+  runeCrush: { multiplier: 0.95, armorPierce: 0.3, enemyWeaken: { multiplier: 0.8, turns: 3 }, textKey: "combat.mage.curse", text: "{ability} trifft für {damage} und verflucht den Gegner {turns} Züge lang." },
+  wardCounter: { multiplier: 1.55, bonusPerDebuff: 0.22, textKey: "combat.mage.shadowBurst", text: "{ability} entlädt alle Flüche für {damage}." },
+};
+
+// Startausrüstung je Klasse; beim Klassenwechsel wird getragene Startausrüstung getauscht.
+const classStarterItems = {
+  warrior: { weapon: "trainingSword", offhand: "wornBuckler", chest: "paddedVest" },
+  mage: { weapon: "apprenticeStaff", offhand: "apprenticeTome", chest: "apprenticeRobe" },
 };
 
 const combatAbilityUnlockLevels = [3, 6, 10];

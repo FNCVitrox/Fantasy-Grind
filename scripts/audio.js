@@ -103,7 +103,7 @@ function audioNoise(output, { start, duration, gain = 0.3, filter = 1800, q = 0.
   source.start(start);
 }
 
-// Soundeffekte: hit, crit, heroHurt, loot (mit Seltenheit), levelUp, victory, defeat, click.
+// Soundeffekte: hit, crit, heroHurt, loot (mit Seltenheit), levelUp, victory, defeat, bossPhase, click.
 function audioPlay(name, detail = "") {
   if (!audioEngine.unlocked || !audioEngine.context) return;
   const { muted, sound } = audioSettings();
@@ -141,6 +141,11 @@ function audioPlay(name, detail = "") {
       break;
     case "defeat":
       [0, -3, -7].forEach((step, index) => audioTone(out, { freq: midiToHz(60 + step), start: now + index * 0.16, duration: 0.5, type: "sine", gain: 0.18 }));
+      break;
+    case "bossPhase":
+      audioNoise(out, { start: now, duration: 0.55, gain: 0.4, filter: 480 });
+      audioTone(out, { freq: 82, glide: 41, start: now, duration: 1, type: "sawtooth", gain: 0.16, attack: 0.02 });
+      [0, -1, -6].forEach((step, index) => audioTone(out, { freq: midiToHz(57 + step), start: now + 0.12 + index * 0.15, duration: 0.45, type: "square", gain: 0.06 }));
       break;
     case "click":
       audioTone(out, { freq: 1400, glide: 900, start: now, duration: 0.04, type: "sine", gain: 0.06 });

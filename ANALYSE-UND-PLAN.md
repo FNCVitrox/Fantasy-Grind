@@ -373,16 +373,33 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 
 ### Phase 5 – Mehr Inhalt
 
-- [ ] **22. Zweite Klasse: Magier** (danach Schurke und Bogenschütze)
+- [x] **22. Zweite Klasse: Magier** (danach Schurke und Bogenschütze)
   - Wo: `scripts/data-player.js`
   - Wie: 3 Builds mit je 3 Fähigkeiten, eigene Werte wie Mana statt Wut, passende Items und eigene Sprites.
   - Fertig wenn: Die Klasse ist bei Spielstart wählbar und vollständig spielbar bis Level 20.
+  - Ergebnis (v0.8.145):
+    - Alle 9 Magier-Fähigkeiten haben eigene Mechaniken (`classAbilityEffects` in `core.js`): Frost friert ein und schützt (Eisrüstung, Frostschild), Feuer setzt Brand und trifft Brennende härter, Dunkel saugt Leben und schwächt mit Flüchen. Der Fluch-Finisher wird pro Schwächung stärker.
+    - Mana als eigene Ressource (lädt pro Runde auf), eigene Start-Ausrüstung (Lehrlingsstab, Lehrlingsfolio, Lehrlingsrobe) und eigene Beute-Namen für Stäbe, Bücher und Roben in allen Seltenheiten.
+    - Beim ersten Start blinkt am Porträt „Klasse wählen“, das Fenster heisst dann „Wähle deine Klasse“. Wer wechselt, bevor er echte Beute hat, bekommt die passende Start-Ausrüstung. Alte Spielstände gelten als „schon gewählt“.
+    - Balance-Simulation läuft jetzt für beide Klassen: Krieger 2,9 h, Magier 2,2 h bis Level 20, beide im Zielbereich.
+    - Grafik: Die bestehende SVG-Figur bleibt (Entscheidung nach den Pixel-Art-Versuchen).
 
-- [ ] **23. Boss-Phasen und Dungeon-Belohnungen**
+- [x] **23. Boss-Phasen und Dungeon-Belohnungen**
   - Wie: Jeder Dungeon-Boss bekommt 2 Phasen mit einem sichtbaren Wechsel, dazu einzigartige Set-Items pro Dungeon.
+  - Ergebnis (v0.8.146):
+    - Alle 10 Dungeon-Bosse (inklusive Turmwächter) wechseln unter 50 % Leben in Phase 2 (`bossPhases` in `data-world.js`, Logik im neuen Modul `scripts/combat-boss.js`). Jeder Boss hat einen eigenen Wechsel: Schild, Heilung, Sofortschlag, Fessel (dein nächster Treffer schwächer) oder Brand, dazu mehr Schaden oder mehr erlittener Schaden für den Rest des Kampfs.
+    - Sichtbar: Marke bei 50 % auf der Boss-Lebensleiste, beim Wechsel Banner „Phase 2 · Name“, roter Blitz, Wackeln, eigener Ton. Danach leuchtet die Bossfigur rot und heisst „… · Phase 2“. Das Bestiarium zeigt die Phase bei jedem Boss.
+    - Die Risiko-Anzeige rechnet die Phase mit ein.
+    - 4 neue Dungeon-Sets mit je 3 Teilen: Grabwächter (Krypta), Eisenschwur (Eisenbruch), Glutliturgie (Aschenkathedrale), Turmwacht (Endloser Turm). Jedes Teil kommt von einem bestimmten Boss (Turm: alle drei vom Turmwächter). 2 Teile geben Werte, das volle Set zusätzlich einen eigenen Effekt (z. B. Heilung nach Sieg, erster Treffer −20 %, Krits heilen und brennen, mehr XP und Beute).
 
-- [ ] **24. Mehr Erfolge mit Titeln**
+- [x] **24. Mehr Erfolge mit Titeln**
   - Wie: Von 20 auf rund 60 Erfolge erweitern. Titel sind wählbar und werden unter dem Namen angezeigt.
+  - Ergebnis (v0.8.147):
+    - 62 Erfolge in 7 Kategorien (neu: Dungeon und Klasse). Neue Ziele: viele Siege, Krits, Siege fast ohne Schaden, manuelle Siege, Fähigkeiten, Bosse in Phase 2, jeden Dungeon leeren, Turm-Stockwerke, Paragon, volles Dungeon-Set, verdientes Gold, Aufträge und Siege je Klasse.
+    - 37 Erfolge vergeben einen Titel. Der erste freigeschaltete Titel wird automatisch getragen. Im Erfolge-Fenster lassen sich alle freigeschalteten Titel wählen oder ablegen („Kein Titel“). Der Titel steht in Gold unter dem Klassennamen, in der schmalen Ansicht hinter dem Level.
+    - Neue Zähler im Spielstand. Alte Spielstände bekommen ihre bisherigen Siege und Aufträge angerechnet.
+    - Neuer Browser-Test `tests/ui-achievements.js` (in `npm run test:ui`): Erfolge abholen, Titel wechseln, nach Neuladen noch da, Titel ablegen.
+    - Nebenbei behoben: Beim Sprachwechsel wurden die schwebenden „+Gold“-Zahlen mit „Gold“ überschrieben.
 
 ### Phase 6 – Steam-Vorbereitung
 
@@ -421,6 +438,6 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 | 1 – Bugs | 1–5 | 5/5 ✅ |
 | 2 – Code | 6–10 | 5/5 ✅ |
 | 3 – Gameplay | 11–15 | 5/5 ✅ |
-| 4 – Grafik & Gefühl | 16–21 | 0/6 |
-| 5 – Inhalt | 22–24 | 0/3 |
+| 4 – Grafik & Gefühl | 16–21 | 6/6 ✅ |
+| 5 – Inhalt | 22–24 | 3/3 ✅ |
 | 6 – Steam | 25–28 | 0/4 |

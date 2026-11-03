@@ -24,7 +24,7 @@ const classCatalog = {
     name: "Magier",
     description: "Arkan, zerbrechlich und stark über Zauberfenster.",
     statBonuses: {
-      damageMultiplier: 1.08,
+      damageMultiplier: 1.05,
       defenseMultiplier: 0.9,
       maxHpMultiplier: 0.9,
       critChanceBonus: 0.03,

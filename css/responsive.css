@@ -259,6 +259,7 @@
   }
 
   .character-panel > h2,
+  .character-panel > .player-title,
   .character-panel > .character-status,
   .character-panel > .class-card {
     display: none;

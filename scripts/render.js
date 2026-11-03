@@ -18,7 +18,8 @@ function renderPlayerHud(language = currentLanguage()) {
   if (typeof document !== "undefined" && document.body?.classList) document.body.classList.toggle("reduced-effects", normalizeSettings(state.settings).reducedEffects);
   if (typeof audioSyncMusic === "function") audioSyncMusic();
   if (typeof document !== "undefined" && document.body?.dataset) document.body.dataset.combatSpeed = String(ui.autoFarm ? 1 : normalizeSettings(state.settings).combatSpeed);
-  setText("characterSummaryMeta", `${t("common.level", "Level")} ${state.level}`);
+  const summaryTitle = activeTitleText();
+  setText("characterSummaryMeta", `${t("common.level", "Level")} ${state.level}${summaryTitle ? ` · ${summaryTitle}` : ""}`);
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
   setText("xpText", state.level >= 20 ? t("common.max", "Max") : `${state.xp}/${needed}`);
   setBarWidth("xpBar", state.level >= 20 ? 100 : Math.max(2, (state.xp / needed) * 100));
@@ -258,10 +259,16 @@ function renderClassPanel() {
   const className = entityName("class", state.characterClass, activeClass().name);
   const activeBuildName = buildName(state.build);
   setText("className", className);
+  const title = activeTitleText();
+  setText("playerTitle", title);
+  setHidden("playerTitle", !title);
   setText("characterSummaryName", className);
   setText("characterBuildSummary", activeBuildName);
   const icon = $("characterClassIcon");
   if (icon) icon.className = classIconClass(state.characterClass);
+  setHidden("classChoiceHint", Boolean(state.classChosen));
+  $("openClassModalBtn")?.classList.toggle("needs-class-choice", !state.classChosen);
+  setText("classModalTitle", state.classChosen ? t("main.changeClass", "Klasse wechseln") : t("class.chooseTitle", "Wähle deine Klasse"));
   const signature = `${currentLanguage()}|${state.characterClass}|${state.build}`;
   if (renderCache.classPanel === signature) return;
   renderCache.classPanel = signature;
@@ -585,7 +592,7 @@ function renderAchievements() {
   if (!container) return;
   const ready = readyAchievementCount();
   const claimed = claimedAchievementCount();
-  const signature = `${currentLanguage()}|${claimed}|${ready}|${achievementCatalog.map((achievement) => `${achievement.id}:${achievementProgress(achievement).value}`).join(",")}|${state.gold}|${state.renown}|${materialsSignature()}`;
+  const signature = `${currentLanguage()}|${claimed}|${ready}|${state.achievements.title || ""}|${achievementCatalog.map((achievement) => `${achievement.id}:${achievementProgress(achievement).value}`).join(",")}|${state.gold}|${state.renown}|${materialsSignature()}`;
   if (renderCache.achievements === signature) return;
   renderCache.achievements = signature;
 
@@ -596,8 +603,27 @@ function renderAchievements() {
       <div><span>${t("common.ready", "Bereit")}</span><strong>${ready}</strong></div>
       <div><span>${t("achievements.readyRewards", "Belohnungen")}</span><strong>${ready ? t("common.claim", "Abholen") : t("common.noOpen", "Keine offen")}</strong></div>
     </section>
+    ${renderTitleSection()}
     ${categories.map((category) => renderAchievementCategory(category)).join("")}
   `;
+}
+
+// Wählbare Titel (Punkt 24): freigeschaltete Titel als Knöpfe, der aktive ist markiert.
+function renderTitleSection() {
+  const unlocked = unlockedTitleIds();
+  const total = achievementCatalog.filter((achievement) => achievement.title).length;
+  const active = state.achievements.title || "";
+  const buttons = unlocked.map((id) => `<button type="button" class="title-choice ${active === id ? "active" : ""}" data-select-title="${escapeAttr(id)}" aria-pressed="${active === id}">${escapeHtml(achievementTitleText(id))}</button>`).join("");
+  return `<section class="achievement-titles">
+    <div class="achievement-titles-head">
+      <h3>${t("achievements.titles", "Titel")}</h3>
+      <span>${t("achievements.titleCount", "{count}/{total} Titel", { count: unlocked.length, total })}</span>
+    </div>
+    <p>${t("achievements.titlesHint", "Freigeschaltete Titel erscheinen unter deinem Namen.")}</p>
+    <div class="title-choice-list">
+      ${unlocked.length ? `<button type="button" class="title-choice ${active ? "" : "active"}" data-select-title="" aria-pressed="${!active}">${t("achievements.noTitle", "Kein Titel")}</button>${buttons}` : `<span class="title-empty">${t("achievements.titleLocked", "Noch keine Titel. Hole Erfolge mit Titel ab.")}</span>`}
+    </div>
+  </section>`;
 }
 
 function renderAchievementCategory(category) {
@@ -629,6 +655,7 @@ function renderAchievementCard(achievement) {
     <div class="achievement-reward">
       <span>${t("common.reward", "Belohnung")}</span>
       <strong>${escapeHtml(achievementRewardText(achievement.reward))}</strong>
+      ${achievement.title ? `<em class="achievement-title-reward">${escapeHtml(t("achievements.titleReward", "Titel: {title}", { title: achievementTitleText(achievement.id) }))}</em>` : ""}
     </div>
     <button type="button" data-claim-achievement="${achievement.id}" ${ready ? "" : "disabled"}>
       ${claimed ? t("achievements.claimed", "Abgeholt") : ready ? t("achievements.claimReward", "Belohnung abholen") : t("achievements.closed", "Noch offen")}
@@ -743,6 +770,12 @@ function setBattleEnemyVisual(enemy) {
   if (art && art.dataset.sprite !== enemy.sprite) {
     art.innerHTML = enemySpriteSvg(enemy.sprite);
     art.dataset.sprite = enemy.sprite;
+  }
+  const phase = typeof bossPhaseFor === "function" ? bossPhaseFor(enemy) : null;
+  const enemyBar = $("battleEnemyHpBar")?.parentElement;
+  if (enemyBar) {
+    enemyBar.classList.toggle("has-phase-mark", Boolean(phase));
+    enemyBar.style.setProperty("--phase-mark", `${Math.round((phase?.threshold || 0.5) * 100)}%`);
   }
   updateBattleHealth(state.hp, state.maxHp, enemy.hp, enemy.hp);
 }
@@ -2008,6 +2041,7 @@ function renderBestiaryDetail() {
     </div>
     <p>${t("common.level", "Level")} ${detailEnemy.level}${detailEnemy.boss ? ` · ${t("common.boss", "Boss")}` : detailEnemy.elite ? ` · ${t("common.elite", "Elite")}` : ""} · ${detailEnemy.hp} ${t("main.life", "Leben")} · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} ${t("main.damage", "Schaden")} · ${detailEnemy.defense} ${t("main.defense", "Rüstung")} · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)} · ${t("bestiary.questScrollChance", "Quest-Schriftrolle {chance}", { chance: formatChance(rareQuestDropChance(detailEnemy)) })}</p>
     ${renderBossRewardPanel(ui.selectedBestiaryEnemy, detailEnemy)}
+    ${renderBossPhaseInfo(ui.selectedBestiaryEnemy, detailEnemy)}
     ${renderEnemyAbilities(detailEnemy)}
     <h3>${t("bestiary.collection", "Sammlung {found}/{total}", lootCompletion(ui.selectedBestiaryEnemy))}</h3>
     <div class="bestiary-category-grid">
@@ -2061,7 +2095,7 @@ function renderBossRewardPanel(enemyId, enemy) {
     const quality = itemQuality(item);
     return `<div class="boss-reward-drop">
       <strong class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, drop.id))}</strong>
-      <span>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, itemSlot(item))} · ${formatChance(drop.chance)}</span>
+      <span>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, itemSlot(item))} · ${formatChance(drop.chance)}${item.set && setBonuses[item.set]?.dungeon ? ` · ${escapeHtml(setDisplayName(item.set))}` : ""}</span>
     </div>`;
   }).join("");
 
@@ -2074,6 +2108,18 @@ function renderBossRewardPanel(enemyId, enemy) {
     </div>
     <div class="boss-reward-grid">
       ${drops || `<span>${t("bestiary.noBossLoot", "Keine feste Bossbeute")}</span>`}
+    </div>
+  </section>`;
+}
+
+// Boss-Phase im Bestiarium (Punkt 23): Schwelle, Name und Wirkung von Phase 2.
+function renderBossPhaseInfo(enemyId, enemy) {
+  const phase = enemy?.boss && typeof bossPhases !== "undefined" ? bossPhases[enemyId] : null;
+  if (!phase) return "";
+  return `<section class="enemy-ability-list boss-phase-info" aria-label="${escapeAttr(t("bestiary.bossPhase", "Boss-Phase"))}">
+    <div class="enemy-ability boss-phase">
+      <strong>${t("combat.phaseTwoTag", "Phase 2")} · ${escapeHtml(bossPhaseName(enemyId))}</strong>
+      <span>${t("bestiary.bossPhaseBelow", "Unter {percent} % Leben", { percent: Math.round((phase.threshold || 0.5) * 100) })} · ${escapeHtml(bossPhaseText(enemyId))}</span>
     </div>
   </section>`;
 }
@@ -2269,7 +2315,7 @@ function generatedBestiaryTemplates(enemy) {
   const allowedSlots = slots.length ? slots : lootSlots;
   const allowedQualities = qualities.length ? qualities : Object.keys(qualityPower);
   const templates = allowedSlots.flatMap((slot) => allowedQualities.flatMap((quality) => {
-    const namePool = lootNames[slot][quality] || lootNames[slot].common;
+    const namePool = lootNamePool(slot, quality);
     return namePool.slice(0, 3).map((name) => ({
       name,
       slot,
@@ -2483,7 +2529,7 @@ function renderSetTooltip(setId) {
     .map(([needed]) => `<span class="${count >= Number(needed) ? "compare-good" : "compare-even"}">${needed} ${t("common.pieces", "Teile")}: ${escapeHtml(setBonusDisplayText(setId, needed))}</span>`)
     .join("");
   return `<div class="item-tooltip">
-    <strong>${escapeHtml(setDisplayName(setId))} (${Math.min(count, 6)}/6)</strong>
+    <strong>${escapeHtml(setDisplayName(setId))} (${Math.min(count, set.pieces || 6)}/${set.pieces || 6})</strong>
     ${bonuses}
   </div>`;
 }

@@ -561,6 +561,67 @@
   font-weight: 900;
 }
 
+/* Titel (Punkt 24) */
+.achievement-title-reward {
+  color: var(--gold);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.achievement-titles {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(216, 174, 75, 0.38);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(216, 174, 75, 0.1), transparent),
+    var(--panel-deep);
+}
+
+.achievement-titles-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.achievement-titles-head h3 {
+  margin: 0;
+}
+
+.achievement-titles-head span,
+.achievement-titles p,
+.title-empty {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.achievement-titles p {
+  margin: 0;
+}
+
+.title-choice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.title-choice {
+  min-height: 30px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.title-choice.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(242, 193, 78, 0.35) inset;
+}
+
 .quest-board {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;
@@ -734,6 +795,17 @@
   background:
     linear-gradient(135deg, rgba(216, 174, 75, 0.1), transparent),
     var(--panel-dark);
+}
+
+.enemy-ability.boss-phase {
+  border-color: rgba(255, 100, 85, 0.6);
+  background:
+    linear-gradient(135deg, rgba(255, 80, 60, 0.16), transparent),
+    var(--panel-dark);
+}
+
+.enemy-ability.boss-phase strong {
+  color: #ffb3a3;
 }
 
 .enemy-ability strong {
@@ -3126,6 +3198,71 @@ body.reduced-effects .fx-level-banner {
 
   .fx-level-banner {
     animation: fx-fade 1900ms linear forwards;
+  }
+}
+
+/* Boss-Phasen (Punkt 23): Marke bei 50 % auf der Lebensleiste, Banner und roter Blitz beim Wechsel. */
+.combat-health-bar.has-phase-mark {
+  position: relative;
+}
+
+.combat-health-bar.has-phase-mark::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: var(--phase-mark, 50%);
+  width: 2px;
+  background: rgba(255, 236, 190, 0.9);
+  box-shadow: 0 0 4px rgba(255, 120, 90, 0.8);
+}
+
+.enemy-sprite.boss-phase-2 .sprite-art {
+  filter: drop-shadow(0 0 10px rgba(255, 70, 60, 0.75)) saturate(1.25);
+}
+
+.enemy-sprite.boss-phase-2 b {
+  color: #ff8a78;
+}
+
+.fx-phase-banner,
+.fx-phase-flash {
+  position: absolute;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.fx-phase-banner {
+  top: 12%;
+  left: 50%;
+  padding: 6px 18px;
+  border: 1px solid rgba(255, 110, 90, 0.85);
+  border-radius: 999px;
+  background: rgba(36, 8, 8, 0.9);
+  color: #ffb3a3;
+  font-weight: 900;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow: 0 0 22px rgba(255, 70, 60, 0.5);
+  transform: translateX(-50%);
+  animation: fx-banner 1800ms ease-out forwards;
+}
+
+.fx-phase-flash {
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 70% 50%, rgba(255, 60, 50, 0.55), transparent 65%);
+  animation: fx-fade 850ms ease-out forwards;
+}
+
+body.reduced-effects .fx-phase-banner {
+  animation: fx-fade 1800ms linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-phase-banner {
+    animation: fx-fade 1800ms linear forwards;
   }
 }
 
