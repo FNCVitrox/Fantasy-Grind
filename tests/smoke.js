@@ -788,6 +788,35 @@ assert(vm.runInContext("state = defaultState(); state.inventory = ['rustBlade', 
 
 assert(assertionCount >= 200, "smoke suite should keep broad behavioral coverage instead of becoming a hollow pass");
 
+suite("mage class");
+
+{
+  const mageAbilities = JSON.parse(vm.runInContext("JSON.stringify(Object.values(classCatalog.mage.buildAbilities).flat())", context));
+  assert.strictEqual(mageAbilities.length, 9, "mage should have 3 builds with 3 abilities each");
+  for (const id of mageAbilities) {
+    assert(vm.runInContext(`Boolean(classAbilityEffects[${JSON.stringify(id)}])`, context), `mage ability ${id} needs its own mechanic`);
+    const key = vm.runInContext(`classAbilityEffects[${JSON.stringify(id)}].textKey`, context);
+    assert(read("scripts/i18n.js").includes(`"${key}"`) && read("scripts/i18n-en.js").includes(`"${key}"`), `mage ability text ${key} needs DE and EN`);
+  }
+  const fakeCombat = "({ enemy: { defense: 10, hp: 500 }, enemyHp: 400, playerHp: 50, combatStats: { maxHp: 200, damage: 40 }, enemyDots: [], playerGuard: 1, enemyWeak: null, guardTurns: null, enemyFrozen: 0 })";
+  assert(vm.runInContext(`(() => { const c = ${fakeCombat}; applyClassAbilityEffect(c, classAbilityEffects.emberNova, 'x', 50); return c.enemyDots.length === 1 && c.enemyDots[0].turns === 3; })()`, context), "Verbrennen should set a burn over 3 turns");
+  assert(vm.runInContext(`(() => { const c = ${fakeCombat}; applyClassAbilityEffect(c, classAbilityEffects.lastSpark, 'x', 50); return c.enemyFrozen === 1; })()`, context), "Frostgefängnis should freeze the enemy for a turn");
+  assert(vm.runInContext(`(() => { const c = ${fakeCombat}; const r = applyClassAbilityEffect(c, classAbilityEffects.spellRush, 'x', 50); return c.playerHp === 50 + Math.floor(r.hit * 0.5); })()`, context), "Seelenraub should heal half of its damage");
+  assert(vm.runInContext(`(() => { const c = ${fakeCombat}; applyClassAbilityEffect(c, classAbilityEffects.runeCrush, 'x', 50); const weak = c.enemyWeak.turns === 3 && c.enemyWeak.multiplier === 0.8; advanceTimedCombatEffects(c); return weak && c.enemyWeak.turns === 2; })()`, context), "Dunkler Fluch should weaken the enemy for 3 turns and count down");
+  assert(vm.runInContext(`(() => { const c = ${fakeCombat}; applyClassAbilityEffect(c, classAbilityEffects.frostAegis, 'x', 50); c.playerGuard = 1; advanceTimedCombatEffects(c); return c.playerGuard === 0.55 && c.guardTurns.turns === 1; })()`, context), "Eisrüstung should keep its guard for the next enemy turn");
+  assert(vm.runInContext(`(() => { const c = ${fakeCombat}; const plain = applyClassAbilityEffect(c, classAbilityEffects.wardCounter, 'x', 50).hit; c.enemyDots.push({ damage: 1, turns: 2 }); c.enemyFrozen = 1; return applyClassAbilityEffect(c, classAbilityEffects.wardCounter, 'x', 50).hit > plain; })()`, context), "Schattenexplosion should grow with active debuffs");
+  assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; save = () => {}; log = () => {}; setCharacterClass('mage'); return state.equipment.weapon === 'apprenticeStaff' && state.equipment.offhand === 'apprenticeTome' && state.equipment.chest === 'apprenticeRobe' && state.classChosen; })()", context), "choosing the mage should swap starter gear to staff, tome and robe");
+  assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; save = () => {}; log = () => {}; state.equipment.weapon = 'poacherKnife'; setCharacterClass('mage'); return state.equipment.weapon === 'poacherKnife'; })()", context), "class change must not replace real loot");
+  assert(vm.runInContext("lootNamePool('weapon', 'rare', 'mage').includes('Runenstab') && lootNamePool('weapon', 'rare', 'warrior').includes('Runenklinge')", context), "mages should find staffs, warriors swords");
+  const mageNames = JSON.parse(vm.runInContext("JSON.stringify(Object.values(classLootNames.mage).flatMap((pool) => Object.values(pool).flat()))", context));
+  for (const name of mageNames) assert(read("scripts/i18n-en.js").includes(`"lootName.${name}"`), `missing English loot name ${name}`);
+  assert.strictEqual(vm.runInContext("defaultState().classChosen", context), false, "a new game should ask for the class");
+  assert(read("scripts/save-system.js").includes("loaded.classChosen = loaded.classChosen === true ||"), "old saves should count as having chosen a class");
+  const sim = require("./balance-sim.js");
+  const mageRun = sim.simulate("mage");
+  assert(sim.evaluate(mageRun).length === 0, `mage should reach level 20 within the target time (${mageRun.totalHours.toFixed(2)} h)`);
+}
+
 const suiteSummary = [...suiteStats.entries()]
   .map(([name, count]) => `${name}: ${count}`)
   .join("; ");

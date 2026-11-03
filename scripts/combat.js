@@ -139,10 +139,26 @@ function waitForCombatAction() {
   });
 }
 
+// Getragene Startausrüstung (egal welcher Klasse) gegen die der neuen Klasse tauschen.
+function swapStarterItems(classId) {
+  const starters = classStarterItems[classId] || classStarterItems.warrior;
+  const allStarters = new Set(Object.values(classStarterItems).flatMap((set) => Object.values(set)));
+  Object.entries(starters).forEach(([slot, itemId]) => {
+    if (allStarters.has(state.equipment[slot]) && items[itemId]) state.equipment[slot] = itemId;
+  });
+}
+
 function setCharacterClass(classId) {
-  if (!classCatalog[classId] || state.characterClass === classId) return;
+  if (!classCatalog[classId]) return;
+  state.classChosen = true;
+  if (state.characterClass === classId) {
+    save();
+    render();
+    return;
+  }
   const hpRatio = state.maxHp > 0 ? state.hp / state.maxHp : 1;
   state.characterClass = classId;
+  swapStarterItems(classId);
   syncDerivedStats();
   state.hp = Math.max(1, Math.min(state.maxHp, Math.floor(state.maxHp * hpRatio)));
   log(() => t("class.changed", "Klasse gewechselt: {class}.", { class: entityName("class", classId, classCatalog[classId].name) }), "drop");
@@ -634,6 +650,9 @@ function createActionCombat(enemy) {
     playerDamageMultiplier: 1,
     playerDots: [],
     enemyDots: [],
+    enemyWeak: null,
+    guardTurns: null,
+    enemyFrozen: 0,
     events: preparedEventEntry ? [preparedEventEntry] : [],
     combatEvent,
     preparedEventEntry,
@@ -794,6 +813,8 @@ function applyPlayerAbilityAction(combat, action, baseHit) {
   combat.cooldowns[action.abilityId] = action.cooldown;
   const group = abilityCombatGroup(action.abilityId);
   const name = abilityCombatName(action.abilityId);
+  const special = classAbilityEffects[action.abilityId];
+  if (special) return applyClassAbilityEffect(combat, special, name, baseHit);
   if (group === "guard") {
     combat.playerGuard = 0.42;
     return { hit: abilityDamage(baseHit, 0.9), text: t("combat.abilityGuardText", "{ability} stärkt deine Deckung und trifft für {damage}.", { ability: name, damage: abilityDamage(baseHit, 0.9) }) };
@@ -826,8 +847,56 @@ function applyPlayerAbilityAction(combat, action, baseHit) {
   return { hit: abilityDamage(baseHit, 1.65), text: t("combat.abilityHeavyText", "{ability} trifft schwer für {damage}.", { ability: name, damage: abilityDamage(baseHit, 1.65) }) };
 }
 
+// Anzahl aktiver Schwächungen auf dem Gegner (Brand/Gift, Fluch, Einfrieren) für Finisher wie Schattenexplosion.
+function enemyDebuffCount(combat) {
+  return combat.enemyDots.length + (combat.enemyWeak?.turns > 0 ? 1 : 0) + (combat.enemyFrozen > 0 ? 1 : 0);
+}
+
+function applyClassAbilityEffect(combat, special, name, baseHit) {
+  let multiplier = special.multiplier || 1;
+  if (special.bonusVsDot && combat.enemyDots.length) multiplier += special.bonusVsDot;
+  if (special.bonusPerDebuff) multiplier += special.bonusPerDebuff * enemyDebuffCount(combat);
+  let base = baseHit;
+  if (special.armorPierce) base += Math.floor(combat.enemy.defense * special.armorPierce);
+  const hit = abilityDamage(base, multiplier);
+  let heal = 0;
+  if (special.lifesteal) {
+    heal = Math.max(0, Math.min(combat.combatStats.maxHp - combat.playerHp, Math.floor(hit * special.lifesteal)));
+    combat.playerHp += heal;
+  }
+  if (special.dot) {
+    combat.enemyDots.push({ name: t(special.dot.key, special.dot.name), damage: Math.max(1, Math.ceil(combat.combatStats.damage * special.dot.ratio)), turns: special.dot.turns });
+  }
+  let turns = 0;
+  if (special.enemyWeaken) {
+    const current = combat.enemyWeak || { multiplier: 1, turns: 0 };
+    combat.enemyWeak = { multiplier: Math.min(current.multiplier, special.enemyWeaken.multiplier), turns: Math.max(current.turns, special.enemyWeaken.turns) };
+    turns = combat.enemyWeak.turns;
+  }
+  if (special.guard) {
+    combat.guardTurns = { value: special.guard.value, turns: special.guard.turns };
+    combat.playerGuard = Math.min(combat.playerGuard, special.guard.value);
+    turns = special.guard.turns;
+  }
+  if (special.freeze) combat.enemyFrozen = (combat.enemyFrozen || 0) + special.freeze;
+  return { hit, text: t(special.textKey, special.text, { ability: name, damage: hit, heal, turns }) };
+}
+
 function abilityCombatGroup(abilityId) {
   return Object.entries(classAbilityGroups).find(([, ids]) => ids.includes(abilityId))?.[0] || "heavy";
+}
+
+// Mehrzügige Effekte nach jedem Gegnerzug weiterzählen (Fluch, Eisrüstung).
+function advanceTimedCombatEffects(combat) {
+  if (combat.enemyWeak?.turns > 0) {
+    combat.enemyWeak.turns -= 1;
+    if (combat.enemyWeak.turns <= 0) combat.enemyWeak = null;
+  }
+  if (combat.guardTurns?.turns > 0) {
+    combat.guardTurns.turns -= 1;
+    combat.playerGuard = combat.guardTurns.turns > 0 ? Math.min(combat.playerGuard, combat.guardTurns.value) : combat.playerGuard;
+    if (combat.guardTurns.turns <= 0) combat.guardTurns = null;
+  }
 }
 
 function applyItemActionEffects(combat, critical) {
@@ -844,11 +913,23 @@ function applyItemActionEffects(combat, critical) {
 }
 
 async function executeEnemyCombatAction(combat) {
+  if (combat.enemyFrozen > 0) {
+    combat.enemyFrozen -= 1;
+    await pushCombatEvent(combat, {
+      round: combat.rounds,
+      actor: "enemy",
+      damage: 0,
+      text: t("combat.enemyFrozen", "{enemy} ist eingefroren und setzt aus.", { enemy: combat.enemyName }),
+    });
+    advanceTimedCombatEffects(combat);
+    return;
+  }
   const enemyBaseHit = enemyBaseDamageAfterDefense(combat.enemy, combat.combatStats.defense);
   const enemyAbility = triggeredEnemyAbility(combat.enemy, combat.rounds, combat.playerHp, combat.combatStats.maxHp, combat.enemyHp);
   const passiveMultiplier = enemyDamagePassiveMultiplier(combat.enemy, combat.enemyHp);
   const abilityMultiplier = enemyAbility?.damageMultiplier || 1;
-  let multiplier = (combat.nextEnemyDamageMultiplier || 1) * combat.playerGuard * abilityMultiplier * passiveMultiplier;
+  const weakMultiplier = combat.enemyWeak?.turns > 0 ? combat.enemyWeak.multiplier : 1;
+  let multiplier = (combat.nextEnemyDamageMultiplier || 1) * weakMultiplier * combat.playerGuard * abilityMultiplier * passiveMultiplier;
   if (combat.combatEvent?.enemyDamageBonus) multiplier *= 1 + combat.combatEvent.enemyDamageBonus;
   let hit = Math.max(1, Math.floor(enemyBaseHit * multiplier));
   hit = Math.max(1, Math.floor(hit * (1 - Math.min(0.35, combat.enchantStats.damageReduction))));
@@ -858,6 +939,7 @@ async function executeEnemyCombatAction(combat) {
   gainCombatResource(combat, classResource().hitGain || 0);
   combat.playerGuard = 1;
   combat.nextEnemyDamageMultiplier = 1;
+  advanceTimedCombatEffects(combat);
   let text = enemyAbility
     ? t("combat.enemyAbilityHit", "{enemy}: {ability} trifft für {damage}.", {
       enemy: combat.enemyName,

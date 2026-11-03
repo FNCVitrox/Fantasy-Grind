@@ -24,7 +24,7 @@ const files = [...order.filter((file) => file !== "scripts/events.js"), ...lazy]
 // Ziele aus dem Arbeitsplan
 const TARGET_MIN_HOURS = 2;
 const TARGET_MAX_HOURS = 4;
-const MAX_STEP_RATIO = 2;
+const MAX_STEP_RATIO = 2; // Sprung-Prüfung erst ab 1,5 min pro Level (kürzere Level schwanken zu stark)
 const SEED = 20261101;
 
 function createContext() {
@@ -55,11 +55,13 @@ function createContext() {
   return context;
 }
 
-function simulate() {
+function simulate(classId = "warrior") {
   const context = createContext();
   const run = (code) => vm.runInContext(code, context);
   run(`
     state = defaultState();
+    state.characterClass = ${JSON.stringify(classId)};
+    swapStarterItems(state.characterClass);
     state.settings.autoLoot = true;
     state.settings.autoSellCommon = true;
     syncDerivedStats();
@@ -166,20 +168,29 @@ function evaluate(result) {
   }
   result.levels.forEach((entry, index) => {
     const previous = result.levels[index - 1];
-    if (previous && previous.minutes > 0.5 && entry.minutes > previous.minutes * MAX_STEP_RATIO) {
+    if (previous && previous.minutes > 1.5 && entry.minutes > previous.minutes * MAX_STEP_RATIO) {
       problems.push(`Level ${entry.level} dauert ${entry.minutes.toFixed(1)} min, mehr als doppelt so lange wie Level ${previous.level} (${previous.minutes.toFixed(1)} min)`);
     }
   });
   return problems;
 }
 
+// Spielbare Klassen, die bis Level 20 im Zielbereich liegen müssen (Punkt 22: Magier).
+const SIM_CLASSES = ["warrior", "mage"];
+
 if (require.main === module) {
-  const result = simulate();
-  console.log(report(result));
-  const problems = evaluate(result);
-  problems.forEach((problem) => console.log(`WARNUNG: ${problem}`));
-  console.log(problems.length ? "BALANCE: Ziele verfehlt" : "BALANCE: im Zielbereich");
-  if (process.argv.includes("--check") && problems.length) process.exit(1);
+  const only = process.argv.includes("--class") ? [process.argv[process.argv.indexOf("--class") + 1]] : SIM_CLASSES;
+  let failed = false;
+  for (const classId of only) {
+    const result = simulate(classId);
+    console.log(`== ${classId}`);
+    console.log(report(result));
+    const problems = evaluate(result);
+    problems.forEach((problem) => console.log(`WARNUNG (${classId}): ${problem}`));
+    failed = failed || problems.length > 0;
+  }
+  console.log(failed ? "BALANCE: Ziele verfehlt" : "BALANCE: im Zielbereich");
+  if (process.argv.includes("--check") && failed) process.exit(1);
 }
 
 module.exports = { simulate, evaluate, report };

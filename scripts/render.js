@@ -262,6 +262,9 @@ function renderClassPanel() {
   setText("characterBuildSummary", activeBuildName);
   const icon = $("characterClassIcon");
   if (icon) icon.className = classIconClass(state.characterClass);
+  setHidden("classChoiceHint", Boolean(state.classChosen));
+  $("openClassModalBtn")?.classList.toggle("needs-class-choice", !state.classChosen);
+  setText("classModalTitle", state.classChosen ? t("main.changeClass", "Klasse wechseln") : t("class.chooseTitle", "Wähle deine Klasse"));
   const signature = `${currentLanguage()}|${state.characterClass}|${state.build}`;
   if (renderCache.classPanel === signature) return;
   renderCache.classPanel = signature;
@@ -2269,7 +2272,7 @@ function generatedBestiaryTemplates(enemy) {
   const allowedSlots = slots.length ? slots : lootSlots;
   const allowedQualities = qualities.length ? qualities : Object.keys(qualityPower);
   const templates = allowedSlots.flatMap((slot) => allowedQualities.flatMap((quality) => {
-    const namePool = lootNames[slot][quality] || lootNames[slot].common;
+    const namePool = lootNamePool(slot, quality);
     return namePool.slice(0, 3).map((name) => ({
       name,
       slot,

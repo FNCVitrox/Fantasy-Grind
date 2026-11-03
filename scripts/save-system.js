@@ -426,6 +426,8 @@ function normalizeLoadedCollections(loaded) {
     : [];
   loaded.inventoryCapacity = normalizeInventoryCapacity(loaded.inventoryCapacity);
   loaded.paragon = normalizeParagon(loaded.paragon);
+  // Alte Spielstände: wer schon gespielt hat, hat seine Klasse damit gewählt.
+  loaded.classChosen = loaded.classChosen === true || (Number(loaded.level) || 1) > 1 || loaded.characterClass !== "warrior" || (loaded.combatStats?.wins || 0) > 0;
   loaded.lastActiveAt = Number.isFinite(loaded.lastActiveAt) && loaded.lastActiveAt > 0 ? loaded.lastActiveAt : 0;
   loaded.tower = normalizeTower(loaded.tower);
   loaded.settings = normalizeSettings(loaded.settings);

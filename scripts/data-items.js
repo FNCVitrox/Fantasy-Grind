@@ -2,6 +2,9 @@ const items = {
   trainingSword: { name: "Übungsschwert", slot: "weapon", quality: "common", damage: 4, defense: 0, critChance: 0.01 },
   wornBuckler: { name: "Abgenutzter Buckler", slot: "offhand", quality: "common", damage: 0, defense: 2 },
   paddedVest: { name: "Gepolsterte Weste", slot: "chest", quality: "common", damage: 0, defense: 3 },
+  apprenticeStaff: { name: "Lehrlingsstab", slot: "weapon", quality: "common", damage: 4, defense: 0, critChance: 0.01 },
+  apprenticeTome: { name: "Abgegriffenes Zauberbuch", slot: "offhand", quality: "common", damage: 0, defense: 2 },
+  apprenticeRobe: { name: "Lehrlingsrobe", slot: "chest", quality: "common", damage: 0, defense: 3 },
   patchedTrousers: { name: "Geflickte Hose", slot: "pants", quality: "common", damage: 0, defense: 2 },
   travelBoots: { name: "Reisestiefel", slot: "boots", quality: "common", damage: 0, defense: 1 },
   twineNecklace: { name: "Kordelhalskette", slot: "necklace", quality: "common", damage: 1, defense: 0, critDamage: 0.04 },
@@ -519,6 +522,30 @@ const lootNames = {
     rare: ["Blutsteinring", "Wolfszeichen", "Wachtersiegel"],
     epic: ["Grablichtreif", "Eidsiegel", "Sternsplitterring"],
     legendary: ["Splitterkrone", "Ring des alten Feuers", "Königszeichen"],
+  },
+};
+
+// Beute-Namen je Klasse (Punkt 22): Magier finden Stäbe, Foki und Roben statt Schwerter, Schilde und Platten.
+const classLootNames = {
+  mage: {
+    weapon: {
+      common: ["Eschenstab", "Zauberrute", "Lehrlingszepter"],
+      rare: ["Runenstab", "Glutzepter", "Froststab"],
+      epic: ["Sternenstab", "Seelenzepter", "Grablichtstab"],
+      legendary: ["Stab der Aschenkrone", "Weltenzepter", "Drachenodem-Stab"],
+    },
+    offhand: {
+      common: ["Zauberbuch", "Kristallsplitter", "Bannkerze"],
+      rare: ["Runenfoliant", "Frostkugel", "Glutkristall"],
+      epic: ["Grimoire der Grauwacht", "Seelenfokus", "Sternenkugel"],
+      legendary: ["Buch der alten Flamme", "Leerenfokus", "Herz des Winters"],
+    },
+    chest: {
+      common: ["Lehrlingskutte", "Wollrobe", "Wanderkutte"],
+      rare: ["Runenrobe", "Glutgewand", "Frostmantel"],
+      epic: ["Robe des Arkanums", "Schattenkutte", "Sternengewand"],
+      legendary: ["Gewand der Aschenkrone", "Mantel des Erzmagiers", "Robe der Leere"],
+    },
   },
 };
 

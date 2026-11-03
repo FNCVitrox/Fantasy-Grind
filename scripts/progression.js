@@ -435,7 +435,7 @@ function createQuestRewardItem(quest) {
   const slot = quest.slot || lootSlots[random(0, lootSlots.length - 1)];
   const base = Math.max(5, Math.floor(quest.rewardXp / 115) + Math.floor(state.level * 0.7));
   const power = qualityPower[quality] * 0.92;
-  const namePool = lootNames[slot][quality];
+  const namePool = lootNamePool(slot, quality);
   const stats = normalizeRolledItemStats(slot, quality, rollSlotStats(slot, base, power));
   const critStats = rollCritStats(slot, quality);
 

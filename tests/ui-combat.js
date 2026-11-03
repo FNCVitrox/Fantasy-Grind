@@ -22,7 +22,23 @@ const al=await p.evaluate(async()=>{state.level=8;syncDerivedStats();state.hp=st
 const farm=await p.evaluate(async()=>{state.settings.autoLoot=true;state.level=8;syncDerivedStats();state.hp=state.maxHp;ui.selectedZone='meadow';ui.selectedEnemy='bandit';render();
  const w0=state.combatStats.wins;$('autoFarmBtn').click();await new Promise(r=>setTimeout(r,9000));const running=ui.autoFarm;$('autoFarmBtn').click();
  for(let i=0;i<40&&ui.isFighting;i++)await new Promise(r=>setTimeout(r,100));return {wins:state.combatStats.wins-w0,running,stopped:!ui.autoFarm&&!ui.isFighting}});
+// Magier (Punkt 22): Klassenwahl beim ersten Start, eigene Fähigkeiten im manuellen Kampf
+const mage=await p.evaluate(async()=>{const hintBefore=!$('classChoiceHint').hidden;
+ $('openClassModalBtn').click();await new Promise(r=>setTimeout(r,100));const title=$('classModalTitle').textContent;
+ document.querySelector('[data-character-class="mage"]').click();await new Promise(r=>setTimeout(r,100));closeModal('classModal');
+ const hintAfter=!$('classChoiceHint').hidden;
+ state.level=12;state.build='damage';syncDerivedStats();state.hp=state.maxHp;state.pendingLoot=[];closeModal('lootModal');state.equipment.weapon='apprenticeStaff';ui.selectedZone='road';ui.selectedEnemy='oldKnight';setCombatMode('manual');render();
+ const used=new Set();const pr=fight();
+ for(let i=0;i<120&&ui.isFighting;i++){await new Promise(r=>setTimeout(r,60));if(!ui.pendingCombatAction)continue;
+  const acts=combatActionList(ui.activeCombatState).filter(a=>!a.disabled);const ab=acts.find(a=>a.type==='ability'&&!used.has(a.abilityId))||acts.find(a=>a.id==='attack');if(ab.type==='ability')used.add(ab.abilityId);requestCombatAction(ab.id);}
+ await pr;setCombatMode('auto');
+ const texts=state.combatLog.map(e=>typeof e==='string'?e:(e.text||'')).join(' | ');
+ return {hintBefore,hintAfter,title,cls:state.characterClass,weapon:state.equipment.weapon,used:[...used],burn:/Brand|Burn/.test(JSON.stringify(state.combatLog))}});
 const worst=Math.max(...r.skip);const errs=[];
+if(!mage.hintBefore||mage.hintAfter||!/Wähle deine Klasse|Choose your class/.test(mage.title))errs.push('Klassenwahl beim Start: '+JSON.stringify(mage));
+if(mage.cls!=='mage')errs.push('Magier nicht korrekt gewählt: '+JSON.stringify(mage));
+if(mage.used.length<2||!mage.burn)errs.push('Magier hat seine Fähigkeiten nicht eingesetzt: '+JSON.stringify(mage.used));
+console.log('Magier: Fähigkeiten eingesetzt '+mage.used.join(', ')+', Brand im Kampf-Log: '+(mage.burn?'ja':'nein'));
 if(worst>=250)errs.push('Überspringen zu langsam: '+worst+' ms');
 if(!r.bannerAfterSkip)errs.push('Ergebnis-Banner fehlt nach dem Überspringen');
 if(r.bannerLater)errs.push('Ergebnis-Banner verschwindet nicht');
