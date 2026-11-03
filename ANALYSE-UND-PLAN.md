@@ -392,8 +392,14 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Die Risiko-Anzeige rechnet die Phase mit ein.
     - 4 neue Dungeon-Sets mit je 3 Teilen: Grabwächter (Krypta), Eisenschwur (Eisenbruch), Glutliturgie (Aschenkathedrale), Turmwacht (Endloser Turm). Jedes Teil kommt von einem bestimmten Boss (Turm: alle drei vom Turmwächter). 2 Teile geben Werte, das volle Set zusätzlich einen eigenen Effekt (z. B. Heilung nach Sieg, erster Treffer −20 %, Krits heilen und brennen, mehr XP und Beute).
 
-- [ ] **24. Mehr Erfolge mit Titeln**
+- [x] **24. Mehr Erfolge mit Titeln**
   - Wie: Von 20 auf rund 60 Erfolge erweitern. Titel sind wählbar und werden unter dem Namen angezeigt.
+  - Ergebnis (v0.8.147):
+    - 62 Erfolge in 7 Kategorien (neu: Dungeon und Klasse). Neue Ziele: viele Siege, Krits, Siege fast ohne Schaden, manuelle Siege, Fähigkeiten, Bosse in Phase 2, jeden Dungeon leeren, Turm-Stockwerke, Paragon, volles Dungeon-Set, verdientes Gold, Aufträge und Siege je Klasse.
+    - 37 Erfolge vergeben einen Titel. Der erste freigeschaltete Titel wird automatisch getragen. Im Erfolge-Fenster lassen sich alle freigeschalteten Titel wählen oder ablegen („Kein Titel“). Der Titel steht in Gold unter dem Klassennamen, in der schmalen Ansicht hinter dem Level.
+    - Neue Zähler im Spielstand. Alte Spielstände bekommen ihre bisherigen Siege und Aufträge angerechnet.
+    - Neuer Browser-Test `tests/ui-achievements.js` (in `npm run test:ui`): Erfolge abholen, Titel wechseln, nach Neuladen noch da, Titel ablegen.
+    - Nebenbei behoben: Beim Sprachwechsel wurden die schwebenden „+Gold“-Zahlen mit „Gold“ überschrieben.
 
 ### Phase 6 – Steam-Vorbereitung
 
@@ -433,5 +439,5 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 | 2 – Code | 6–10 | 5/5 ✅ |
 | 3 – Gameplay | 11–15 | 5/5 ✅ |
 | 4 – Grafik & Gefühl | 16–21 | 6/6 ✅ |
-| 5 – Inhalt | 22–24 | 2/3 |
+| 5 – Inhalt | 22–24 | 3/3 ✅ |
 | 6 – Steam | 25–28 | 0/4 |

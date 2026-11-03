@@ -561,6 +561,67 @@
   font-weight: 900;
 }
 
+/* Titel (Punkt 24) */
+.achievement-title-reward {
+  color: var(--gold);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.achievement-titles {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(216, 174, 75, 0.38);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(216, 174, 75, 0.1), transparent),
+    var(--panel-deep);
+}
+
+.achievement-titles-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.achievement-titles-head h3 {
+  margin: 0;
+}
+
+.achievement-titles-head span,
+.achievement-titles p,
+.title-empty {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.achievement-titles p {
+  margin: 0;
+}
+
+.title-choice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.title-choice {
+  min-height: 30px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.title-choice.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(242, 193, 78, 0.35) inset;
+}
+
 .quest-board {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;

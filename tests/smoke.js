@@ -777,7 +777,7 @@ assert(vm.runInContext("state = defaultState(); state.level = 8; const commonCos
 assert(vm.runInContext("(() => { const summary = clampEnchantmentSummary({ ...emptyEnchantmentSummary(), critChance: 0.6, critDamage: 1.2, damageReduction: 0.9, lootBonus: 0.8, maxHp: -999 }); return summary.critChance <= 0.18 && summary.critDamage <= 0.45 && summary.damageReduction <= 0.24 && summary.lootBonus <= 0.24 && summary.maxHp >= -80; })()", context), "enchantment totals should be capped so stacked runes cannot break builds");
 assert(vm.runInContext("state = defaultState(); state.level = 8; state.customItems.trainingSword = { ...items.trainingSword, id: 'trainingSword', enchantments: ['keenEdge'] }; totalStats().critChance > 0.06", context), "equipped enchantments should affect player stats");
 assert(vm.runInContext("state = defaultState(); state.level = 8; state.gold = 999; state.materials.shard = 9; state.materials.moonDust = 9; render = () => {}; renderLog = () => {}; enchantEquipped('weapon', 'offense'); getItem(state.equipment.weapon).enchantments.length === 1", context), "enchanting should add a valid enchantment to equipped gear");
-assert.strictEqual(vm.runInContext("achievementCatalog.length", context), 20);
+assert(vm.runInContext("achievementCatalog.length >= 55 && achievementCatalog.length <= 70", context), "there should be around 60 achievements");
 assert(vm.runInContext("new Set(achievementCatalog.map((achievement) => achievement.id)).size === achievementCatalog.length", context), "achievement ids should be unique");
 assert(vm.runInContext("achievementCatalog.every((achievement) => !achievement.reward?.materials || Object.keys(achievement.reward.materials).every((id) => materialLabel[id]))", context), "achievement rewards should only use known materials");
 assert.strictEqual(vm.runInContext("defaultState().achievements.claimed.length", context), 0);
@@ -855,6 +855,44 @@ suite("boss phases and dungeon sets");
   }
   assert(vm.runInContext("(() => { state = defaultState(); state.equipment.boots = 'cellwardenBoots'; state.equipment.necklace = 'graveWardAmulet'; const two = activeSetBonusStats().maxHp === 16 && itemEffectSummary().postCombatHeal < 0.05; state.equipment.pants = 'cryptGreaves'; return two && itemEffectSummary().postCombatHeal >= 0.05 && activeSetBonusStats().maxHp === 40; })()", context), "full dungeon set should add its own effect, two pieces only stats");
   assert(vm.runInContext("(() => { state = defaultState(); state.equipment.boots = 'cellwardenBoots'; return renderSetTooltip('graveWarden').includes('1/3'); })()", context), "set tooltip should count against the set size");
+}
+
+suite("achievements and titles");
+
+{
+  const catalog = JSON.parse(vm.runInContext("JSON.stringify(achievementCatalog)", context));
+  assert(catalog.length >= 55 && catalog.length <= 70, `about 60 achievements expected, got ${catalog.length}`);
+  assert(catalog.filter((entry) => entry.title).length >= 20, "at least 20 achievements should grant a title");
+  const progressionSource = read("scripts/progression.js");
+  const counters = ["crits", "flawlessWins", "manualWins", "abilitiesUsed", "bossPhaseWins", "goldEarned", "questsDone", "warriorWins", "mageWins"];
+  const de = read("scripts/i18n.js");
+  const en = read("scripts/i18n-en.js");
+  for (const entry of catalog) {
+    assert(counters.includes(entry.metric) || progressionSource.includes(`metric === "${entry.metric}"`), `achievement ${entry.id} uses unknown metric ${entry.metric}`);
+    for (const field of ["name", "text", ...(entry.title ? ["title"] : [])]) {
+      assert(de.includes(`"achievement.${entry.id}.${field}"`) && en.includes(`"achievement.${entry.id}.${field}"`), `achievement ${entry.id}.${field} needs DE and EN`);
+    }
+    for (const material of Object.keys(entry.reward?.materials || {})) {
+      assert(vm.runInContext(`Boolean(materialLabel[${JSON.stringify(material)}])`, context), `achievement ${entry.id} rewards unknown material ${material}`);
+    }
+    if (entry.metric === "dungeonCleared") assert(vm.runInContext(`zones[${JSON.stringify(entry.key)}]?.enemies.length === ${entry.target}`, context), `${entry.id} target should match the dungeon bosses`);
+  }
+  for (const category of new Set(catalog.map((entry) => entry.category))) assert(en.includes(`"achievement.category.${category}"`), `category ${category} needs English`);
+  assert.strictEqual(vm.runInContext("Object.values(enemies).filter((enemy) => enemy.boss).length", context), catalog.find((entry) => entry.id === "allBosses").target, "allBosses should need every boss");
+
+  const fight = "({ events: [{ actor: 'hero', critical: true, abilityId: 'whirlwind' }, { actor: 'hero', critical: true }, { actor: 'enemy', critical: true }], startHp: 100, playerHp: 95, combatStats: { maxHp: 100 }, manual: true, bossPhase: 2 })";
+  assert(vm.runInContext(`(() => { state = defaultState(); recordCombatAchievementStats(${fight}, true, 40); const s = state.combatStats; return s.crits === 2 && s.abilitiesUsed === 1 && s.flawlessWins === 1 && s.manualWins === 1 && s.bossPhaseWins === 1 && s.goldEarned === 40 && s.warriorWins === 1 && s.mageWins === 0; })()`, context), "combat should count crits, abilities, flawless, manual, phase wins, gold and class wins");
+  assert(vm.runInContext(`(() => { state = defaultState(); recordCombatAchievementStats({ ...${fight}, playerHp: 10 }, false); const s = state.combatStats; return s.crits === 2 && s.flawlessWins === 0 && s.manualWins === 0 && s.warriorWins === 0; })()`, context), "losses count crits but no wins");
+  assert(vm.runInContext("(() => { state = defaultState(); state.defeatedBosses = ['ratguard', 'boneAcolyte']; return achievementProgress(achievementById('clearCrypt')).value === 2 && achievementProgressValue('distinctBosses') === 2; })()", context), "dungeon clear progress should count defeated bosses");
+  assert(vm.runInContext("(() => { state = defaultState(); state.equipment.boots = 'cellwardenBoots'; state.equipment.necklace = 'graveWardAmulet'; state.equipment.pants = 'cryptGreaves'; return achievementProgressValue('fullDungeonSet') === 1; })()", context), "wearing a full dungeon set should count");
+  assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; save = () => {}; state.combatStats.wins = 100; const ok = claimAchievement('hundredWins'); return ok && state.achievements.title === 'hundredWins' && activeTitleText() === 'Kampferprobt'; })()", context), "claiming a title achievement should unlock and select its title");
+  assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; save = () => {}; state.combatStats.wins = 100; claimAchievement('hundredWins'); state.combatStats.eliteKills = 50; claimAchievement('fiftyElites'); const kept = state.achievements.title === 'hundredWins'; selectTitle('fiftyElites'); const switched = activeTitleText() === 'Elitejäger'; return kept && switched && selectTitle('towerFifty') === false && selectTitle('') && activeTitleText() === ''; })()", context), "titles should be selectable, removable and locked titles refused");
+  assert(vm.runInContext("normalizeAchievements({ claimed: ['tenWins'], title: 'hundredWins' }).title === ''", context), "an unclaimed title should be dropped on load");
+  assert(vm.runInContext("normalizeAchievements({ claimed: ['tenWins'], title: 'tenWins' }).title === ''", context), "achievements without title cannot be worn as title");
+  assert(vm.runInContext("(() => { state = defaultState(); state.achievements = { claimed: ['hundredWins'], notified: [], title: 'hundredWins' }; return renderTitleSection().includes('data-select-title=\"hundredWins\"') && renderTitleSection().includes('Kampferprobt'); })()", context), "achievements modal should list unlocked titles");
+  assert(vm.runInContext("(() => { state = defaultState(); state.language = 'en'; state.achievements = { claimed: ['thousandWins'], notified: [], title: 'thousandWins' }; const text = activeTitleText(); state.language = 'de'; return text === 'the Tireless'; })()", context), "titles should translate to English");
+  assert(vm.runInContext("(() => { const loaded = { combatStats: normalizeCombatStats({ wins: 30 }), completedQuests: ['a', 'b', 'c', 'd'], characterClass: 'warrior' }; migrateAchievementCounters(loaded); return loaded.combatStats.warriorWins === 30 && loaded.combatStats.questsDone === 4; })()", context), "old saves should keep credit for wins and quests");
+  assert(html.includes('id="playerTitle"'), "the title should show under the class name");
 }
 
 const suiteSummary = [...suiteStats.entries()]

@@ -640,6 +640,8 @@ function createActionCombat(enemy) {
     enemy,
     enemyName: enemyDisplayName(enemy, enemy.baseId || ui.selectedEnemy),
     playerHp: state.hp,
+    startHp: state.hp,
+    manual: isManualCombatMode(),
     enemyHp: enemy.hp,
     rounds: 0,
     resource: Math.min(resource.max, state.level >= 3 ? 1 : 0),
@@ -1030,6 +1032,7 @@ function grantActionCombatRewards(combat) {
   createLootChoices(combat.enemy, combat.enemy.baseId || ui.selectedEnemy);
   state.combatStats = normalizeCombatStats(state.combatStats);
   state.combatStats.wins += 1;
+  recordCombatAchievementStats(combat, true, gold);
   recordSmithMasteryBattle(combat.enemy);
   recordEnchantMasteryBattle(combat.enemy);
   updateQuestProgress(combat.enemy, combat.enemy.baseId || ui.selectedEnemy);
@@ -1053,6 +1056,7 @@ function applyActionCombatLoss(combat) {
   state.xp -= xpLoss;
   state.gold -= goldLoss;
   state.deaths += 1;
+  recordCombatAchievementStats(combat, false);
   state.hp = state.maxHp;
   damageEquippedItems(combat.enemy, 2);
   log(() => t("combat.lossLog", "Tod gegen {enemy}. Du verlierst {xp} XP, {gold} Gold und kehrst angeschlagen ins Lager zurück.", { enemy: enemyDisplayName(combat.enemy, combat.enemy.baseId || ui.selectedEnemy), xp: xpLoss, gold: goldLoss }), "bad");

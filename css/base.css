@@ -2319,3 +2319,12 @@ h2 {
 @media (prefers-reduced-motion: reduce) {
   .class-choice-hint { animation: none; }
 }
+
+/* Titel unter dem Klassennamen (Punkt 24) */
+.player-title {
+  margin: -6px 0 2px;
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}

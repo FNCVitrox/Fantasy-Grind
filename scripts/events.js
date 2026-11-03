@@ -84,6 +84,8 @@ $("quests").addEventListener("click", (event) => {
 $("achievements").addEventListener("click", (event) => {
   const button = event.target.closest("[data-claim-achievement]");
   if (button) claimAchievement(button.dataset.claimAchievement);
+  const title = event.target.closest("[data-select-title]");
+  if (title) selectTitle(title.dataset.selectTitle);
 });
 
 $("bestiary").addEventListener("click", (event) => {
@@ -754,6 +756,7 @@ function setControlsDisabled(disabled) {
     if (button.dataset.equipLoot !== undefined) return;
     if (button.dataset.acceptQuest !== undefined) return;
     if (button.dataset.claimAchievement !== undefined) return;
+    if (button.dataset.selectTitle !== undefined) return;
     button.disabled = disabled;
   });
 }

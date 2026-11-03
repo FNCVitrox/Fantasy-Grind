@@ -285,6 +285,7 @@ function parseSavedState(raw) {
     loaded.itemDurability = loaded.itemDurability || {};
     loaded.combatLog = Array.isArray(loaded.combatLog) ? loaded.combatLog : [];
     loaded.combatStats = normalizeCombatStats(loaded.combatStats);
+    migrateAchievementCounters(loaded);
     loaded.achievements = normalizeAchievements(loaded.achievements);
     loaded.smithMastery = normalizeSmithMastery(loaded.smithMastery, loaded);
     loaded.enchanting = normalizeEnchanting(loaded.enchanting);
@@ -800,4 +801,13 @@ function attemptRecoverSavedState(raw) {
 
   // 3) Kein Recovery möglich
   return null;
+}
+
+// Punkt 24: neue Erfolgs-Zähler aus alten Spielständen ableiten (Aufträge, Siege der aktuellen Klasse).
+function migrateAchievementCounters(loaded) {
+  const stats = loaded.combatStats;
+  stats.questsDone = Math.max(stats.questsDone, Array.isArray(loaded.completedQuests) ? loaded.completedQuests.length : 0);
+  if (stats.wins > 0 && stats.warriorWins + stats.mageWins === 0) {
+    stats[loaded.characterClass === "mage" ? "mageWins" : "warriorWins"] = stats.wins;
+  }
 }

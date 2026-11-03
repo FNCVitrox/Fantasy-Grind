@@ -264,8 +264,17 @@ function defaultState() {
       itemsSalvaged: 0,
       itemsEnchanted: 0,
       rareEnchantments: 0,
+      crits: 0,
+      flawlessWins: 0,
+      manualWins: 0,
+      abilitiesUsed: 0,
+      bossPhaseWins: 0,
+      goldEarned: 0,
+      questsDone: 0,
+      warriorWins: 0,
+      mageWins: 0,
     },
-    achievements: { claimed: [], notified: [] },
+    achievements: { claimed: [], notified: [], title: "" },
     smithMastery: { limit: 5, active: null, completed: [], progress: {}, discovered: false },
     winsSinceQuestRefresh: 0,
     lastSaveExportAt: "",
@@ -336,6 +345,15 @@ function normalizeCombatStats(stats = {}) {
     itemsSalvaged: Math.max(0, Math.floor(stats.itemsSalvaged || 0)),
     itemsEnchanted: Math.max(0, Math.floor(stats.itemsEnchanted || 0)),
     rareEnchantments: Math.max(0, Math.floor(stats.rareEnchantments || 0)),
+    crits: Math.max(0, Math.floor(stats.crits || 0)),
+    flawlessWins: Math.max(0, Math.floor(stats.flawlessWins || 0)),
+    manualWins: Math.max(0, Math.floor(stats.manualWins || 0)),
+    abilitiesUsed: Math.max(0, Math.floor(stats.abilitiesUsed || 0)),
+    bossPhaseWins: Math.max(0, Math.floor(stats.bossPhaseWins || 0)),
+    goldEarned: Math.max(0, Math.floor(stats.goldEarned || 0)),
+    questsDone: Math.max(0, Math.floor(stats.questsDone || 0)),
+    warriorWins: Math.max(0, Math.floor(stats.warriorWins || 0)),
+    mageWins: Math.max(0, Math.floor(stats.mageWins || 0)),
   };
 }
 
@@ -348,9 +366,14 @@ function normalizeAchievements(achievements = {}) {
   const notified = Array.isArray(achievements.notified)
     ? achievements.notified.filter((id) => !catalogReady || ids.has(id))
     : [];
+  const uniqueClaimed = [...new Set(claimed)];
+  // Gewählter Titel (Punkt 24) bleibt nur, wenn der Erfolg abgeholt ist und (bei geladenem Katalog) einen Titel vergibt.
+  const titleId = typeof achievements.title === "string" ? achievements.title : "";
+  const titleValid = titleId && uniqueClaimed.includes(titleId) && (!catalogReady || Boolean(achievementCatalog.find((entry) => entry.id === titleId)?.title));
   return {
-    claimed: [...new Set(claimed)],
+    claimed: uniqueClaimed,
     notified: [...new Set(notified)],
+    title: titleValid ? titleId : "",
   };
 }
 

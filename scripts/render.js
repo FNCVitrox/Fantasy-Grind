@@ -18,7 +18,8 @@ function renderPlayerHud(language = currentLanguage()) {
   if (typeof document !== "undefined" && document.body?.classList) document.body.classList.toggle("reduced-effects", normalizeSettings(state.settings).reducedEffects);
   if (typeof audioSyncMusic === "function") audioSyncMusic();
   if (typeof document !== "undefined" && document.body?.dataset) document.body.dataset.combatSpeed = String(ui.autoFarm ? 1 : normalizeSettings(state.settings).combatSpeed);
-  setText("characterSummaryMeta", `${t("common.level", "Level")} ${state.level}`);
+  const summaryTitle = activeTitleText();
+  setText("characterSummaryMeta", `${t("common.level", "Level")} ${state.level}${summaryTitle ? ` · ${summaryTitle}` : ""}`);
   const needed = state.level >= 20 ? 1 : xpForLevel(state.level);
   setText("xpText", state.level >= 20 ? t("common.max", "Max") : `${state.xp}/${needed}`);
   setBarWidth("xpBar", state.level >= 20 ? 100 : Math.max(2, (state.xp / needed) * 100));
@@ -258,6 +259,9 @@ function renderClassPanel() {
   const className = entityName("class", state.characterClass, activeClass().name);
   const activeBuildName = buildName(state.build);
   setText("className", className);
+  const title = activeTitleText();
+  setText("playerTitle", title);
+  setHidden("playerTitle", !title);
   setText("characterSummaryName", className);
   setText("characterBuildSummary", activeBuildName);
   const icon = $("characterClassIcon");
@@ -588,7 +592,7 @@ function renderAchievements() {
   if (!container) return;
   const ready = readyAchievementCount();
   const claimed = claimedAchievementCount();
-  const signature = `${currentLanguage()}|${claimed}|${ready}|${achievementCatalog.map((achievement) => `${achievement.id}:${achievementProgress(achievement).value}`).join(",")}|${state.gold}|${state.renown}|${materialsSignature()}`;
+  const signature = `${currentLanguage()}|${claimed}|${ready}|${state.achievements.title || ""}|${achievementCatalog.map((achievement) => `${achievement.id}:${achievementProgress(achievement).value}`).join(",")}|${state.gold}|${state.renown}|${materialsSignature()}`;
   if (renderCache.achievements === signature) return;
   renderCache.achievements = signature;
 
@@ -599,8 +603,27 @@ function renderAchievements() {
       <div><span>${t("common.ready", "Bereit")}</span><strong>${ready}</strong></div>
       <div><span>${t("achievements.readyRewards", "Belohnungen")}</span><strong>${ready ? t("common.claim", "Abholen") : t("common.noOpen", "Keine offen")}</strong></div>
     </section>
+    ${renderTitleSection()}
     ${categories.map((category) => renderAchievementCategory(category)).join("")}
   `;
+}
+
+// Wählbare Titel (Punkt 24): freigeschaltete Titel als Knöpfe, der aktive ist markiert.
+function renderTitleSection() {
+  const unlocked = unlockedTitleIds();
+  const total = achievementCatalog.filter((achievement) => achievement.title).length;
+  const active = state.achievements.title || "";
+  const buttons = unlocked.map((id) => `<button type="button" class="title-choice ${active === id ? "active" : ""}" data-select-title="${escapeAttr(id)}" aria-pressed="${active === id}">${escapeHtml(achievementTitleText(id))}</button>`).join("");
+  return `<section class="achievement-titles">
+    <div class="achievement-titles-head">
+      <h3>${t("achievements.titles", "Titel")}</h3>
+      <span>${t("achievements.titleCount", "{count}/{total} Titel", { count: unlocked.length, total })}</span>
+    </div>
+    <p>${t("achievements.titlesHint", "Freigeschaltete Titel erscheinen unter deinem Namen.")}</p>
+    <div class="title-choice-list">
+      ${unlocked.length ? `<button type="button" class="title-choice ${active ? "" : "active"}" data-select-title="" aria-pressed="${!active}">${t("achievements.noTitle", "Kein Titel")}</button>${buttons}` : `<span class="title-empty">${t("achievements.titleLocked", "Noch keine Titel. Hole Erfolge mit Titel ab.")}</span>`}
+    </div>
+  </section>`;
 }
 
 function renderAchievementCategory(category) {
@@ -632,6 +655,7 @@ function renderAchievementCard(achievement) {
     <div class="achievement-reward">
       <span>${t("common.reward", "Belohnung")}</span>
       <strong>${escapeHtml(achievementRewardText(achievement.reward))}</strong>
+      ${achievement.title ? `<em class="achievement-title-reward">${escapeHtml(t("achievements.titleReward", "Titel: {title}", { title: achievementTitleText(achievement.id) }))}</em>` : ""}
     </div>
     <button type="button" data-claim-achievement="${achievement.id}" ${ready ? "" : "disabled"}>
       ${claimed ? t("achievements.claimed", "Abgeholt") : ready ? t("achievements.claimReward", "Belohnung abholen") : t("achievements.closed", "Noch offen")}
