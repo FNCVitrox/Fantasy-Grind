@@ -39,7 +39,7 @@ assert.deepStrictEqual = (actual, expected, message) => {
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 // Spiellogik ist auf mehrere Dateien verteilt; statische Prüfungen durchsuchen alle zusammen.
-const logicFiles = ["scripts/combat.js", "scripts/combat-risk.js", "scripts/loot.js", "scripts/smith.js", "scripts/arcanist.js", "scripts/idle.js", "scripts/progression.js", "scripts/core.js"];
+const logicFiles = ["scripts/combat.js", "scripts/combat-risk.js", "scripts/combat-boss.js", "scripts/loot.js", "scripts/smith.js", "scripts/arcanist.js", "scripts/idle.js", "scripts/progression.js", "scripts/core.js"];
 const readLogic = () => logicFiles.map(read).join("\n");
 
 const html = read("index.html");
@@ -61,6 +61,7 @@ const scripts = [
   "scripts/save-system.js",
   "scripts/combat.js",
   "scripts/combat-risk.js",
+  "scripts/combat-boss.js",
   "scripts/loot.js",
   "scripts/smith.js",
   "scripts/arcanist.js",
@@ -109,6 +110,7 @@ assert.deepStrictEqual(scriptOrder, [
   "scripts/save-system.js",
   "scripts/combat.js",
   "scripts/combat-risk.js",
+  "scripts/combat-boss.js",
   "scripts/loot.js",
   "scripts/smith.js",
   "scripts/arcanist.js",
@@ -588,13 +590,13 @@ assert(vm.runInContext("Object.values(itemEffectCatalog).every((effect) => effec
 assert(vm.runInContext("['huntingMark', 'ironWard', 'pilgrimPace', 'mendersThread', 'openingCut', 'scavengerCharm', 'battleLesson', 'ashTempo', 'revenantSeal'].every((id) => itemEffectCatalog[id])", context), "expanded item effect package should be registered");
 assert(vm.runInContext("['huntingMark', 'ironWard', 'pilgrimPace', 'mendersThread', 'openingCut', 'scavengerCharm', 'battleLesson'].every((id) => { const effect = itemEffectCatalog[id]; return itemEffectScore({ id: 'test', slot: effect.slots[0], quality: 'rare', effect: id }) <= itemEffectBudget('rare'); })", context), "new rare item effects should fit the rare effect budget");
 assert(vm.runInContext("itemEffectScore({ id: 'test', slot: 'ring', quality: 'rare', effect: 'mendersThread' }) < itemEffectScore({ id: 'test', slot: 'ring', quality: 'legendary', effect: 'lifeSiphon' })", context), "small hybrid healing effects should score below stronger healing effects");
-assert(vm.runInContext("Object.values(enemies).filter((enemy) => enemy.boss).every((enemy) => enemy.drops.length >= 1 && enemy.drops.length <= 2 && enemy.drops.every((drop) => items[drop.id] && drop.chance > 0))", context), "dungeon bosses should have one or two valid fixed drops");
+assert(vm.runInContext("Object.values(enemies).filter((enemy) => enemy.boss).every((enemy) => enemy.drops.length >= 1 && enemy.drops.length <= 4 && enemy.drops.every((drop) => items[drop.id] && drop.chance > 0))", context), "dungeon bosses should have one to four valid fixed drops (incl. dungeon set pieces)");
 assert(vm.runInContext("Object.values(enemies).filter((enemy) => enemy.boss).every((enemy) => enemy.drops.every((drop) => drop.chance >= 0.018))", context), "boss fixed drops should have readable drop chances");
 assert(vm.runInContext("Object.values(enemies).filter((enemy) => enemy.boss).every((enemy) => enemy.firstClear?.renown > 0 && enemy.firstClear?.gold > 0)", context), "dungeon bosses should grant first-clear rewards");
 assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; const originalRandom = Math.random; Math.random = () => 0; try { createLootChoices(enemies.ratguard, 'ratguard'); const ids = state.pendingLoot.map((item) => item.id); return ids.includes('guardAxe') && ids.includes('cellkeeperBulwark'); } finally { Math.random = originalRandom; } })()", context), "boss fixed drops should roll independently and allow multiple boss items in one loot batch");
 assert(vm.runInContext("state = defaultState(); state.bossDropPity.ratguard = 2; bossDropPityText('ratguard', 'short').includes('2/3')", context), "boss drop pity should expose progress text");
 assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; const originalRandom = Math.random; Math.random = () => 0.99; try { createLootChoices(enemies.ratguard, 'ratguard'); return state.bossDropPity.ratguard === 1 && !state.pendingLoot.some((item) => item.fixed); } finally { Math.random = originalRandom; } })()", context), "boss drop pity should increase after dry boss wins");
-assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; state.bossDropPity.ratguard = bossDropPityGoal; const originalRandom = Math.random; Math.random = () => 0.99; try { createLootChoices(enemies.ratguard, 'ratguard'); return state.bossDropPity.ratguard === 0 && state.pendingLoot.some((item) => item.fixed && ['guardAxe', 'cellkeeperBulwark'].includes(item.id)); } finally { Math.random = originalRandom; } })()", context), "boss drop pity should guarantee a fixed boss drop after enough dry wins");
+assert(vm.runInContext("(() => { state = defaultState(); render = () => {}; state.bossDropPity.ratguard = bossDropPityGoal; const originalRandom = Math.random; Math.random = () => 0.99; try { createLootChoices(enemies.ratguard, 'ratguard'); return state.bossDropPity.ratguard === 0 && state.pendingLoot.some((item) => item.fixed && ['guardAxe', 'cellkeeperBulwark', 'cellwardenBoots'].includes(item.id)); } finally { Math.random = originalRandom; } })()", context), "boss drop pity should guarantee a fixed boss drop after enough dry wins");
 assert(vm.runInContext("(() => { const loaded = { ...defaultState(), bossDropPity: { ratguard: 99, wolf: 2 } }; normalizeLoadedCollections(loaded); return loaded.bossDropPity.ratguard === bossDropPityGoal && !('wolf' in loaded.bossDropPity); })()", context), "boss drop pity save data should normalize to known bosses");
 assert(vm.runInContext("state = defaultState(); const reward = grantBossFirstClear(enemies.ratguard, 'ratguard'); reward && state.defeatedBosses.includes('ratguard') && state.renown === reward.renown && state.gold === 20 + reward.gold", context), "first boss clear should grant one-time rewards");
 assert(vm.runInContext("const beforeGold = state.gold; grantBossFirstClear(enemies.ratguard, 'ratguard') === null && state.gold === beforeGold", context), "first boss clear should not pay twice");
@@ -660,8 +662,8 @@ assert(vm.runInContext("Object.values(enemies).filter((enemy) => enemy.boss).eve
 assert(vm.runInContext("Object.values(enemies).filter((enemy) => enemy.boss).every((enemy) => enemyAbilityIds(enemy).length === 4 && enemyPassiveIds(enemy).length >= 2)", context), "expanded dungeon bosses should have four active tools and at least two passives");
 assert(vm.runInContext("enemyAbilityIds(createEliteEnemy(enemies.wolf, 'wolf')).length >= 2", context), "elite variants should gain a bonus ability");
 assert(
-  vm.runInContext("Object.values(enemies).every((enemy) => generatedLootPoolCount(enemy) + enemy.drops.length >= 15 && generatedLootPoolCount(enemy) + enemy.drops.length <= 20)", context),
-  "enemy item pools should stay between 15 and 20 items",
+  vm.runInContext("Object.values(enemies).every((enemy) => generatedLootPoolCount(enemy) + enemy.drops.length >= 15 && generatedLootPoolCount(enemy) + enemy.drops.length <= (enemy.boss ? 22 : 20))", context),
+  "enemy item pools should stay between 15 and 20 items (bosses up to 22 with dungeon set pieces)",
 );
 assert(vm.runInContext("Object.values(materialDrops).flat().every((drop) => materialLabel[drop.id])", context), "all material drops need labels");
 assert(vm.runInContext("['boneAcolyte', 'cryptBrute', 'emberPriest', 'crownBeast', 'hollowChampion'].every((id) => materialDrops[id].some((drop) => drop.id === 'graveSeal'))", context), "late dungeon bosses should be able to drop grave seals for Mira mastery");
@@ -815,6 +817,44 @@ suite("mage class");
   const sim = require("./balance-sim.js");
   const mageRun = sim.simulate("mage");
   assert(sim.evaluate(mageRun).length === 0, `mage should reach level 20 within the target time (${mageRun.totalHours.toFixed(2)} h)`);
+}
+
+suite("boss phases and dungeon sets");
+
+{
+  const dungeonBosses = JSON.parse(vm.runInContext("JSON.stringify(Object.values(zones).filter((zone) => zone.type === 'dungeon').flatMap((zone) => zone.enemies))", context));
+  assert(dungeonBosses.length >= 10, "all dungeon bosses should be checked");
+  for (const id of dungeonBosses) {
+    assert(vm.runInContext(`Boolean(bossPhases[${JSON.stringify(id)}]?.name && bossPhases[${JSON.stringify(id)}]?.text && bossPhases[${JSON.stringify(id)}]?.onEnter)`, context), `dungeon boss ${id} needs a phase 2`);
+    for (const field of ["name", "text"]) {
+      assert(read("scripts/i18n.js").includes(`"bossPhase.${id}.${field}"`) && read("scripts/i18n-en.js").includes(`"bossPhase.${id}.${field}"`), `boss phase ${id}.${field} needs DE and EN`);
+    }
+  }
+  const fake = (id, ratio) => `({ enemy: { ...enemies.${id}, baseId: '${id}' }, enemyHp: Math.floor(enemies.${id}.hp * ${ratio}), playerHp: 300, playerDamageMultiplier: 1, playerDots: [], bossPhase: 1, rounds: 4, enemyName: 'Boss', combatStats: { defense: 10 }, playerGuard: 1, enchantStats: { damageReduction: 0 }, enemyShield: null })`;
+  assert(vm.runInContext(`applyBossPhaseShift(${fake("ratguard", 0.6)}) === null`, context), "phase 2 should wait until 50% health");
+  assert(vm.runInContext(`(() => { const c = ${fake("ratguard", 0.49)}; const e = applyBossPhaseShift(c); return e?.phaseShift && c.bossPhase === 2 && c.enemyShield.turns === 2 && applyBossPhaseShift(c) === null; })()`, context), "ratguard should shift once and raise a 2-hit shield");
+  assert(vm.runInContext(`(() => { const c = ${fake("boneAcolyte", 0.4)}; const before = c.enemyHp; applyBossPhaseShift(c); return c.enemyHp === before + Math.floor(enemies.boneAcolyte.hp * 0.1); })()`, context), "bone acolyte should heal 10% when shifting");
+  assert(vm.runInContext(`(() => { const c = ${fake("chainWarden", 0.4)}; applyBossPhaseShift(c); return c.playerDamageMultiplier === 0.55; })()`, context), "chain warden should weaken the next hero hit");
+  assert(vm.runInContext(`(() => { const c = ${fake("oathForger", 0.4)}; applyBossPhaseShift(c); return c.playerDots.length === 1 && c.playerDots[0].turns === 3; })()`, context), "oath forger should burn the hero for 3 rounds");
+  assert(vm.runInContext(`(() => { const c = ${fake("cryptBrute", 0.4)}; applyBossPhaseShift(c); return bossPhaseStrikeDamage(c) > 0 && bossPhaseActive(c).damageTaken > 1; })()`, context), "crypt brute should strike at once and take more damage");
+  assert(vm.runInContext(`applyBossPhaseShift({ enemy: { ...enemies.wolf, baseId: 'wolf' }, enemyHp: 1, playerHp: 10, bossPhase: 1 }) === null`, context), "normal enemies have no phases");
+  assert(vm.runInContext("riskBossPhase(enemies.ironDuke) === bossPhases.ironDuke", context), "risk estimate should know the boss phase");
+  assert(vm.runInContext("(() => { state = defaultState(); return renderBossPhaseInfo('ratguard', enemies.ratguard).includes('Alarm im Kerker'); })()", context), "bestiary should show the boss phase");
+
+  const dungeonSets = JSON.parse(vm.runInContext("JSON.stringify(Object.entries(setBonuses).filter(([, set]) => set.dungeon).map(([id, set]) => ({ id, dungeon: set.dungeon, pieces: set.pieces })))", context));
+  const dungeonIds = JSON.parse(vm.runInContext("JSON.stringify(Object.keys(zones).filter((id) => zones[id].type === 'dungeon'))", context));
+  assert.deepStrictEqual(dungeonSets.map((set) => set.dungeon).sort(), [...dungeonIds].sort(), "every dungeon should have exactly one own set");
+  for (const set of dungeonSets) {
+    const pieces = JSON.parse(vm.runInContext(`JSON.stringify(Object.keys(items).filter((id) => items[id].set === '${set.id}'))`, context));
+    assert.strictEqual(pieces.length, set.pieces, `set ${set.id} should have ${set.pieces} pieces`);
+    for (const piece of pieces) {
+      assert(vm.runInContext(`zones['${set.dungeon}'].enemies.some((enemyId) => enemies[enemyId].drops.some((drop) => drop.id === '${piece}'))`, context), `${piece} should drop in ${set.dungeon}`);
+      assert(read("scripts/i18n-en.js").includes(`"item.${piece}.name"`), `${piece} needs an English name`);
+    }
+    for (const key of ["name", "bonus.2", "bonus.3"]) assert(read("scripts/i18n-en.js").includes(`"set.${set.id}.${key}"`), `set ${set.id} needs English ${key}`);
+  }
+  assert(vm.runInContext("(() => { state = defaultState(); state.equipment.boots = 'cellwardenBoots'; state.equipment.necklace = 'graveWardAmulet'; const two = activeSetBonusStats().maxHp === 16 && itemEffectSummary().postCombatHeal < 0.05; state.equipment.pants = 'cryptGreaves'; return two && itemEffectSummary().postCombatHeal >= 0.05 && activeSetBonusStats().maxHp === 40; })()", context), "full dungeon set should add its own effect, two pieces only stats");
+  assert(vm.runInContext("(() => { state = defaultState(); state.equipment.boots = 'cellwardenBoots'; return renderSetTooltip('graveWarden').includes('1/3'); })()", context), "set tooltip should count against the set size");
 }
 
 const suiteSummary = [...suiteStats.entries()]

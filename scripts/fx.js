@@ -113,6 +113,17 @@ function fxLevelUp(label) {
   }
 }
 
+// Boss-Phasenwechsel (Punkt 23): Banner auf der Bühne, roter Blitz und starkes Wackeln.
+function fxBossPhase(label) {
+  const stage = fxStage();
+  if (!stage) return;
+  const banner = fxSpawn(stage, "fx-phase-banner", {}, 1900);
+  banner.textContent = label;
+  if (fxReduced()) return;
+  fxSpawn(stage, "fx-phase-flash", {}, 900);
+  fxShake(1.8);
+}
+
 // Kurzer schwebender Hinweis wie "+120 XP" neben einem Wert.
 function fxFloatGain(id, text) {
   const element = typeof document !== "undefined" && document.getElementById ? document.getElementById(id) : null;

@@ -653,6 +653,8 @@ function createActionCombat(enemy) {
     enemyWeak: null,
     guardTurns: null,
     enemyFrozen: 0,
+    bossPhase: 1,
+    enemyShield: null,
     events: preparedEventEntry ? [preparedEventEntry] : [],
     combatEvent,
     preparedEventEntry,
@@ -674,6 +676,7 @@ async function runActionCombat(combat, manualMode) {
 
     if (await applyCombatDots(combat, "player")) break;
     if (await applyCombatDots(combat, "enemy")) break;
+    if (await checkBossPhase(combat)) break;
 
     const action = manualMode ? await waitForCombatAction() : chooseAutoCombatAction(combat);
     combat.lastActionId = action.id;
@@ -766,6 +769,14 @@ async function executePlayerCombatAction(combat, action) {
     combat.playerDamageMultiplier = 1;
   }
   const defense = enemyDamageTakenMultiplier(combat.enemy, combat.enemyHp, combat.rounds, hit);
+  const phase = bossPhaseActive(combat);
+  if (phase?.damageTaken) hit = abilityDamage(hit, phase.damageTaken);
+  if (combat.enemyShield?.turns > 0) {
+    defense.multiplier *= combat.enemyShield.multiplier;
+    defense.defensive.push(t("combat.phaseShield", "Phasenschild"));
+    combat.enemyShield.turns -= 1;
+    if (combat.enemyShield.turns <= 0) combat.enemyShield = null;
+  }
   if (defense.multiplier < 1) {
     hit = abilityDamage(hit, defense.multiplier);
     if (defense.defensive.length) {
@@ -793,6 +804,7 @@ async function executePlayerCombatAction(combat, action) {
     text,
   });
   applyItemActionEffects(combat, crit.critical);
+  await checkBossPhase(combat);
 }
 
 function playerBaseActionHit(combat) {
@@ -929,7 +941,8 @@ async function executeEnemyCombatAction(combat) {
   const passiveMultiplier = enemyDamagePassiveMultiplier(combat.enemy, combat.enemyHp);
   const abilityMultiplier = enemyAbility?.damageMultiplier || 1;
   const weakMultiplier = combat.enemyWeak?.turns > 0 ? combat.enemyWeak.multiplier : 1;
-  let multiplier = (combat.nextEnemyDamageMultiplier || 1) * weakMultiplier * combat.playerGuard * abilityMultiplier * passiveMultiplier;
+  const phaseMultiplier = bossPhaseActive(combat)?.damage || 1;
+  let multiplier = (combat.nextEnemyDamageMultiplier || 1) * weakMultiplier * combat.playerGuard * abilityMultiplier * passiveMultiplier * phaseMultiplier;
   if (combat.combatEvent?.enemyDamageBonus) multiplier *= 1 + combat.combatEvent.enemyDamageBonus;
   let hit = Math.max(1, Math.floor(enemyBaseHit * multiplier));
   hit = Math.max(1, Math.floor(hit * (1 - Math.min(0.35, combat.enchantStats.damageReduction))));

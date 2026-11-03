@@ -34,7 +34,17 @@ const mage=await p.evaluate(async()=>{const hintBefore=!$('classChoiceHint').hid
  await pr;setCombatMode('auto');
  const texts=state.combatLog.map(e=>typeof e==='string'?e:(e.text||'')).join(' | ');
  return {hintBefore,hintAfter,title,cls:state.characterClass,weapon:state.equipment.weapon,used:[...used],burn:/Brand|Burn/.test(JSON.stringify(state.combatLog))}});
+// Boss-Phasen (Punkt 23): Marke auf der Lebensleiste, Banner und rote Bossfigur beim Wechsel, Eintrag im Kampf-Log
+const phase=await p.evaluate(async()=>{let mark=false,banner=false,glow=false,logged=false,tag=false;
+ for(let n=0;n<3&&!(banner&&glow);n++){state.level=12;syncDerivedStats();state.hp=state.maxHp;state.pendingLoot=[];closeModal('lootModal');ui.selectedZone='crypt';ui.selectedEnemy='ratguard';render();
+  const pr=fight();for(let i=0;i<400&&ui.isFighting;i++){await new Promise(r=>setTimeout(r,20));
+   mark=mark||$('battleEnemyHpBar').parentElement.classList.contains('has-phase-mark');banner=banner||Boolean(document.querySelector('.fx-phase-banner'));
+   glow=glow||$('enemySprite').classList.contains('boss-phase-2');tag=tag||/Phase 2/.test($('enemySpriteName').textContent);}
+  await pr;logged=logged||/Phase 2/.test(JSON.stringify(state.combatLog));}
+ return {mark,banner,glow,tag,logged}});
 const worst=Math.max(...r.skip);const errs=[];
+if(!phase.mark||!phase.banner||!phase.glow||!phase.tag||!phase.logged)errs.push('Boss-Phase nicht sichtbar: '+JSON.stringify(phase));
+console.log('Boss-Phase: Marke '+(phase.mark?'ja':'nein')+', Banner '+(phase.banner?'ja':'nein')+', rote Figur '+(phase.glow?'ja':'nein')+', Kampf-Log '+(phase.logged?'ja':'nein'));
 if(!mage.hintBefore||mage.hintAfter||!/Wähle deine Klasse|Choose your class/.test(mage.title))errs.push('Klassenwahl beim Start: '+JSON.stringify(mage));
 if(mage.cls!=='mage')errs.push('Magier nicht korrekt gewählt: '+JSON.stringify(mage));
 if(mage.used.length<2||!mage.burn)errs.push('Magier hat seine Fähigkeiten nicht eingesetzt: '+JSON.stringify(mage.used));

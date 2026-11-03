@@ -48,6 +48,19 @@ const items = {
   royalSpurs: { name: "Königssporn", slot: "boots", quality: "legendary", damage: 0, defense: 28, set: "ashen", effect: "royalPace" },
   ashenGreatsword: { name: "Aschgraues Großschwert", slot: "weapon", quality: "legendary", damage: 28, defense: 0, critChance: 0.04, critDamage: 0.32, set: "ashen", effect: "crownBurn" },
   crownShard: { name: "Splitter der Krone", slot: "ring", quality: "legendary", damage: 14, defense: 0, critChance: 0.05, critDamage: 0.18, set: "ashen", effect: "duelistMark" },
+  // Dungeon-Sets (Punkt 23): je Dungeon ein eigenes 3-Teile-Set, jedes Teil kommt von einem bestimmten Boss.
+  cellwardenBoots: { name: "Stiefel des Kerkermeisters", slot: "boots", quality: "epic", damage: 0, defense: 12, set: "graveWarden", effect: "wardedTread" },
+  graveWardAmulet: { name: "Amulett des Grabwächters", slot: "necklace", quality: "epic", damage: 7, defense: 0, critDamage: 0.1, set: "graveWarden", effect: "soulAnchor" },
+  cryptGreaves: { name: "Gruftwächter-Beinschienen", slot: "pants", quality: "epic", damage: 0, defense: 18, set: "graveWarden", effect: "bruteThorns" },
+  vowShackleRing: { name: "Fesselring des Schwurs", slot: "ring", quality: "epic", damage: 7, defense: 2, critChance: 0.03, set: "ironVow", effect: "chainSnare" },
+  vowforgedBoots: { name: "Schwurgeschmiedete Stiefel", slot: "boots", quality: "legendary", damage: 0, defense: 24, set: "ironVow", effect: "wardedTread" },
+  dukeGorget: { name: "Halsberge des Herzogs", slot: "necklace", quality: "legendary", damage: 14, defense: 0, critDamage: 0.18, set: "ironVow", effect: "duelistMark" },
+  liturgyLegwraps: { name: "Glutgeweihte Beinkleider", slot: "pants", quality: "legendary", damage: 0, defense: 34, set: "emberLiturgy", effect: "thornGuard" },
+  crownhuntRing: { name: "Ring der Kronenjagd", slot: "ring", quality: "legendary", damage: 14, defense: 0, critChance: 0.05, critDamage: 0.1, set: "emberLiturgy", effect: "crownBurn" },
+  hollowAegis: { name: "Ägis der Leere", slot: "offhand", quality: "legendary", damage: 6, defense: 30, set: "emberLiturgy", effect: "emberWard" },
+  towerHauberk: { name: "Harnisch des Turmwächters", slot: "chest", quality: "legendary", damage: 0, defense: 50, set: "towerWatch", effect: "steadfastWard" },
+  towerGreaves: { name: "Turmbeinschienen", slot: "pants", quality: "legendary", damage: 0, defense: 38, set: "towerWatch", effect: "ironWard" },
+  towerTreads: { name: "Stufenläufer", slot: "boots", quality: "legendary", damage: 0, defense: 28, set: "towerWatch", effect: "royalPace" },
 };
 
 const itemEffectCatalog = {
@@ -572,6 +585,43 @@ const setBonuses = {
       2: { damage: 4, maxHp: 12, text: "+4 Schaden, +12 Leben" },
       4: { damage: 7, defense: 6, maxHp: 22, text: "+7 Schaden, +6 Verteidigung, +22 Leben" },
       6: { damage: 13, defense: 11, maxHp: 48, text: "+13 Schaden, +11 Verteidigung, +48 Leben" },
+    },
+  },
+  // Dungeon-Sets (Punkt 23): 3 Teile, das volle Set gibt zusätzlich einen eigenen Effekt (Werte wie bei Item-Effekten).
+  graveWarden: {
+    name: "Grabwächter",
+    dungeon: "crypt",
+    pieces: 3,
+    bonuses: {
+      2: { defense: 5, maxHp: 16, text: "+5 Verteidigung, +16 Leben" },
+      3: { damage: 6, defense: 4, maxHp: 24, effect: { postCombatHeal: 0.05, eliteDamageBonus: 0.04 }, text: "+6 Schaden, +4 Verteidigung, +24 Leben. Nach jedem Sieg heilst du 5 % Leben, +4 % Schaden gegen Bosse." },
+    },
+  },
+  ironVow: {
+    name: "Eisenschwur",
+    dungeon: "ironhold",
+    pieces: 3,
+    bonuses: {
+      2: { damage: 4, defense: 8, text: "+4 Schaden, +8 Verteidigung" },
+      3: { damage: 8, defense: 12, maxHp: 30, effect: { firstHitReduction: 0.2, enemyCritReduction: 0.03 }, text: "+8 Schaden, +12 Verteidigung, +30 Leben. Der erste Gegentreffer wird um 20 % reduziert, gegnerische Crit-Chance −3 %." },
+    },
+  },
+  emberLiturgy: {
+    name: "Glutliturgie",
+    dungeon: "ashcathedral",
+    pieces: 3,
+    bonuses: {
+      2: { damage: 9, defense: 5, text: "+9 Schaden, +5 Verteidigung" },
+      3: { damage: 15, defense: 10, maxHp: 40, effect: { critHealRatio: 0.025, critBurn: true }, text: "+15 Schaden, +10 Verteidigung, +40 Leben. Kritische Treffer heilen 2,5 % Leben und setzen Brennen." },
+    },
+  },
+  towerWatch: {
+    name: "Turmwacht",
+    dungeon: "tower",
+    pieces: 3,
+    bonuses: {
+      2: { defense: 12, maxHp: 30, text: "+12 Verteidigung, +30 Leben" },
+      3: { damage: 14, defense: 18, maxHp: 60, effect: { xpBonus: 0.08, lootBonus: 0.05 }, text: "+14 Schaden, +18 Verteidigung, +60 Leben. +8 % XP und +5 % Beutequalität nach Siegen." },
     },
   },
   ashen: {

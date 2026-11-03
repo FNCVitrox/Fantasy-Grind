@@ -747,6 +747,12 @@ function setBattleEnemyVisual(enemy) {
     art.innerHTML = enemySpriteSvg(enemy.sprite);
     art.dataset.sprite = enemy.sprite;
   }
+  const phase = typeof bossPhaseFor === "function" ? bossPhaseFor(enemy) : null;
+  const enemyBar = $("battleEnemyHpBar")?.parentElement;
+  if (enemyBar) {
+    enemyBar.classList.toggle("has-phase-mark", Boolean(phase));
+    enemyBar.style.setProperty("--phase-mark", `${Math.round((phase?.threshold || 0.5) * 100)}%`);
+  }
   updateBattleHealth(state.hp, state.maxHp, enemy.hp, enemy.hp);
 }
 
@@ -2011,6 +2017,7 @@ function renderBestiaryDetail() {
     </div>
     <p>${t("common.level", "Level")} ${detailEnemy.level}${detailEnemy.boss ? ` · ${t("common.boss", "Boss")}` : detailEnemy.elite ? ` · ${t("common.elite", "Elite")}` : ""} · ${detailEnemy.hp} ${t("main.life", "Leben")} · ${detailEnemy.damage[0]}-${detailEnemy.damage[1]} ${t("main.damage", "Schaden")} · ${detailEnemy.defense} ${t("main.defense", "Rüstung")} · Crit ${formatPercent(enemyCriticalStats(detailEnemy).critChance)} / ${formatPercent(enemyCriticalStats(detailEnemy).critDamage)} · ${t("bestiary.questScrollChance", "Quest-Schriftrolle {chance}", { chance: formatChance(rareQuestDropChance(detailEnemy)) })}</p>
     ${renderBossRewardPanel(ui.selectedBestiaryEnemy, detailEnemy)}
+    ${renderBossPhaseInfo(ui.selectedBestiaryEnemy, detailEnemy)}
     ${renderEnemyAbilities(detailEnemy)}
     <h3>${t("bestiary.collection", "Sammlung {found}/{total}", lootCompletion(ui.selectedBestiaryEnemy))}</h3>
     <div class="bestiary-category-grid">
@@ -2064,7 +2071,7 @@ function renderBossRewardPanel(enemyId, enemy) {
     const quality = itemQuality(item);
     return `<div class="boss-reward-drop">
       <strong class="quality-${quality}">${itemIconHtml(item)}${escapeHtml(itemDisplayName(item, drop.id))}</strong>
-      <span>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, itemSlot(item))} · ${formatChance(drop.chance)}</span>
+      <span>${labelFor(qualityLabel, quality)} · ${labelFor(slotLabel, itemSlot(item))} · ${formatChance(drop.chance)}${item.set && setBonuses[item.set]?.dungeon ? ` · ${escapeHtml(setDisplayName(item.set))}` : ""}</span>
     </div>`;
   }).join("");
 
@@ -2077,6 +2084,18 @@ function renderBossRewardPanel(enemyId, enemy) {
     </div>
     <div class="boss-reward-grid">
       ${drops || `<span>${t("bestiary.noBossLoot", "Keine feste Bossbeute")}</span>`}
+    </div>
+  </section>`;
+}
+
+// Boss-Phase im Bestiarium (Punkt 23): Schwelle, Name und Wirkung von Phase 2.
+function renderBossPhaseInfo(enemyId, enemy) {
+  const phase = enemy?.boss && typeof bossPhases !== "undefined" ? bossPhases[enemyId] : null;
+  if (!phase) return "";
+  return `<section class="enemy-ability-list boss-phase-info" aria-label="${escapeAttr(t("bestiary.bossPhase", "Boss-Phase"))}">
+    <div class="enemy-ability boss-phase">
+      <strong>${t("combat.phaseTwoTag", "Phase 2")} · ${escapeHtml(bossPhaseName(enemyId))}</strong>
+      <span>${t("bestiary.bossPhaseBelow", "Unter {percent} % Leben", { percent: Math.round((phase.threshold || 0.5) * 100) })} · ${escapeHtml(bossPhaseText(enemyId))}</span>
     </div>
   </section>`;
 }
@@ -2486,7 +2505,7 @@ function renderSetTooltip(setId) {
     .map(([needed]) => `<span class="${count >= Number(needed) ? "compare-good" : "compare-even"}">${needed} ${t("common.pieces", "Teile")}: ${escapeHtml(setBonusDisplayText(setId, needed))}</span>`)
     .join("");
   return `<div class="item-tooltip">
-    <strong>${escapeHtml(setDisplayName(setId))} (${Math.min(count, 6)}/6)</strong>
+    <strong>${escapeHtml(setDisplayName(setId))} (${Math.min(count, set.pieces || 6)}/${set.pieces || 6})</strong>
     ${bonuses}
   </div>`;
 }

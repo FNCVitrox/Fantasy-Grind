@@ -384,8 +384,13 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
     - Balance-Simulation läuft jetzt für beide Klassen: Krieger 2,9 h, Magier 2,2 h bis Level 20, beide im Zielbereich.
     - Grafik: Die bestehende SVG-Figur bleibt (Entscheidung nach den Pixel-Art-Versuchen).
 
-- [ ] **23. Boss-Phasen und Dungeon-Belohnungen**
+- [x] **23. Boss-Phasen und Dungeon-Belohnungen**
   - Wie: Jeder Dungeon-Boss bekommt 2 Phasen mit einem sichtbaren Wechsel, dazu einzigartige Set-Items pro Dungeon.
+  - Ergebnis (v0.8.146):
+    - Alle 10 Dungeon-Bosse (inklusive Turmwächter) wechseln unter 50 % Leben in Phase 2 (`bossPhases` in `data-world.js`, Logik im neuen Modul `scripts/combat-boss.js`). Jeder Boss hat einen eigenen Wechsel: Schild, Heilung, Sofortschlag, Fessel (dein nächster Treffer schwächer) oder Brand, dazu mehr Schaden oder mehr erlittener Schaden für den Rest des Kampfs.
+    - Sichtbar: Marke bei 50 % auf der Boss-Lebensleiste, beim Wechsel Banner „Phase 2 · Name“, roter Blitz, Wackeln, eigener Ton. Danach leuchtet die Bossfigur rot und heisst „… · Phase 2“. Das Bestiarium zeigt die Phase bei jedem Boss.
+    - Die Risiko-Anzeige rechnet die Phase mit ein.
+    - 4 neue Dungeon-Sets mit je 3 Teilen: Grabwächter (Krypta), Eisenschwur (Eisenbruch), Glutliturgie (Aschenkathedrale), Turmwacht (Endloser Turm). Jedes Teil kommt von einem bestimmten Boss (Turm: alle drei vom Turmwächter). 2 Teile geben Werte, das volle Set zusätzlich einen eigenen Effekt (z. B. Heilung nach Sieg, erster Treffer −20 %, Krits heilen und brennen, mehr XP und Beute).
 
 - [ ] **24. Mehr Erfolge mit Titeln**
   - Wie: Von 20 auf rund 60 Erfolge erweitern. Titel sind wählbar und werden unter dem Namen angezeigt.
@@ -428,5 +433,5 @@ So wird gearbeitet: Die Punkte werden **von oben nach unten** abgearbeitet. Jede
 | 2 – Code | 6–10 | 5/5 ✅ |
 | 3 – Gameplay | 11–15 | 5/5 ✅ |
 | 4 – Grafik & Gefühl | 16–21 | 6/6 ✅ |
-| 5 – Inhalt | 22–24 | 1/3 |
+| 5 – Inhalt | 22–24 | 2/3 |
 | 6 – Steam | 25–28 | 0/4 |

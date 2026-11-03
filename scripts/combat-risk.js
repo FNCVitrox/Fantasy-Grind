@@ -98,7 +98,23 @@ function expectedEnemyEffectiveHp(enemy, playerDamagePerRound) {
   if (enemyPassiveIds(enemy).includes("graveBargain")) effectiveHp *= 1.06;
   if (enemyPassiveIds(enemy).includes("emberChoir")) effectiveHp *= 1.07;
   if (enemyPassiveIds(enemy).includes("hollowSecondWind")) effectiveHp *= 1.12;
+  const phase = riskBossPhase(enemy);
+  if (phase) {
+    const onEnter = phase.onEnter || {};
+    const half = enemy.hp * (phase.threshold || 0.5);
+    if (onEnter.heal) effectiveHp += enemy.hp * onEnter.heal;
+    if (onEnter.shield) effectiveHp += playerDamagePerRound * (1 - onEnter.shield.multiplier) * onEnter.shield.turns;
+    if (onEnter.curse) effectiveHp += playerDamagePerRound * (1 - onEnter.curse);
+    if (phase.damageTaken > 1) effectiveHp -= half * (1 - 1 / phase.damageTaken);
+  }
   return effectiveHp;
+}
+
+// Boss-Phase (Punkt 23) auch für Gegner aus der Datentabelle ohne baseId finden.
+function riskBossPhase(enemy) {
+  if (!enemy?.boss || typeof bossPhases === "undefined") return null;
+  const id = enemy.baseId || Object.keys(enemies).find((key) => enemies[key] === enemy);
+  return bossPhases[id] || null;
 }
 
 function expectedEnemyDamagePerRound(enemy, stats, effectSummary = itemEffectSummary()) {
@@ -111,6 +127,11 @@ function expectedEnemyDamagePerRound(enemy, stats, effectSummary = itemEffectSum
   hit *= enemyAbilityDamageMultiplier(enemy);
   hit *= enemyDamagePassiveMultiplier(enemy, enemy.hp * 0.45);
   hit += enemyDotDamagePerRound(enemy);
+  const phase = riskBossPhase(enemy);
+  if (phase) {
+    hit *= 1 + ((phase.damage || 1) - 1) * 0.5 + (phase.onEnter?.strike || 0) * 0.08;
+    if (phase.onEnter?.burn) hit += (enemy.level * phase.onEnter.burn.ratio * phase.onEnter.burn.turns) / 8;
+  }
   hit *= playerDefensiveAbilityMultiplier(stats);
   hit *= 1 - Math.min(0.35, enchantStats.damageReduction);
   hit *= 1 - Math.min(0.08, effectSummary.firstHitReduction / 8);

@@ -15,7 +15,18 @@ function equippedItemEffects() {
     .filter(Boolean);
 }
 
-function itemEffectSummary(effects = equippedItemEffects()) {
+// Eigene Effekte voller Dungeon-Sets (Punkt 23) zählen wie Item-Effekte.
+function activeSetEffects() {
+  const effects = [];
+  Object.values(activeSetCounts()).forEach(({ id, count }) => {
+    Object.entries(setBonuses[id]?.bonuses || {}).forEach(([needed, bonus]) => {
+      if (count >= Number(needed) && bonus.effect) effects.push({ id: `set:${id}:${needed}`, ...bonus.effect });
+    });
+  });
+  return effects;
+}
+
+function itemEffectSummary(effects = [...equippedItemEffects(), ...activeSetEffects()]) {
   return effects.reduce((summary, effect) => {
     summary.bleedChance += effect.bleedChance || 0;
     summary.poisonChance += effect.poisonChance || 0;

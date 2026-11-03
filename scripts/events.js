@@ -785,7 +785,7 @@ function waitResult(ms) {
 
 function showCombatAnimationEvent(stage, event, activeCombatEvent, enemyName, playerMaxHp, enemyMaxHp) {
   const eventClass = combatEventClass(event);
-  const attackClass = event.combatEventId ? "" : event.actor === "hero" ? "hero-attacks enemy-hit" : "enemy-attacks hero-hit";
+  const attackClass = event.phaseShift ? "boss-phase-shift" : event.combatEventId ? "" : event.actor === "hero" ? "hero-attacks enemy-hit" : "enemy-attacks hero-hit";
   const side = event.actor === "hero" ? "right" : "left";
   setBattleStageClass(stage, `${attackClass} ${eventClass}`, activeCombatEvent);
   $("battleText").textContent = event.text || (event.actor === "hero"
@@ -793,12 +793,21 @@ function showCombatAnimationEvent(stage, event, activeCombatEvent, enemyName, pl
     : t("combat.enemyHit", "{enemy} trifft für {damage}.", { enemy: enemyName, damage: event.damage }));
   updateBattleHealth(event.playerHp, playerMaxHp, event.enemyHp, enemyMaxHp);
   highlightAbilityUse(event.abilityId);
+  if (event.phaseShift) showBossPhaseShift(event.phaseName, enemyName);
   if (event.damage > 0) {
     spawnDamage(event.damage, side, event.critical);
     fxHitParticles(side, event.critical);
     audioPlay(event.critical ? "crit" : event.actor === "hero" ? "hit" : "heroHurt");
     if (event.critical) fxShake(event.actor === "hero" ? 1 : 1.4);
   }
+}
+
+// Sichtbarer Phasenwechsel (Punkt 23): Banner, roter Blitz, Ton und dauerhaft markierte Bossfigur.
+function showBossPhaseShift(phaseName, enemyName) {
+  $("enemySprite")?.classList.add("boss-phase-2");
+  setText("enemySpriteName", `${enemyName} · ${t("combat.phaseTwoTag", "Phase 2")}`);
+  if (typeof fxBossPhase === "function") fxBossPhase(`${t("combat.phaseTwoTag", "Phase 2")} · ${phaseName}`);
+  if (typeof audioPlay === "function") audioPlay("bossPhase");
 }
 
 function setBattleStageClass(stage, classNames = "", activeCombatEvent = null) {

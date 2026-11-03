@@ -193,4 +193,4 @@ if (require.main === module) {
   if (process.argv.includes("--check") && failed) process.exit(1);
 }
 
-module.exports = { simulate, evaluate, report };
+module.exports = { simulate, evaluate, report, createContext };
